@@ -100,5 +100,9 @@
             android:id="@+id/deauth_item"
             android:icon="@drawable/ic_action_network_wifi"
             android:title="@string/drawertitledeauth" />
+        <item
+            android:id="@+id/can_item"
+            android:icon="@drawable/ic_action_can"
+            android:title="@string/drawertitlecan" />
      </group>
 </menu>
