@@ -32,6 +32,7 @@ public class CANFragment extends Fragment {
     public static final String TAG = "CANFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
     private TextView SelectedIface;
+    private TextView SelectedBitrate;
     private final ArrayList<String> arrayList = new ArrayList<>();
     private SharedPreferences sharedpreferences;
     private Context context;
@@ -88,6 +89,29 @@ public class CANFragment extends Fragment {
             SetupDialog();
         }
 
+        //Start CAN interface
+        Button startcanButton = rootView.findViewById(R.id.start_caniface);
+        SelectedIface = rootView.findViewById(R.id.can_iface);
+        SelectedBitrate = rootView.findViewById(R.id.bitrate);
+
+        startcanButton.setOnClickListener(v ->  {
+            String selected_bitrate = SelectedBitrate.getText().toString();
+            if (iswatch) {
+                exe.RunAsRoot(new String[]{"echo 'todo'"});
+            } else exe.RunAsRoot(new String[]{"svc wifi enable"});
+            run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
+                    "echo 'Creating CAN interface...' && sudo ip link set can0 type can bitrate " + selected_bitrate + " && " +
+                    "echo 'Starting CAN interface...' && sudo ip link set up can0 && ifconfig can0");
+            //WearOS iface control is weird, hence reset is needed
+            if (iswatch)
+                AsyncTask.execute(() -> {
+                    getActivity().runOnUiThread(() -> {
+                        exe.RunAsRoot(new String[]{"echo 'todo'"});
+                    });
+                });
+            activity.invalidateOptionsMenu();
+        });
+
         //Start VCAN interface
         Button startvcanButton = rootView.findViewById(R.id.start_vcaniface);
         SelectedIface = rootView.findViewById(R.id.can_iface);
@@ -99,6 +123,29 @@ public class CANFragment extends Fragment {
             run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
                     "echo 'Creating VCAN interface...' && ip link add dev vcan0 type vcan && ip link set vcan0 mtu 72 && " +
                     "echo 'Starting VCAN interface...' && ip link set up vcan0 && ifconfig vcan0");
+            //WearOS iface control is weird, hence reset is needed
+            if (iswatch)
+                AsyncTask.execute(() -> {
+                    getActivity().runOnUiThread(() -> {
+                        exe.RunAsRoot(new String[]{"echo 'todo'"});
+                    });
+                });
+            activity.invalidateOptionsMenu();
+        });
+
+        //Start SLCAN interface
+        Button startslcanButton = rootView.findViewById(R.id.start_slcaniface);
+        SelectedIface = rootView.findViewById(R.id.can_iface);
+        SelectedBitrate = rootView.findViewById(R.id.bitrate);
+
+        startslcanButton.setOnClickListener(v ->  {
+            String selected_bitrate = SelectedBitrate.getText().toString();
+            if (iswatch) {
+                exe.RunAsRoot(new String[]{"echo 'todo'"});
+            } else exe.RunAsRoot(new String[]{"svc wifi enable"});
+            run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
+                    "echo 'Creating SLCAN interface...' && sudo slcand -o -s8 -t hw -S " + selected_bitrate + " /dev/ttyUSB0 && " +
+                    "echo 'Starting SLCAN interface...' && sudo ip link set up slcan0");
             //WearOS iface control is weird, hence reset is needed
             if (iswatch)
                 AsyncTask.execute(() -> {

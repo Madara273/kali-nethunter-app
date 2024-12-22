@@ -57,13 +57,59 @@
 
             </LinearLayout>
 
-            <Button
-                android:id="@+id/start_vcaniface"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:layout_margin="15dp"
-                android:text="Start VCAN Interface" />
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/textView3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_weight="3"
+                    android:text="Bitrate :"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                <EditText
+                    android:id="@+id/bitrate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="2"
+                    android:ems="10"
+                    android:inputType="number"
+                    android:text="125000" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="15dp">
+
+                <Button
+                    android:id="@+id/start_caniface"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Start CAN" />
+
+                <Button
+                    android:id="@+id/start_vcaniface"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Start VCAN" />
+
+                <Button
+                    android:id="@+id/start_slcaniface"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Start SLCAN" />
+
+            </LinearLayout>
 
             <Button
                 android:id="@+id/CanUtilsAdvancedButton"
@@ -82,11 +128,11 @@
 
                 <Button
                     android:id="@+id/start_candump"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="bottom"
                     android:layout_margin="15dp"
-                    android:text="Launch candump" />
+                    android:text="CanDump" />
 
                 <Button
                     android:id="@+id/CanPlayerAdvancedButton"
@@ -103,31 +149,34 @@
                         android:saveEnabled="true"
                         android:visibility="gone">
 
-                    <EditText
-                        android:id="@+id/playfilename"
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:inputType="text"
-                        android:text="/root/candump-log/candump_log_01.log" />
+                        <EditText
+                            android:id="@+id/playfilename"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:inputType="text"
+                            android:text="/root/candump-log/candump_log_01.log" />
 
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/playfilebrowse"
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="5"
-                        android:text="..."
-                        android:textColor="#ffffffff" />
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/playfilebrowse"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="5"
+                            android:text="..."
+                            android:textColor="#ffffffff" />
 
-                    <Button
-                        android:id="@+id/start_canplayer"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="bottom"
-                        android:layout_margin="15dp"
-                        android:text="Launch canplayer" />
+                        <Button
+                            android:id="@+id/start_canplayer"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_gravity="bottom"
+                            android:layout_margin="15dp"
+                            android:text="Launch" />
+
                     </LinearLayout>
+
             </LinearLayout>
+
             <TextView
                 android:id="@+id/f_wps_viewlogger"
                 android:layout_width="match_parent"
