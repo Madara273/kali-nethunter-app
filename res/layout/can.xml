@@ -73,6 +73,30 @@
                 android:layout_margin="15dp"
                 android:text="Launch candump" />
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:orientation="horizontal">
+
+                <EditText
+                    android:id="@+id/playfilename"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:inputType="text"
+                    android:text="/root/candump-log/candump_log_01.log" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/playfilebrowse"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="5"
+                    android:text="..."
+                    android:textColor="#ffffffff" />
+
+            </LinearLayout>
+
             <Button
                 android:id="@+id/start_canplayer"
                 android:layout_width="match_parent"

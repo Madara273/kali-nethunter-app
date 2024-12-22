@@ -13,6 +13,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,7 +27,6 @@ import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.util.ArrayList;
-
 
 public class CANFragment extends Fragment {
     public static final String TAG = "CANFragment";
@@ -63,16 +63,22 @@ public class CANFragment extends Fragment {
         SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
 
+        //First run
+        Boolean setupdone = sharedpreferences.getBoolean("setup_done", false);
+        if (!setupdone.equals(true)) {
+            if (iswatch) SetupDialogWatch();
+            SetupDialog();
+        }
+
         //Start VCAN interface
         Button startvcanButton = rootView.findViewById(R.id.start_vcaniface);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
         startvcanButton.setOnClickListener(v ->  {
-            String selected_interface = SelectedIface.getText().toString();
             if (iswatch) {
                 exe.RunAsRoot(new String[]{"echo 'todo'"});
             } else exe.RunAsRoot(new String[]{"svc wifi enable"});
-            run_cmd("clear;echo 'Loading module...' && modprobe vcan && lsmod | grep vcan && " +
+            run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
                     "echo 'Creating VCAN interface...' && ip link add dev vcan0 type vcan && ip link set vcan0 mtu 72 && " +
                     "echo 'Starting VCAN interface...' && ip link set up vcan0 && ifconfig vcan0");
             //WearOS iface control is weird, hence reset is needed
@@ -82,7 +88,6 @@ public class CANFragment extends Fragment {
                         exe.RunAsRoot(new String[]{"echo 'todo'"});
                     });
                 });
-            else Toast.makeText(getActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
             activity.invalidateOptionsMenu();
         });
 
@@ -95,7 +100,7 @@ public class CANFragment extends Fragment {
             if (iswatch) {
                 exe.RunAsRoot(new String[]{"echo 'todo'"});
             } else exe.RunAsRoot(new String[]{"svc wifi enable"});
-            run_cmd("candump " + selected_interface + " -l");
+            run_cmd("candump " + selected_interface + " -f /root/candump-log/candump_log_01.log");
             //WearOS iface control is weird, hence reset is needed
             if (iswatch)
                 AsyncTask.execute(() -> {
@@ -107,16 +112,28 @@ public class CANFragment extends Fragment {
             activity.invalidateOptionsMenu();
         });
 
+        //Play File
+        final EditText playfilename = rootView.findViewById(R.id.playfilename);
+        final Button playfilebrowse = rootView.findViewById(R.id.playfilebrowse);
+
+        playfilebrowse.setOnClickListener( v -> {
+            Intent intent = new Intent();
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("log/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(Intent.createChooser(intent, "Select dump file"),1001);
+        });
+
         //Start canplayer
         Button canplayerButton = rootView.findViewById(R.id.start_canplayer);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
         canplayerButton.setOnClickListener(v ->  {
-            String selected_interface = SelectedIface.getText().toString();
+            String canplayer_playfile = playfilename.getText().toString();
             if (iswatch) {
                 exe.RunAsRoot(new String[]{"echo 'todo'"});
             } else exe.RunAsRoot(new String[]{"svc wifi enable"});
-            run_cmd("canplayer -i *.log"); //TODO : Handle output log as var
+            run_cmd("canplayer -i " + canplayer_playfile); //TODO : Handle output log as var
             //WearOS iface control is weird, hence reset is needed
             if (iswatch)
                 AsyncTask.execute(() -> {
@@ -124,7 +141,6 @@ public class CANFragment extends Fragment {
                         exe.RunAsRoot(new String[]{"echo 'todo'"});
                     });
                 });
-            else Toast.makeText(getActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
             activity.invalidateOptionsMenu();
         });
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
@@ -191,7 +207,7 @@ public class CANFragment extends Fragment {
     public void RunSetupWatch() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         run_cmd("echo -ne \"\\033]0;CAN Arsenal Setup\\007\" && clear; apt update && apt install -y libsdl2-dev libsdl2-image-dev can-utils maven autoconf && " +
-                "if [[ -f /usr/bin/candump ]]; then echo 'Can-utils is installed!'; else sudo mkdir -p /sdcard/nh_files/car_hacking; cd /sdcard/nh_files/car_hacking; sudo git clone https://github.com/v0lk3n/can-utils.git; cd /sdcard/nh_files/car_hacking/can-utils; sudo make; sudo make install;fi;" +
+                "if [[ -f /usr/bin/candump ]]; then echo 'Can-utils is installed!'; else sudo mkdir -p /root/candump-log; sudo mkdir -p /sdcard/nh_files/car_hacking; cd /sdcard/nh_files/car_hacking; sudo git clone https://github.com/v0lk3n/can-utils.git; cd /sdcard/nh_files/car_hacking/can-utils; sudo make; sudo make install;fi;" +
                 "echo 'Everything is installed! Closing in 3secs..'; sleep 3 && exit");
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }
@@ -199,7 +215,7 @@ public class CANFragment extends Fragment {
     public void RunSetup() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         run_cmd("echo -ne \"\\033]0;CAN Arsenal Setup\\007\" && clear; apt update && apt install -y libsdl2-dev libsdl2-image-dev can-utils maven autoconf && " +
-                "if [[ -f /usr/bin/candump ]]; then echo 'Can-utils is installed!'; else sudo mkdir -p /sdcard/nh_files/car_hacking; cd /sdcard/nh_files/car_hacking; sudo git clone https://github.com/v0lk3n/can-utils.git; cd /sdcard/nh_files/car_hacking/can-utils; sudo make; sudo make install;fi;" +
+                "if [[ -f /usr/bin/candump ]]; then echo 'Can-utils is installed!'; else sudo mkdir -p /root/candump-log; sudo mkdir -p /sdcard/nh_files/car_hacking; cd /sdcard/nh_files/car_hacking; sudo git clone https://github.com/v0lk3n/can-utils.git; cd /sdcard/nh_files/car_hacking/can-utils; sudo make; sudo make install;fi;" +
                 "echo 'Everything is installed!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }
