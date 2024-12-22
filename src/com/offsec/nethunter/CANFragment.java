@@ -39,6 +39,7 @@ public class CANFragment extends Fragment {
     private NhPaths nh;
     private final ShellExecuter exe = new ShellExecuter();
     private Boolean iswatch;
+    private boolean showingAdvanced;
 
     public static CANFragment newInstance(int sectionNumber) {
         CANFragment fragment = new CANFragment();
@@ -55,12 +56,29 @@ public class CANFragment extends Fragment {
         activity = getActivity();
     }
 
+    private void addClickListener(Button _button, View.OnClickListener onClickListener) {
+        _button.setOnClickListener(onClickListener);
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.can, container, false);
+        View CanUtilsView = rootView.findViewById(R.id.CanUtilsView);
+        Button CanUtilsAdvanced = rootView.findViewById(R.id.CanUtilsAdvancedButton);
+        View CanPlayerView = rootView.findViewById(R.id.CanPlayerView);
+        Button CanPlayerAdvanced = rootView.findViewById(R.id.CanPlayerAdvancedButton);
+
+        SharedPreferences sharedpreferences = context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
+        showingAdvanced = sharedpreferences.getBoolean("advanced_visible", false);
+
+        CanUtilsView.setVisibility(showingAdvanced ? View.VISIBLE : View.INVISIBLE);
+        CanUtilsAdvanced.setText("Hide CanUtils");
+
+        CanPlayerView.setVisibility(showingAdvanced ? View.VISIBLE : View.INVISIBLE);
+        CanPlayerAdvanced.setText("Hide CanPlayer");
 
         //Detecting watch
-        SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        //SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
 
         //First run
@@ -89,6 +107,21 @@ public class CANFragment extends Fragment {
                     });
                 });
             activity.invalidateOptionsMenu();
+        });
+
+        SharedPreferences finalSharedpreferences = sharedpreferences;
+        addClickListener(CanUtilsAdvanced, v -> {
+            if (!showingAdvanced) {
+                CanUtilsView.setVisibility(View.VISIBLE);
+                CanUtilsAdvanced.setText("Hide Can-Utils");
+                showingAdvanced = true;
+                finalSharedpreferences.edit().putBoolean("advanced_visible", true).apply();
+            } else {
+                CanUtilsView.setVisibility(View.GONE);
+                CanUtilsAdvanced.setText("Can-Utils");
+                showingAdvanced = false;
+                finalSharedpreferences.edit().putBoolean("advanced_visible", false).apply();
+            }
         });
 
         //Start candump
@@ -128,12 +161,26 @@ public class CANFragment extends Fragment {
         Button canplayerButton = rootView.findViewById(R.id.start_canplayer);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
+        addClickListener(CanPlayerAdvanced, v -> {
+            if (!showingAdvanced) {
+                CanPlayerView.setVisibility(View.VISIBLE);
+                CanPlayerAdvanced.setText("Hide CanPlayer");
+                showingAdvanced = true;
+                finalSharedpreferences.edit().putBoolean("advanced_visible", true).apply();
+            } else {
+                CanPlayerView.setVisibility(View.GONE);
+                CanPlayerAdvanced.setText("CanPlayer");
+                showingAdvanced = false;
+                finalSharedpreferences.edit().putBoolean("advanced_visible", false).apply();
+            }
+        });
+
         canplayerButton.setOnClickListener(v ->  {
             String canplayer_playfile = playfilename.getText().toString();
             if (iswatch) {
                 exe.RunAsRoot(new String[]{"echo 'todo'"});
             } else exe.RunAsRoot(new String[]{"svc wifi enable"});
-            run_cmd("canplayer -i " + canplayer_playfile); //TODO : Handle output log as var
+            run_cmd("canplayer -I " + canplayer_playfile);
             //WearOS iface control is weird, hence reset is needed
             if (iswatch)
                 AsyncTask.execute(() -> {

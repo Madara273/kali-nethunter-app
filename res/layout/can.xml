@@ -66,45 +66,68 @@
                 android:text="Start VCAN Interface" />
 
             <Button
-                android:id="@+id/start_candump"
-                android:layout_width="match_parent"
+                android:id="@+id/CanUtilsAdvancedButton"
+                android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:layout_margin="15dp"
-                android:text="Launch candump" />
+                android:layout_weight="1"
+                android:text="Can-Utils" />
 
             <LinearLayout
+                android:id="@+id/CanUtilsView"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:orientation="horizontal">
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:saveEnabled="true"
+                android:visibility="gone">
 
-                <EditText
-                    android:id="@+id/playfilename"
+                <Button
+                    android:id="@+id/start_candump"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:layout_margin="15dp"
+                    android:text="Launch candump" />
+
+                <Button
+                    android:id="@+id/CanPlayerAdvancedButton"
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:inputType="text"
-                    android:text="/root/candump-log/candump_log_01.log" />
+                    android:text="CanPlayer" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/playfilebrowse"
-                    android:layout_width="fill_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="5"
-                    android:text="..."
-                    android:textColor="#ffffffff" />
+                    <LinearLayout
+                        android:id="@+id/CanPlayerView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical"
+                        android:saveEnabled="true"
+                        android:visibility="gone">
 
+                    <EditText
+                        android:id="@+id/playfilename"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:inputType="text"
+                        android:text="/root/candump-log/candump_log_01.log" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/playfilebrowse"
+                        android:layout_width="fill_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="5"
+                        android:text="..."
+                        android:textColor="#ffffffff" />
+
+                    <Button
+                        android:id="@+id/start_canplayer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="bottom"
+                        android:layout_margin="15dp"
+                        android:text="Launch canplayer" />
+                    </LinearLayout>
             </LinearLayout>
-
-            <Button
-                android:id="@+id/start_canplayer"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:layout_margin="15dp"
-                android:text="Launch canplayer" />
-
             <TextView
                 android:id="@+id/f_wps_viewlogger"
                 android:layout_width="match_parent"
@@ -117,7 +140,7 @@
                 android:scrollbars="vertical"
                 android:singleLine="false"
                 android:textSize="13sp"
-                android:visibility="gone"/>
+                android:visibility="gone" />
 
         </LinearLayout>
 
