@@ -126,13 +126,34 @@
                 android:saveEnabled="true"
                 android:visibility="gone">
 
-                <Button
-                    android:id="@+id/start_candump"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="bottom"
-                    android:layout_margin="15dp"
-                    android:text="CanDump" />
+                    android:layout_gravity="center"
+                    android:orientation="horizontal"
+                    android:padding="15dp">
+
+                    <Button
+                        android:id="@+id/start_cangen"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="CanGen" />
+
+                    <Button
+                        android:id="@+id/start_cansniffer"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:text="CanSniffer" />
+
+                    <Button
+                        android:id="@+id/start_candump"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:text="CanDump" />
+
+                </LinearLayout>
 
                 <Button
                     android:id="@+id/CanPlayerAdvancedButton"
@@ -141,13 +162,20 @@
                     android:layout_weight="1"
                     android:text="CanPlayer" />
 
+                <LinearLayout
+                    android:id="@+id/CanPlayerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:saveEnabled="true"
+                    android:visibility="gone">
+
                     <LinearLayout
-                        android:id="@+id/CanPlayerView"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:orientation="vertical"
-                        android:saveEnabled="true"
-                        android:visibility="gone">
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:orientation="horizontal"
+                        android:padding="15dp">
 
                         <EditText
                             android:id="@+id/playfilename"
@@ -155,7 +183,7 @@
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:inputType="text"
-                            android:text="/root/candump-log/candump_log_01.log" />
+                            android:text="/root/candump/candump_log_01.log" />
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/playfilebrowse"
@@ -165,31 +193,26 @@
                             android:text="..."
                             android:textColor="#ffffffff" />
 
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:orientation="horizontal"
+                        android:padding="15dp">
+
                         <Button
                             android:id="@+id/start_canplayer"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_gravity="bottom"
-                            android:layout_margin="15dp"
                             android:text="Launch" />
 
                     </LinearLayout>
 
-            </LinearLayout>
+                </LinearLayout>
 
-            <TextView
-                android:id="@+id/f_wps_viewlogger"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="5dp"
-                android:alpha="100"
-                android:background="@android:color/black"
-                android:gravity="bottom"
-                android:minHeight="250dp"
-                android:scrollbars="vertical"
-                android:singleLine="false"
-                android:textSize="13sp"
-                android:visibility="gone" />
+            </LinearLayout>
 
         </LinearLayout>
 
