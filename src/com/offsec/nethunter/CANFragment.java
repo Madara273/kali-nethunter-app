@@ -248,6 +248,7 @@ public class CANFragment extends Fragment {
 
         //Start canplayer
         Button canplayerButton = rootView.findViewById(R.id.start_canplayer);
+        Button log2ascButton = rootView.findViewById(R.id.start_log2asc);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
         addClickListener(CanPlayerAdvanced, v -> {
@@ -279,6 +280,24 @@ public class CANFragment extends Fragment {
                 });
             activity.invalidateOptionsMenu();
         });
+
+        log2ascButton.setOnClickListener(v ->  {
+            String canplayer_playfile = playfilename.getText().toString();
+            String selected_interface = SelectedIface.getText().toString();
+            if (iswatch) {
+                exe.RunAsRoot(new String[]{"echo 'todo'"});
+            } else exe.RunAsRoot(new String[]{"svc wifi enable"});
+            run_cmd("log2asc -I " + canplayer_playfile + " " + selected_interface);
+            //WearOS iface control is weird, hence reset is needed
+            if (iswatch)
+                AsyncTask.execute(() -> {
+                    getActivity().runOnUiThread(() -> {
+                        exe.RunAsRoot(new String[]{"echo 'todo'"});
+                    });
+                });
+            activity.invalidateOptionsMenu();
+        });
+
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         setHasOptionsMenu(true);
         return rootView;
