@@ -218,6 +218,46 @@
 
                 </LinearLayout>
 
+            <Button
+                android:id="@+id/CanSendAdvancedButton"
+                android:layout_width="fill_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="CanSend" />
+
+            <LinearLayout
+                android:id="@+id/CanSendView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:saveEnabled="true"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:orientation="horizontal"
+                    android:padding="15dp">
+
+                    <EditText
+                        android:id="@+id/cansend_value"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:inputType="text"
+                        android:text="01a#01020304" />
+
+                    <Button
+                        android:id="@+id/start_cansend"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Launch" />
+
+                </LinearLayout>
+
+            </LinearLayout>
+
             </LinearLayout>
 
         </LinearLayout>
