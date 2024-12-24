@@ -72,6 +72,7 @@
                     android:layout_weight="2"
                     android:ems="10"
                     android:inputType="number"
+                    android:minHeight="48dp"
                     android:text="vcan0"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -98,10 +99,11 @@
                     android:id="@+id/bitrate"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="2"
                     android:layout_marginEnd="20dp"
+                    android:layout_weight="2"
                     android:ems="10"
                     android:inputType="number"
+                    android:minHeight="48dp"
                     android:text="125000"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -128,11 +130,11 @@
                     android:id="@+id/cansend_sequence"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="2"
                     android:layout_marginEnd="20dp"
-                    android:ems="10"
+                    android:ems="13"
                     android:inputType="text"
-                    android:text=""
+                    android:minHeight="48dp"
+                    android:text="01a#11223344AABBCCDD"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
             </LinearLayout>
@@ -170,6 +172,7 @@
                     android:layout_marginEnd="20dp"
                     android:layout_weight="1"
                     android:inputType="text"
+                    android:minHeight="48dp"
                     android:text="/root/candump/dump_01.log"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -178,7 +181,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
-                    android:text="..."
+                    android:text="Browse"
                     android:textColor="#ffffffff" />
 
             </LinearLayout>
