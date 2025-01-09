@@ -84,6 +84,30 @@ public class CANFragment extends Fragment {
             SetupDialog();
         }
 
+        //Input File
+        final EditText inputfilepath = rootView.findViewById(R.id.inputfilepath);
+        final Button inputfilebrowse = rootView.findViewById(R.id.inputfilebrowse);
+
+        inputfilebrowse.setOnClickListener( v -> {
+            Intent intent = new Intent();
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("log/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(Intent.createChooser(intent, "Select dump file"),1001);
+        });
+
+        //Output File
+        final EditText outputfilepath = rootView.findViewById(R.id.outputfilepath);
+        final Button outputfilebrowse = rootView.findViewById(R.id.outputfilebrowse);
+
+        outputfilebrowse.setOnClickListener( v -> {
+            Intent intent = new Intent();
+            intent.addCategory(Intent.CATEGORY_OPENABLE);
+            intent.setType("log/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            startActivityForResult(Intent.createChooser(intent, "Select dump file"),1001);
+        });
+
         //Start CAN interface
         Button startcanButton = rootView.findViewById(R.id.start_caniface);
         SelectedIface = rootView.findViewById(R.id.can_iface);
@@ -214,10 +238,11 @@ public class CANFragment extends Fragment {
 
         candumpButton.setOnClickListener(v ->  {
             String selected_interface = SelectedIface.getText().toString();
+            String outputfile = outputfilepath.getText().toString();
             if (iswatch) {
                 exe.RunAsRoot(new String[]{"echo 'todo'"});
             } else exe.RunAsRoot(new String[]{"svc wifi enable"});
-            run_cmd("candump " + selected_interface + " -f /root/candump/dump_01.log");
+            run_cmd("candump " + selected_interface + " -f " + outputfile);
             //WearOS iface control is weird, hence reset is needed
             if (iswatch)
                 AsyncTask.execute(() -> {
@@ -251,27 +276,15 @@ public class CANFragment extends Fragment {
             activity.invalidateOptionsMenu();
         });
 
-        //Play File
-        final EditText logfilepath = rootView.findViewById(R.id.logfilepath);
-        final Button logfilebrowse = rootView.findViewById(R.id.logfilebrowse);
-
-        logfilebrowse.setOnClickListener( v -> {
-            Intent intent = new Intent();
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            intent.setType("log/*");
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-            startActivityForResult(Intent.createChooser(intent, "Select dump file"),1001);
-        });
-
         //Start canplayer
         Button canplayerButton = rootView.findViewById(R.id.start_canplayer);
 
         canplayerButton.setOnClickListener(v ->  {
-            String logfile = logfilepath.getText().toString();
+            String inputfile = inputfilepath.getText().toString();
             if (iswatch) {
                 exe.RunAsRoot(new String[]{"echo 'todo'"});
             } else exe.RunAsRoot(new String[]{"svc wifi enable"});
-            run_cmd("canplayer -I " + logfile);
+            run_cmd("canplayer -I " + inputfile);
             //WearOS iface control is weird, hence reset is needed
             if (iswatch)
                 AsyncTask.execute(() -> {
@@ -310,11 +323,12 @@ public class CANFragment extends Fragment {
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
         asc2logButton.setOnClickListener(v ->  {
-            String logfile = logfilepath.getText().toString();
+            String inputfile = inputfilepath.getText().toString();
+            String outputfile = outputfilepath.getText().toString();
             if (iswatch) {
                 exe.RunAsRoot(new String[]{"echo 'todo'"});
             } else exe.RunAsRoot(new String[]{"svc wifi enable"});
-            run_cmd("asc2log -I " + logfile);
+            run_cmd("asc2log -I " + inputfile + " -O " + outputfile);
             //WearOS iface control is weird, hence reset is needed
             if (iswatch)
                 AsyncTask.execute(() -> {
@@ -330,12 +344,13 @@ public class CANFragment extends Fragment {
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
         log2ascButton.setOnClickListener(v ->  {
-            String logfile = logfilepath.getText().toString();
+            String inputfile = inputfilepath.getText().toString();
+            String outputfile = outputfilepath.getText().toString();
             String selected_interface = SelectedIface.getText().toString();
             if (iswatch) {
                 exe.RunAsRoot(new String[]{"echo 'todo'"});
             } else exe.RunAsRoot(new String[]{"svc wifi enable"});
-            run_cmd("log2asc -I " + logfile + " " + selected_interface);
+            run_cmd("log2asc -I " + inputfile + " -O " + outputfile + " " + selected_interface);
             //WearOS iface control is weird, hence reset is needed
             if (iswatch)
                 AsyncTask.execute(() -> {
