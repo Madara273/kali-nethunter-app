@@ -151,29 +151,19 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    android:layout_weight="3"
-                    android:text="Input File :"
+                    android:layout_weight="50"
+                    android:text="Input :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:orientation="horizontal">
 
                 <EditText
                     android:id="@+id/inputfilepath"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="25dp"
                     android:layout_marginEnd="20dp"
-                    android:layout_weight="1"
                     android:inputType="text"
                     android:minHeight="48dp"
-                    android:text="/root/candump/dump_01.log"
+                    android:text="/root/candump/dump01.log"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <com.google.android.material.button.MaterialButton
@@ -198,26 +188,15 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    android:layout_weight="3"
-                    android:text="Output File :"
+                    android:layout_weight="50"
+                    android:text="Output :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:orientation="horizontal">
 
                 <EditText
                     android:id="@+id/outputfilepath"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="25dp"
                     android:layout_marginEnd="20dp"
-                    android:layout_weight="1"
                     android:inputType="text"
                     android:minHeight="48dp"
                     android:text="/root/candump/dump_01.log"
@@ -255,27 +234,34 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="50dp"
+                android:layout_marginStart="20dp"
                 android:orientation="horizontal"
-                android:padding="15dp">
+                android:padding="10dp">
 
                 <Button
                     android:id="@+id/start_caniface"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Start CAN" />
+                    android:text="▶ CAN" />
 
                 <Button
                     android:id="@+id/start_vcaniface"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Start VCAN" />
+                    android:text="▶ VCAN" />
 
                 <Button
                     android:id="@+id/start_slcaniface"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Start SLCAN" />
+                    android:src="@drawable/ic_action_play"
+                    android:text="▶ SLCAN" />
+
+                <Button
+                    android:id="@+id/attach_slcaniface"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="🔗 SLCAN" />
 
             </LinearLayout>
 
