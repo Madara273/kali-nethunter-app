@@ -12,8 +12,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -26,6 +29,7 @@ import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
+import java.io.File;
 import java.util.ArrayList;
 
 public class CANFragment extends Fragment {
@@ -33,6 +37,7 @@ public class CANFragment extends Fragment {
     private static final String ARG_SECTION_NUMBER = "section_number";
     private TextView SelectedIface;
     private TextView SelectedBitrate;
+    private int selectedprompt_bitrate;
     private final ArrayList<String> arrayList = new ArrayList<>();
     private SharedPreferences sharedpreferences;
     private Context context;
@@ -83,6 +88,38 @@ public class CANFragment extends Fragment {
             if (iswatch) SetupDialogWatch();
             SetupDialog();
         }
+
+        // Prompt spinner for bitrate selection
+        Spinner bitrateSpinner = rootView.findViewById(R.id.bitrate_spinner);
+        String[] bitrateOptions = new String[]{"0 - 10 Kbit/s", "1 - 20 Kbit/s", "2 - 50 Kbit/s", "3 - 100 Kbit/s", "4 - 125 Kbit/s", "5 - 250 Kbit/s", "6 - 500 Kbit/s", "7 - 800 Kbit/s", "8 - 1000 Kbit/s"};
+
+        // Set up the adapter
+        ArrayAdapter<String> bitrateAdapter = new ArrayAdapter<>(requireContext(),
+                android.R.layout.simple_list_item_1, bitrateOptions);
+        bitrateSpinner.setAdapter(bitrateAdapter);
+
+        // Handle item selection
+        bitrateSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                // Get the selected item and extract the numeric value
+                String selectedItem = parentView.getItemAtPosition(pos).toString();
+                String[] parts = selectedItem.split(" - ");
+                String selectedBitrate = parts[0]; // The numeric part of the selection (e.g., "0", "1", "3")
+
+                // You now have the selected bitrate number
+                int bitrateValue = Integer.parseInt(selectedBitrate);
+
+                // Store or use the selected bitrate value
+                // For example, saving it to a variable or performing other actions
+                selectedprompt_bitrate = bitrateValue;  // This stores the numeric part
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+                // Handle case where no item is selected (optional)
+            }
+        });
 
         //Input File
         final EditText inputfilepath = rootView.findViewById(R.id.inputfilepath);
@@ -159,11 +196,12 @@ public class CANFragment extends Fragment {
 
         startslcanButton.setOnClickListener(v ->  {
             String selected_bitrate = SelectedBitrate.getText().toString();
+            String prompt_bitrate = String.valueOf(selectedprompt_bitrate);
             if (iswatch) {
                 exe.RunAsRoot(new String[]{"echo 'todo'"});
             } else exe.RunAsRoot(new String[]{"svc wifi enable"});
             run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
-                    "echo 'Creating SLCAN interface...' && sudo slcand -o -s8 -t hw -S " + selected_bitrate + " /dev/ttyUSB0 && " +
+                    "echo 'Creating SLCAN interface...' && sudo slcand -o -s" + prompt_bitrate + " -t hw -S " + selected_bitrate + " /dev/ttyUSB0 && " +
                     "echo 'Starting SLCAN interface...' && sudo ip link set up slcan0");
             //WearOS iface control is weird, hence reset is needed
             if (iswatch)

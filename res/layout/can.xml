@@ -61,7 +61,7 @@
                     android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
                     android:layout_weight="3"
-                    android:text="CAN interface:"
+                    android:text="CAN interface :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <EditText
@@ -90,9 +90,17 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    android:layout_weight="3"
+                    android:layout_marginEnd="10dp"
+                    android:layout_weight="10"
                     android:text="Bitrate :"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                <Spinner
+                    android:id="@+id/bitrate_spinner"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:dropDownWidth="wrap_content"
+                    android:saveEnabled="false"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <EditText
@@ -163,7 +171,7 @@
                     android:layout_marginEnd="20dp"
                     android:inputType="text"
                     android:minHeight="48dp"
-                    android:text="/root/candump/dump01.log"
+                    android:text="/root/candump/in_01.log"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <com.google.android.material.button.MaterialButton
@@ -199,7 +207,7 @@
                     android:layout_marginEnd="20dp"
                     android:inputType="text"
                     android:minHeight="48dp"
-                    android:text="/root/candump/dump_01.log"
+                    android:text="/root/candump/out_01.log"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <com.google.android.material.button.MaterialButton
@@ -211,6 +219,12 @@
                     android:textColor="#ffffffff" />
 
             </LinearLayout>
+
+            <View
+                android:id="@+id/divider3"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -264,6 +278,12 @@
                     android:text="🔗 SLCAN" />
 
             </LinearLayout>
+
+            <View
+                android:id="@+id/divider4"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -363,6 +383,12 @@
 
                 </LinearLayout>
 
+                <View
+                    android:id="@+id/divider5"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?android:attr/listDivider" />
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -404,6 +430,12 @@
                         android:text="Log2Asc" />
 
                 </LinearLayout>
+
+                <View
+                    android:id="@+id/divider6"
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:background="?android:attr/listDivider" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -453,6 +485,13 @@
                 </LinearLayout>
 
             </LinearLayout>
+
+            <View
+                android:id="@+id/divider7"
+                android:layout_marginTop="20dp"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
 
         </LinearLayout>
 
