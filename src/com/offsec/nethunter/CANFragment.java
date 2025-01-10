@@ -4,8 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Bundle;
-import android.widget.Switch;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,6 +17,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -427,6 +428,36 @@ public class CANFragment extends Fragment {
             String sequence = customcmd.getText().toString();
             run_cmd(sequence);
             activity.invalidateOptionsMenu();
+        });
+
+        //Author Contact
+        // 𝕏
+        Button authorXButton = rootView.findViewById(R.id.author_x);
+        authorXButton.setOnClickListener(v -> {
+            String url = "https://x.com/v0lk3n";
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
+        });
+        // Discord
+        Button authorDiscordButton = rootView.findViewById(R.id.author_discord);
+        authorDiscordButton.setOnClickListener(v -> {
+            String url = "https://discord.com/users/343776454762430484";
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
+        });
+        // GitHub
+        Button authorGitHubButton = rootView.findViewById(R.id.author_github);
+        authorGitHubButton.setOnClickListener(v -> {
+            String url = "https://github.com/V0lk3n";
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
+        });
+        // GitLab
+        Button authorGitLabButton = rootView.findViewById(R.id.author_gitlab);
+        authorGitLabButton.setOnClickListener(v -> {
+            String url = "https://gitlab.com/V0lk3n";
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
         });
 
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
