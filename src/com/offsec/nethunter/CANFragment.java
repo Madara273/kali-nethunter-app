@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.widget.Switch;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -38,6 +39,8 @@ public class CANFragment extends Fragment {
     private TextView SelectedIface;
     private TextView SelectedBitrate;
     private int selectedprompt_bitrate;
+    private TextView SelectedMtu;
+    private String flow_control = "hw"; // Default value
     private final ArrayList<String> arrayList = new ArrayList<>();
     private SharedPreferences sharedpreferences;
     private Context context;
@@ -74,6 +77,15 @@ public class CANFragment extends Fragment {
 
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         showingAdvanced = sharedpreferences.getBoolean("advanced_visible", false);
+
+        // Find the Switch view by ID
+        Switch flowControlSwitch = rootView.findViewById(R.id.flow_control_switch);
+
+        // Set the OnCheckedChangeListener for the Switch
+        flowControlSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            // Change the flow_control variable based on the switch state
+            flow_control = isChecked ? "sw" : "hw";
+        });
 
         CanUtilsView.setVisibility(showingAdvanced ? View.VISIBLE : View.INVISIBLE);
         CanUtilsAdvanced.setText("Can-Utils");
@@ -171,13 +183,15 @@ public class CANFragment extends Fragment {
         //Start VCAN interface
         Button startvcanButton = rootView.findViewById(R.id.start_vcaniface);
         SelectedIface = rootView.findViewById(R.id.can_iface);
+        SelectedMtu = rootView.findViewById(R.id.mtu);
 
         startvcanButton.setOnClickListener(v ->  {
+            String selected_mtu = SelectedMtu.getText().toString();
             if (iswatch) {
                 exe.RunAsRoot(new String[]{"echo 'todo'"});
             } else exe.RunAsRoot(new String[]{"svc wifi enable"});
             run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
-                    "echo 'Creating VCAN interface...' && ip link add dev vcan0 type vcan && ip link set vcan0 mtu 72 && " +
+                    "echo 'Creating VCAN interface...' && ip link add dev vcan0 type vcan && ip link set vcan0 mtu " + selected_mtu + " && " +
                     "echo 'Starting VCAN interface...' && ip link set up vcan0 && ifconfig vcan0");
             //WearOS iface control is weird, hence reset is needed
             if (iswatch)
@@ -201,7 +215,7 @@ public class CANFragment extends Fragment {
                 exe.RunAsRoot(new String[]{"echo 'todo'"});
             } else exe.RunAsRoot(new String[]{"svc wifi enable"});
             run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
-                    "echo 'Creating SLCAN interface...' && sudo slcand -o -s" + prompt_bitrate + " -t hw -S " + selected_bitrate + " /dev/ttyUSB0 && " +
+                    "echo 'Creating SLCAN interface...' && sudo slcand -o -s" + prompt_bitrate + " -t " + flow_control + " -S " + selected_bitrate + " /dev/ttyUSB0 && " +
                     "echo 'Starting SLCAN interface...' && sudo ip link set up slcan0");
             //WearOS iface control is weird, hence reset is needed
             if (iswatch)
@@ -226,7 +240,7 @@ public class CANFragment extends Fragment {
             } else exe.RunAsRoot(new String[]{"svc wifi enable"});
             run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
                     "echo 'Creating SLCAN interface...' && sudo slcan_attach /dev/ttyUSB0 -w && " +
-                    "echo 'Starting SLCAN interface...' && sudo ip link set " + selected_iface + " type can bitrate " + selected_bitrate + " restart-ms 500;sudo ip link set up " + selected_iface + " up");
+                    "echo 'Starting SLCAN interface...' && sudo ip link set " + selected_iface + " type can bitrate " + selected_bitrate + " restart-ms 500 && sudo ip link set up " + selected_iface);
             //WearOS iface control is weird, hence reset is needed
             if (iswatch)
                 AsyncTask.execute(() -> {
