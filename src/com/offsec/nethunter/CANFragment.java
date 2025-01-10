@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.widget.Switch;
 import android.view.LayoutInflater;
@@ -27,12 +26,9 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.offsec.nethunter.bridge.Bridge;
-import com.offsec.nethunter.utils.NhPaths;
-import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.util.Map;
 import java.util.HashMap;
-import java.util.ArrayList;
 
 public class CANFragment extends Fragment {
     public static final String TAG = "CANFragment";
@@ -45,8 +41,6 @@ public class CANFragment extends Fragment {
     private SharedPreferences sharedpreferences;
     private Context context;
     private static Activity activity;
-    private final ShellExecuter exe = new ShellExecuter();
-    private Boolean iswatch;
     private boolean showingAdvanced;
 
     public static CANFragment newInstance(int sectionNumber) {
@@ -395,7 +389,6 @@ public class CANFragment extends Fragment {
         cansplitButton.setOnClickListener(v ->  {
             String selected_interface = SelectedIface.getText().toString();
             run_cmd("echo 'script todo'");
-            //WearOS iface control is weird, hence reset is needed
             Toast.makeText(getActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
             activity.invalidateOptionsMenu();
         });
@@ -450,7 +443,7 @@ public class CANFragment extends Fragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.setup:
-                SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+                sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
                 RunSetup();
                 return true;
             case R.id.update:
