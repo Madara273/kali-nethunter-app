@@ -329,9 +329,9 @@
             </LinearLayout>
 
             <LinearLayout
+                android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
                 android:orientation="horizontal"
                 android:padding="10dp">
 
@@ -405,10 +405,9 @@
                 android:visibility="gone">
 
                 <LinearLayout
+                    android:gravity="center"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="15dp"
-                    android:layout_marginEnd="15dp"
                     android:layout_gravity="center"
                     android:orientation="horizontal"
                     android:padding="15dp">
@@ -442,10 +441,9 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:gravity="center"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="15dp"
-                    android:layout_marginEnd="15dp"
                     android:layout_gravity="center"
                     android:orientation="horizontal"
                     android:padding="15dp">
@@ -492,10 +490,9 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:gravity="center"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="15dp"
-                    android:layout_marginEnd="15dp"
                     android:layout_gravity="center"
                     android:orientation="horizontal"
                     android:padding="15dp">
@@ -596,41 +593,79 @@
             </LinearLayout>
 
             <LinearLayout
+                android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:orientation="horizontal">
 
                 <Button
-                    android:id="@+id/author_x"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/author_website"
+                    android:layout_width="50dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
+                    android:drawableLeft="@drawable/ic_website" />
+
+                <Button
+                    android:id="@+id/author_x"
+                    android:layout_width="50dp"
+                    android:layout_height="wrap_content"
                     android:text="𝕏" />
 
                 <Button
+                    android:id="@+id/author_bluesky"
+                    android:layout_width="50dp"
+                    android:layout_height="wrap_content"
+                    android:drawableLeft="@drawable/ic_bluesky" />
+
+                <Button
+                    android:id="@+id/author_mastodon"
+                    android:layout_width="50dp"
+                    android:layout_height="wrap_content"
+                    android:drawableLeft="@drawable/ic_mastodon" />
+
+                <Button
                     android:id="@+id/author_discord"
-                    android:layout_width="wrap_content"
+                    android:layout_width="50dp"
                     android:layout_height="wrap_content"
                     android:drawableLeft="@drawable/ic_discord" />
 
                 <Button
                     android:id="@+id/author_github"
-                    android:layout_width="wrap_content"
+                    android:layout_width="50dp"
                     android:layout_height="wrap_content"
                     android:drawableLeft="@drawable/ic_github" />
 
                 <Button
                     android:id="@+id/author_gitlab"
-                    android:layout_width="wrap_content"
+                    android:layout_width="50dp"
                     android:layout_height="wrap_content"
                     android:drawableLeft="@drawable/ic_gitlab" />
 
             </LinearLayout>
 
+            <LinearLayout
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <TextView
+                    android:gravity="center"
+                    android:id="@+id/textView13"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="20dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:text="Made with ♥ by V0lk3n"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+            </LinearLayout>
+
             <View
                 android:id="@+id/divider8"
-                android:layout_marginTop="20dp"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="?android:attr/listDivider" />

@@ -431,10 +431,31 @@ public class CANFragment extends Fragment {
         });
 
         //Author Contact
+        // Website
+        Button authorWebsiteButton = rootView.findViewById(R.id.author_website);
+        authorWebsiteButton.setOnClickListener(v -> {
+            String url = "https://v0lk3n.github.io";
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
+        });
         // 𝕏
         Button authorXButton = rootView.findViewById(R.id.author_x);
         authorXButton.setOnClickListener(v -> {
             String url = "https://x.com/v0lk3n";
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
+        });
+        // BlueSky
+        Button authorBlueskyButton = rootView.findViewById(R.id.author_bluesky);
+        authorBlueskyButton.setOnClickListener(v -> {
+            String url = "https://bsky.app/profile/v0lk3n.bsky.social";
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
+        });
+        // Mastodon
+        Button authorMastodonButton = rootView.findViewById(R.id.author_mastodon);
+        authorMastodonButton.setOnClickListener(v -> {
+            String url = "https://infosec.exchange/@v0lk3n";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
