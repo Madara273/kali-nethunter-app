@@ -30,6 +30,9 @@ import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
+import java.util.Map;
+import java.util.HashMap;
+
 import java.io.File;
 import java.util.ArrayList;
 
@@ -157,97 +160,199 @@ public class CANFragment extends Fragment {
             startActivityForResult(Intent.createChooser(intent, "Select dump file"),1001);
         });
 
+        // Create a map to store states for each button
+        Map<String, Boolean> buttonStates = new HashMap<>();
+
         //Start CAN interface
         Button startcanButton = rootView.findViewById(R.id.start_caniface);
         SelectedIface = rootView.findViewById(R.id.can_iface);
         SelectedBitrate = rootView.findViewById(R.id.bitrate);
 
-        startcanButton.setOnClickListener(v ->  {
+        // Initialize button state if not present in the map
+        if (!buttonStates.containsKey("start_caniface")) {
+            buttonStates.put("start_caniface", false); // False means not started
+        }
+
+        startcanButton.setOnClickListener(v -> {
+            String selected_caniface = SelectedIface.getText().toString();
             String selected_bitrate = SelectedBitrate.getText().toString();
-            if (iswatch) {
-                exe.RunAsRoot(new String[]{"echo 'todo'"});
-            } else exe.RunAsRoot(new String[]{"svc wifi enable"});
-            run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
-                    "echo 'Creating CAN interface...' && sudo ip link set can0 type can bitrate " + selected_bitrate + " && " +
-                    "echo 'Starting CAN interface...' && sudo ip link set up can0 && ifconfig can0");
-            //WearOS iface control is weird, hence reset is needed
-            if (iswatch)
-                AsyncTask.execute(() -> {
-                    getActivity().runOnUiThread(() -> {
-                        exe.RunAsRoot(new String[]{"echo 'todo'"});
+
+            // Retrieve the current state from the map
+            boolean isStarted = buttonStates.get("start_caniface");
+
+            if (isStarted) {
+                // If started, stop the CAN interface
+                run_cmd("echo 'Stopping CAN interface...' && sudo ip link set " + selected_caniface + " down");
+                buttonStates.put("start_caniface", false); // Mark as stopped
+
+                // Change button text to indicate stop action
+                startcanButton.setText("▶ CAN");
+
+            } else {
+                // If not started, start the CAN interface
+                if (iswatch) {
+                    exe.RunAsRoot(new String[]{"echo 'todo'"});
+                } else {
+                    exe.RunAsRoot(new String[]{"svc wifi enable"});
+                }
+                run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
+                        "echo 'Creating CAN interface...' && sudo ip link set " + selected_caniface + " type can bitrate " + selected_bitrate + " && " +
+                        "echo 'Starting CAN interface...' && sudo ip link set up " + selected_caniface + " && ifconfig " + selected_caniface);
+
+                // WearOS iface control workaround
+                if (iswatch) {
+                    AsyncTask.execute(() -> {
+                        getActivity().runOnUiThread(() -> {
+                            exe.RunAsRoot(new String[]{"echo 'todo'"});
+                        });
                     });
-                });
+                }
+
+                buttonStates.put("start_caniface", true); // Mark as started
+
+                // Change button text to indicate start action
+                startcanButton.setText("⏹ CAN");
+            }
+
+            // Update options menu or any other UI updates if needed
             activity.invalidateOptionsMenu();
         });
 
-        //Start VCAN interface
+        // Start VCAN interface
         Button startvcanButton = rootView.findViewById(R.id.start_vcaniface);
         SelectedIface = rootView.findViewById(R.id.can_iface);
         SelectedMtu = rootView.findViewById(R.id.mtu);
 
-        startvcanButton.setOnClickListener(v ->  {
+        // Initialize button state if not present in the map
+        if (!buttonStates.containsKey("start_vcaniface")) {
+            buttonStates.put("start_vcaniface", false); // False means not started
+        }
+
+        startvcanButton.setOnClickListener(v -> {
+            String selected_caniface = SelectedIface.getText().toString();
             String selected_mtu = SelectedMtu.getText().toString();
-            if (iswatch) {
-                exe.RunAsRoot(new String[]{"echo 'todo'"});
-            } else exe.RunAsRoot(new String[]{"svc wifi enable"});
-            run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
-                    "echo 'Creating VCAN interface...' && ip link add dev vcan0 type vcan && ip link set vcan0 mtu " + selected_mtu + " && " +
-                    "echo 'Starting VCAN interface...' && ip link set up vcan0 && ifconfig vcan0");
-            //WearOS iface control is weird, hence reset is needed
-            if (iswatch)
-                AsyncTask.execute(() -> {
-                    getActivity().runOnUiThread(() -> {
-                        exe.RunAsRoot(new String[]{"echo 'todo'"});
-                    });
-                });
+
+            // Retrieve the current state from the map
+            boolean isStarted = buttonStates.get("start_vcaniface");
+
+            if (isStarted) {
+                // If started, stop the VCAN interface
+                run_cmd("echo 'Stopping VCAN interface...' && sudo ip link set " + selected_caniface + " down");
+                buttonStates.put("start_vcaniface", false); // Mark as stopped
+
+                // Change button text to indicate stop action
+                startvcanButton.setText("▶ VCAN");
+
+            } else {
+                // If not started, start the VCAN interface
+                if (iswatch) {
+                    exe.RunAsRoot(new String[]{"echo 'todo'"});
+                } else {
+                    exe.RunAsRoot(new String[]{"svc wifi enable"});
+                }
+                run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
+                        "echo 'Creating VCAN interface...' && ip link add dev " + selected_caniface + " type vcan && ip link set " + selected_caniface + " mtu " + selected_mtu + " && " +
+                        "echo 'Starting VCAN interface...' && ip link set up " + selected_caniface + " && ifconfig " + selected_caniface);
+
+                buttonStates.put("start_vcaniface", true); // Mark as started
+
+                // Change button text to indicate start action
+                startvcanButton.setText("⏹ VCAN");
+            }
+
+            // Update options menu or any other UI updates if needed
             activity.invalidateOptionsMenu();
         });
 
-        //Start SLCAN interface
+        // Start SLCAN interface
         Button startslcanButton = rootView.findViewById(R.id.start_slcaniface);
         SelectedIface = rootView.findViewById(R.id.can_iface);
         SelectedBitrate = rootView.findViewById(R.id.bitrate);
 
-        startslcanButton.setOnClickListener(v ->  {
+        // Initialize button state if not present in the map
+        if (!buttonStates.containsKey("start_slcaniface")) {
+            buttonStates.put("start_slcaniface", false); // False means not started
+        }
+
+        startslcanButton.setOnClickListener(v -> {
+            String selected_caniface = SelectedIface.getText().toString();
             String selected_bitrate = SelectedBitrate.getText().toString();
             String prompt_bitrate = String.valueOf(selectedprompt_bitrate);
-            if (iswatch) {
-                exe.RunAsRoot(new String[]{"echo 'todo'"});
-            } else exe.RunAsRoot(new String[]{"svc wifi enable"});
-            run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
-                    "echo 'Creating SLCAN interface...' && sudo slcand -o -s" + prompt_bitrate + " -t " + flow_control + " -S " + selected_bitrate + " /dev/ttyUSB0 && " +
-                    "echo 'Starting SLCAN interface...' && sudo ip link set up slcan0");
-            //WearOS iface control is weird, hence reset is needed
-            if (iswatch)
-                AsyncTask.execute(() -> {
-                    getActivity().runOnUiThread(() -> {
-                        exe.RunAsRoot(new String[]{"echo 'todo'"});
-                    });
-                });
+
+            // Retrieve the current state from the map
+            boolean isStarted = buttonStates.get("start_slcaniface");
+
+            if (isStarted) {
+                // If started, stop the SLCAN interface
+                run_cmd("echo 'Stopping SLCAN interface...' && sudo ip link set " + selected_caniface + " down");
+                buttonStates.put("start_slcaniface", false); // Mark as stopped
+
+                // Change button text to indicate stop action
+                startslcanButton.setText("▶ SLCAN");
+
+            } else {
+                // If not started, start the SLCAN interface
+                if (iswatch) {
+                    exe.RunAsRoot(new String[]{"echo 'todo'"});
+                } else {
+                    exe.RunAsRoot(new String[]{"svc wifi enable"});
+                }
+                run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
+                        "echo 'Creating SLCAN interface...' && sudo slcand -o -s" + prompt_bitrate + " -t " + flow_control + " -S " + selected_bitrate + " /dev/ttyUSB0 && " +
+                        "echo 'Starting SLCAN interface...' && sudo ip link set up " + selected_caniface);
+
+                buttonStates.put("start_slcaniface", true); // Mark as started
+
+                // Change button text to indicate start action
+                startslcanButton.setText("⏹ SLCAN");
+            }
+
+            // Update options menu or any other UI updates if needed
             activity.invalidateOptionsMenu();
         });
 
-        //Attach SLCAN interface
+        // Attach SLCAN interface
         Button attachslcanButton = rootView.findViewById(R.id.attach_slcaniface);
         SelectedIface = rootView.findViewById(R.id.can_iface);
         SelectedBitrate = rootView.findViewById(R.id.bitrate);
 
-        attachslcanButton.setOnClickListener(v ->  {
-            String selected_iface = SelectedIface.getText().toString();
+        // Initialize button state if not present in the map
+        if (!buttonStates.containsKey("attach_slcaniface")) {
+            buttonStates.put("attach_slcaniface", false); // False means not started
+        }
+
+        attachslcanButton.setOnClickListener(v -> {
+            String selected_caniface = SelectedIface.getText().toString();
             String selected_bitrate = SelectedBitrate.getText().toString();
-            if (iswatch) {
-                exe.RunAsRoot(new String[]{"echo 'todo'"});
-            } else exe.RunAsRoot(new String[]{"svc wifi enable"});
-            run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
-                    "echo 'Creating SLCAN interface...' && sudo slcan_attach /dev/ttyUSB0 -w && " +
-                    "echo 'Starting SLCAN interface...' && sudo ip link set " + selected_iface + " type can bitrate " + selected_bitrate + " restart-ms 500 && sudo ip link set up " + selected_iface);
-            //WearOS iface control is weird, hence reset is needed
-            if (iswatch)
-                AsyncTask.execute(() -> {
-                    getActivity().runOnUiThread(() -> {
-                        exe.RunAsRoot(new String[]{"echo 'todo'"});
-                    });
-                });
+
+            // Retrieve the current state from the map
+            boolean isStarted = buttonStates.get("attach_slcaniface");
+
+            if (isStarted) {
+                // If started, detach the SLCAN interface
+                run_cmd("echo 'Detaching SLCAN interface...' && sudo ip link set " + selected_caniface + " down");
+                buttonStates.put("attach_slcaniface", false); // Mark as stopped
+
+                // Change button text to indicate stop action
+                attachslcanButton.setText("🔗 SLCAN");
+
+            } else {
+                // If not started, attach the SLCAN interface
+                if (iswatch) {
+                    exe.RunAsRoot(new String[]{"echo 'todo'"});
+                } else {
+                    exe.RunAsRoot(new String[]{"svc wifi enable"});
+                }
+                run_cmd("clear;echo 'Creating SLCAN interface...' && sudo slcan_attach /dev/ttyUSB0 -w && " +
+                        "echo 'Starting SLCAN interface...' && sudo ip link set " + selected_caniface + " type can bitrate " + selected_bitrate + " restart-ms 500 && sudo ip link set up " + selected_caniface);
+
+                buttonStates.put("attach_slcaniface", true); // Mark as started
+
+                // Change button text to indicate start action
+                attachslcanButton.setText("🔗‍💥 SLCAN");
+            }
+
+            // Update options menu or any other UI updates if needed
             activity.invalidateOptionsMenu();
         });
 
