@@ -494,6 +494,10 @@ public class CANFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.documentation:
+                sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+                RunDocumentation();
+                return true;
             case R.id.setup:
                 sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
                 RunSetup();
@@ -521,6 +525,12 @@ public class CANFragment extends Fragment {
             sharedpreferences.edit().putBoolean("setup_done", true).apply();
         });
         builder.show();
+    }
+
+    public void RunDocumentation() {
+        String url = "https://github.com/V0lk3n/NetHunter-CANArsenal";
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+        activity.startActivity(intent);
     }
 
     public void RunSetup() {
