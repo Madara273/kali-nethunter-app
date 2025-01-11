@@ -35,14 +35,13 @@ public class CANFragment extends Fragment {
     public static final String TAG = "CANFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
     private TextView SelectedIface;
-    private TextView SelectedBitrate;
+    private TextView SelectedUartSpeed;
     private TextView SelectedMtu;
-    private int selectedprompt_bitrate;
+    private int SelectedCanSpeed;
     private String flow_control = "hw"; // Default value
     private SharedPreferences sharedpreferences;
     private Context context;
     private static Activity activity;
-    private boolean showingAdvanced;
 
     public static CANFragment newInstance(int sectionNumber) {
         CANFragment fragment = new CANFragment();
@@ -59,16 +58,11 @@ public class CANFragment extends Fragment {
         activity = getActivity();
     }
 
-    private void addClickListener(Button _button, View.OnClickListener onClickListener) {
-        _button.setOnClickListener(onClickListener);
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.can, container, false);
 
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        showingAdvanced = sharedpreferences.getBoolean("advanced_visible", false);
 
         // Find the Switch view by ID
         Switch flowControlSwitch = rootView.findViewById(R.id.flow_control_switch);
@@ -86,29 +80,29 @@ public class CANFragment extends Fragment {
         }
 
         // Prompt spinner for bitrate selection
-        Spinner bitrateSpinner = rootView.findViewById(R.id.bitrate_spinner);
+        Spinner CanSpeedSpinner = rootView.findViewById(R.id.canspeed_spinner);
         String[] bitrateOptions = new String[]{"0 - 10 Kbit/s", "1 - 20 Kbit/s", "2 - 50 Kbit/s", "3 - 100 Kbit/s", "4 - 125 Kbit/s", "5 - 250 Kbit/s", "6 - 500 Kbit/s", "7 - 800 Kbit/s", "8 - 1000 Kbit/s"};
 
         // Set up the adapter
         ArrayAdapter<String> bitrateAdapter = new ArrayAdapter<>(requireContext(),
                 android.R.layout.simple_list_item_1, bitrateOptions);
-        bitrateSpinner.setAdapter(bitrateAdapter);
+        CanSpeedSpinner.setAdapter(bitrateAdapter);
 
         // Handle item selection
-        bitrateSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        CanSpeedSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
                 // Get the selected item and extract the numeric value
                 String selectedItem = parentView.getItemAtPosition(pos).toString();
                 String[] parts = selectedItem.split(" - ");
-                String selectedBitrate = parts[0]; // The numeric part of the selection (e.g., "0", "1", "3")
+                String selectedCanSpeed = parts[0]; // The numeric part of the selection (e.g., "0", "1", "3")
 
                 // You now have the selected bitrate number
-                int bitrateValue = Integer.parseInt(selectedBitrate);
+                int CanSpeed = Integer.parseInt(selectedCanSpeed);
 
                 // Store or use the selected bitrate value
                 // For example, saving it to a variable or performing other actions
-                selectedprompt_bitrate = bitrateValue;  // This stores the numeric part
+                SelectedCanSpeed = CanSpeed;  // This stores the numeric part
             }
 
             @Override
@@ -145,18 +139,18 @@ public class CANFragment extends Fragment {
         Map<String, Boolean> buttonStates = new HashMap<>();
 
         //Start CAN interface
-        Button startcanButton = rootView.findViewById(R.id.start_caniface);
+        Button StartCanButton = rootView.findViewById(R.id.start_caniface);
         SelectedIface = rootView.findViewById(R.id.can_iface);
-        SelectedBitrate = rootView.findViewById(R.id.bitrate);
+        SelectedUartSpeed = rootView.findViewById(R.id.uart_speed);
 
         // Initialize button state if not present in the map
         if (!buttonStates.containsKey("start_caniface")) {
             buttonStates.put("start_caniface", false); // False means not started
         }
 
-        startcanButton.setOnClickListener(v -> {
+        StartCanButton.setOnClickListener(v -> {
             String selected_caniface = SelectedIface.getText().toString();
-            String selected_bitrate = SelectedBitrate.getText().toString();
+            String selected_uartspeed = SelectedUartSpeed.getText().toString();
 
             // Retrieve the current state from the map
             boolean isStarted = buttonStates.get("start_caniface");
@@ -167,17 +161,17 @@ public class CANFragment extends Fragment {
                 buttonStates.put("start_caniface", false); // Mark as stopped
 
                 // Change button text to indicate stop action
-                startcanButton.setText("▶ CAN");
+                StartCanButton.setText("▶ CAN");
 
             } else {
                 run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
-                        "echo 'Creating CAN interface...' && sudo ip link set " + selected_caniface + " type can bitrate " + selected_bitrate + " && " +
+                        "echo 'Creating CAN interface...' && sudo ip link set " + selected_caniface + " type can bitrate " + selected_uartspeed + " && " +
                         "echo 'Starting CAN interface...' && sudo ip link set up " + selected_caniface + " && ifconfig " + selected_caniface);
 
                 buttonStates.put("start_caniface", true); // Mark as started
 
                 // Change button text to indicate start action
-                startcanButton.setText("⏹ CAN");
+                StartCanButton.setText("⏹ CAN");
             }
 
             // Update options menu or any other UI updates if needed
@@ -185,7 +179,7 @@ public class CANFragment extends Fragment {
         });
 
         // Start VCAN interface
-        Button startvcanButton = rootView.findViewById(R.id.start_vcaniface);
+        Button StartVCanButton = rootView.findViewById(R.id.start_vcaniface);
         SelectedIface = rootView.findViewById(R.id.can_iface);
         SelectedMtu = rootView.findViewById(R.id.mtu);
 
@@ -194,7 +188,7 @@ public class CANFragment extends Fragment {
             buttonStates.put("start_vcaniface", false); // False means not started
         }
 
-        startvcanButton.setOnClickListener(v -> {
+        StartVCanButton.setOnClickListener(v -> {
             String selected_caniface = SelectedIface.getText().toString();
             String selected_mtu = SelectedMtu.getText().toString();
 
@@ -207,7 +201,7 @@ public class CANFragment extends Fragment {
                 buttonStates.put("start_vcaniface", false); // Mark as stopped
 
                 // Change button text to indicate stop action
-                startvcanButton.setText("▶ VCAN");
+                StartVCanButton.setText("▶ VCAN");
 
             } else {
                 // If not started, start the VCAN interface
@@ -218,7 +212,7 @@ public class CANFragment extends Fragment {
                 buttonStates.put("start_vcaniface", true); // Mark as started
 
                 // Change button text to indicate start action
-                startvcanButton.setText("⏹ VCAN");
+                StartVCanButton.setText("⏹ VCAN");
             }
 
             // Update options menu or any other UI updates if needed
@@ -226,19 +220,19 @@ public class CANFragment extends Fragment {
         });
 
         // Start SLCAN interface
-        Button startslcanButton = rootView.findViewById(R.id.start_slcaniface);
+        Button StartSLCanButton = rootView.findViewById(R.id.start_slcaniface);
         SelectedIface = rootView.findViewById(R.id.can_iface);
-        SelectedBitrate = rootView.findViewById(R.id.bitrate);
+        SelectedUartSpeed = rootView.findViewById(R.id.uart_speed);
 
         // Initialize button state if not present in the map
         if (!buttonStates.containsKey("start_slcaniface")) {
             buttonStates.put("start_slcaniface", false); // False means not started
         }
 
-        startslcanButton.setOnClickListener(v -> {
+        StartSLCanButton.setOnClickListener(v -> {
             String selected_caniface = SelectedIface.getText().toString();
-            String selected_bitrate = SelectedBitrate.getText().toString();
-            String prompt_bitrate = String.valueOf(selectedprompt_bitrate);
+            String selected_uartSpeed = SelectedUartSpeed.getText().toString();
+            String selected_canSpeed = String.valueOf(SelectedCanSpeed);
 
             // Retrieve the current state from the map
             boolean isStarted = buttonStates.get("start_slcaniface");
@@ -249,18 +243,18 @@ public class CANFragment extends Fragment {
                 buttonStates.put("start_slcaniface", false); // Mark as stopped
 
                 // Change button text to indicate stop action
-                startslcanButton.setText("▶ SLCAN");
+                StartSLCanButton.setText("▶ SLCAN");
 
             } else {
                 // If not started, start the SLCAN interface
                 run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
-                        "echo 'Creating SLCAN interface...' && sudo slcand -o -s" + prompt_bitrate + " -t " + flow_control + " -S " + selected_bitrate + " /dev/ttyUSB0 && " +
+                        "echo 'Creating SLCAN interface...' && sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartSpeed + " /dev/ttyUSB0 && " +
                         "echo 'Starting SLCAN interface...' && sudo ip link set up " + selected_caniface);
 
                 buttonStates.put("start_slcaniface", true); // Mark as started
 
                 // Change button text to indicate start action
-                startslcanButton.setText("⏹ SLCAN");
+                StartSLCanButton.setText("⏹ SLCAN");
             }
 
             // Update options menu or any other UI updates if needed
@@ -268,18 +262,18 @@ public class CANFragment extends Fragment {
         });
 
         // Attach SLCAN interface
-        Button attachslcanButton = rootView.findViewById(R.id.attach_slcaniface);
+        Button AttachSLCanButton = rootView.findViewById(R.id.attach_slcaniface);
         SelectedIface = rootView.findViewById(R.id.can_iface);
-        SelectedBitrate = rootView.findViewById(R.id.bitrate);
+        SelectedUartSpeed = rootView.findViewById(R.id.uart_speed);
 
         // Initialize button state if not present in the map
         if (!buttonStates.containsKey("attach_slcaniface")) {
             buttonStates.put("attach_slcaniface", false); // False means not started
         }
 
-        attachslcanButton.setOnClickListener(v -> {
+        AttachSLCanButton.setOnClickListener(v -> {
             String selected_caniface = SelectedIface.getText().toString();
-            String selected_bitrate = SelectedBitrate.getText().toString();
+            String selected_uartspeed = SelectedUartSpeed.getText().toString();
 
             // Retrieve the current state from the map
             boolean isStarted = buttonStates.get("attach_slcaniface");
@@ -290,17 +284,17 @@ public class CANFragment extends Fragment {
                 buttonStates.put("attach_slcaniface", false); // Mark as stopped
 
                 // Change button text to indicate stop action
-                attachslcanButton.setText("🔗 SLCAN");
+                AttachSLCanButton.setText("🔗 SLCAN");
 
             } else {
                 // If not started, attach the SLCAN interface
                 run_cmd("clear;echo 'Creating SLCAN interface...' && sudo slcan_attach /dev/ttyUSB0 -w && " +
-                        "echo 'Starting SLCAN interface...' && sudo ip link set " + selected_caniface + " type can bitrate " + selected_bitrate + " restart-ms 500 && sudo ip link set up " + selected_caniface);
+                        "echo 'Starting SLCAN interface...' && sudo ip link set " + selected_caniface + " type can bitrate " + selected_uartspeed + " restart-ms 500 && sudo ip link set up " + selected_caniface);
 
                 buttonStates.put("attach_slcaniface", true); // Mark as started
 
                 // Change button text to indicate start action
-                attachslcanButton.setText("🔗‍💥 SLCAN");
+                AttachSLCanButton.setText("🔗‍💥 SLCAN");
             }
 
             // Update options menu or any other UI updates if needed
@@ -308,68 +302,68 @@ public class CANFragment extends Fragment {
         });
 
         //Start cangen
-        Button cangenButton = rootView.findViewById(R.id.start_cangen);
+        Button CanGenButton = rootView.findViewById(R.id.start_cangen);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
-        cangenButton.setOnClickListener(v ->  {
-            String selected_interface = SelectedIface.getText().toString();
-            run_cmd("cangen " + selected_interface + " -v");
+        CanGenButton.setOnClickListener(v ->  {
+            String selected_caniface = SelectedIface.getText().toString();
+            run_cmd("cangen " + selected_caniface + " -v");
             Toast.makeText(getActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
             activity.invalidateOptionsMenu();
         });
 
         //Start cansniffer
-        Button cansnifferButton = rootView.findViewById(R.id.start_cansniffer);
+        Button CanSnifferButton = rootView.findViewById(R.id.start_cansniffer);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
-        cansnifferButton.setOnClickListener(v ->  {
-            String selected_interface = SelectedIface.getText().toString();
-            run_cmd("cansniffer " + selected_interface);
+        CanSnifferButton.setOnClickListener(v ->  {
+            String selected_caniface = SelectedIface.getText().toString();
+            run_cmd("cansniffer " + selected_caniface);
             Toast.makeText(getActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
             activity.invalidateOptionsMenu();
         });
 
         //Start candump
-        Button candumpButton = rootView.findViewById(R.id.start_candump);
+        Button CanDumpButton = rootView.findViewById(R.id.start_candump);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
-        candumpButton.setOnClickListener(v ->  {
-            String selected_interface = SelectedIface.getText().toString();
+        CanDumpButton.setOnClickListener(v ->  {
+            String selected_caniface = SelectedIface.getText().toString();
             String outputfile = outputfilepath.getText().toString();
-            run_cmd("candump " + selected_interface + " -f " + outputfile);
+            run_cmd("candump " + selected_caniface + " -f " + outputfile);
             Toast.makeText(getActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
             activity.invalidateOptionsMenu();
         });
 
         //Start cansend
         final EditText cansend_sequence = rootView.findViewById(R.id.cansend_sequence);
-        Button cansendButton = rootView.findViewById(R.id.start_cansend);
+        Button CanSendButton = rootView.findViewById(R.id.start_cansend);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
-        cansendButton.setOnClickListener(v ->  {
+        CanSendButton.setOnClickListener(v ->  {
             String sequence = cansend_sequence.getText().toString();
-            String selected_interface = SelectedIface.getText().toString();
-            run_cmd("cansend " + selected_interface + " " + sequence);
+            String selected_caniface = SelectedIface.getText().toString();
+            run_cmd("cansend " + selected_caniface + " " + sequence);
             //WearOS iface control is weird, hence reset is needed
             activity.invalidateOptionsMenu();
         });
 
         //Start canplayer
-        Button canplayerButton = rootView.findViewById(R.id.start_canplayer);
+        Button CanPlayerButton = rootView.findViewById(R.id.start_canplayer);
 
-        canplayerButton.setOnClickListener(v ->  {
+        CanPlayerButton.setOnClickListener(v ->  {
             String inputfile = inputfilepath.getText().toString();
             run_cmd("canplayer -I " + inputfile);
             activity.invalidateOptionsMenu();
         });
 
         //Start cansplit
-        Button cansplitButton = rootView.findViewById(R.id.start_cansplit);
+        Button CanSplitButton = rootView.findViewById(R.id.start_cansplit);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
-        cansplitButton.setOnClickListener(v ->  {
-            String selected_interface = SelectedIface.getText().toString();
-            run_cmd("echo 'script todo'");
+        CanSplitButton.setOnClickListener(v ->  {
+            String inputfile = inputfilepath.getText().toString();
+            run_cmd("echo 'script todo'" + inputfile);
             Toast.makeText(getActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
             activity.invalidateOptionsMenu();
         });
@@ -377,10 +371,10 @@ public class CANFragment extends Fragment {
         // Logging
 
         // Start Asc2Log
-        Button asc2logButton = rootView.findViewById(R.id.start_asc2log);
+        Button Asc2LogButton = rootView.findViewById(R.id.start_asc2log);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
-        asc2logButton.setOnClickListener(v ->  {
+        Asc2LogButton.setOnClickListener(v ->  {
             String inputfile = inputfilepath.getText().toString();
             String outputfile = outputfilepath.getText().toString();
             run_cmd("asc2log -I " + inputfile + " -O " + outputfile);
@@ -388,74 +382,74 @@ public class CANFragment extends Fragment {
         });
 
         // Start Log2asc
-        Button log2ascButton = rootView.findViewById(R.id.start_log2asc);
+        Button Log2AscButton = rootView.findViewById(R.id.start_log2asc);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
-        log2ascButton.setOnClickListener(v ->  {
+        Log2AscButton.setOnClickListener(v ->  {
             String inputfile = inputfilepath.getText().toString();
             String outputfile = outputfilepath.getText().toString();
-            String selected_interface = SelectedIface.getText().toString();
-            run_cmd("log2asc -I " + inputfile + " -O " + outputfile + " " + selected_interface);
+            String selected_caniface = SelectedIface.getText().toString();
+            run_cmd("log2asc -I " + inputfile + " -O " + outputfile + " " + selected_caniface);
             activity.invalidateOptionsMenu();
         });
 
         //Start CustomCommand
-        final EditText customcmd = rootView.findViewById(R.id.customcmd);
-        Button customcmdButton = rootView.findViewById(R.id.start_customcmd);
+        final EditText CustomCmd = rootView.findViewById(R.id.customcmd);
+        Button CustomCmdButton = rootView.findViewById(R.id.start_customcmd);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
-        customcmdButton.setOnClickListener(v ->  {
-            String sequence = customcmd.getText().toString();
+        CustomCmdButton.setOnClickListener(v ->  {
+            String sequence = CustomCmd.getText().toString();
             run_cmd(sequence);
             activity.invalidateOptionsMenu();
         });
 
         //Author Contact
         // Website
-        Button authorWebsiteButton = rootView.findViewById(R.id.author_website);
-        authorWebsiteButton.setOnClickListener(v -> {
+        Button AuthorWebsiteButton = rootView.findViewById(R.id.author_website);
+        AuthorWebsiteButton.setOnClickListener(v -> {
             String url = "https://v0lk3n.github.io";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
         // 𝕏
-        Button authorXButton = rootView.findViewById(R.id.author_x);
-        authorXButton.setOnClickListener(v -> {
+        Button AuthorXButton = rootView.findViewById(R.id.author_x);
+        AuthorXButton.setOnClickListener(v -> {
             String url = "https://x.com/v0lk3n";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
         // BlueSky
-        Button authorBlueskyButton = rootView.findViewById(R.id.author_bluesky);
-        authorBlueskyButton.setOnClickListener(v -> {
+        Button AuthorBlueskyButton = rootView.findViewById(R.id.author_bluesky);
+        AuthorBlueskyButton.setOnClickListener(v -> {
             String url = "https://bsky.app/profile/v0lk3n.bsky.social";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
         // Mastodon
-        Button authorMastodonButton = rootView.findViewById(R.id.author_mastodon);
-        authorMastodonButton.setOnClickListener(v -> {
+        Button AuthorMastodonButton = rootView.findViewById(R.id.author_mastodon);
+        AuthorMastodonButton.setOnClickListener(v -> {
             String url = "https://infosec.exchange/@v0lk3n";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
         // Discord
-        Button authorDiscordButton = rootView.findViewById(R.id.author_discord);
-        authorDiscordButton.setOnClickListener(v -> {
+        Button AuthorDiscordButton = rootView.findViewById(R.id.author_discord);
+        AuthorDiscordButton.setOnClickListener(v -> {
             String url = "https://discord.com/users/343776454762430484";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
         // GitHub
-        Button authorGitHubButton = rootView.findViewById(R.id.author_github);
-        authorGitHubButton.setOnClickListener(v -> {
+        Button AuthorGitHubButton = rootView.findViewById(R.id.author_github);
+        AuthorGitHubButton.setOnClickListener(v -> {
             String url = "https://github.com/V0lk3n";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
         // GitLab
-        Button authorGitLabButton = rootView.findViewById(R.id.author_gitlab);
-        authorGitLabButton.setOnClickListener(v -> {
+        Button AuthorGitLabButton = rootView.findViewById(R.id.author_gitlab);
+        AuthorGitLabButton.setOnClickListener(v -> {
             String url = "https://gitlab.com/V0lk3n";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);

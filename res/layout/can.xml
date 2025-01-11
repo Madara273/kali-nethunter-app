@@ -93,7 +93,7 @@
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <Spinner
-                    android:id="@+id/bitrate_spinner"
+                    android:id="@+id/canspeed_spinner"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:dropDownWidth="wrap_content"
@@ -120,7 +120,7 @@
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <EditText
-                    android:id="@+id/bitrate"
+                    android:id="@+id/uart_speed"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
