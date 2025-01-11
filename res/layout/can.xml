@@ -1,5 +1,4 @@
-<LinearLayout xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -26,6 +25,7 @@
             <View
                 android:id="@+id/divider2"
                 android:layout_width="match_parent"
+                android:layout_marginBottom="10dp"
                 android:layout_height="1dp"
                 android:background="?android:attr/listDivider" />
 
@@ -41,7 +41,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:layout_weight="3"
                     android:text="Settings :"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
@@ -59,7 +58,6 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
                     android:layout_weight="3"
                     android:text="CAN interface :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
@@ -69,10 +67,9 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
-                    android:layout_weight="2"
+                    android:layout_weight="3"
                     android:ems="10"
                     android:inputType="text"
-                    android:minHeight="48dp"
                     android:text="vcan0"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -89,17 +86,16 @@
                     android:id="@+id/textView3"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_weight="3"
                     android:layout_marginStart="20dp"
-                    android:layout_marginEnd="10dp"
-                    android:layout_weight="10"
                     android:text="CAN Speed :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <Spinner
                     android:id="@+id/bitrate_spinner"
+                    android:dropDownWidth="wrap_content"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:dropDownWidth="wrap_content"
                     android:saveEnabled="false"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -117,8 +113,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:layout_marginEnd="10dp"
-                    android:layout_weight="10"
+                    android:layout_weight="3"
                     android:text="UART Speed (baud) :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -127,75 +122,10 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
-                    android:layout_weight="2"
+                    android:layout_weight="3"
                     android:ems="10"
                     android:inputType="number"
-                    android:minHeight="48dp"
                     android:text="125000"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-                <!-- Flow Control Label -->
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Flow Control :"
-                    android:layout_marginStart="20dp"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <!-- Left Text (hw) -->
-                <TextView
-                    android:id="@+id/left_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="hw"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="8dp"
-                    android:textAppearance="?android:attr/textAppearanceSmall"/>
-
-                <!-- Switch -->
-                <Switch
-                    android:id="@+id/flow_control_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="false" />
-
-                <!-- Right Text (sw) -->
-                <TextView
-                    android:id="@+id/right_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="sw"
-                    android:layout_marginStart="8dp"
-                    android:textAppearance="?android:attr/textAppearanceSmall"/>
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="MTU :"
-                    android:layout_marginStart="60dp"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <EditText
-                    android:id="@+id/mtu"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:layout_marginEnd="20dp"
-                    android:layout_weight="2"
-                    android:ems="10"
-                    android:inputType="number"
-                    android:minWidth="48dp"
-                    android:minHeight="48dp"
-                    android:text="72"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
             </LinearLayout>
@@ -209,11 +139,70 @@
 
                 <TextView
                     android:id="@+id/textView5"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Flow Control :"
+                    android:layout_marginStart="20dp"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                <TextView
+                    android:id="@+id/left_label"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
+                    android:layout_marginEnd="8dp"
+                    android:text="hw"
+                    android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+                <Switch
+                    android:id="@+id/flow_control_switch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:checked="false"/>
+
+                <TextView
+                    android:id="@+id/right_label"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="sw"
+                    android:textAppearance="?android:attr/textAppearanceSmall"/>
+
+                <TextView
+                    android:id="@+id/textView6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="MTU :"
+                    android:layout_marginStart="100dp"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                <EditText
+                    android:id="@+id/mtu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:layout_weight="3"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:ems="10"
+                    android:inputType="number"
+                    android:text="72"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/textView7"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:layout_marginStart="20dp"
                     android:text="Sequence :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -224,7 +213,6 @@
                     android:layout_marginEnd="20dp"
                     android:ems="13"
                     android:inputType="text"
-                    android:minHeight="48dp"
                     android:text="01a#11223344AABBCCDD"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -238,11 +226,11 @@
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/textView6"
+                    android:id="@+id/textView8"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_weight="3"
                     android:layout_marginStart="20dp"
-                    android:layout_weight="1"
                     android:text="Input :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -252,8 +240,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
+                    android:gravity="center"
                     android:inputType="text"
-                    android:minHeight="48dp"
                     android:text="/root/candump/in_01.log"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -275,7 +263,7 @@
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/textView7"
+                    android:id="@+id/textView9"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
@@ -288,8 +276,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
+                    android:gravity="center"
                     android:inputType="text"
-                    android:minHeight="48dp"
                     android:text="/root/candump/out_01.log"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -306,6 +294,8 @@
             <View
                 android:id="@+id/divider3"
                 android:layout_width="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
                 android:layout_height="1dp"
                 android:background="?android:attr/listDivider" />
 
@@ -317,21 +307,21 @@
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/textView8"
+                    android:id="@+id/textView10"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_weight="3"
                     android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
-                    android:layout_weight="3"
                     android:text="Interface :"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
             </LinearLayout>
 
             <LinearLayout
-                android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="center"
                 android:orientation="horizontal"
                 android:padding="10dp">
 
@@ -351,7 +341,6 @@
                     android:id="@+id/start_slcaniface"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:src="@drawable/ic_action_play"
                     android:text="▶ SLCAN" />
 
                 <Button
@@ -365,6 +354,8 @@
             <View
                 android:id="@+id/divider4"
                 android:layout_width="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
                 android:layout_height="1dp"
                 android:background="?android:attr/listDivider" />
 
@@ -376,24 +367,24 @@
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/textView9"
+                    android:id="@+id/textView11"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_weight="3"
                     android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
-                    android:layout_weight="3"
                     android:text="Tools :"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
             </LinearLayout>
 
             <LinearLayout
-                android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
+                android:gravity="center"
                 android:orientation="horizontal"
-                android:padding="15dp">
+                android:padding="10dp">
 
                 <Button
                     android:id="@+id/start_cangen"
@@ -405,14 +396,12 @@
                     android:id="@+id/start_cansniffer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
                     android:text="CanSniffer" />
 
                 <Button
                     android:id="@+id/start_candump"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
                     android:text="CanDump" />
 
                 <Button
@@ -424,10 +413,10 @@
             </LinearLayout>
 
             <LinearLayout
-                android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
+                android:gravity="center"
                 android:orientation="horizontal"
                 android:padding="15dp">
 
@@ -435,14 +424,12 @@
                     android:id="@+id/start_canplayer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
                     android:text="CanPlayer" />
 
                 <Button
                     android:id="@+id/start_cansplit"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
                     android:text="Auto CanSplit" />
 
             </LinearLayout>
@@ -450,6 +437,8 @@
             <View
                 android:id="@+id/divider5"
                 android:layout_width="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
                 android:layout_height="1dp"
                 android:background="?android:attr/listDivider" />
 
@@ -461,22 +450,22 @@
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/textView10"
+                    android:id="@+id/textView12"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_weight="3"
                     android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
-                    android:layout_weight="3"
                     android:text="Logging :"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
             </LinearLayout>
 
             <LinearLayout
-                android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
+                android:gravity="center"
                 android:orientation="horizontal"
                 android:padding="15dp">
 
@@ -497,6 +486,8 @@
             <View
                 android:id="@+id/divider6"
                 android:layout_width="match_parent"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
                 android:layout_height="1dp"
                 android:background="?android:attr/listDivider" />
 
@@ -508,12 +499,12 @@
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/textView11"
+                    android:id="@+id/textView13"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_weight="3"
                     android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
-                    android:layout_weight="3"
                     android:text="Custom Command :"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
@@ -523,17 +514,16 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_gravity="center"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:padding="10dp">
 
                 <EditText
                     android:id="@+id/customcmd"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="25dp"
-                    android:layout_marginEnd="20dp"
-                    android:layout_weight="1"
+                    android:layout_marginStart="20dp"
+                    android:ems="20"
                     android:inputType="text"
-                    android:minHeight="48dp"
                     android:text="canbusload can0@100000 -r -t -b -c"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -541,6 +531,7 @@
                     android:id="@+id/start_customcmd"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
                     android:layout_marginEnd="20dp"
                     android:text="Run"
                     android:textColor="#ffffffff" />
@@ -549,7 +540,8 @@
 
             <View
                 android:id="@+id/divider7"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="?android:attr/listDivider" />
@@ -562,7 +554,7 @@
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/textView12"
+                    android:id="@+id/textView14"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
@@ -634,9 +626,9 @@
 
                 <TextView
                     android:gravity="center"
-                    android:id="@+id/textView13"
+                    android:id="@+id/textView15"
                     android:layout_marginTop="10dp"
-                    android:layout_marginBottom="20dp"
+                    android:layout_marginBottom="15dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="3"
@@ -649,6 +641,7 @@
                 android:id="@+id/divider8"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
+                android:layout_marginBottom="10dp"
                 android:background="?android:attr/listDivider" />
 
         </LinearLayout>
