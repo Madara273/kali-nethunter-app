@@ -387,182 +387,163 @@
 
             </LinearLayout>
 
-            <Button
-                android:id="@+id/CanUtilsAdvancedButton"
+            <LinearLayout
+                android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginStart="30dp"
-                android:layout_marginEnd="30dp"
-                android:text="Can-Utils" />
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="15dp">
+
+                <Button
+                    android:id="@+id/start_cangen"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="CanGen" />
+
+                <Button
+                    android:id="@+id/start_cansniffer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:text="CanSniffer" />
+
+                <Button
+                    android:id="@+id/start_candump"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:text="CanDump" />
+
+                <Button
+                    android:id="@+id/start_cansend"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="CanSend" />
+
+            </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/CanUtilsView"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="15dp">
+
+                <Button
+                    android:id="@+id/start_canplayer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:text="CanPlayer" />
+
+                <Button
+                    android:id="@+id/start_cansplit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:text="Auto CanSplit" />
+
+            </LinearLayout>
+
+            <View
+                android:id="@+id/divider5"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
+
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:orientation="vertical"
-                android:saveEnabled="true"
-                android:visibility="gone">
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
 
-                <LinearLayout
-                    android:gravity="center"
+                <TextView
+                    android:id="@+id/textView10"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:orientation="horizontal"
-                    android:padding="15dp">
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_weight="3"
+                    android:text="Logging :"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
 
-                    <Button
-                        android:id="@+id/start_cangen"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="CanGen" />
+            </LinearLayout>
 
-                    <Button
-                        android:id="@+id/start_cansniffer"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:text="CanSniffer" />
+            <LinearLayout
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="15dp">
 
-                    <Button
-                        android:id="@+id/start_candump"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:text="CanDump" />
+                <Button
+                    android:id="@+id/start_asc2log"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Asc2Log" />
 
-                    <Button
-                        android:id="@+id/start_cansend"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="CanSend" />
+                <Button
+                    android:id="@+id/start_log2asc"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Log2Asc" />
 
-                </LinearLayout>
+            </LinearLayout>
 
-                <LinearLayout
-                    android:gravity="center"
+            <View
+                android:id="@+id/divider6"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/textView11"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:orientation="horizontal"
-                    android:padding="15dp">
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_weight="3"
+                    android:text="Custom Command :"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
 
-                    <Button
-                        android:id="@+id/start_canplayer"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:text="CanPlayer" />
+            </LinearLayout>
 
-                    <Button
-                        android:id="@+id/start_cansplit"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:text="Auto CanSplit" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:orientation="horizontal">
 
-                </LinearLayout>
-
-                <View
-                    android:id="@+id/divider5"
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?android:attr/listDivider" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:orientation="horizontal"
-                    android:padding="10dp">
-
-                    <TextView
-                        android:id="@+id/textView10"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginEnd="20dp"
-                        android:layout_weight="3"
-                        android:text="Logging :"
-                        android:textAppearance="?android:attr/textAppearanceMedium" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:gravity="center"
-                    android:layout_width="match_parent"
+                <EditText
+                    android:id="@+id/customcmd"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="center"
-                    android:orientation="horizontal"
-                    android:padding="15dp">
+                    android:layout_marginStart="25dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_weight="1"
+                    android:inputType="text"
+                    android:minHeight="48dp"
+                    android:text="canbusload can0@100000 -r -t -b -c"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
 
-                    <Button
-                        android:id="@+id/start_asc2log"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Asc2Log" />
-
-                    <Button
-                        android:id="@+id/start_log2asc"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Log2Asc" />
-
-                </LinearLayout>
-
-                <View
-                    android:id="@+id/divider6"
-                    android:layout_width="match_parent"
-                    android:layout_height="1dp"
-                    android:background="?android:attr/listDivider" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:orientation="horizontal"
-                    android:padding="10dp">
-
-                    <TextView
-                        android:id="@+id/textView11"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginEnd="20dp"
-                        android:layout_weight="3"
-                        android:text="Custom Command :"
-                        android:textAppearance="?android:attr/textAppearanceMedium" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_gravity="center"
-                    android:orientation="horizontal">
-
-                    <EditText
-                        android:id="@+id/customcmd"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="25dp"
-                        android:layout_marginEnd="20dp"
-                        android:layout_weight="1"
-                        android:inputType="text"
-                        android:minHeight="48dp"
-                        android:text="canbusload can0@100000 -r -t -b -c"
-                        android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                    <com.google.android.material.button.MaterialButton
-                        android:id="@+id/start_customcmd"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="20dp"
-                        android:text="Run"
-                        android:textColor="#ffffffff" />
-
-                </LinearLayout>
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/start_customcmd"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="20dp"
+                    android:text="Run"
+                    android:textColor="#ffffffff" />
 
             </LinearLayout>
 

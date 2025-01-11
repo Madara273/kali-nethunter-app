@@ -36,8 +36,8 @@ public class CANFragment extends Fragment {
     private static final String ARG_SECTION_NUMBER = "section_number";
     private TextView SelectedIface;
     private TextView SelectedBitrate;
-    private int selectedprompt_bitrate;
     private TextView SelectedMtu;
+    private int selectedprompt_bitrate;
     private String flow_control = "hw"; // Default value
     private SharedPreferences sharedpreferences;
     private Context context;
@@ -66,8 +66,6 @@ public class CANFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.can, container, false);
-        View CanUtilsView = rootView.findViewById(R.id.CanUtilsView);
-        Button CanUtilsAdvanced = rootView.findViewById(R.id.CanUtilsAdvancedButton);
 
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         showingAdvanced = sharedpreferences.getBoolean("advanced_visible", false);
@@ -80,9 +78,6 @@ public class CANFragment extends Fragment {
             // Change the flow_control variable based on the switch state
             flow_control = isChecked ? "sw" : "hw";
         });
-
-        CanUtilsView.setVisibility(showingAdvanced ? View.VISIBLE : View.INVISIBLE);
-        CanUtilsAdvanced.setText("Can-Utils");
 
         //First run
         Boolean setupdone = sharedpreferences.getBoolean("setup_done", false);
@@ -310,21 +305,6 @@ public class CANFragment extends Fragment {
 
             // Update options menu or any other UI updates if needed
             activity.invalidateOptionsMenu();
-        });
-
-        SharedPreferences finalSharedpreferences = sharedpreferences;
-        addClickListener(CanUtilsAdvanced, v -> {
-            if (!showingAdvanced) {
-                CanUtilsView.setVisibility(View.VISIBLE);
-                CanUtilsAdvanced.setText("Hide Can-Utils");
-                showingAdvanced = true;
-                finalSharedpreferences.edit().putBoolean("advanced_visible", true).apply();
-            } else {
-                CanUtilsView.setVisibility(View.GONE);
-                CanUtilsAdvanced.setText("Can-Utils");
-                showingAdvanced = false;
-                finalSharedpreferences.edit().putBoolean("advanced_visible", false).apply();
-            }
         });
 
         //Start cangen
