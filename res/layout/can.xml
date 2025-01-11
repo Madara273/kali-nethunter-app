@@ -1,4 +1,4 @@
-<LinearLayout
+<LinearLayout xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
@@ -71,7 +71,8 @@
                     android:ems="10"
                     android:inputType="text"
                     android:text="vcan0"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
 
             </LinearLayout>
 
@@ -93,11 +94,12 @@
 
                 <Spinner
                     android:id="@+id/bitrate_spinner"
-                    android:dropDownWidth="wrap_content"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:dropDownWidth="wrap_content"
                     android:saveEnabled="false"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
 
             </LinearLayout>
 
@@ -126,7 +128,8 @@
                     android:ems="10"
                     android:inputType="number"
                     android:text="125000"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
 
             </LinearLayout>
 
@@ -158,7 +161,8 @@
                     android:id="@+id/flow_control_switch"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:checked="false"/>
+                    android:checked="false"
+                    tools:ignore="TouchTargetSizeCheck" />
 
                 <TextView
                     android:id="@+id/right_label"
@@ -180,13 +184,14 @@
                     android:id="@+id/mtu"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="3"
                     android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
+                    android:layout_weight="3"
                     android:ems="10"
                     android:inputType="number"
                     android:text="72"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
 
             </LinearLayout>
 
@@ -214,7 +219,8 @@
                     android:ems="13"
                     android:inputType="text"
                     android:text="01a#11223344AABBCCDD"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
 
             </LinearLayout>
 
@@ -243,7 +249,8 @@
                     android:gravity="center"
                     android:inputType="text"
                     android:text="/root/candump/in_01.log"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/inputfilebrowse"
@@ -279,7 +286,8 @@
                     android:gravity="center"
                     android:inputType="text"
                     android:text="/root/candump/out_01.log"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/outputfilebrowse"
@@ -525,7 +533,8 @@
                     android:ems="20"
                     android:inputType="text"
                     android:text="canbusload can0@100000 -r -t -b -c"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/start_customcmd"
@@ -576,7 +585,8 @@
                     android:id="@+id/author_website"
                     android:layout_width="50dp"
                     android:layout_height="wrap_content"
-                    android:drawableLeft="@drawable/ic_website" />
+                    android:drawableLeft="@drawable/ic_website"
+                    tools:ignore="SpeakableTextPresentCheck" />
 
                 <Button
                     android:id="@+id/author_x"
@@ -588,31 +598,36 @@
                     android:id="@+id/author_bluesky"
                     android:layout_width="50dp"
                     android:layout_height="wrap_content"
-                    android:drawableLeft="@drawable/ic_bluesky" />
+                    android:drawableLeft="@drawable/ic_bluesky"
+                    tools:ignore="SpeakableTextPresentCheck" />
 
                 <Button
                     android:id="@+id/author_mastodon"
                     android:layout_width="50dp"
                     android:layout_height="wrap_content"
-                    android:drawableLeft="@drawable/ic_mastodon" />
+                    android:drawableLeft="@drawable/ic_mastodon"
+                    tools:ignore="SpeakableTextPresentCheck" />
 
                 <Button
                     android:id="@+id/author_discord"
                     android:layout_width="50dp"
                     android:layout_height="wrap_content"
-                    android:drawableLeft="@drawable/ic_discord" />
+                    android:drawableLeft="@drawable/ic_discord"
+                    tools:ignore="SpeakableTextPresentCheck" />
 
                 <Button
                     android:id="@+id/author_github"
                     android:layout_width="50dp"
                     android:layout_height="wrap_content"
-                    android:drawableLeft="@drawable/ic_github" />
+                    android:drawableLeft="@drawable/ic_github"
+                    tools:ignore="SpeakableTextPresentCheck" />
 
                 <Button
                     android:id="@+id/author_gitlab"
                     android:layout_width="50dp"
                     android:layout_height="wrap_content"
-                    android:drawableLeft="@drawable/ic_gitlab" />
+                    android:drawableLeft="@drawable/ic_gitlab"
+                    tools:ignore="SpeakableTextPresentCheck" />
 
             </LinearLayout>
 
