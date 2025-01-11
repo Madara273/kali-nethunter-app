@@ -215,7 +215,7 @@ public class CANFragment extends Fragment {
             if (isStarted) {
                 run_cmd("clear;echo '\\nUnloading modules...' && modprobe -r can-raw can-gw can-bcm can vcan slcan && " +
                         "echo 'Detttaching SLCAN from ttyUSB0...' && sudo slcan_attach -d /dev/ttyUSB0 && " +
-                        "echo 'Stopping SLCAN interface...' && sudo ip link set " + selected_caniface + " down" +
+                        "echo 'Stopping SLCAN interface...' && sudo ip link set " + selected_caniface + " down && " +
                         "echo '\\nSLCAN Interface Stopped!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
                 buttonStates.put("start_slcaniface", false);
                 StartSLCanButton.setText("▶ SLCAN");
@@ -449,7 +449,7 @@ public class CANFragment extends Fragment {
         run_cmd("echo -ne \"\\033]0;CAN Arsenal Setup\\007\" && clear; echo '\\nUpdating and Installing Packages...\\n' && apt update && apt install -y libsdl2-dev libsdl2-image-dev can-utils maven autoconf && " +
                 "echo '\\nSetting up environment...' && if [[ -d /root/candump ]]; then echo '\\nFolder /root/candump detected!'; else echo '\\nCreating /root/candump folder...'; sudo mkdir -p /root/candump;fi;" +
                 "if [[ -d /opt/car_hacking ]]; then echo '\\nFolder /opt/car_hacking detected!'; else echo '\\nCreating /opt/car_hacking folder...'; sudo mkdir -p /opt/car_hacking;fi;" +
-                "if [[ -f /usr/bin/cangen && -f /usr/bin/cansniffer && -f /usr/bin/candump && -f /usr/bin/cansend && -f /usr/bin/canplayer && -d /opt/car_hacking/can-utils ]]; then echo 'Can-utils is installed!'; else sudo git clone https://github.com/v0lk3n/can-utils.git; cd /opt/car_hacking/can-utils; sudo make; sudo make install;fi;" +
+                "if [[ -f /usr/bin/cangen && -f /usr/bin/cansniffer && -f /usr/bin/candump && -f /usr/bin/cansend && -f /usr/bin/canplayer && -d /opt/car_hacking/can-utils ]]; then echo 'Can-utils is installed!'; else cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/can-utils.git; cd /opt/car_hacking/can-utils; sudo make; sudo make install;fi;" +
                 "echo '\\nSetup done!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }
@@ -458,7 +458,7 @@ public class CANFragment extends Fragment {
     public void RunUpdate() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         run_cmd("echo -ne \"\\033]0;CAN Arsenal Update\\007\" && clear; echo '\\nUpdating Packages...\\n' && apt update && apt install -y libsdl2-dev libsdl2-image-dev can-utils maven autoconf && " +
-                "if [[ -f /usr/bin/cangen && -f /usr/bin/cansniffer && -f /usr/bin/candump && -f /usr/bin/cansend && -f /usr/bin/canplayer && -d /opt/car_hacking/can-utils  ]]; then echo '\\nCan-Utils detected! Updating...\\n'; cd /sdcard/nh_files/car_hacking/can-utils/; git pull && make && make install;fi; " +
+                "if [[ -f /usr/bin/cangen && -f /usr/bin/cansniffer && -f /usr/bin/candump && -f /usr/bin/cansend && -f /usr/bin/canplayer && -d /opt/car_hacking/can-utils  ]]; then echo '\\nCan-Utils detected! Updating...\\n'; cd /opt/car_hacking/can-utils; git pull; make; make install;fi; " +
                 "echo '\\nEverything is updated! Closing in 3secs..'; sleep 3 && exit");
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }

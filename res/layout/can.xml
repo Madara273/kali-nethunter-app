@@ -177,7 +177,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="MTU :"
-                    android:layout_marginStart="100dp"
+                    android:layout_marginStart="30dp"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <EditText
@@ -525,7 +525,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:ems="20"
+                    android:ems="15"
                     android:inputType="text"
                     android:text="canbusload can0@100000 -r -t -b -c"
                     android:textAppearance="?android:attr/textAppearanceSmall"
@@ -535,7 +535,7 @@
                     android:id="@+id/start_customcmd"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
+                    android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
                     android:text="Run"
                     android:textColor="#ffffffff" />
