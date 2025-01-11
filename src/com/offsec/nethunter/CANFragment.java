@@ -110,7 +110,7 @@ public class CANFragment extends Fragment {
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             intent.setType("log/*");
             intent.setAction(Intent.ACTION_GET_CONTENT);
-            startActivityForResult(Intent.createChooser(intent, "Select dump file"),1001);
+            startActivityForResult(Intent.createChooser(intent, "Select input file"),1001);
         });
 
         //Output File
@@ -122,7 +122,7 @@ public class CANFragment extends Fragment {
             intent.addCategory(Intent.CATEGORY_OPENABLE);
             intent.setType("log/*");
             intent.setAction(Intent.ACTION_GET_CONTENT);
-            startActivityForResult(Intent.createChooser(intent, "Select dump file"),1001);
+            startActivityForResult(Intent.createChooser(intent, "Select output file"),1001);
         });
 
         // Interfaces
@@ -144,14 +144,17 @@ public class CANFragment extends Fragment {
             boolean isStarted = buttonStates.get("start_caniface");
 
             if (isStarted) {
-                run_cmd("echo 'Stopping CAN interface...' && sudo ip link set " + selected_caniface + " down");
+                run_cmd("clear;echo '\\nUnloading modules...' && modprobe -r can-raw can-gw can-bcm can && " +
+                        "echo '\\nStopping CAN interface...' && sudo ip link set " + selected_caniface + " down && " +
+                        "echo '\\nCAN Interface Stopped!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
                 buttonStates.put("start_caniface", false);
                 StartCanButton.setText("▶ CAN");
 
             } else {
-                run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
-                        "echo 'Creating CAN interface...' && sudo ip link set " + selected_caniface + " type can bitrate " + selected_uartspeed + " && " +
-                        "echo 'Starting CAN interface...' && sudo ip link set up " + selected_caniface + " && ifconfig " + selected_caniface);
+                run_cmd("clear;echo '\\nLoading modules...' && modprobe -a can can-raw can-gw can-bcm && " +
+                        "echo '\\nCreating CAN interface...' && sudo ip link set " + selected_caniface + " type can bitrate " + selected_uartspeed + " && " +
+                        "echo 'Starting CAN interface...' && sudo ip link set up " + selected_caniface + " && ifconfig " + selected_caniface + " && " +
+                        "echo '\\nCAN Interface Initialized!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
 
                 buttonStates.put("start_caniface", true);
                 StartCanButton.setText("⏹ CAN");
@@ -175,14 +178,17 @@ public class CANFragment extends Fragment {
             boolean isStarted = buttonStates.get("start_vcaniface");
 
             if (isStarted) {
-                run_cmd("echo 'Stopping VCAN interface...' && sudo ip link set " + selected_caniface + " down");
+                run_cmd("clear;echo '\\nUnloading modules...' && modprobe -r vcan && " +
+                        "echo 'Stopping VCAN interface...' && sudo ip link set " + selected_caniface + " down && " +
+                        "echo '\\nVCAN Interface Stopped!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
                 buttonStates.put("start_vcaniface", false);
                 StartVCanButton.setText("▶ VCAN");
 
             } else {
-                run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
-                        "echo 'Creating VCAN interface...' && ip link add dev " + selected_caniface + " type vcan && ip link set " + selected_caniface + " mtu " + selected_mtu + " && " +
-                        "echo 'Starting VCAN interface...' && ip link set up " + selected_caniface + " && ifconfig " + selected_caniface);
+                run_cmd("clear;echo '\\nLoading modules...' && modprobe -a vcan && " +
+                        "echo '\\nCreating VCAN interface...' && ip link add dev " + selected_caniface + " type vcan && ip link set " + selected_caniface + " mtu " + selected_mtu + " && " +
+                        "echo 'Starting VCAN interface...' && ip link set up " + selected_caniface + " && ifconfig " + selected_caniface + " && " +
+                        "echo '\\nVCAN Interface Initialized!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
 
                 buttonStates.put("start_vcaniface", true);
                 StartVCanButton.setText("⏹ VCAN");
@@ -207,47 +213,22 @@ public class CANFragment extends Fragment {
             boolean isStarted = buttonStates.get("start_slcaniface");
 
             if (isStarted) {
-                run_cmd("echo 'Stopping SLCAN interface...' && sudo ip link set " + selected_caniface + " down");
+                run_cmd("clear;echo '\\nUnloading modules...' && modprobe -r can-raw can-gw can-bcm can vcan slcan && " +
+                        "echo 'Detttaching SLCAN from ttyUSB0...' && sudo slcan_attach -d /dev/ttyUSB0 && " +
+                        "echo 'Stopping SLCAN interface...' && sudo ip link set " + selected_caniface + " down" +
+                        "echo '\\nSLCAN Interface Stopped!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
                 buttonStates.put("start_slcaniface", false);
                 StartSLCanButton.setText("▶ SLCAN");
 
             } else {
-                run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
-                        "echo 'Creating SLCAN interface...' && sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartSpeed + " /dev/ttyUSB0 && " +
-                        "echo 'Starting SLCAN interface...' && sudo ip link set up " + selected_caniface);
+                run_cmd("clear;echo '\\nLoading modules...' && modprobe -a can vcan slcan can-raw can-gw can-bcm && " +
+                        "echo 'Attaching SLCAN to ttyUSB0...' && sudo slcan_attach -f -s" + selected_canSpeed + " -o /dev/ttyUSB0 && " +
+                        "echo 'Creating SLCAN interface...' && sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartSpeed + " /dev/ttyUSB0 " + selected_caniface + " && " +
+                        "echo 'Starting SLCAN interface...' && sudo ip link set up " + selected_caniface + " && " +
+                        "echo '\\nSLCAN Interface Initialized!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
 
                 buttonStates.put("start_slcaniface", true);
                 StartSLCanButton.setText("⏹ SLCAN");
-            }
-
-            activity.invalidateOptionsMenu();
-        });
-
-        // Attach SLCAN interface
-        Button AttachSLCanButton = rootView.findViewById(R.id.attach_slcaniface);
-        SelectedIface = rootView.findViewById(R.id.can_iface);
-        SelectedUartSpeed = rootView.findViewById(R.id.uart_speed);
-
-        if (!buttonStates.containsKey("attach_slcaniface")) {
-            buttonStates.put("attach_slcaniface", false);
-        }
-
-        AttachSLCanButton.setOnClickListener(v -> {
-            String selected_caniface = SelectedIface.getText().toString();
-            String selected_uartspeed = SelectedUartSpeed.getText().toString();
-            boolean isStarted = buttonStates.get("attach_slcaniface");
-
-            if (isStarted) {
-                run_cmd("echo 'Detaching SLCAN interface...' && sudo ip link set " + selected_caniface + " down");
-                buttonStates.put("attach_slcaniface", false);
-                AttachSLCanButton.setText("🔗 SLCAN");
-
-            } else {
-                run_cmd("clear;echo 'Creating SLCAN interface...' && sudo slcan_attach /dev/ttyUSB0 -w && " +
-                        "echo 'Starting SLCAN interface...' && sudo ip link set " + selected_caniface + " type can bitrate " + selected_uartspeed + " restart-ms 500 && sudo ip link set up " + selected_caniface);
-
-                buttonStates.put("attach_slcaniface", true);
-                AttachSLCanButton.setText("🔗‍💥 SLCAN");
             }
 
             activity.invalidateOptionsMenu();
