@@ -64,45 +64,35 @@ public class CANFragment extends Fragment {
 
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
-        // Find the Switch view by ID
-        Switch flowControlSwitch = rootView.findViewById(R.id.flow_control_switch);
-
-        // Set the OnCheckedChangeListener for the Switch
-        flowControlSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            // Change the flow_control variable based on the switch state
-            flow_control = isChecked ? "sw" : "hw";
-        });
-
         //First run
         Boolean setupdone = sharedpreferences.getBoolean("setup_done", false);
         if (!setupdone.equals(true)) {
             SetupDialog();
         }
 
-        // Prompt spinner for bitrate selection
+        //Settings
+        //Flow Control Switch
+        Switch flowControlSwitch = rootView.findViewById(R.id.flow_control_switch);
+        flowControlSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            flow_control = isChecked ? "sw" : "hw";
+        });
+
+        //CanSpeed Spinner
         Spinner CanSpeedSpinner = rootView.findViewById(R.id.canspeed_spinner);
         String[] bitrateOptions = new String[]{"0 - 10 Kbit/s", "1 - 20 Kbit/s", "2 - 50 Kbit/s", "3 - 100 Kbit/s", "4 - 125 Kbit/s", "5 - 250 Kbit/s", "6 - 500 Kbit/s", "7 - 800 Kbit/s", "8 - 1000 Kbit/s"};
 
-        // Set up the adapter
         ArrayAdapter<String> bitrateAdapter = new ArrayAdapter<>(requireContext(),
                 android.R.layout.simple_list_item_1, bitrateOptions);
         CanSpeedSpinner.setAdapter(bitrateAdapter);
 
-        // Handle item selection
         CanSpeedSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                // Get the selected item and extract the numeric value
                 String selectedItem = parentView.getItemAtPosition(pos).toString();
                 String[] parts = selectedItem.split(" - ");
-                String selectedCanSpeed = parts[0]; // The numeric part of the selection (e.g., "0", "1", "3")
-
-                // You now have the selected bitrate number
+                String selectedCanSpeed = parts[0];
                 int CanSpeed = Integer.parseInt(selectedCanSpeed);
-
-                // Store or use the selected bitrate value
-                // For example, saving it to a variable or performing other actions
-                SelectedCanSpeed = CanSpeed;  // This stores the numeric part
+                SelectedCanSpeed = CanSpeed;
             }
 
             @Override
@@ -135,7 +125,8 @@ public class CANFragment extends Fragment {
             startActivityForResult(Intent.createChooser(intent, "Select dump file"),1001);
         });
 
-        // Create a map to store states for each button
+        // Interfaces
+        // Store CAN Interface States
         Map<String, Boolean> buttonStates = new HashMap<>();
 
         //Start CAN interface
@@ -143,24 +134,18 @@ public class CANFragment extends Fragment {
         SelectedIface = rootView.findViewById(R.id.can_iface);
         SelectedUartSpeed = rootView.findViewById(R.id.uart_speed);
 
-        // Initialize button state if not present in the map
         if (!buttonStates.containsKey("start_caniface")) {
-            buttonStates.put("start_caniface", false); // False means not started
+            buttonStates.put("start_caniface", false);
         }
 
         StartCanButton.setOnClickListener(v -> {
             String selected_caniface = SelectedIface.getText().toString();
             String selected_uartspeed = SelectedUartSpeed.getText().toString();
-
-            // Retrieve the current state from the map
             boolean isStarted = buttonStates.get("start_caniface");
 
             if (isStarted) {
-                // If started, stop the CAN interface
                 run_cmd("echo 'Stopping CAN interface...' && sudo ip link set " + selected_caniface + " down");
-                buttonStates.put("start_caniface", false); // Mark as stopped
-
-                // Change button text to indicate stop action
+                buttonStates.put("start_caniface", false);
                 StartCanButton.setText("▶ CAN");
 
             } else {
@@ -168,13 +153,10 @@ public class CANFragment extends Fragment {
                         "echo 'Creating CAN interface...' && sudo ip link set " + selected_caniface + " type can bitrate " + selected_uartspeed + " && " +
                         "echo 'Starting CAN interface...' && sudo ip link set up " + selected_caniface + " && ifconfig " + selected_caniface);
 
-                buttonStates.put("start_caniface", true); // Mark as started
-
-                // Change button text to indicate start action
+                buttonStates.put("start_caniface", true);
                 StartCanButton.setText("⏹ CAN");
             }
 
-            // Update options menu or any other UI updates if needed
             activity.invalidateOptionsMenu();
         });
 
@@ -183,39 +165,29 @@ public class CANFragment extends Fragment {
         SelectedIface = rootView.findViewById(R.id.can_iface);
         SelectedMtu = rootView.findViewById(R.id.mtu);
 
-        // Initialize button state if not present in the map
         if (!buttonStates.containsKey("start_vcaniface")) {
-            buttonStates.put("start_vcaniface", false); // False means not started
+            buttonStates.put("start_vcaniface", false);
         }
 
         StartVCanButton.setOnClickListener(v -> {
             String selected_caniface = SelectedIface.getText().toString();
             String selected_mtu = SelectedMtu.getText().toString();
-
-            // Retrieve the current state from the map
             boolean isStarted = buttonStates.get("start_vcaniface");
 
             if (isStarted) {
-                // If started, stop the VCAN interface
                 run_cmd("echo 'Stopping VCAN interface...' && sudo ip link set " + selected_caniface + " down");
-                buttonStates.put("start_vcaniface", false); // Mark as stopped
-
-                // Change button text to indicate stop action
+                buttonStates.put("start_vcaniface", false);
                 StartVCanButton.setText("▶ VCAN");
 
             } else {
-                // If not started, start the VCAN interface
                 run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
                         "echo 'Creating VCAN interface...' && ip link add dev " + selected_caniface + " type vcan && ip link set " + selected_caniface + " mtu " + selected_mtu + " && " +
                         "echo 'Starting VCAN interface...' && ip link set up " + selected_caniface + " && ifconfig " + selected_caniface);
 
-                buttonStates.put("start_vcaniface", true); // Mark as started
-
-                // Change button text to indicate start action
+                buttonStates.put("start_vcaniface", true);
                 StartVCanButton.setText("⏹ VCAN");
             }
 
-            // Update options menu or any other UI updates if needed
             activity.invalidateOptionsMenu();
         });
 
@@ -224,40 +196,30 @@ public class CANFragment extends Fragment {
         SelectedIface = rootView.findViewById(R.id.can_iface);
         SelectedUartSpeed = rootView.findViewById(R.id.uart_speed);
 
-        // Initialize button state if not present in the map
         if (!buttonStates.containsKey("start_slcaniface")) {
-            buttonStates.put("start_slcaniface", false); // False means not started
+            buttonStates.put("start_slcaniface", false);
         }
 
         StartSLCanButton.setOnClickListener(v -> {
             String selected_caniface = SelectedIface.getText().toString();
             String selected_uartSpeed = SelectedUartSpeed.getText().toString();
             String selected_canSpeed = String.valueOf(SelectedCanSpeed);
-
-            // Retrieve the current state from the map
             boolean isStarted = buttonStates.get("start_slcaniface");
 
             if (isStarted) {
-                // If started, stop the SLCAN interface
                 run_cmd("echo 'Stopping SLCAN interface...' && sudo ip link set " + selected_caniface + " down");
-                buttonStates.put("start_slcaniface", false); // Mark as stopped
-
-                // Change button text to indicate stop action
+                buttonStates.put("start_slcaniface", false);
                 StartSLCanButton.setText("▶ SLCAN");
 
             } else {
-                // If not started, start the SLCAN interface
                 run_cmd("clear;echo 'Loading module...' && modprobe -a can vcan slcan can-raw can-gw can-bcm can-dev && lsmod | grep vcan && " +
                         "echo 'Creating SLCAN interface...' && sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartSpeed + " /dev/ttyUSB0 && " +
                         "echo 'Starting SLCAN interface...' && sudo ip link set up " + selected_caniface);
 
-                buttonStates.put("start_slcaniface", true); // Mark as started
-
-                // Change button text to indicate start action
+                buttonStates.put("start_slcaniface", true);
                 StartSLCanButton.setText("⏹ SLCAN");
             }
 
-            // Update options menu or any other UI updates if needed
             activity.invalidateOptionsMenu();
         });
 
@@ -266,42 +228,33 @@ public class CANFragment extends Fragment {
         SelectedIface = rootView.findViewById(R.id.can_iface);
         SelectedUartSpeed = rootView.findViewById(R.id.uart_speed);
 
-        // Initialize button state if not present in the map
         if (!buttonStates.containsKey("attach_slcaniface")) {
-            buttonStates.put("attach_slcaniface", false); // False means not started
+            buttonStates.put("attach_slcaniface", false);
         }
 
         AttachSLCanButton.setOnClickListener(v -> {
             String selected_caniface = SelectedIface.getText().toString();
             String selected_uartspeed = SelectedUartSpeed.getText().toString();
-
-            // Retrieve the current state from the map
             boolean isStarted = buttonStates.get("attach_slcaniface");
 
             if (isStarted) {
-                // If started, detach the SLCAN interface
                 run_cmd("echo 'Detaching SLCAN interface...' && sudo ip link set " + selected_caniface + " down");
-                buttonStates.put("attach_slcaniface", false); // Mark as stopped
-
-                // Change button text to indicate stop action
+                buttonStates.put("attach_slcaniface", false);
                 AttachSLCanButton.setText("🔗 SLCAN");
 
             } else {
-                // If not started, attach the SLCAN interface
                 run_cmd("clear;echo 'Creating SLCAN interface...' && sudo slcan_attach /dev/ttyUSB0 -w && " +
                         "echo 'Starting SLCAN interface...' && sudo ip link set " + selected_caniface + " type can bitrate " + selected_uartspeed + " restart-ms 500 && sudo ip link set up " + selected_caniface);
 
-                buttonStates.put("attach_slcaniface", true); // Mark as started
-
-                // Change button text to indicate start action
+                buttonStates.put("attach_slcaniface", true);
                 AttachSLCanButton.setText("🔗‍💥 SLCAN");
             }
 
-            // Update options menu or any other UI updates if needed
             activity.invalidateOptionsMenu();
         });
 
-        //Start cangen
+        //Tools
+        //Start CanGen
         Button CanGenButton = rootView.findViewById(R.id.start_cangen);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
@@ -312,7 +265,7 @@ public class CANFragment extends Fragment {
             activity.invalidateOptionsMenu();
         });
 
-        //Start cansniffer
+        //Start CanSniffer
         Button CanSnifferButton = rootView.findViewById(R.id.start_cansniffer);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
@@ -323,7 +276,7 @@ public class CANFragment extends Fragment {
             activity.invalidateOptionsMenu();
         });
 
-        //Start candump
+        //Start CanDump
         Button CanDumpButton = rootView.findViewById(R.id.start_candump);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
@@ -335,7 +288,7 @@ public class CANFragment extends Fragment {
             activity.invalidateOptionsMenu();
         });
 
-        //Start cansend
+        //Start CanSend
         final EditText cansend_sequence = rootView.findViewById(R.id.cansend_sequence);
         Button CanSendButton = rootView.findViewById(R.id.start_cansend);
         SelectedIface = rootView.findViewById(R.id.can_iface);
@@ -344,11 +297,10 @@ public class CANFragment extends Fragment {
             String sequence = cansend_sequence.getText().toString();
             String selected_caniface = SelectedIface.getText().toString();
             run_cmd("cansend " + selected_caniface + " " + sequence);
-            //WearOS iface control is weird, hence reset is needed
             activity.invalidateOptionsMenu();
         });
 
-        //Start canplayer
+        //Start CanPlayer
         Button CanPlayerButton = rootView.findViewById(R.id.start_canplayer);
 
         CanPlayerButton.setOnClickListener(v ->  {
@@ -357,7 +309,7 @@ public class CANFragment extends Fragment {
             activity.invalidateOptionsMenu();
         });
 
-        //Start cansplit
+        //Start CanSplit
         Button CanSplitButton = rootView.findViewById(R.id.start_cansplit);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
@@ -368,9 +320,8 @@ public class CANFragment extends Fragment {
             activity.invalidateOptionsMenu();
         });
 
-        // Logging
-
-        // Start Asc2Log
+        //Logging
+        //Start Asc2Log
         Button Asc2LogButton = rootView.findViewById(R.id.start_asc2log);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
@@ -381,7 +332,7 @@ public class CANFragment extends Fragment {
             activity.invalidateOptionsMenu();
         });
 
-        // Start Log2asc
+        //Start Log2asc
         Button Log2AscButton = rootView.findViewById(R.id.start_log2asc);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
@@ -405,49 +356,49 @@ public class CANFragment extends Fragment {
         });
 
         //Author Contact
-        // Website
+        //Website
         Button AuthorWebsiteButton = rootView.findViewById(R.id.author_website);
         AuthorWebsiteButton.setOnClickListener(v -> {
             String url = "https://v0lk3n.github.io";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
-        // 𝕏
+        //𝕏
         Button AuthorXButton = rootView.findViewById(R.id.author_x);
         AuthorXButton.setOnClickListener(v -> {
             String url = "https://x.com/v0lk3n";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
-        // BlueSky
+        //BlueSky
         Button AuthorBlueskyButton = rootView.findViewById(R.id.author_bluesky);
         AuthorBlueskyButton.setOnClickListener(v -> {
             String url = "https://bsky.app/profile/v0lk3n.bsky.social";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
-        // Mastodon
+        //Mastodon
         Button AuthorMastodonButton = rootView.findViewById(R.id.author_mastodon);
         AuthorMastodonButton.setOnClickListener(v -> {
             String url = "https://infosec.exchange/@v0lk3n";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
-        // Discord
+        //Discord
         Button AuthorDiscordButton = rootView.findViewById(R.id.author_discord);
         AuthorDiscordButton.setOnClickListener(v -> {
             String url = "https://discord.com/users/343776454762430484";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
-        // GitHub
+        //GitHub
         Button AuthorGitHubButton = rootView.findViewById(R.id.author_github);
         AuthorGitHubButton.setOnClickListener(v -> {
             String url = "https://github.com/V0lk3n";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
-        // GitLab
+        //GitLab
         Button AuthorGitLabButton = rootView.findViewById(R.id.author_gitlab);
         AuthorGitLabButton.setOnClickListener(v -> {
             String url = "https://gitlab.com/V0lk3n";
@@ -460,11 +411,13 @@ public class CANFragment extends Fragment {
         return rootView;
     }
 
+    //Menu
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater menuinflater) {
         menuinflater.inflate(R.menu.can, menu);
     }
 
+    //Menu Items
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -485,6 +438,7 @@ public class CANFragment extends Fragment {
         }
     }
 
+    //First Setup
     public void SetupDialog() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
@@ -501,12 +455,14 @@ public class CANFragment extends Fragment {
         builder.show();
     }
 
+    //Documentation item
     public void RunDocumentation() {
         String url = "https://github.com/V0lk3n/NetHunter-CANArsenal";
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         activity.startActivity(intent);
     }
 
+    //Setup item
     public void RunSetup() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         run_cmd("echo -ne \"\\033]0;CAN Arsenal Setup\\007\" && clear; apt update && apt install -y libsdl2-dev libsdl2-image-dev can-utils maven autoconf && " +
@@ -515,6 +471,7 @@ public class CANFragment extends Fragment {
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }
 
+    //Update item
     public void RunUpdate() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         run_cmd("echo -ne \"\\033]0;CAN Arsenal Update\\007\" && clear; apt update && apt install -y libsdl2-dev libsdl2-image-dev can-utils maven autoconf && " +
