@@ -213,7 +213,7 @@ public class CANFragment extends Fragment {
             boolean isStarted = buttonStates.get("start_slcaniface");
 
             if (isStarted) {
-                run_cmd("clear;echo '\\nUnloading modules...' && modprobe -r can-raw can-gw can-bcm can vcan slcan && " +
+                run_cmd("clear;echo '\\nUnloading modules...' && modprobe -r can-raw can-gw can-bcm can slcan && " +
                         "echo 'Detttaching SLCAN from ttyUSB0...' && sudo slcan_attach -d /dev/ttyUSB0 && " +
                         "echo 'Stopping SLCAN interface...' && sudo ip link set " + selected_caniface + " down && " +
                         "echo '\\nSLCAN Interface Stopped!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
@@ -221,7 +221,7 @@ public class CANFragment extends Fragment {
                 StartSLCanButton.setText("▶ SLCAN");
 
             } else {
-                run_cmd("clear;echo '\\nLoading modules...' && modprobe -a can vcan slcan can-raw can-gw can-bcm && " +
+                run_cmd("clear;echo '\\nLoading modules...' && modprobe -a can slcan can-raw can-gw can-bcm && " +
                         "echo 'Attaching SLCAN to ttyUSB0...' && sudo slcan_attach -f -s" + selected_canSpeed + " -o /dev/ttyUSB0 && " +
                         "echo 'Creating SLCAN interface...' && sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartSpeed + " /dev/ttyUSB0 " + selected_caniface + " && " +
                         "echo 'Starting SLCAN interface...' && sudo ip link set up " + selected_caniface + " && " +
