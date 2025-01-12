@@ -473,7 +473,7 @@
                     android:id="@+id/cannelloni_rhost"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="5dp"
+                    android:layout_marginStart="1dp"
                     android:ems="5"
                     android:inputType="text"
                     android:text="192.168.0.2"
@@ -484,7 +484,7 @@
                     android:id="@+id/textView13"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
+                    android:layout_marginStart="3dp"
                     android:text="LPORT :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -492,7 +492,7 @@
                     android:id="@+id/cannelloni_lport"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="5dp"
+                    android:layout_marginStart="1dp"
                     android:ems="3"
                     android:inputType="text"
                     android:text="20000"
@@ -503,7 +503,7 @@
                     android:id="@+id/textView14"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
+                    android:layout_marginStart="3dp"
                     android:text="RPORT :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -511,7 +511,7 @@
                     android:id="@+id/cannelloni_rport"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="5dp"
+                    android:layout_marginStart="1dp"
                     android:ems="3"
                     android:inputType="text"
                     android:text="20000"
