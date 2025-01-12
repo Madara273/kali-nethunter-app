@@ -321,8 +321,66 @@
                     android:layout_weight="3"
                     android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
+                    android:text="Modules :"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <Spinner
+                    android:id="@+id/modules_spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:dropDownWidth="wrap_content"
+                    android:saveEnabled="false"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <Button
+                    android:id="@+id/load_module"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:text="Load" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/textView11"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
                     android:text="Interface :"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
+
 
             </LinearLayout>
 
@@ -370,7 +428,7 @@
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/textView15"
+                    android:id="@+id/textView12"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="3"
@@ -445,7 +503,7 @@
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/textView11"
+                    android:id="@+id/textView13"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
@@ -463,7 +521,7 @@
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/textView12"
+                    android:id="@+id/textView14"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="RHOST :"
@@ -481,7 +539,7 @@
                     tools:ignore="TouchTargetSizeCheck" />
 
                 <TextView
-                    android:id="@+id/textView13"
+                    android:id="@+id/textView15"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="3dp"
@@ -500,7 +558,7 @@
                     tools:ignore="TouchTargetSizeCheck" />
 
                 <TextView
-                    android:id="@+id/textView14"
+                    android:id="@+id/textView16"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="3dp"
@@ -553,7 +611,7 @@
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/textView16"
+                    android:id="@+id/textView17"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="3"
@@ -602,7 +660,7 @@
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/textView17"
+                    android:id="@+id/textView18"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="3"
@@ -658,7 +716,7 @@
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/textView18"
+                    android:id="@+id/textView19"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
@@ -736,7 +794,7 @@
 
                 <TextView
                     android:gravity="center"
-                    android:id="@+id/textView19"
+                    android:id="@+id/textView20"
                     android:layout_marginTop="10dp"
                     android:layout_marginBottom="15dp"
                     android:layout_width="wrap_content"

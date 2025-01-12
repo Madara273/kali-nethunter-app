@@ -82,10 +82,10 @@ public class CANFragment extends Fragment {
 
         //CanSpeed Spinner
         Spinner CanSpeedSpinner = rootView.findViewById(R.id.canspeed_spinner);
-        String[] bitrateOptions = new String[]{"0 - 10 Kbit/s", "1 - 20 Kbit/s", "2 - 50 Kbit/s", "3 - 100 Kbit/s", "4 - 125 Kbit/s", "5 - 250 Kbit/s", "6 - 500 Kbit/s", "7 - 800 Kbit/s", "8 - 1000 Kbit/s"};
+        String[] CanSpeedOptions = new String[]{"0 - 10 Kbit/s", "1 - 20 Kbit/s", "2 - 50 Kbit/s", "3 - 100 Kbit/s", "4 - 125 Kbit/s", "5 - 250 Kbit/s", "6 - 500 Kbit/s", "7 - 800 Kbit/s", "8 - 1000 Kbit/s"};
 
         ArrayAdapter<String> bitrateAdapter = new ArrayAdapter<>(requireContext(),
-                android.R.layout.simple_list_item_1, bitrateOptions);
+                android.R.layout.simple_list_item_1, CanSpeedOptions);
         CanSpeedSpinner.setAdapter(bitrateAdapter);
 
         CanSpeedSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -126,6 +126,102 @@ public class CANFragment extends Fragment {
             intent.setType("log/*");
             intent.setAction(Intent.ACTION_GET_CONTENT);
             startActivityForResult(Intent.createChooser(intent, "Select output file"),1001);
+        });
+
+        // Modules
+        Spinner modulesSpinner = rootView.findViewById(R.id.modules_spinner);
+        Button loadButton = rootView.findViewById(R.id.load_module);
+
+        // Set up the items for the Spinner
+        String[] moduleOptions = new String[]{
+                "Aeroflex Gaisler GRCAN/GRHCAN",
+                "Bosh C_CAN/D_CAN",
+                "Bosh CC7770 and Intel AN82527",
+                "Bosh M_CAN",
+                "EMS CPC-PCI, CPC-PCIe and CPC-104P Card",
+                "EMS CPC-USB/ARM7 CAN/USB interface",
+                "ESD USB/2 CAN/USB interface",
+                "Generic PCI Bus based C_CAN/D_CAN",
+                "Generic Platform Bus based C_CAN/D_CAN",
+                "Generic Platform Bus based CC770",
+                "Generic Platform Bus based SJA1000",
+                "Geschwister Schneider UG interfaces",
+                "IFI CAN_FD IP",
+                "ISA Bus based legacy CC770",
+                "ISA Bus based legacy SJA1000",
+                "Kvaser CAN/USB interface",
+                "Kvaser PCIcanx and Kvaser PCIcan PCI Cards",
+                "Microchip MCP251x SPI CAN controllers",
+                "PEAK PCAN-PCI/PCIe/miniPCI Cards",
+                "PEAK PCAN-USB/Pro (CAN 2.0b/CAN-FD)",
+                "Philips/NXP SJA1000",
+                "PLX90xx PCI-bridge based Cards",
+                "Softing Gmbh CAN generic",
+                "Xilinx CAN",
+                "8 devices USB2CAN interface"
+        };
+
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, moduleOptions);
+        modulesSpinner.setAdapter(adapter);
+
+        // Set OnClickListener for the Load button
+        loadButton.setOnClickListener(v -> {
+            // Get the selected item from the Spinner
+            String selectedModule = modulesSpinner.getSelectedItem().toString();
+
+            // Execute the corresponding modprobe command based on the selected item
+            if (selectedModule.equals("Aeroflex Gaisler GRCAN/GRHCAN")) {
+                run_cmd("modprobe grcan");
+            } else if (selectedModule.equals("Bosh C_CAN/D_CAN")) {
+                run_cmd("modprobe c_can");
+            } else if (selectedModule.equals("Bosh CC7770 and Intel AN82527")) {
+                run_cmd("modprobe cc770");
+            } else if (selectedModule.equals("Bosh M_CAN")) {
+                run_cmd("modprobe m_can");
+            } else if (selectedModule.equals("EMS CPC-PCI, CPC-PCIe and CPC-104P Card")) {
+                run_cmd("modprobe ems_pci");
+            } else if (selectedModule.equals("EMS CPC-USB/ARM7 CAN/USB interface")) {
+                run_cmd("modprobe ems_usb");
+            } else if (selectedModule.equals("ESD USB/2 CAN/USB interface")) {
+                run_cmd("modprobe esd_usb2");
+            } else if (selectedModule.equals("Generic PCI Bus based C_CAN/D_CAN")) {
+                run_cmd("modprobe c_can_pci");
+            } else if (selectedModule.equals("Generic Platform Bus based C_CAN/D_CAN")) {
+                run_cmd("modprobe c_can_platform");
+            } else if (selectedModule.equals("Generic Platform Bus based CC770")) {
+                run_cmd("modprobe cc770_platform");
+            } else if (selectedModule.equals("Generic Platform Bus based SJA1000")) {
+                run_cmd("modprobe sja1000_platform");
+            } else if (selectedModule.equals("Geschwister Schneider UG interfaces")) {
+                run_cmd("modprobe gs_usb");
+            } else if (selectedModule.equals("IFI CAN_FD IP")) {
+                run_cmd("modprobe ifi_canfd");
+            } else if (selectedModule.equals("ISA Bus based legacy CC770")) {
+                run_cmd("modprobe cc770_isa");
+            } else if (selectedModule.equals("ISA Bus based legacy SJA1000")) {
+                run_cmd("modprobe sja1000_isa");
+            } else if (selectedModule.equals("Kvaser CAN/USB interface")) {
+                run_cmd("modprobe kvaser_usb");
+            } else if (selectedModule.equals("Kvaser PCIcanx and Kvaser PCIcan PCI Cards")) {
+                run_cmd("modprobe kvaser_pci");
+            } else if (selectedModule.equals("Microchip MCP251x SPI CAN controllers")) {
+                run_cmd("modprobe mcp251x");
+            } else if (selectedModule.equals("PEAK PCAN-PCI/PCIe/miniPCI Cards")) {
+                run_cmd("modprobe peak_pci");
+            } else if (selectedModule.equals("PEAK PCAN-USB/Pro (CAN 2.0b/CAN-FD)")) {
+                run_cmd("modprobe peak_usb");
+            } else if (selectedModule.equals("Philips/NXP SJA1000")) {
+                run_cmd("modprobe sja1000");
+            } else if (selectedModule.equals("PLX90xx PCI-bridge based Cards")) {
+                run_cmd("modprobe plx_pci");
+            } else if (selectedModule.equals("Softing Gmbh CAN generic")) {
+                run_cmd("modprobe softing");
+            } else if (selectedModule.equals("Xilinx CAN")) {
+                run_cmd("modprobe xilinx_can");
+            } else if (selectedModule.equals("8 devices USB2CAN interface")) {
+                run_cmd("modprobe usb_8dev");
+            }
+            activity.invalidateOptionsMenu();
         });
 
         // Interfaces
