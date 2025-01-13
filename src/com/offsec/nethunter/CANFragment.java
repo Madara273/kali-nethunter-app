@@ -19,6 +19,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -28,6 +29,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.BootKali;
 import com.offsec.nethunter.utils.NhPaths;
+import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -35,6 +37,7 @@ import java.util.HashMap;
 public class CANFragment extends Fragment {
     public static final String TAG = "CANFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
+    private final ShellExecuter exe = new ShellExecuter();
     private TextView SelectedIface;
     private TextView SelectedUartSpeed;
     private TextView SelectedMtu;
@@ -46,6 +49,7 @@ public class CANFragment extends Fragment {
     private SharedPreferences sharedpreferences;
     private Context context;
     private static Activity activity;
+    public EditText modules_path;
 
     public static CANFragment newInstance(int sectionNumber) {
         CANFragment fragment = new CANFragment();
@@ -65,6 +69,9 @@ public class CANFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.can, container, false);
+
+        // Inflate the modules layout just to get the value of modulesPath
+        View modulesLayout = inflater.inflate(R.layout.modules, container, false);
 
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
@@ -172,66 +179,82 @@ public class CANFragment extends Fragment {
                 "8 devices USB2CAN interface"
         };
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, moduleOptions);
-        modulesSpinner.setAdapter(adapter);
+        // Create a Map for modules and their corresponding modprobe commands
+        Map<String, String> moduleCommands = new HashMap<>();
+        moduleCommands.put("Aeroflex Gaisler GRCAN/GRHCAN", "grcan");
+        moduleCommands.put("Bosh C_CAN/D_CAN", "c_can");
+        moduleCommands.put("Bosh CC7770 and Intel AN82527", "cc770");
+        moduleCommands.put("Bosh M_CAN", "m_can");
+        moduleCommands.put("EMS CPC-PCI, CPC-PCIe and CPC-104P Card", "ems_pci");
+        moduleCommands.put("EMS CPC-USB/ARM7 CAN/USB interface", "ems_usb");
+        moduleCommands.put("ESD USB/2 CAN/USB interface", "esd_usb2");
+        moduleCommands.put("Generic PCI Bus based C_CAN/D_CAN", "c_can_pci");
+        moduleCommands.put("Generic Platform Bus based C_CAN/D_CAN", "c_can_platform");
+        moduleCommands.put("Generic Platform Bus based CC770", "cc770_platform");
+        moduleCommands.put("Generic Platform Bus based SJA1000", "sja1000_platform");
+        moduleCommands.put("Geschwister Schneider UG interfaces", "gs_usb");
+        moduleCommands.put("IFI CAN_FD IP", "ifi_canfd");
+        moduleCommands.put("ISA Bus based legacy CC770", "cc770_isa");
+        moduleCommands.put("ISA Bus based legacy SJA1000", "sja1000_isa");
+        moduleCommands.put("Kvaser CAN/USB interface", "kvaser_usb");
+        moduleCommands.put("Kvaser PCIcanx and Kvaser PCIcan PCI Cards", "kvaser_pci");
+        moduleCommands.put("Microchip MCP251x SPI CAN controllers", "mcp251x");
+        moduleCommands.put("PEAK PCAN-PCI/PCIe/miniPCI Cards", "peak_pci");
+        moduleCommands.put("PEAK PCAN-USB/Pro (CAN 2.0b/CAN-FD)", "peak_usb");
+        moduleCommands.put("Philips/NXP SJA1000", "sja1000");
+        moduleCommands.put("PLX90xx PCI-bridge based Cards", "plx_pci");
+        moduleCommands.put("Softing Gmbh CAN generic", "softing");
+        moduleCommands.put("Xilinx CAN", "xilinx_can");
+        moduleCommands.put("8 devices USB2CAN interface", "usb_8dev");
+
+        // Create and set the adapter for the Spinner
+        ArrayAdapter<String> ModulesAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, moduleOptions);
+        ModulesAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        modulesSpinner.setAdapter(ModulesAdapter);
+
+        // Access the modulesPath TextView from the inflated layout
+        modules_path = modulesLayout.findViewById(R.id.modulesPath);
+        String LastModulesPath = sharedpreferences.getString("last_modulespath", "");
+        if (!LastModulesPath.isEmpty()) modules_path.setText(LastModulesPath);
+
+        String ModulesPath = modules_path.getText().toString();
 
         // Set OnClickListener for the Load button
         loadButton.setOnClickListener(v -> {
-            // Get the selected item from the Spinner
+            // Get the selected item from the Spinner (user-friendly name)
             String selectedModule = modulesSpinner.getSelectedItem().toString();
+            // Get the corresponding kernel module name from the map
+            String kernelModuleName = moduleCommands.get(selectedModule);
+            String ModulesPathFull = ModulesPath + "/" + System.getProperty("os.version");
 
-            // Execute the corresponding modprobe command based on the selected item
-            if (selectedModule.equals("Aeroflex Gaisler GRCAN/GRHCAN")) {
-                run_cmd("modprobe grcan");
-            } else if (selectedModule.equals("Bosh C_CAN/D_CAN")) {
-                run_cmd("modprobe c_can");
-            } else if (selectedModule.equals("Bosh CC7770 and Intel AN82527")) {
-                run_cmd("modprobe cc770");
-            } else if (selectedModule.equals("Bosh M_CAN")) {
-                run_cmd("modprobe m_can");
-            } else if (selectedModule.equals("EMS CPC-PCI, CPC-PCIe and CPC-104P Card")) {
-                run_cmd("modprobe ems_pci");
-            } else if (selectedModule.equals("EMS CPC-USB/ARM7 CAN/USB interface")) {
-                run_cmd("modprobe ems_usb");
-            } else if (selectedModule.equals("ESD USB/2 CAN/USB interface")) {
-                run_cmd("modprobe esd_usb2");
-            } else if (selectedModule.equals("Generic PCI Bus based C_CAN/D_CAN")) {
-                run_cmd("modprobe c_can_pci");
-            } else if (selectedModule.equals("Generic Platform Bus based C_CAN/D_CAN")) {
-                run_cmd("modprobe c_can_platform");
-            } else if (selectedModule.equals("Generic Platform Bus based CC770")) {
-                run_cmd("modprobe cc770_platform");
-            } else if (selectedModule.equals("Generic Platform Bus based SJA1000")) {
-                run_cmd("modprobe sja1000_platform");
-            } else if (selectedModule.equals("Geschwister Schneider UG interfaces")) {
-                run_cmd("modprobe gs_usb");
-            } else if (selectedModule.equals("IFI CAN_FD IP")) {
-                run_cmd("modprobe ifi_canfd");
-            } else if (selectedModule.equals("ISA Bus based legacy CC770")) {
-                run_cmd("modprobe cc770_isa");
-            } else if (selectedModule.equals("ISA Bus based legacy SJA1000")) {
-                run_cmd("modprobe sja1000_isa");
-            } else if (selectedModule.equals("Kvaser CAN/USB interface")) {
-                run_cmd("modprobe kvaser_usb");
-            } else if (selectedModule.equals("Kvaser PCIcanx and Kvaser PCIcan PCI Cards")) {
-                run_cmd("modprobe kvaser_pci");
-            } else if (selectedModule.equals("Microchip MCP251x SPI CAN controllers")) {
-                run_cmd("modprobe mcp251x");
-            } else if (selectedModule.equals("PEAK PCAN-PCI/PCIe/miniPCI Cards")) {
-                run_cmd("modprobe peak_pci");
-            } else if (selectedModule.equals("PEAK PCAN-USB/Pro (CAN 2.0b/CAN-FD)")) {
-                run_cmd("modprobe peak_usb");
-            } else if (selectedModule.equals("Philips/NXP SJA1000")) {
-                run_cmd("modprobe sja1000");
-            } else if (selectedModule.equals("PLX90xx PCI-bridge based Cards")) {
-                run_cmd("modprobe plx_pci");
-            } else if (selectedModule.equals("Softing Gmbh CAN generic")) {
-                run_cmd("modprobe softing");
-            } else if (selectedModule.equals("Xilinx CAN")) {
-                run_cmd("modprobe xilinx_can");
-            } else if (selectedModule.equals("8 devices USB2CAN interface")) {
-                run_cmd("modprobe usb_8dev");
+            if (kernelModuleName != null) {
+                // Check if the module is already loaded using the kernel module name
+                String isModuleLoaded = exe.RunAsRootOutput("lsmod | cut -d' ' -f1 | grep " + kernelModuleName);
+
+                if (isModuleLoaded.contains(kernelModuleName)) {
+                    // If the module is loaded, unload it (rmmod)
+                    String unloadCommand = exe.RunAsRootOutput("rmmod " + kernelModuleName + " && echo Success || echo Failed");
+                    if (unloadCommand.contains("Success")) {
+                        Toast.makeText(requireActivity().getApplicationContext(), "Module Unloaded: " + selectedModule + " - " + kernelModuleName, Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to unload: " + selectedModule + " - " + kernelModuleName, Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    String toggle_module = exe.RunAsRootOutput("insmod " + ModulesPathFull + "/" + selectedModule + ".ko && echo Success || echo Failed");
+                    if (toggle_module.contains("Success")) {
+                        Toast.makeText(requireActivity().getApplicationContext(), "Module Loaded: " + selectedModule + " - " + kernelModuleName + " with insmod.", Toast.LENGTH_LONG).show();
+                    } else {
+                        // If the module is not loaded, load it (modprobe)
+                        String loadCommand = exe.RunAsRootOutput("modprobe -d " + ModulesPathFull + " " + kernelModuleName + " && echo Success || echo Failed");
+                        if (loadCommand.contains("Success")) {
+                            Toast.makeText(requireActivity().getApplicationContext(), "Module Loaded: " + selectedModule + " - " + kernelModuleName + " with modprobe.", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(requireActivity().getApplicationContext(), "Failed to load: " + selectedModule + " - " + kernelModuleName + " with modprobe.", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                }
             }
+            // Invalidate the options menu (refresh)
             activity.invalidateOptionsMenu();
         });
 
