@@ -27,6 +27,7 @@ import androidx.fragment.app.Fragment;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.offsec.nethunter.bridge.Bridge;
+import com.offsec.nethunter.utils.BootKali;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -82,7 +83,17 @@ public class CANFragment extends Fragment {
 
         //CanSpeed Spinner
         Spinner CanSpeedSpinner = rootView.findViewById(R.id.canspeed_spinner);
-        String[] CanSpeedOptions = new String[]{"0 - 10 Kbit/s", "1 - 20 Kbit/s", "2 - 50 Kbit/s", "3 - 100 Kbit/s", "4 - 125 Kbit/s", "5 - 250 Kbit/s", "6 - 500 Kbit/s", "7 - 800 Kbit/s", "8 - 1000 Kbit/s"};
+        String[] CanSpeedOptions = new String[]{
+                "0 - 10 Kbit/s",
+                "1 - 20 Kbit/s",
+                "2 - 50 Kbit/s",
+                "3 - 100 Kbit/s",
+                "4 - 125 Kbit/s",
+                "5 - 250 Kbit/s",
+                "6 - 500 Kbit/s",
+                "7 - 800 Kbit/s",
+                "8 - 1000 Kbit/s"
+        };
 
         ArrayAdapter<String> bitrateAdapter = new ArrayAdapter<>(requireContext(),
                 android.R.layout.simple_list_item_1, CanSpeedOptions);
@@ -277,14 +288,14 @@ public class CANFragment extends Fragment {
             boolean isStarted = buttonStates.get("start_vcaniface");
 
             if (isStarted) {
-                run_cmd("clear;echo '\\nUnloading modules...' && modprobe -r vcan && " +
+                run_cmd("clear;echo '\\nUnloading modules...' && modprobe -r can-raw can-gw can-bcm vcan can && " +
                         "echo 'Stopping VCAN interface...' && sudo ip link set " + selected_caniface + " down && " +
                         "echo '\\nVCAN Interface Stopped!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
                 buttonStates.put("start_vcaniface", false);
                 StartVCanButton.setText("▶ VCAN");
 
             } else {
-                run_cmd("clear;echo '\\nLoading modules...' && modprobe -a vcan && " +
+                run_cmd("clear;echo '\\nLoading modules...' && modprobe -a vcan can can-raw can-gw can-bcm  && " +
                         "echo '\\nCreating VCAN interface...' && ip link add dev " + selected_caniface + " type vcan && ip link set " + selected_caniface + " mtu " + selected_mtu + " && " +
                         "echo 'Starting VCAN interface...' && ip link set up " + selected_caniface + " && ifconfig " + selected_caniface + " && " +
                         "echo '\\nVCAN Interface Initialized!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
@@ -389,13 +400,14 @@ public class CANFragment extends Fragment {
             activity.invalidateOptionsMenu();
         });
 
-        //Start CanSplit
-        Button CanSplitButton = rootView.findViewById(R.id.start_cansplit);
+        //Start SequenceFinder
+        Button SequenceFinderButton = rootView.findViewById(R.id.start_sequencefinder);
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
-        CanSplitButton.setOnClickListener(v ->  {
+        SequenceFinderButton.setOnClickListener(v ->  {
+            new BootKali("cp /sdcard/nh_files/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh && chmod +x /opt/car_hacking/sequence_finder.sh").run_bg();
             String inputfile = inputfilepath.getText().toString();
-            run_cmd("echo 'script todo'" + inputfile);
+            run_cmd("/opt/car_hacking/sequence_finder.sh " + inputfile);
             Toast.makeText(getActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
             activity.invalidateOptionsMenu();
         });
