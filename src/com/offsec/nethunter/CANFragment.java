@@ -19,7 +19,6 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -28,6 +27,7 @@ import androidx.fragment.app.Fragment;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.BootKali;
+import com.offsec.nethunter.utils.NhPaths;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -95,9 +95,9 @@ public class CANFragment extends Fragment {
                 "8 - 1000 Kbit/s"
         };
 
-        ArrayAdapter<String> bitrateAdapter = new ArrayAdapter<>(requireContext(),
+        ArrayAdapter<String> CanSpeedAdapter = new ArrayAdapter<>(requireContext(),
                 android.R.layout.simple_list_item_1, CanSpeedOptions);
-        CanSpeedSpinner.setAdapter(bitrateAdapter);
+        CanSpeedSpinner.setAdapter(CanSpeedAdapter);
 
         CanSpeedSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -352,7 +352,6 @@ public class CANFragment extends Fragment {
         CanGenButton.setOnClickListener(v ->  {
             String selected_caniface = SelectedIface.getText().toString();
             run_cmd("cangen " + selected_caniface + " -v");
-            Toast.makeText(getActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
             activity.invalidateOptionsMenu();
         });
 
@@ -363,7 +362,6 @@ public class CANFragment extends Fragment {
         CanSnifferButton.setOnClickListener(v ->  {
             String selected_caniface = SelectedIface.getText().toString();
             run_cmd("cansniffer " + selected_caniface);
-            Toast.makeText(getActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
             activity.invalidateOptionsMenu();
         });
 
@@ -375,7 +373,6 @@ public class CANFragment extends Fragment {
             String selected_caniface = SelectedIface.getText().toString();
             String outputfile = outputfilepath.getText().toString();
             run_cmd("candump " + selected_caniface + " -f " + outputfile);
-            Toast.makeText(getActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
             activity.invalidateOptionsMenu();
         });
 
@@ -401,14 +398,11 @@ public class CANFragment extends Fragment {
         });
 
         //Start SequenceFinder
-        Button SequenceFinderButton = rootView.findViewById(R.id.start_sequencefinder);
-        SelectedIface = rootView.findViewById(R.id.can_iface);
-
+        final Button SequenceFinderButton = rootView.findViewById(R.id.start_sequencefinder);
         SequenceFinderButton.setOnClickListener(v ->  {
-            new BootKali("cp /sdcard/nh_files/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh && chmod +x /opt/car_hacking/sequence_finder.sh").run_bg();
+            new BootKali("cp " + NhPaths.APP_SD_FILES_PATH + "/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh && chmod +x /opt/car_hacking/sequence_finder.sh").run_bg();
             String inputfile = inputfilepath.getText().toString();
             run_cmd("/opt/car_hacking/sequence_finder.sh " + inputfile);
-            Toast.makeText(getActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
             activity.invalidateOptionsMenu();
         });
 
@@ -425,7 +419,6 @@ public class CANFragment extends Fragment {
             String rport = SelectedRPort.getText().toString();
             String lport = SelectedLPort.getText().toString();
             run_cmd("sudo cannelloni -I " + selected_caniface + " -R " + rhost + " -r " + rport + " -l " + lport);
-            Toast.makeText(getActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
             activity.invalidateOptionsMenu();
         });
 
@@ -578,7 +571,7 @@ public class CANFragment extends Fragment {
                 "echo '\\nSetting up environment...' && if [[ -d /root/candump ]]; then echo '\\nFolder /root/candump detected!'; else echo '\\nCreating /root/candump folder...'; sudo mkdir -p /root/candump;fi;" +
                 "if [[ -d /opt/car_hacking ]]; then echo '\\nFolder /opt/car_hacking detected!'; else echo '\\nCreating /opt/car_hacking folder...'; sudo mkdir -p /opt/car_hacking;fi;" +
                 "if [[ -f /usr/bin/cangen && -f /usr/bin/cansniffer && -f /usr/bin/candump && -f /usr/bin/cansend && -f /usr/bin/canplayer && -d /opt/car_hacking/can-utils ]]; then echo 'Can-utils is installed!'; else cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/can-utils.git; cd /opt/car_hacking/can-utils; sudo make; sudo make install;fi;" +
-                "if [[ -f /usr/bin/cannelloni ]]; then echo 'Cannelloni is installed!'; else cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/cannelloni.git; cd /opt/car_hacking/cannelloni; sudo cmake -DCMAKE_BUILD_TYPE=Release; sudo make; sudo make install;fi;" +
+                "if [[ -f /usr/local/bin/cannelloni ]]; then echo 'Cannelloni is installed!'; else cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/cannelloni.git; cd /opt/car_hacking/cannelloni; sudo cmake -DCMAKE_BUILD_TYPE=Release; sudo make; sudo make install;fi;" +
                 "echo '\\nSetup done!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }
@@ -588,7 +581,7 @@ public class CANFragment extends Fragment {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         run_cmd("echo -ne \"\\033]0;CAN Arsenal Update\\007\" && clear; echo '\\nUpdating Packages...\\n' && apt update && apt install -y libsdl2-dev libsdl2-image-dev can-utils maven autoconf make cmake && " +
                 "if [[ -f /usr/bin/cangen && -f /usr/bin/cansniffer && -f /usr/bin/candump && -f /usr/bin/cansend && -f /usr/bin/canplayer && -d /opt/car_hacking/can-utils  ]]; then echo '\\nCan-Utils detected! Updating...\\n'; cd /opt/car_hacking/can-utils; sudo git pull; sudo make; sudo make install;fi; " +
-                "if [[ -f /usr/bin/cannelloni && -d /opt/car_hacking/cannelloni  ]]; then echo '\\nCannelloni detected! Updating...\\n'; cd /opt/car_hacking/cannelloni; sudo git pull; sudo cmake -DCMAKE_BUILD_TYPE=Release; sudo make; sudo make install;fi; " +
+                "if [[ -f /usr/local/bin/cannelloni && -d /opt/car_hacking/cannelloni  ]]; then echo '\\nCannelloni detected! Updating...\\n'; cd /opt/car_hacking/cannelloni; sudo git pull; sudo cmake -DCMAKE_BUILD_TYPE=Release; sudo make; sudo make install;fi; " +
                 "echo '\\nEverything is updated! Closing in 3secs..'; sleep 3 && exit");
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }
