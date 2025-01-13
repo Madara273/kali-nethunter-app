@@ -69,8 +69,6 @@ public class CANFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.can, container, false);
-
-        // Inflate the modules layout just to get the value of modulesPath
         View modulesLayout = inflater.inflate(R.layout.modules, container, false);
 
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
@@ -102,8 +100,7 @@ public class CANFragment extends Fragment {
                 "8 - 1000 Kbit/s"
         };
 
-        ArrayAdapter<String> CanSpeedAdapter = new ArrayAdapter<>(requireContext(),
-                android.R.layout.simple_list_item_1, CanSpeedOptions);
+        ArrayAdapter<String> CanSpeedAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, CanSpeedOptions);
         CanSpeedSpinner.setAdapter(CanSpeedAdapter);
 
         CanSpeedSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -162,7 +159,7 @@ public class CANFragment extends Fragment {
                 "8 devices USB2CAN interface"
         };
 
-        // Create a Map for modules and their corresponding modprobe commands
+        // Link item to corresponding kernel names
         Map<String, String> moduleCommands = new HashMap<>();
         moduleCommands.put("EMS CPC-USB/ARM7 CAN/USB interface", "ems_usb");
         moduleCommands.put("ESD USB/2 CAN/USB interface", "esd_usb2");
@@ -173,32 +170,27 @@ public class CANFragment extends Fragment {
         moduleCommands.put("PEAK PCAN-USB/Pro (CAN 2.0b/CAN-FD)", "peak_usb");
         moduleCommands.put("8 devices USB2CAN interface", "usb_8dev");
 
-        // Create and set the adapter for the Spinner
         ArrayAdapter<String> ModulesAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, moduleOptions);
         ModulesAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         modulesSpinner.setAdapter(ModulesAdapter);
 
-        // Access the modulesPath TextView from the inflated layout
+        // Access the modules layout
         modules_path = modulesLayout.findViewById(R.id.modulesPath);
         String LastModulesPath = sharedpreferences.getString("last_modulespath", "");
         if (!LastModulesPath.isEmpty()) modules_path.setText(LastModulesPath);
 
         String ModulesPath = modules_path.getText().toString();
 
-        // Set OnClickListener for the Load button
+        // Set OnClickListener for the Load button with Modules tab logic
         loadButton.setOnClickListener(v -> {
-            // Get the selected item from the Spinner (user-friendly name)
             String selectedModule = modulesSpinner.getSelectedItem().toString();
-            // Get the corresponding kernel module name from the map
             String kernelModuleName = moduleCommands.get(selectedModule);
             String ModulesPathFull = ModulesPath + "/" + System.getProperty("os.version");
 
             if (kernelModuleName != null) {
-                // Check if the module is already loaded using the kernel module name
                 String isModuleLoaded = exe.RunAsRootOutput("lsmod | cut -d' ' -f1 | grep " + kernelModuleName);
 
                 if (isModuleLoaded.contains(kernelModuleName)) {
-                    // If the module is loaded, unload it (rmmod)
                     String unloadCommand = exe.RunAsRootOutput("rmmod " + kernelModuleName + " && echo Success || echo Failed");
                     if (unloadCommand.contains("Success")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Module Unloaded: " + selectedModule + " - " + kernelModuleName, Toast.LENGTH_LONG).show();
@@ -210,7 +202,6 @@ public class CANFragment extends Fragment {
                     if (toggle_module.contains("Success")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Module Loaded: " + selectedModule + " - " + kernelModuleName + " with insmod.", Toast.LENGTH_LONG).show();
                     } else {
-                        // If the module is not loaded, load it (modprobe)
                         String loadCommand = exe.RunAsRootOutput("modprobe -d " + ModulesPathFull + " " + kernelModuleName + " && echo Success || echo Failed");
                         if (loadCommand.contains("Success")) {
                             Toast.makeText(requireActivity().getApplicationContext(), "Module Loaded: " + selectedModule + " - " + kernelModuleName + " with modprobe.", Toast.LENGTH_LONG).show();
@@ -220,7 +211,7 @@ public class CANFragment extends Fragment {
                     }
                 }
             }
-            // Invalidate the options menu (refresh)
+
             activity.invalidateOptionsMenu();
         });
 
