@@ -152,59 +152,25 @@ public class CANFragment extends Fragment {
 
         // Set up the items for the Spinner
         String[] moduleOptions = new String[]{
-                "Aeroflex Gaisler GRCAN/GRHCAN",
-                "Bosh C_CAN/D_CAN",
-                "Bosh CC7770 and Intel AN82527",
-                "Bosh M_CAN",
-                "EMS CPC-PCI, CPC-PCIe and CPC-104P Card",
                 "EMS CPC-USB/ARM7 CAN/USB interface",
                 "ESD USB/2 CAN/USB interface",
-                "Generic PCI Bus based C_CAN/D_CAN",
-                "Generic Platform Bus based C_CAN/D_CAN",
-                "Generic Platform Bus based CC770",
-                "Generic Platform Bus based SJA1000",
                 "Geschwister Schneider UG interfaces",
                 "IFI CAN_FD IP",
-                "ISA Bus based legacy CC770",
-                "ISA Bus based legacy SJA1000",
                 "Kvaser CAN/USB interface",
-                "Kvaser PCIcanx and Kvaser PCIcan PCI Cards",
                 "Microchip MCP251x SPI CAN controllers",
-                "PEAK PCAN-PCI/PCIe/miniPCI Cards",
                 "PEAK PCAN-USB/Pro (CAN 2.0b/CAN-FD)",
-                "Philips/NXP SJA1000",
-                "PLX90xx PCI-bridge based Cards",
-                "Softing Gmbh CAN generic",
-                "Xilinx CAN",
                 "8 devices USB2CAN interface"
         };
 
         // Create a Map for modules and their corresponding modprobe commands
         Map<String, String> moduleCommands = new HashMap<>();
-        moduleCommands.put("Aeroflex Gaisler GRCAN/GRHCAN", "grcan");
-        moduleCommands.put("Bosh C_CAN/D_CAN", "c_can");
-        moduleCommands.put("Bosh CC7770 and Intel AN82527", "cc770");
-        moduleCommands.put("Bosh M_CAN", "m_can");
-        moduleCommands.put("EMS CPC-PCI, CPC-PCIe and CPC-104P Card", "ems_pci");
         moduleCommands.put("EMS CPC-USB/ARM7 CAN/USB interface", "ems_usb");
         moduleCommands.put("ESD USB/2 CAN/USB interface", "esd_usb2");
-        moduleCommands.put("Generic PCI Bus based C_CAN/D_CAN", "c_can_pci");
-        moduleCommands.put("Generic Platform Bus based C_CAN/D_CAN", "c_can_platform");
-        moduleCommands.put("Generic Platform Bus based CC770", "cc770_platform");
-        moduleCommands.put("Generic Platform Bus based SJA1000", "sja1000_platform");
         moduleCommands.put("Geschwister Schneider UG interfaces", "gs_usb");
         moduleCommands.put("IFI CAN_FD IP", "ifi_canfd");
-        moduleCommands.put("ISA Bus based legacy CC770", "cc770_isa");
-        moduleCommands.put("ISA Bus based legacy SJA1000", "sja1000_isa");
         moduleCommands.put("Kvaser CAN/USB interface", "kvaser_usb");
-        moduleCommands.put("Kvaser PCIcanx and Kvaser PCIcan PCI Cards", "kvaser_pci");
         moduleCommands.put("Microchip MCP251x SPI CAN controllers", "mcp251x");
-        moduleCommands.put("PEAK PCAN-PCI/PCIe/miniPCI Cards", "peak_pci");
         moduleCommands.put("PEAK PCAN-USB/Pro (CAN 2.0b/CAN-FD)", "peak_usb");
-        moduleCommands.put("Philips/NXP SJA1000", "sja1000");
-        moduleCommands.put("PLX90xx PCI-bridge based Cards", "plx_pci");
-        moduleCommands.put("Softing Gmbh CAN generic", "softing");
-        moduleCommands.put("Xilinx CAN", "xilinx_can");
         moduleCommands.put("8 devices USB2CAN interface", "usb_8dev");
 
         // Create and set the adapter for the Spinner
