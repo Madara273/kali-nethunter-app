@@ -16,6 +16,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
@@ -439,49 +440,63 @@ public class CANFragment extends Fragment {
 
         //Author Contact
         //Website
-        Button AuthorWebsiteButton = rootView.findViewById(R.id.author_website);
+        ImageView AuthorWebsiteButton = rootView.findViewById(R.id.author_website);
         AuthorWebsiteButton.setOnClickListener(v -> {
             String url = "https://v0lk3n.github.io";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
+
         //𝕏
-        Button AuthorXButton = rootView.findViewById(R.id.author_x);
+        ImageView AuthorXButton = rootView.findViewById(R.id.author_x);
         AuthorXButton.setOnClickListener(v -> {
             String url = "https://x.com/v0lk3n";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
+
         //BlueSky
-        Button AuthorBlueskyButton = rootView.findViewById(R.id.author_bluesky);
+        ImageView AuthorBlueskyButton = rootView.findViewById(R.id.author_bluesky);
         AuthorBlueskyButton.setOnClickListener(v -> {
             String url = "https://bsky.app/profile/v0lk3n.bsky.social";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
+
         //Mastodon
-        Button AuthorMastodonButton = rootView.findViewById(R.id.author_mastodon);
+        ImageView AuthorMastodonButton = rootView.findViewById(R.id.author_mastodon);
         AuthorMastodonButton.setOnClickListener(v -> {
             String url = "https://infosec.exchange/@v0lk3n";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
+
+        //Instagram
+        ImageView AuthorInstagramButton = rootView.findViewById(R.id.author_instagram);
+        AuthorInstagramButton.setOnClickListener(v -> {
+            String url = "https://www.instagram.com/v0lk3n_/";
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
+        });
+
         //Discord
-        Button AuthorDiscordButton = rootView.findViewById(R.id.author_discord);
+        ImageView AuthorDiscordButton = rootView.findViewById(R.id.author_discord);
         AuthorDiscordButton.setOnClickListener(v -> {
             String url = "https://discord.com/users/343776454762430484";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
+
         //GitHub
-        Button AuthorGitHubButton = rootView.findViewById(R.id.author_github);
+        ImageView AuthorGitHubButton = rootView.findViewById(R.id.author_github);
         AuthorGitHubButton.setOnClickListener(v -> {
             String url = "https://github.com/V0lk3n";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
         });
+
         //GitLab
-        Button AuthorGitLabButton = rootView.findViewById(R.id.author_gitlab);
+        ImageView AuthorGitLabButton = rootView.findViewById(R.id.author_gitlab);
         AuthorGitLabButton.setOnClickListener(v -> {
             String url = "https://gitlab.com/V0lk3n";
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
