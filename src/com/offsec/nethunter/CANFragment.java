@@ -217,17 +217,25 @@ public class CANFragment extends Fragment {
         });
 
         // Interfaces
+        // Declare SharedPreferences at the class level
+        SharedPreferences preferences = requireActivity().getSharedPreferences("CANInterfaceState", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+
         // Store CAN Interface States
         Map<String, Boolean> buttonStates = new HashMap<>();
+
+        // Load saved button states from SharedPreferences when fragment/activity is created
+        buttonStates.put("start_caniface", preferences.getBoolean("start_caniface", false));
+        buttonStates.put("start_vcaniface", preferences.getBoolean("start_vcaniface", false));
+        buttonStates.put("start_slcaniface", preferences.getBoolean("start_slcaniface", false));
 
         //Start CAN interface
         Button StartCanButton = rootView.findViewById(R.id.start_caniface);
         SelectedIface = rootView.findViewById(R.id.can_iface);
         SelectedUartSpeed = rootView.findViewById(R.id.uart_speed);
 
-        if (!buttonStates.containsKey("start_caniface")) {
-            buttonStates.put("start_caniface", false);
-        }
+        // Set initial button text based on saved state
+        StartCanButton.setText(buttonStates.get("start_caniface") ? "⏹ CAN" : "▶ CAN");
 
         StartCanButton.setOnClickListener(v -> {
             String selected_caniface = SelectedIface.getText().toString();
@@ -240,7 +248,6 @@ public class CANFragment extends Fragment {
                         "echo '\\nCAN Interface Stopped!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
                 buttonStates.put("start_caniface", false);
                 StartCanButton.setText("▶ CAN");
-
             } else {
                 run_cmd("clear;echo '\\nLoading modules...' && modprobe -a can can-raw can-gw can-bcm && " +
                         "echo '\\nCreating CAN interface...' && sudo ip link set " + selected_caniface + " type can bitrate " + selected_uartspeed + " && " +
@@ -251,6 +258,10 @@ public class CANFragment extends Fragment {
                 StartCanButton.setText("⏹ CAN");
             }
 
+            // Save button state to SharedPreferences
+            editor.putBoolean("start_caniface", buttonStates.get("start_caniface"));
+            editor.apply();
+
             activity.invalidateOptionsMenu();
         });
 
@@ -259,9 +270,8 @@ public class CANFragment extends Fragment {
         SelectedIface = rootView.findViewById(R.id.can_iface);
         SelectedMtu = rootView.findViewById(R.id.mtu);
 
-        if (!buttonStates.containsKey("start_vcaniface")) {
-            buttonStates.put("start_vcaniface", false);
-        }
+        // Set initial button text based on saved state
+        StartVCanButton.setText(buttonStates.get("start_vcaniface") ? "⏹ VCAN" : "▶ VCAN");
 
         StartVCanButton.setOnClickListener(v -> {
             String selected_caniface = SelectedIface.getText().toString();
@@ -285,6 +295,10 @@ public class CANFragment extends Fragment {
                 StartVCanButton.setText("⏹ VCAN");
             }
 
+            // Save button state to SharedPreferences
+            editor.putBoolean("start_vcaniface", buttonStates.get("start_vcaniface"));
+            editor.apply();
+
             activity.invalidateOptionsMenu();
         });
 
@@ -293,9 +307,8 @@ public class CANFragment extends Fragment {
         SelectedIface = rootView.findViewById(R.id.can_iface);
         SelectedUartSpeed = rootView.findViewById(R.id.uart_speed);
 
-        if (!buttonStates.containsKey("start_slcaniface")) {
-            buttonStates.put("start_slcaniface", false);
-        }
+        // Set initial button text based on saved state
+        StartSLCanButton.setText(buttonStates.get("start_slcaniface") ? "⏹ SLCAN" : "▶ SLCAN");
 
         StartSLCanButton.setOnClickListener(v -> {
             String selected_caniface = SelectedIface.getText().toString();
@@ -321,6 +334,10 @@ public class CANFragment extends Fragment {
                 buttonStates.put("start_slcaniface", true);
                 StartSLCanButton.setText("⏹ SLCAN");
             }
+
+            // Save button state to SharedPreferences
+            editor.putBoolean("start_slcaniface", buttonStates.get("start_slcaniface"));
+            editor.apply();
 
             activity.invalidateOptionsMenu();
         });
