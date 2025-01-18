@@ -387,7 +387,7 @@ public class CANFragment extends Fragment {
                 }
 
                 if (isStarted) {
-                    String stopSLCanIface = exe.RunAsChrootOutput("sudo slcan_attach -d /dev/ttyUSB0 && sudo ip link set " + selected_caniface + " down && modprobe -r can-raw can-gw can-bcm can slcan && echo Success || echo Failed");
+                    String stopSLCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && sudo slcan_attach -d /dev/ttyUSB0 && modprobe -r can-raw can-gw can-bcm can slcan && echo Success || echo Failed");
                     stopSLCanIface = stopSLCanIface.trim();
                     if (stopSLCanIface.contains("FATAL:") || stopSLCanIface.contains("Failed")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to stop " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
