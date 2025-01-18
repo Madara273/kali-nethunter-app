@@ -242,20 +242,28 @@ public class CANFragment extends Fragment {
             String selected_uartspeed = SelectedUartSpeed.getText().toString();
             boolean isStarted = buttonStates.get("start_caniface");
 
-            if (isStarted) {
-                run_cmd("clear;echo '\\nUnloading modules...' && modprobe -r can-raw can-gw can-bcm can && " +
-                        "echo '\\nStopping CAN interface...' && sudo ip link set " + selected_caniface + " down && " +
-                        "echo '\\nCAN Interface Stopped!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
-                buttonStates.put("start_caniface", false);
-                StartCanButton.setText("▶ CAN");
+            if (selected_caniface != null && !selected_caniface.isEmpty()) {
+                if (isStarted) {
+                    String stopCanIface = exe.RunAsChrootOutput("modprobe -r can-raw can-gw can-bcm can && sudo ip link set " + selected_caniface + " down && echo Success || echo Failed");
+                    if (stopCanIface.contains("Success")) {
+                        buttonStates.put("start_caniface", false);
+                        StartCanButton.setText("▶ CAN");
+                        Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to stop " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    String startCanIface = exe.RunAsChrootOutput("modprobe -a can can-raw can-gw can-bcm && sudo ip link set " + selected_caniface + " type can bitrate " + selected_uartspeed + " && sudo ip link set up " + selected_caniface + " && echo Success || echo Failed");
+                    if (startCanIface.contains("Success")) {
+                        buttonStates.put("start_caniface", true);
+                        StartCanButton.setText("⏹ CAN");
+                        Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " started!", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                    }
+                }
             } else {
-                run_cmd("clear;echo '\\nLoading modules...' && modprobe -a can can-raw can-gw can-bcm && " +
-                        "echo '\\nCreating CAN interface...' && sudo ip link set " + selected_caniface + " type can bitrate " + selected_uartspeed + " && " +
-                        "echo 'Starting CAN interface...' && sudo ip link set up " + selected_caniface + " && ifconfig " + selected_caniface + " && " +
-                        "echo '\\nCAN Interface Initialized!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
-
-                buttonStates.put("start_caniface", true);
-                StartCanButton.setText("⏹ CAN");
+                Toast.makeText(requireActivity().getApplicationContext(), "Please specify a CAN interface!", Toast.LENGTH_LONG).show();
             }
 
             // Save button state to SharedPreferences
@@ -278,21 +286,28 @@ public class CANFragment extends Fragment {
             String selected_mtu = SelectedMtu.getText().toString();
             boolean isStarted = buttonStates.get("start_vcaniface");
 
-            if (isStarted) {
-                run_cmd("clear;echo '\\nUnloading modules...' && modprobe -r can-raw can-gw can-bcm vcan can && " +
-                        "echo 'Stopping VCAN interface...' && sudo ip link set " + selected_caniface + " down && " +
-                        "echo '\\nVCAN Interface Stopped!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
-                buttonStates.put("start_vcaniface", false);
-                StartVCanButton.setText("▶ VCAN");
-
+            if (selected_caniface != null && !selected_caniface.isEmpty()) {
+                if (isStarted) {
+                    String stopVCanIface = exe.RunAsChrootOutput("modprobe -r can-raw can-gw can-bcm vcan can && sudo ip link set " + selected_caniface + " down && echo Success || echo Failed");
+                    if (stopVCanIface.contains("Success")) {
+                        buttonStates.put("start_vcaniface", false);
+                        StartVCanButton.setText("▶ VCAN");
+                        Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to stop " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    String startVCanIface = exe.RunAsChrootOutput("modprobe -a vcan can can-raw can-gw can-bcm && sudo ip link add dev " + selected_caniface + " type vcan && sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && sudo ip link set up " + selected_caniface + " && echo Success || echo Failed");
+                    if (startVCanIface.contains("Success")) {
+                        buttonStates.put("start_vcaniface", true);
+                        StartVCanButton.setText("⏹ VCAN");
+                        Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " started!", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                    }
+                }
             } else {
-                run_cmd("clear;echo '\\nLoading modules...' && modprobe -a vcan can can-raw can-gw can-bcm  && " +
-                        "echo '\\nCreating VCAN interface...' && ip link add dev " + selected_caniface + " type vcan && ip link set " + selected_caniface + " mtu " + selected_mtu + " && " +
-                        "echo 'Starting VCAN interface...' && ip link set up " + selected_caniface + " && ifconfig " + selected_caniface + " && " +
-                        "echo '\\nVCAN Interface Initialized!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
-
-                buttonStates.put("start_vcaniface", true);
-                StartVCanButton.setText("⏹ VCAN");
+                Toast.makeText(requireActivity().getApplicationContext(), "Please specify a CAN interface!", Toast.LENGTH_LONG).show();
             }
 
             // Save button state to SharedPreferences
@@ -316,23 +331,28 @@ public class CANFragment extends Fragment {
             String selected_canSpeed = String.valueOf(SelectedCanSpeed);
             boolean isStarted = buttonStates.get("start_slcaniface");
 
-            if (isStarted) {
-                run_cmd("clear;echo '\\nUnloading modules...' && modprobe -r can-raw can-gw can-bcm can slcan && " +
-                        "echo 'Detttaching SLCAN from ttyUSB0...' && sudo slcan_attach -d /dev/ttyUSB0 && " +
-                        "echo 'Stopping SLCAN interface...' && sudo ip link set " + selected_caniface + " down && " +
-                        "echo '\\nSLCAN Interface Stopped!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
-                buttonStates.put("start_slcaniface", false);
-                StartSLCanButton.setText("▶ SLCAN");
-
+            if (selected_caniface != null && !selected_caniface.isEmpty()) {
+                if (isStarted) {
+                    String stopSLCanIface = exe.RunAsChrootOutput("modprobe -r can-raw can-gw can-bcm can slcan && sudo slcan_attach -d /dev/ttyUSB0 && sudo ip link set " + selected_caniface + " down && echo Success || echo Failed");
+                    if (stopSLCanIface.contains("Success")) {
+                        buttonStates.put("start_slcaniface", false);
+                        StartVCanButton.setText("▶ SLCAN");
+                        Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to stop " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                    }
+                } else {
+                    String startSLCanIface = exe.RunAsChrootOutput("modprobe -a can slcan can-raw can-gw can-bcm && sudo slcan_attach -f -s" + selected_canSpeed + " -o /dev/ttyUSB0 && sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartSpeed + " /dev/ttyUSB0 " + selected_caniface + " && sudo ip link set up " + selected_caniface + " && echo Success || echo Failed");
+                    if (startSLCanIface.contains("Success")) {
+                        buttonStates.put("start_slcaniface", true);
+                        StartVCanButton.setText("⏹ SLCAN");
+                        Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " started!", Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                    }
+                }
             } else {
-                run_cmd("clear;echo '\\nLoading modules...' && modprobe -a can slcan can-raw can-gw can-bcm && " +
-                        "echo 'Attaching SLCAN to ttyUSB0...' && sudo slcan_attach -f -s" + selected_canSpeed + " -o /dev/ttyUSB0 && " +
-                        "echo 'Creating SLCAN interface...' && sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartSpeed + " /dev/ttyUSB0 " + selected_caniface + " && " +
-                        "echo 'Starting SLCAN interface...' && sudo ip link set up " + selected_caniface + " && " +
-                        "echo '\\nSLCAN Interface Initialized!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
-
-                buttonStates.put("start_slcaniface", true);
-                StartSLCanButton.setText("⏹ SLCAN");
+                Toast.makeText(requireActivity().getApplicationContext(), "Please specify a CAN interface!", Toast.LENGTH_LONG).show();
             }
 
             // Save button state to SharedPreferences
