@@ -394,6 +394,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
             navigationView.getMenu().getItem(21).setVisible(false);
             navigationView.getMenu().getItem(22).setVisible(false);
             navigationView.getMenu().getItem(23).setVisible(false);
+            navigationView.getMenu().getItem(24).setVisible(false);
         } else {
             snowfall = prefs.getBoolean("snowfall_enabled", true);
         }
