@@ -242,28 +242,50 @@ public class CANFragment extends Fragment {
             String selected_uartspeed = SelectedUartSpeed.getText().toString();
             boolean isStarted = buttonStates.get("start_caniface");
 
-            if (selected_caniface != null && !selected_caniface.isEmpty()) {
+            String checkUSB = exe.RunAsChrootOutput("ls /dev/ttyUSB*");
+            checkUSB = checkUSB.trim();
+            if (checkUSB.isEmpty()) {
+                Toast.makeText(requireActivity().getApplicationContext(), "No CAN Adapter detected! Please connect your CAN Adapter.", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            if (selected_caniface != null && !selected_caniface.isEmpty()
+                    && selected_uartspeed != null && !selected_uartspeed.isEmpty()) {
+
+                // Validate CAN interface format
+                if (!selected_caniface.matches("^can\\d+$")) {
+                    Toast.makeText(requireActivity().getApplicationContext(), "The CAN interface should have a numeric suffix, such as 'can0', 'can1', etc.", Toast.LENGTH_LONG).show();
+                    return;
+                }
                 if (isStarted) {
-                    String stopCanIface = exe.RunAsChrootOutput("modprobe -r can-raw can-gw can-bcm can && sudo ip link set " + selected_caniface + " down && echo Success || echo Failed");
-                    if (stopCanIface.contains("Success")) {
+                    String stopCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && modprobe -r can-raw can-gw can-bcm can && echo Success || echo Failed");
+                    stopCanIface = stopCanIface.trim();
+                    if (stopCanIface.contains("FATAL:") || stopCanIface.contains("Failed")) {
+                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to stop " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                    } else {
                         buttonStates.put("start_caniface", false);
                         StartCanButton.setText("▶ CAN");
                         Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to stop " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                     }
                 } else {
                     String startCanIface = exe.RunAsChrootOutput("modprobe -a can can-raw can-gw can-bcm && sudo ip link set " + selected_caniface + " type can bitrate " + selected_uartspeed + " && sudo ip link set up " + selected_caniface + " && echo Success || echo Failed");
-                    if (startCanIface.contains("Success")) {
+                    startCanIface = startCanIface.trim();
+                    if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
+                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                    } else {
                         buttonStates.put("start_caniface", true);
                         StartCanButton.setText("⏹ CAN");
                         Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " started!", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                     }
                 }
             } else {
-                Toast.makeText(requireActivity().getApplicationContext(), "Please specify a CAN interface!", Toast.LENGTH_LONG).show();
+                if (selected_caniface == null || selected_caniface.isEmpty()) {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please set a CAN interface!", Toast.LENGTH_LONG).show();
+                }
+
+                if (selected_uartspeed == null || selected_uartspeed.isEmpty()) {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please set a UART Speed value!", Toast.LENGTH_LONG).show();
+                }
             }
 
             // Save button state to SharedPreferences
@@ -286,28 +308,44 @@ public class CANFragment extends Fragment {
             String selected_mtu = SelectedMtu.getText().toString();
             boolean isStarted = buttonStates.get("start_vcaniface");
 
-            if (selected_caniface != null && !selected_caniface.isEmpty()) {
+            if (selected_caniface != null && !selected_caniface.isEmpty()
+                    && selected_mtu != null && !selected_mtu.isEmpty()) {
+
+                // Validate VCAN interface format
+                if (!selected_caniface.matches("^vcan\\d+$")) {
+                    Toast.makeText(requireActivity().getApplicationContext(), "The VCAN interface should have a numeric suffix, such as 'vcan0', 'vcan1', etc.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
                 if (isStarted) {
-                    String stopVCanIface = exe.RunAsChrootOutput("modprobe -r can-raw can-gw can-bcm vcan can && sudo ip link set " + selected_caniface + " down && echo Success || echo Failed");
-                    if (stopVCanIface.contains("Success")) {
+                    String stopVCanIface = exe.RunAsChrootOutput("modprobe -r can-raw can-gw can-bcm vcan can && echo Success || echo Failed");
+                    stopVCanIface = stopVCanIface.trim();
+                    if (stopVCanIface.contains("FATAL:") || stopVCanIface.contains("Failed")) {
+                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to stop " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                    } else {
                         buttonStates.put("start_vcaniface", false);
                         StartVCanButton.setText("▶ VCAN");
                         Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to stop " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                     }
                 } else {
-                    String startVCanIface = exe.RunAsChrootOutput("modprobe -a vcan can can-raw can-gw can-bcm && sudo ip link add dev " + selected_caniface + " type vcan && sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && sudo ip link set up " + selected_caniface + " && echo Success || echo Failed");
-                    if (startVCanIface.contains("Success")) {
+                    String startVCanIface = exe.RunAsChrootOutput("modprobe -a vcan can can-raw can-gw can-bcm;sudo ip link add dev " + selected_caniface + " type vcan && sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && sudo ip link set up " + selected_caniface + " && echo Success || echo Failed");
+                    startVCanIface = startVCanIface.trim();
+                    if (startVCanIface.contains("FATAL:") || startVCanIface.contains("Failed")) {
+                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                    } else {
                         buttonStates.put("start_vcaniface", true);
                         StartVCanButton.setText("⏹ VCAN");
                         Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " started!", Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                     }
                 }
             } else {
-                Toast.makeText(requireActivity().getApplicationContext(), "Please specify a CAN interface!", Toast.LENGTH_LONG).show();
+                if (selected_caniface == null || selected_caniface.isEmpty()) {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please set a VCAN interface!", Toast.LENGTH_LONG).show();
+                }
+
+                if (selected_mtu == null || selected_mtu.isEmpty()) {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please set a MTU value!", Toast.LENGTH_LONG).show();
+                }
             }
 
             // Save button state to SharedPreferences
@@ -331,28 +369,56 @@ public class CANFragment extends Fragment {
             String selected_canSpeed = String.valueOf(SelectedCanSpeed);
             boolean isStarted = buttonStates.get("start_slcaniface");
 
-            if (selected_caniface != null && !selected_caniface.isEmpty()) {
+            String checkUSB = exe.RunAsChrootOutput("ls /dev/ttyUSB*");
+            checkUSB = checkUSB.trim();
+            if (checkUSB.isEmpty()) {
+                Toast.makeText(requireActivity().getApplicationContext(), "No CAN Adapter detected! Please connect your CAN Adapter.", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            if (selected_caniface != null && !selected_caniface.isEmpty()
+                    && selected_uartSpeed != null && !selected_uartSpeed.isEmpty()
+                    && selected_canSpeed != null && !selected_canSpeed.isEmpty()) {
+
+                // Validate SLCAN interface format
+                if (!selected_caniface.matches("^slcan\\d+$")) {
+                    Toast.makeText(requireActivity().getApplicationContext(), "The SLCAN interface should have a numeric suffix, such as 'slcan0', 'slcan1', etc.", Toast.LENGTH_LONG).show();
+                    return;
+                }
+
                 if (isStarted) {
-                    String stopSLCanIface = exe.RunAsChrootOutput("modprobe -r can-raw can-gw can-bcm can slcan && sudo slcan_attach -d /dev/ttyUSB0 && sudo ip link set " + selected_caniface + " down && echo Success || echo Failed");
-                    if (stopSLCanIface.contains("Success")) {
-                        buttonStates.put("start_slcaniface", false);
-                        StartVCanButton.setText("▶ SLCAN");
-                        Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
-                    } else {
+                    String stopSLCanIface = exe.RunAsChrootOutput("sudo slcan_attach -d /dev/ttyUSB0 && sudo ip link set " + selected_caniface + " down && modprobe -r can-raw can-gw can-bcm can slcan && echo Success || echo Failed");
+                    stopSLCanIface = stopSLCanIface.trim();
+                    if (stopSLCanIface.contains("FATAL:") || stopSLCanIface.contains("Failed")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to stop " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                    } else {
+                        buttonStates.put("start_slcaniface", false);
+                        StartSLCanButton.setText("▶ SLCAN");
+                        Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
                     }
                 } else {
                     String startSLCanIface = exe.RunAsChrootOutput("modprobe -a can slcan can-raw can-gw can-bcm && sudo slcan_attach -f -s" + selected_canSpeed + " -o /dev/ttyUSB0 && sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartSpeed + " /dev/ttyUSB0 " + selected_caniface + " && sudo ip link set up " + selected_caniface + " && echo Success || echo Failed");
-                    if (startSLCanIface.contains("Success")) {
-                        buttonStates.put("start_slcaniface", true);
-                        StartVCanButton.setText("⏹ SLCAN");
-                        Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " started!", Toast.LENGTH_LONG).show();
-                    } else {
+                    startSLCanIface = startSLCanIface.trim();
+                    if (startSLCanIface.contains("FATAL:") || startSLCanIface.contains("Failed")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                    } else {
+                        buttonStates.put("start_slcaniface", true);
+                        StartSLCanButton.setText("⏹ SLCAN");
+                        Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " started!", Toast.LENGTH_LONG).show();
                     }
                 }
             } else {
-                Toast.makeText(requireActivity().getApplicationContext(), "Please specify a CAN interface!", Toast.LENGTH_LONG).show();
+                if (selected_caniface == null || selected_caniface.isEmpty()) {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please set a SLCAN interface!", Toast.LENGTH_LONG).show();
+                }
+
+                if (selected_canSpeed == null || selected_canSpeed.isEmpty()) {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please set a CAN Speed value!", Toast.LENGTH_LONG).show();
+                }
+
+                if (selected_uartSpeed == null || selected_uartSpeed.isEmpty()) {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please set a UART Speed value!", Toast.LENGTH_LONG).show();
+                }
             }
 
             // Save button state to SharedPreferences
@@ -369,7 +435,12 @@ public class CANFragment extends Fragment {
 
         CanGenButton.setOnClickListener(v ->  {
             String selected_caniface = SelectedIface.getText().toString();
-            run_cmd("cangen " + selected_caniface + " -v");
+
+            if (selected_caniface != null && !selected_caniface.isEmpty()) {
+                run_cmd("cangen " + selected_caniface + " -v");
+            } else {
+                Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface field is set!", Toast.LENGTH_LONG).show();
+            }
             activity.invalidateOptionsMenu();
         });
 
@@ -379,7 +450,13 @@ public class CANFragment extends Fragment {
 
         CanSnifferButton.setOnClickListener(v ->  {
             String selected_caniface = SelectedIface.getText().toString();
-            run_cmd("cansniffer " + selected_caniface);
+
+            if (selected_caniface != null && !selected_caniface.isEmpty()) {
+                run_cmd("cansniffer " + selected_caniface);
+            } else {
+                Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface field is set!", Toast.LENGTH_LONG).show();
+            }
+
             activity.invalidateOptionsMenu();
         });
 
@@ -390,7 +467,14 @@ public class CANFragment extends Fragment {
         CanDumpButton.setOnClickListener(v ->  {
             String selected_caniface = SelectedIface.getText().toString();
             String outputfile = outputfilepath.getText().toString();
-            run_cmd("candump " + selected_caniface + " -f " + outputfile);
+
+            if (selected_caniface != null && !selected_caniface.isEmpty()
+                    && outputfile != null && !outputfile.isEmpty()) {
+                run_cmd("candump " + selected_caniface + " -f " + outputfile);
+            } else {
+                Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface and Output File fields is set!", Toast.LENGTH_LONG).show();
+            }
+
             activity.invalidateOptionsMenu();
         });
 
@@ -402,7 +486,14 @@ public class CANFragment extends Fragment {
         CanSendButton.setOnClickListener(v ->  {
             String sequence = cansend_sequence.getText().toString();
             String selected_caniface = SelectedIface.getText().toString();
-            run_cmd("cansend " + selected_caniface + " " + sequence);
+
+            if (selected_caniface != null && !selected_caniface.isEmpty()
+                    && sequence != null && !sequence.isEmpty()) {
+                run_cmd("cansend " + selected_caniface + " " + sequence);
+            } else {
+                Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface and Sequence fields is set!", Toast.LENGTH_LONG).show();
+            }
+
             activity.invalidateOptionsMenu();
         });
 
@@ -411,7 +502,13 @@ public class CANFragment extends Fragment {
 
         CanPlayerButton.setOnClickListener(v ->  {
             String inputfile = inputfilepath.getText().toString();
-            run_cmd("canplayer -I " + inputfile);
+
+            if (inputfile != null && !inputfile.isEmpty()) {
+                run_cmd("canplayer -I " + inputfile);
+            } else {
+                Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your Input File field is set!", Toast.LENGTH_LONG).show();
+            }
+
             activity.invalidateOptionsMenu();
         });
 
@@ -420,7 +517,13 @@ public class CANFragment extends Fragment {
         SequenceFinderButton.setOnClickListener(v ->  {
             new BootKali("cp " + NhPaths.APP_SD_FILES_PATH + "/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh && chmod +x /opt/car_hacking/sequence_finder.sh").run_bg();
             String inputfile = inputfilepath.getText().toString();
-            run_cmd("/opt/car_hacking/sequence_finder.sh " + inputfile);
+
+            if (inputfile != null && !inputfile.isEmpty()) {
+                run_cmd("/opt/car_hacking/sequence_finder.sh " + inputfile);
+            } else {
+                Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your Input File field is set!", Toast.LENGTH_LONG).show();
+            }
+
             activity.invalidateOptionsMenu();
         });
 
@@ -436,7 +539,16 @@ public class CANFragment extends Fragment {
             String rhost = SelectedRHost.getText().toString();
             String rport = SelectedRPort.getText().toString();
             String lport = SelectedLPort.getText().toString();
-            run_cmd("sudo cannelloni -I " + selected_caniface + " -R " + rhost + " -r " + rport + " -l " + lport);
+
+            if (selected_caniface != null && !selected_caniface.isEmpty()
+                    && rhost != null && !rhost.isEmpty()
+                    && rport != null && !rport.isEmpty()
+                    && lport !=null && !lport.isEmpty()) {
+                run_cmd("sudo cannelloni -I " + selected_caniface + " -R " + rhost + " -r " + rport + " -l " + lport);
+            } else {
+                Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface, RHOST, RPORT, LPORT fields is set!", Toast.LENGTH_LONG).show();
+            }
+
             activity.invalidateOptionsMenu();
         });
 
@@ -448,7 +560,14 @@ public class CANFragment extends Fragment {
         Asc2LogButton.setOnClickListener(v ->  {
             String inputfile = inputfilepath.getText().toString();
             String outputfile = outputfilepath.getText().toString();
-            run_cmd("asc2log -I " + inputfile + " -O " + outputfile);
+
+            if (inputfile != null && !inputfile.isEmpty()
+                    && outputfile != null && !outputfile.isEmpty()) {
+                run_cmd("asc2log -I " + inputfile + " -O " + outputfile);
+            } else {
+                Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your Input and Output File fields is set!", Toast.LENGTH_LONG).show();
+            }
+
             activity.invalidateOptionsMenu();
         });
 
@@ -460,7 +579,15 @@ public class CANFragment extends Fragment {
             String inputfile = inputfilepath.getText().toString();
             String outputfile = outputfilepath.getText().toString();
             String selected_caniface = SelectedIface.getText().toString();
-            run_cmd("log2asc -I " + inputfile + " -O " + outputfile + " " + selected_caniface);
+
+            if (selected_caniface != null && !selected_caniface.isEmpty()
+                    && inputfile != null && !inputfile.isEmpty()
+                    && outputfile != null && !outputfile.isEmpty()) {
+                run_cmd("log2asc -I " + inputfile + " -O " + outputfile + " " + selected_caniface);
+            } else {
+                Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface, Input and Output File fields is set!", Toast.LENGTH_LONG).show();
+            }
+
             activity.invalidateOptionsMenu();
         });
 
@@ -470,8 +597,14 @@ public class CANFragment extends Fragment {
         SelectedIface = rootView.findViewById(R.id.can_iface);
 
         CustomCmdButton.setOnClickListener(v ->  {
-            String sequence = CustomCmd.getText().toString();
-            run_cmd(sequence);
+            String command = CustomCmd.getText().toString();
+
+            if (command != null && !command.isEmpty()) {
+                run_cmd(command);
+            } else {
+                Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your Custom Command field is set!", Toast.LENGTH_LONG).show();
+            }
+
             activity.invalidateOptionsMenu();
         });
 

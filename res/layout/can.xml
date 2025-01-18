@@ -552,7 +552,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="1dp"
                     android:ems="3"
-                    android:inputType="text"
+                    android:inputType="number"
                     android:text="20000"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -571,7 +571,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="1dp"
                     android:ems="3"
-                    android:inputType="text"
+                    android:inputType="number"
                     android:text="20000"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
