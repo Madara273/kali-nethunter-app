@@ -46,7 +46,7 @@ public class CANFragment extends Fragment {
     private TextView SelectedRPort;
     private TextView SelectedLPort;
     private int SelectedCanSpeed;
-    private String flow_control = "hw"; // Default value
+    //private String flow_control = "hw"; // Default value (disabled)
     private SharedPreferences sharedpreferences;
     private Context context;
     private static Activity activity;
@@ -81,11 +81,11 @@ public class CANFragment extends Fragment {
         }
 
         //Settings
-        //Flow Control Switch
-        Switch flowControlSwitch = rootView.findViewById(R.id.flow_control_switch);
-        flowControlSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            flow_control = isChecked ? "sw" : "hw";
-        });
+        //Flow Control Switch (Disabled)
+        //Switch flowControlSwitch = rootView.findViewById(R.id.flow_control_switch);
+        //flowControlSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+        //    flow_control = isChecked ? "sw" : "hw";
+        //});
 
         //CanSpeed Spinner
         Spinner CanSpeedSpinner = rootView.findViewById(R.id.canspeed_spinner);
@@ -399,11 +399,10 @@ public class CANFragment extends Fragment {
                 } else {
                     String startSLCanIface = exe.RunAsChrootOutput("modprobe -a can slcan can-raw can-gw can-bcm && " +
                             "sudo slcan_attach -f -s" + selected_canSpeed + " -o /dev/ttyUSB0 && " +
-                            "if timeout 10 sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartSpeed + " /dev/ttyUSB0 " + selected_caniface + "; then " +
-                            "sudo ip link set up " + selected_caniface + " && echo Success || echo Failed; " +
-                            "else echo 'TIMED OUT' && modprobe -r can-raw can-gw can-bcm can slcan;sudo slcan_attach -d /dev/ttyUSB0;sudo ip link set " + selected_caniface + " down;fi;");
+                            "sudo slcand -o -s" + selected_canSpeed + " -t sw -S " + selected_uartSpeed + " /dev/ttyUSB0 " + selected_caniface + " && " +
+                            "sudo ip link set up " + selected_caniface + " && echo Success || echo Failed");
                     startSLCanIface = startSLCanIface.trim();
-                    if (startSLCanIface.contains("FATAL:") || startSLCanIface.contains("Failed") || startSLCanIface.contains("TIMED OUT")) {
+                    if (startSLCanIface.contains("FATAL:") || startSLCanIface.contains("Failed")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                     } else {
                         buttonStates.put("start_slcaniface", true);
