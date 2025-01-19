@@ -401,7 +401,7 @@ public class CANFragment extends Fragment {
                             "sudo slcan_attach -f -s" + selected_canSpeed + " -o /dev/ttyUSB0 && " +
                             "if timeout 10 sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartSpeed + " /dev/ttyUSB0 " + selected_caniface + "; then " +
                             "sudo ip link set up " + selected_caniface + " && echo Success || echo Failed; " +
-                            "else echo 'TIMED OUT' && modprobe -r can-raw can-gw can-bcm can slcan;fi;");
+                            "else echo 'TIMED OUT' && modprobe -r can-raw can-gw can-bcm can slcan;sudo slcan_attach -d /dev/ttyUSB0;sudo ip link set " + selected_caniface + " down;fi;");
                     startSLCanIface = startSLCanIface.trim();
                     if (startSLCanIface.contains("FATAL:") || startSLCanIface.contains("Failed") || startSLCanIface.contains("TIMED OUT")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
