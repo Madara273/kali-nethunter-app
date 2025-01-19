@@ -397,9 +397,13 @@ public class CANFragment extends Fragment {
                         Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
                     }
                 } else {
-                    String startSLCanIface = exe.RunAsChrootOutput("modprobe -a can slcan can-raw can-gw can-bcm && sudo slcan_attach -f -s" + selected_canSpeed + " -o /dev/ttyUSB0 && sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartSpeed + " /dev/ttyUSB0 " + selected_caniface + " && sudo ip link set up " + selected_caniface + " && echo Success || echo Failed");
+                    String startSLCanIface = exe.RunAsChrootOutput("modprobe -a can slcan can-raw can-gw can-bcm && " +
+                            "sudo slcan_attach -f -s" + selected_canSpeed + " -o /dev/ttyUSB0 && " +
+                            "if timeout 10 sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartSpeed + " /dev/ttyUSB0 " + selected_caniface + "; then " +
+                            "sudo ip link set up " + selected_caniface + " && echo Success || echo Failed; " +
+                            "else echo 'TIMED OUT' && modprobe -r can-raw can-gw can-bcm can slcan;fi;");
                     startSLCanIface = startSLCanIface.trim();
-                    if (startSLCanIface.contains("FATAL:") || startSLCanIface.contains("Failed")) {
+                    if (startSLCanIface.contains("FATAL:") || startSLCanIface.contains("Failed") || startSLCanIface.contains("TIMED OUT")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                     } else {
                         buttonStates.put("start_slcaniface", true);
