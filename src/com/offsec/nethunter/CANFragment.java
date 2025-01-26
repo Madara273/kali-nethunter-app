@@ -105,7 +105,7 @@ public class CANFragment extends Fragment {
         } else {
             final String[] usbifacesArray = outputUSB[0].split("\n");
             ttyUSB.setAdapter(new ArrayAdapter(requireContext(),android.R.layout.simple_list_item_1, usbifacesArray));
-            String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
+            String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
             Toast.makeText(requireActivity().getApplicationContext(), detected_device, Toast.LENGTH_LONG).show();
 
         }
@@ -727,7 +727,7 @@ public class CANFragment extends Fragment {
                 ttyUSB.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, usbifacesArray));
                 int lastiface = sharedpreferences.getInt("selected_usb", 0);
                 ttyUSB.setSelection(lastiface);
-                String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
+                String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
                 Toast.makeText(requireActivity().getApplicationContext(), detected_device, Toast.LENGTH_LONG).show();
             }
         });
