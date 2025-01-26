@@ -79,6 +79,7 @@
                     android:layout_weight="3"
                     android:ems="10"
                     android:inputType="text"
+                    android:saveEnabled="true"
                     android:text="can0"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -106,7 +107,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:dropDownWidth="wrap_content"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:spinnerMode="dropdown" />
 
             </LinearLayout>
@@ -132,7 +133,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:dropDownWidth="wrap_content"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
 
@@ -162,6 +163,7 @@
                     android:layout_weight="3"
                     android:ems="10"
                     android:inputType="number"
+                    android:saveEnabled="true"
                     android:text="125000"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -224,6 +226,7 @@
                     android:layout_weight="3"
                     android:ems="10"
                     android:inputType="number"
+                    android:saveEnabled="true"
                     android:text="72"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -253,6 +256,7 @@
                     android:layout_marginEnd="20dp"
                     android:ems="13"
                     android:inputType="text"
+                    android:saveEnabled="true"
                     android:text="01a#11223344AABBCCDD"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -283,7 +287,8 @@
                     android:layout_marginEnd="20dp"
                     android:gravity="center"
                     android:inputType="text"
-                    android:text="/root/candump/in_01.log"
+                    android:saveEnabled="true"
+                    android:text="/root/candump/dump.log"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
 
@@ -320,7 +325,8 @@
                     android:layout_marginEnd="20dp"
                     android:gravity="center"
                     android:inputType="text"
-                    android:text="/root/candump/out_01.log"
+                    android:saveEnabled="true"
+                    android:text="/root/candump/dump.log"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
 
@@ -569,6 +575,7 @@
                     android:layout_marginStart="1dp"
                     android:ems="5"
                     android:inputType="text"
+                    android:saveEnabled="true"
                     android:text="192.168.0.2"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -588,6 +595,7 @@
                     android:layout_marginStart="1dp"
                     android:ems="3"
                     android:inputType="number"
+                    android:saveEnabled="true"
                     android:text="20000"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -607,6 +615,7 @@
                     android:layout_marginStart="1dp"
                     android:ems="3"
                     android:inputType="number"
+                    android:saveEnabled="true"
                     android:text="20000"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -720,6 +729,7 @@
                     android:layout_marginStart="20dp"
                     android:ems="15"
                     android:inputType="text"
+                    android:saveEnabled="true"
                     android:text="canbusload can0@100000 -r -t -b -c"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />

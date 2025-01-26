@@ -43,7 +43,14 @@ public class CANFragment extends Fragment {
     public static final String TAG = "CANFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
     private final ShellExecuter exe = new ShellExecuter();
+    private String selected_caniface;
+    private String selected_mtu;
+    private String selected_canSpeed;
+    private String selected_uartspeed;
     private String selected_usb;
+    private String rhost;
+    private String rport;
+    private String lport;
     private TextView SelectedIface;
     private TextView SelectedUartSpeed;
     private TextView SelectedMtu;
@@ -252,6 +259,22 @@ public class CANFragment extends Fragment {
             activity.invalidateOptionsMenu();
         });
 
+        // Common used variables
+        SelectedIface = rootView.findViewById(R.id.can_iface);
+        selected_caniface = SelectedIface.getText().toString();
+        selected_canSpeed = String.valueOf(SelectedCanSpeed);
+        SelectedUartSpeed = rootView.findViewById(R.id.uart_speed);
+        selected_uartspeed = SelectedUartSpeed.getText().toString();
+        SelectedMtu = rootView.findViewById(R.id.mtu);
+        selected_mtu = SelectedMtu.getText().toString();
+
+        SelectedRHost = rootView.findViewById(R.id.cannelloni_rhost);
+        rhost = SelectedRHost.getText().toString();
+        SelectedRPort = rootView.findViewById(R.id.cannelloni_rport);
+        rport = SelectedRPort.getText().toString();
+        SelectedLPort = rootView.findViewById(R.id.cannelloni_lport);
+        lport = SelectedLPort.getText().toString();
+
         // Interfaces
         // Declare SharedPreferences at the class level
         SharedPreferences preferences = requireActivity().getSharedPreferences("CANInterfaceState", Context.MODE_PRIVATE);
@@ -267,15 +290,11 @@ public class CANFragment extends Fragment {
 
         //Start CAN interface
         Button StartCanButton = rootView.findViewById(R.id.start_caniface);
-        SelectedIface = rootView.findViewById(R.id.can_iface);
-        SelectedUartSpeed = rootView.findViewById(R.id.uart_speed);
 
         // Set initial button text based on saved state
         StartCanButton.setText(buttonStates.get("start_caniface") ? "⏹ CAN" : "▶ CAN");
 
         StartCanButton.setOnClickListener(v -> {
-            String selected_caniface = SelectedIface.getText().toString();
-            String selected_uartspeed = SelectedUartSpeed.getText().toString();
             boolean isStarted = buttonStates.get("start_caniface");
 
             String checkCAN = exe.RunAsChrootOutput("ls /sys/class/net/can*");
@@ -333,15 +352,11 @@ public class CANFragment extends Fragment {
 
         // Start VCAN interface
         Button StartVCanButton = rootView.findViewById(R.id.start_vcaniface);
-        SelectedIface = rootView.findViewById(R.id.can_iface);
-        SelectedMtu = rootView.findViewById(R.id.mtu);
 
         // Set initial button text based on saved state
         StartVCanButton.setText(buttonStates.get("start_vcaniface") ? "⏹ VCAN" : "▶ VCAN");
 
         StartVCanButton.setOnClickListener(v -> {
-            String selected_caniface = SelectedIface.getText().toString();
-            String selected_mtu = SelectedMtu.getText().toString();
             boolean isStarted = buttonStates.get("start_vcaniface");
 
             if (selected_caniface != null && !selected_caniface.isEmpty()
@@ -393,16 +408,11 @@ public class CANFragment extends Fragment {
 
         // Start SLCAN interface
         Button StartSLCanButton = rootView.findViewById(R.id.start_slcaniface);
-        SelectedIface = rootView.findViewById(R.id.can_iface);
-        SelectedUartSpeed = rootView.findViewById(R.id.uart_speed);
 
         // Set initial button text based on saved state
         StartSLCanButton.setText(buttonStates.get("start_slcaniface") ? "⏹ SLCAN" : "▶ SLCAN");
 
         StartSLCanButton.setOnClickListener(v -> {
-            String selected_caniface = SelectedIface.getText().toString();
-            String selected_uartSpeed = SelectedUartSpeed.getText().toString();
-            String selected_canSpeed = String.valueOf(SelectedCanSpeed);
             boolean isStarted = buttonStates.get("start_slcaniface");
 
             String checkUSB = exe.RunAsChrootOutput("ls /dev/ttyUSB*");
@@ -413,7 +423,7 @@ public class CANFragment extends Fragment {
             }
 
             if (selected_caniface != null && !selected_caniface.isEmpty()
-                    && selected_uartSpeed != null && !selected_uartSpeed.isEmpty()
+                    && selected_uartspeed != null && !selected_uartspeed.isEmpty()
                     && selected_canSpeed != null && !selected_canSpeed.isEmpty()) {
 
                 // Validate SLCAN interface format
@@ -435,7 +445,7 @@ public class CANFragment extends Fragment {
                 } else {
                     String startSLCanIface = exe.RunAsChrootOutput("modprobe -a can slcan can-raw can-gw can-bcm && " +
                             "sudo slcan_attach -f -s" + selected_canSpeed + " -o " + selected_usb + " && " +
-                            "sudo slcand -o -s" + selected_canSpeed + " -t sw -S " + selected_uartSpeed + " " + selected_usb + " " + selected_caniface + " && " +
+                            "sudo slcand -o -s" + selected_canSpeed + " -t sw -S " + selected_uartspeed + " " + selected_usb + " " + selected_caniface + " && " +
                             "sudo ip link set up " + selected_caniface + " && echo Success || echo Failed");
                     startSLCanIface = startSLCanIface.trim();
                     if (startSLCanIface.contains("FATAL:") || startSLCanIface.contains("Failed")) {
@@ -455,7 +465,7 @@ public class CANFragment extends Fragment {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please set a CAN Speed value!", Toast.LENGTH_LONG).show();
                 }
 
-                if (selected_uartSpeed == null || selected_uartSpeed.isEmpty()) {
+                if (selected_uartspeed == null || selected_uartspeed.isEmpty()) {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please set a UART Speed value!", Toast.LENGTH_LONG).show();
                 }
             }
@@ -470,10 +480,8 @@ public class CANFragment extends Fragment {
         //Tools
         //Start CanGen
         Button CanGenButton = rootView.findViewById(R.id.start_cangen);
-        SelectedIface = rootView.findViewById(R.id.can_iface);
 
         CanGenButton.setOnClickListener(v ->  {
-            String selected_caniface = SelectedIface.getText().toString();
 
             if (selected_caniface != null && !selected_caniface.isEmpty()) {
                 run_cmd("cangen " + selected_caniface + " -v");
@@ -485,10 +493,8 @@ public class CANFragment extends Fragment {
 
         //Start CanSniffer
         Button CanSnifferButton = rootView.findViewById(R.id.start_cansniffer);
-        SelectedIface = rootView.findViewById(R.id.can_iface);
 
         CanSnifferButton.setOnClickListener(v ->  {
-            String selected_caniface = SelectedIface.getText().toString();
 
             if (selected_caniface != null && !selected_caniface.isEmpty()) {
                 run_cmd("cansniffer " + selected_caniface);
@@ -501,10 +507,8 @@ public class CANFragment extends Fragment {
 
         //Start CanDump
         Button CanDumpButton = rootView.findViewById(R.id.start_candump);
-        SelectedIface = rootView.findViewById(R.id.can_iface);
 
         CanDumpButton.setOnClickListener(v ->  {
-            String selected_caniface = SelectedIface.getText().toString();
             String outputfile = outputfilepath.getText().toString();
 
             if (selected_caniface != null && !selected_caniface.isEmpty()
@@ -520,11 +524,9 @@ public class CANFragment extends Fragment {
         //Start CanSend
         final EditText cansend_sequence = rootView.findViewById(R.id.cansend_sequence);
         Button CanSendButton = rootView.findViewById(R.id.start_cansend);
-        SelectedIface = rootView.findViewById(R.id.can_iface);
 
         CanSendButton.setOnClickListener(v ->  {
             String sequence = cansend_sequence.getText().toString();
-            String selected_caniface = SelectedIface.getText().toString();
 
             if (selected_caniface != null && !selected_caniface.isEmpty()
                     && sequence != null && !sequence.isEmpty()) {
@@ -568,16 +570,8 @@ public class CANFragment extends Fragment {
 
         //Cannelloni
         Button CannelloniButton = rootView.findViewById(R.id.start_cannelloni);
-        SelectedIface = rootView.findViewById(R.id.can_iface);
-        SelectedRHost = rootView.findViewById(R.id.cannelloni_rhost);
-        SelectedRPort = rootView.findViewById(R.id.cannelloni_rport);
-        SelectedLPort = rootView.findViewById(R.id.cannelloni_lport);
 
         CannelloniButton.setOnClickListener(v ->  {
-            String selected_caniface = SelectedIface.getText().toString();
-            String rhost = SelectedRHost.getText().toString();
-            String rport = SelectedRPort.getText().toString();
-            String lport = SelectedLPort.getText().toString();
 
             if (selected_caniface != null && !selected_caniface.isEmpty()
                     && rhost != null && !rhost.isEmpty()
@@ -594,7 +588,6 @@ public class CANFragment extends Fragment {
         //Logging
         //Start Asc2Log
         Button Asc2LogButton = rootView.findViewById(R.id.start_asc2log);
-        SelectedIface = rootView.findViewById(R.id.can_iface);
 
         Asc2LogButton.setOnClickListener(v ->  {
             String inputfile = inputfilepath.getText().toString();
@@ -612,12 +605,10 @@ public class CANFragment extends Fragment {
 
         //Start Log2asc
         Button Log2AscButton = rootView.findViewById(R.id.start_log2asc);
-        SelectedIface = rootView.findViewById(R.id.can_iface);
 
         Log2AscButton.setOnClickListener(v ->  {
             String inputfile = inputfilepath.getText().toString();
             String outputfile = outputfilepath.getText().toString();
-            String selected_caniface = SelectedIface.getText().toString();
 
             if (selected_caniface != null && !selected_caniface.isEmpty()
                     && inputfile != null && !inputfile.isEmpty()
@@ -633,7 +624,6 @@ public class CANFragment extends Fragment {
         //Start CustomCommand
         final EditText CustomCmd = rootView.findViewById(R.id.customcmd);
         Button CustomCmdButton = rootView.findViewById(R.id.start_customcmd);
-        SelectedIface = rootView.findViewById(R.id.can_iface);
 
         CustomCmdButton.setOnClickListener(v ->  {
             String command = CustomCmd.getText().toString();
