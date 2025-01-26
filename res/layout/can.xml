@@ -42,6 +42,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
+                    android:layout_weight="3"
                     android:text="Settings :"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
@@ -49,8 +50,8 @@
                     android:id="@+id/refreshUSB"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="230dp"
                     android:layout_marginEnd="20dp"
+                    android:ems="10"
                     app:srcCompat="@drawable/ic_action_refresh" />
 
             </LinearLayout>
@@ -450,7 +451,6 @@
                     android:layout_height="wrap_content"
                     android:text="▶ SLCAN" />
 
-
             </LinearLayout>
 
             <View
@@ -724,10 +724,10 @@
 
                 <EditText
                     android:id="@+id/customcmd"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:ems="15"
+                    android:layout_weight="3"
                     android:inputType="text"
                     android:saveEnabled="true"
                     android:text="canbusload can0@100000 -r -t -b -c"
@@ -738,8 +738,9 @@
                     android:id="@+id/start_customcmd"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
+                    android:layout_weight="3"
+                    android:ems="10"
                     android:text="Run"
                     android:textColor="#ffffffff" />
 

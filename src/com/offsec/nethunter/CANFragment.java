@@ -96,7 +96,7 @@ public class CANFragment extends Fragment {
         final Spinner ttyUSB = rootView.findViewById(R.id.usb_interface);
 
         final String[] outputUSB = {""};
-        AsyncTask.execute(() -> outputUSB[0] = exe.RunAsChrootOutput("ls /dev/ttyUSB*"));
+        AsyncTask.execute(() -> outputUSB[0] = exe.RunAsChrootOutput("ls -1 /sys/class/net/ | grep can;ls -1 /dev/ttyUSB*"));
 
         final ArrayList<String> usbIfaces = new ArrayList<>();
         if (outputUSB[0].isEmpty()) {
@@ -105,6 +105,9 @@ public class CANFragment extends Fragment {
         } else {
             final String[] usbifacesArray = outputUSB[0].split("\n");
             ttyUSB.setAdapter(new ArrayAdapter(requireContext(),android.R.layout.simple_list_item_1, usbifacesArray));
+            String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
+            Toast.makeText(requireActivity().getApplicationContext(), detected_device, Toast.LENGTH_LONG).show();
+
         }
 
         ttyUSB.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -297,7 +300,7 @@ public class CANFragment extends Fragment {
         StartCanButton.setOnClickListener(v -> {
             boolean isStarted = buttonStates.get("start_caniface");
 
-            String checkCAN = exe.RunAsChrootOutput("ls /sys/class/net/can*");
+            String checkCAN = exe.RunAsChrootOutput("ls -1 /sys/class/net/ | grep can");
             checkCAN = checkCAN.trim();
             if (checkCAN.isEmpty()) {
                 Toast.makeText(requireActivity().getApplicationContext(), "No CAN device detected! Please connect your CAN device.", Toast.LENGTH_LONG).show();
@@ -415,10 +418,10 @@ public class CANFragment extends Fragment {
         StartSLCanButton.setOnClickListener(v -> {
             boolean isStarted = buttonStates.get("start_slcaniface");
 
-            String checkUSB = exe.RunAsChrootOutput("ls /dev/ttyUSB*");
+            String checkUSB = exe.RunAsChrootOutput("ls -1 /dev/ttyUSB*");
             checkUSB = checkUSB.trim();
             if (checkUSB.isEmpty()) {
-                Toast.makeText(requireActivity().getApplicationContext(), "No CAN Adapter detected! Please connect your CAN Adapter.", Toast.LENGTH_LONG).show();
+                Toast.makeText(requireActivity().getApplicationContext(), "No CAN Device detected! Please connect your CAN Device.", Toast.LENGTH_LONG).show();
                 return;
             }
 
@@ -713,7 +716,7 @@ public class CANFragment extends Fragment {
         SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
         requireActivity().runOnUiThread(() -> {
-            String outputUSB = exe.RunAsChrootOutput("ls /dev/ttyUSB*");
+            String outputUSB = exe.RunAsChrootOutput("ls -1 /sys/class/net/ | grep can;ls -1 /dev/ttyUSB*");
             final ArrayList<String> usbIfaces = new ArrayList<>();
             if (outputUSB.isEmpty()) {
                 usbIfaces.add("None");
@@ -724,6 +727,8 @@ public class CANFragment extends Fragment {
                 ttyUSB.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, usbifacesArray));
                 int lastiface = sharedpreferences.getInt("selected_usb", 0);
                 ttyUSB.setSelection(lastiface);
+                String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
+                Toast.makeText(requireActivity().getApplicationContext(), detected_device, Toast.LENGTH_LONG).show();
             }
         });
     }
