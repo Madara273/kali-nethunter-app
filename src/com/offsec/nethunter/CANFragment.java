@@ -276,19 +276,17 @@ public class CANFragment extends Fragment {
         StartCanButton.setOnClickListener(v -> {
             String selected_caniface = SelectedIface.getText().toString();
             String selected_uartspeed = SelectedUartSpeed.getText().toString();
-            String selected_canSpeed = String.valueOf(SelectedCanSpeed);
             boolean isStarted = buttonStates.get("start_caniface");
 
-            String checkUSB = exe.RunAsChrootOutput("ls /dev/ttyUSB*");
-            checkUSB = checkUSB.trim();
-            if (checkUSB.isEmpty()) {
-                Toast.makeText(requireActivity().getApplicationContext(), "No CAN Adapter detected! Please connect your CAN Adapter.", Toast.LENGTH_LONG).show();
+            String checkCAN = exe.RunAsChrootOutput("ls /sys/class/net/can*");
+            checkCAN = checkCAN.trim();
+            if (checkCAN.isEmpty()) {
+                Toast.makeText(requireActivity().getApplicationContext(), "No CAN device detected! Please connect your CAN device.", Toast.LENGTH_LONG).show();
                 return;
             }
 
             if (selected_caniface != null && !selected_caniface.isEmpty()
-                    && selected_uartspeed != null && !selected_uartspeed.isEmpty()
-                    && selected_canSpeed != null && !selected_canSpeed.isEmpty()) {
+                    && selected_uartspeed != null && !selected_uartspeed.isEmpty()) {
 
                 // Validate CAN interface format
                 if (!selected_caniface.matches("^can\\d+$")) {
@@ -296,7 +294,7 @@ public class CANFragment extends Fragment {
                     return;
                 }
                 if (isStarted) {
-                    String stopCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && sleep 1 && sudo slcan_attach -d " + selected_usb + " && sleep 1 && modprobe -r can-raw can-gw can-bcm can && echo Success || echo Failed");
+                    String stopCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && modprobe -r can-raw can-gw can-bcm can && echo Success || echo Failed");
                     stopCanIface = stopCanIface.trim();
                     if (stopCanIface.contains("FATAL:") || stopCanIface.contains("Failed")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to stop " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
@@ -306,7 +304,7 @@ public class CANFragment extends Fragment {
                         Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
                     }
                 } else {
-                    String startCanIface = exe.RunAsChrootOutput("modprobe -a can can-raw can-gw can-bcm && sudo slcan_attach -f -s" + selected_canSpeed + " -o " + selected_usb + " && sudo ip link set " + selected_caniface + " type can bitrate " + selected_uartspeed + " && sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
+                    String startCanIface = exe.RunAsChrootOutput("modprobe -a can can-raw can-gw can-bcm && sudo ip link set " + selected_caniface + " type can bitrate " + selected_uartspeed + " && sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
                     startCanIface = startCanIface.trim();
                     if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
@@ -319,10 +317,6 @@ public class CANFragment extends Fragment {
             } else {
                 if (selected_caniface == null || selected_caniface.isEmpty()) {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please set a CAN interface!", Toast.LENGTH_LONG).show();
-                }
-
-                if (selected_canSpeed == null || selected_canSpeed.isEmpty()) {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Please set a CAN Speed value!", Toast.LENGTH_LONG).show();
                 }
 
                 if (selected_uartspeed == null || selected_uartspeed.isEmpty()) {
