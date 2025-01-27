@@ -43,14 +43,7 @@ public class CANFragment extends Fragment {
     public static final String TAG = "CANFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
     private final ShellExecuter exe = new ShellExecuter();
-    private String selected_caniface;
-    private String selected_mtu;
-    private String selected_canSpeed;
-    private String selected_uartspeed;
     private String selected_usb;
-    private String rhost;
-    private String rport;
-    private String lport;
     private TextView SelectedIface;
     private TextView SelectedUartSpeed;
     private TextView SelectedMtu;
@@ -85,6 +78,18 @@ public class CANFragment extends Fragment {
         View modulesLayout = inflater.inflate(R.layout.modules, container, false);
 
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+
+        // Common used variables
+
+        SelectedIface = rootView.findViewById(R.id.can_iface);
+        SelectedUartSpeed = rootView.findViewById(R.id.uart_speed);
+        SelectedMtu = rootView.findViewById(R.id.mtu);
+        final EditText cansend_sequence = rootView.findViewById(R.id.cansend_sequence);
+        final EditText CustomCmd = rootView.findViewById(R.id.customcmd);
+
+        SelectedRHost = rootView.findViewById(R.id.cannelloni_rhost);
+        SelectedRPort = rootView.findViewById(R.id.cannelloni_rport);
+        SelectedLPort = rootView.findViewById(R.id.cannelloni_lport);
 
         //First run
         Boolean setupdone = sharedpreferences.getBoolean("setup_done", false);
@@ -262,22 +267,6 @@ public class CANFragment extends Fragment {
             activity.invalidateOptionsMenu();
         });
 
-        // Common used variables
-        SelectedIface = rootView.findViewById(R.id.can_iface);
-        selected_caniface = SelectedIface.getText().toString();
-        selected_canSpeed = String.valueOf(SelectedCanSpeed);
-        SelectedUartSpeed = rootView.findViewById(R.id.uart_speed);
-        selected_uartspeed = SelectedUartSpeed.getText().toString();
-        SelectedMtu = rootView.findViewById(R.id.mtu);
-        selected_mtu = SelectedMtu.getText().toString();
-
-        SelectedRHost = rootView.findViewById(R.id.cannelloni_rhost);
-        rhost = SelectedRHost.getText().toString();
-        SelectedRPort = rootView.findViewById(R.id.cannelloni_rport);
-        rport = SelectedRPort.getText().toString();
-        SelectedLPort = rootView.findViewById(R.id.cannelloni_lport);
-        lport = SelectedLPort.getText().toString();
-
         // Interfaces
         // Declare SharedPreferences at the class level
         SharedPreferences preferences = requireActivity().getSharedPreferences("CANInterfaceState", Context.MODE_PRIVATE);
@@ -298,6 +287,8 @@ public class CANFragment extends Fragment {
         StartCanButton.setText(buttonStates.get("start_caniface") ? "⏹ CAN" : "▶ CAN");
 
         StartCanButton.setOnClickListener(v -> {
+            String selected_caniface = SelectedIface.getText().toString();
+            String selected_uartspeed = SelectedUartSpeed.getText().toString();
             boolean isStarted = buttonStates.get("start_caniface");
 
             String checkCAN = exe.RunAsChrootOutput("ls -1 /sys/class/net/ | grep can");
@@ -360,6 +351,8 @@ public class CANFragment extends Fragment {
         StartVCanButton.setText(buttonStates.get("start_vcaniface") ? "⏹ VCAN" : "▶ VCAN");
 
         StartVCanButton.setOnClickListener(v -> {
+            String selected_caniface = SelectedIface.getText().toString();
+            String selected_mtu = SelectedMtu.getText().toString();
             boolean isStarted = buttonStates.get("start_vcaniface");
 
             if (selected_caniface != null && !selected_caniface.isEmpty()
@@ -416,6 +409,9 @@ public class CANFragment extends Fragment {
         StartSLCanButton.setText(buttonStates.get("start_slcaniface") ? "⏹ SLCAN" : "▶ SLCAN");
 
         StartSLCanButton.setOnClickListener(v -> {
+            String selected_caniface = SelectedIface.getText().toString();
+            String selected_canSpeed = String.valueOf(SelectedCanSpeed);
+            String selected_uartspeed = SelectedUartSpeed.getText().toString();
             boolean isStarted = buttonStates.get("start_slcaniface");
 
             String checkUSB = exe.RunAsChrootOutput("ls -1 /dev/ttyUSB*");
@@ -485,6 +481,7 @@ public class CANFragment extends Fragment {
         Button CanGenButton = rootView.findViewById(R.id.start_cangen);
 
         CanGenButton.setOnClickListener(v ->  {
+            String selected_caniface = SelectedIface.getText().toString();
 
             if (selected_caniface != null && !selected_caniface.isEmpty()) {
                 run_cmd("cangen " + selected_caniface + " -v");
@@ -498,6 +495,7 @@ public class CANFragment extends Fragment {
         Button CanSnifferButton = rootView.findViewById(R.id.start_cansniffer);
 
         CanSnifferButton.setOnClickListener(v ->  {
+            String selected_caniface = SelectedIface.getText().toString();
 
             if (selected_caniface != null && !selected_caniface.isEmpty()) {
                 run_cmd("cansniffer " + selected_caniface);
@@ -512,6 +510,7 @@ public class CANFragment extends Fragment {
         Button CanDumpButton = rootView.findViewById(R.id.start_candump);
 
         CanDumpButton.setOnClickListener(v ->  {
+            String selected_caniface = SelectedIface.getText().toString();
             String outputfile = outputfilepath.getText().toString();
 
             if (selected_caniface != null && !selected_caniface.isEmpty()
@@ -525,10 +524,10 @@ public class CANFragment extends Fragment {
         });
 
         //Start CanSend
-        final EditText cansend_sequence = rootView.findViewById(R.id.cansend_sequence);
         Button CanSendButton = rootView.findViewById(R.id.start_cansend);
 
         CanSendButton.setOnClickListener(v ->  {
+            String selected_caniface = SelectedIface.getText().toString();
             String sequence = cansend_sequence.getText().toString();
 
             if (selected_caniface != null && !selected_caniface.isEmpty()
@@ -558,6 +557,7 @@ public class CANFragment extends Fragment {
 
         //Start SequenceFinder
         final Button SequenceFinderButton = rootView.findViewById(R.id.start_sequencefinder);
+
         SequenceFinderButton.setOnClickListener(v ->  {
             new BootKali("cp " + NhPaths.APP_SD_FILES_PATH + "/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh && chmod +x /opt/car_hacking/sequence_finder.sh").run_bg();
             String inputfile = inputfilepath.getText().toString();
@@ -575,6 +575,10 @@ public class CANFragment extends Fragment {
         Button CannelloniButton = rootView.findViewById(R.id.start_cannelloni);
 
         CannelloniButton.setOnClickListener(v ->  {
+            String selected_caniface = SelectedIface.getText().toString();
+            String rhost = SelectedRHost.getText().toString();
+            String rport = SelectedRPort.getText().toString();
+            String lport = SelectedLPort.getText().toString();
 
             if (selected_caniface != null && !selected_caniface.isEmpty()
                     && rhost != null && !rhost.isEmpty()
@@ -610,6 +614,7 @@ public class CANFragment extends Fragment {
         Button Log2AscButton = rootView.findViewById(R.id.start_log2asc);
 
         Log2AscButton.setOnClickListener(v ->  {
+            String selected_caniface = SelectedIface.getText().toString();
             String inputfile = inputfilepath.getText().toString();
             String outputfile = outputfilepath.getText().toString();
 
@@ -625,7 +630,6 @@ public class CANFragment extends Fragment {
         });
 
         //Start CustomCommand
-        final EditText CustomCmd = rootView.findViewById(R.id.customcmd);
         Button CustomCmdButton = rootView.findViewById(R.id.start_customcmd);
 
         CustomCmdButton.setOnClickListener(v ->  {
