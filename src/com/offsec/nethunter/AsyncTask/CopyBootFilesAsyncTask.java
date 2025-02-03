@@ -101,6 +101,7 @@ public class CopyBootFilesAsyncTask extends AsyncTask<String, String, String>{
             Symlink("bootkali_bash");
             Symlink("bootkali_init");
             Symlink("bootkali_login");
+	    Symlink("killkali");
             // disable the magisk notification for nethunter app as it will keep popping up bunch of toast message when executing runtime command.
             disableMagiskNotification();
             SharedPreferences.Editor ed = prefs.edit();
