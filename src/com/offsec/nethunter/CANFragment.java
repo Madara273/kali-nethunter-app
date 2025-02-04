@@ -35,7 +35,6 @@ import com.offsec.nethunter.utils.BootKali;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
@@ -472,11 +471,16 @@ public class CANFragment extends Fragment {
                 } else {
                     String startSLCanIface = exe.RunAsChrootOutput("modprobe -a can slcan can-raw can-gw can-bcm && " +
                             "sudo slcan_attach -f -s" + selected_canSpeed + " -o " + selected_usb + " && " +
-                            "sudo slcand -o -s" + selected_canSpeed + " -t sw -S " + selected_uartspeed + " " + selected_usb + " " + selected_caniface + " && " +
-                            "sudo ip link set up " + selected_caniface + " && echo Success || echo Failed");
+                            "if timeout 5 sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartspeed + " " + selected_usb + " " + selected_caniface + "; then " +
+                            "sudo ip link set up " + selected_caniface + " && echo Success || echo Failed; " +
+                            "else echo 'TIMED OUT' && modprobe -r can-raw can-gw can-bcm can slcan;sudo slcan_attach -d " + selected_usb + ";sudo ip link set " + selected_caniface + " down;fi;");
                     startSLCanIface = startSLCanIface.trim();
-                    if (startSLCanIface.contains("FATAL:") || startSLCanIface.contains("Failed")) {
-                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                    if (startSLCanIface.contains("FATAL:") || startSLCanIface.contains("Failed") || startSLCanIface.contains("TIMED OUT")) {
+                        if (startSLCanIface.contains("TIMED OUT")) {
+                            Toast.makeText(requireActivity().getApplicationContext(), "Timed Out! Try switching flow control.", Toast.LENGTH_LONG).show();
+                        } else {
+                            Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                        }
                     } else {
                         buttonStates.put("start_slcaniface", true);
                         StartSLCanButton.setText("⏹ SLCAN");
