@@ -594,7 +594,7 @@
                     android:layout_marginStart="2dp"
                     android:inputType="number"
                     android:saveEnabled="false"
-                    android:text="200000"
+                    android:text="9600"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
 
@@ -613,7 +613,7 @@
                     android:layout_marginStart="2dp"
                     android:inputType="number"
                     android:saveEnabled="false"
-                    android:text="200000"
+                    android:text="500000"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
 

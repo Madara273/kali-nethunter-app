@@ -64,7 +64,7 @@ public class CANFragment extends Fragment {
     private TextView SelectedLPort;
     private TextView SelectedSleep;
     private int SelectedCanSpeed;
-    private String flow_control = "sw"; // Default value
+    private String flow_control = "hw";
     private SharedPreferences sharedpreferences;
     private Context context;
     private static Activity activity;
