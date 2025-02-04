@@ -509,9 +509,6 @@ public class CANFragment extends Fragment {
             activity.invalidateOptionsMenu();
         });
 
-        // Reset Iface
-        // Todo
-
         //Tools
         //Start CanGen
         Button CanGenButton = rootView.findViewById(R.id.start_cangen);
