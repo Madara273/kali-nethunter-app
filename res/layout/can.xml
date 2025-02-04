@@ -15,6 +15,21 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/can_experimental_version"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|center"
+                android:gravity="center"
+                android:padding="10dp"
+                android:text="Experimental Version" />
+
+            <View
+                android:id="@+id/divider9"
+                android:layout_width="match_parent"
+                android:layout_marginBottom="10dp"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
+            <TextView
                 android:id="@+id/can_desc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
