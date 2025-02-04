@@ -138,8 +138,9 @@ public class CANFragment extends Fragment {
             final String[] usbifacesArray = outputUSB[0].split("\n");
             ttyUSB.setAdapter(new ArrayAdapter(requireContext(),android.R.layout.simple_list_item_1, usbifacesArray));
             String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
-            Toast.makeText(requireActivity().getApplicationContext(), detected_device, Toast.LENGTH_LONG).show();
-
+            if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
+                Toast.makeText(requireActivity().getApplicationContext(), detected_device, Toast.LENGTH_LONG).show();
+            }
         }
 
         ttyUSB.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
