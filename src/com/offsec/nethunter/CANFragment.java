@@ -65,7 +65,7 @@ public class CANFragment extends Fragment {
     private TextView SelectedLPort;
     private TextView SelectedSleep;
     private int SelectedCanSpeed;
-    //private String flow_control = "hw"; // Default value (disabled)
+    private String flow_control = "sw"; // Default value
     private SharedPreferences sharedpreferences;
     private Context context;
     private static Activity activity;
@@ -160,11 +160,11 @@ public class CANFragment extends Fragment {
         AsyncTask.execute(() -> refresh(rootView));
 
         //Settings
-        //Flow Control Switch (Disabled)
-        //Switch flowControlSwitch = rootView.findViewById(R.id.flow_control_switch);
-        //flowControlSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
-        //    flow_control = isChecked ? "sw" : "hw";
-        //});
+        //Flow Control Switch
+        Switch flowControlSwitch = rootView.findViewById(R.id.flow_control_switch);
+        flowControlSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            flow_control = isChecked ? "sw" : "hw";
+        });
 
         //CanSpeed Spinner
         Spinner CanSpeedSpinner = rootView.findViewById(R.id.canspeed_spinner);
