@@ -606,6 +606,15 @@ public class CANFragment extends Fragment {
             activity.invalidateOptionsMenu();
         });
 
+        //Start Freediag
+        Button FreediagButton = rootView.findViewById(R.id.start_freediag);
+
+        FreediagButton.setOnClickListener(v ->  {
+            run_cmd("freediag");
+
+            activity.invalidateOptionsMenu();
+        });
+
         // USB-CAN
         DebugCheckbox.setOnClickListener( v -> {
             if (DebugCheckbox.isChecked())
@@ -900,6 +909,7 @@ public class CANFragment extends Fragment {
                 "if [[ -f /usr/bin/cangen && -f /usr/bin/cansniffer && -f /usr/bin/candump && -f /usr/bin/cansend && -f /usr/bin/canplayer && -d /opt/car_hacking/can-utils ]]; then echo '\\nCan-utils is installed!'; else echo '\\nInstalling Can-Utils...\\n'; cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/can-utils.git; cd /opt/car_hacking/can-utils; sudo make; sudo make install;fi;" +
                 "if [[ -f /usr/local/bin/cannelloni ]]; then echo 'Cannelloni is installed!'; else echo '\\nInstalling Cannelloni\\n'; cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/cannelloni.git; cd /opt/car_hacking/cannelloni; sudo cmake -DCMAKE_BUILD_TYPE=Release; sudo make; sudo make install;fi;" +
                 "if [[ -f /usr/local/bin/canusb ]]; then echo 'USB-CAN is installed!'; else echo '\\nInstalling USB-CAN\\n'; cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/usb-can.git; cd /opt/car_hacking/usb-can;sudo gcc -o canusb canusb.c; sudo cp canusb /usr/local/bin/canusb;fi;" +
+                "if [[ -f /usr/local/bin/freediag && -f /usr/local/bin/diag_test ]]; then echo 'Freediag is installed!'; else echo '\\nInstalling Freediag\\n'; cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/freediag.git; cd /opt/car_hacking/freediag;./build_simple.sh; sudo cp build/scantool/freediag /usr/local/bin/freediag && sudo cp build/scantool/diag_test /usr/local/bin/diag_test;fi;" +
                 "echo '\\nSetup done!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }
@@ -911,6 +921,7 @@ public class CANFragment extends Fragment {
                 "if [[ -f /usr/bin/cangen && -f /usr/bin/cansniffer && -f /usr/bin/candump && -f /usr/bin/cansend && -f /usr/bin/canplayer && -d /opt/car_hacking/can-utils  ]]; then echo '\\nCan-Utils detected! Updating...\\n'; cd /opt/car_hacking/can-utils; sudo git pull; sudo make; sudo make install; else echo '\\nCan-Utils not detected! Please run Setup first.';fi; " +
                 "if [[ -f /usr/local/bin/cannelloni && -d /opt/car_hacking/cannelloni  ]]; then echo '\\nCannelloni detected! Updating...\\n'; cd /opt/car_hacking/cannelloni; sudo git pull; sudo cmake -DCMAKE_BUILD_TYPE=Release; sudo make; sudo make install; else echo '\\nCannelloni not detected! Please run Setup first.';fi; " +
                 "if [[ -f /usr/local/bin/canusb && -d /opt/car_hacking/usb-can  ]]; then echo '\\nUSB-CAN detected! Updating...\\n'; cd /opt/car_hacking/usb-can; sudo git pull; sudo gcc -o canusb canusb.c; sudo cp canusb /usr/local/bin/canusb; else echo '\\nUSB-CAN not detected! Please run Setup first.';fi; " +
+                "if [[ -f /usr/local/bin/freediag && -f /usr/local/bin/diag_test && -d /opt/car_hacking/freediag  ]]; then echo '\\nFreediag detected! Updating...\\n'; cd /opt/car_hacking/freediag; sudo git pull;./build_simple.sh; sudo cp build/scantool/freediag /usr/local/bin/freediag && sudo cp build/scantool/diag_test /usr/local/bin/diag_test; else echo '\\nFreediag not detected! Please run Setup first.';fi; " +
                 "echo '\\nEverything is updated! Closing in 3secs..'; sleep 3 && exit");
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }

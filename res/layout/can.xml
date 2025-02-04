@@ -467,6 +467,22 @@
 
             </LinearLayout>
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="15dp">
+
+                <Button
+                    android:id="@+id/reset_iface"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Reset Interface" />
+
+            </LinearLayout>
+
             <View
                 android:id="@+id/divider4"
                 android:layout_width="match_parent"
@@ -547,6 +563,12 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="SequenceFinder" />
+
+                <Button
+                    android:id="@+id/start_freediag"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Freediag" />
 
             </LinearLayout>
 
