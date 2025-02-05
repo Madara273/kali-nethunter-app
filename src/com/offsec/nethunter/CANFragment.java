@@ -68,7 +68,6 @@ public class CANFragment extends Fragment {
     private SharedPreferences sharedpreferences;
     private Context context;
     private static Activity activity;
-    public EditText modules_path;
 
     public static CANFragment newInstance(int sectionNumber) {
         CANFragment fragment = new CANFragment();
@@ -226,78 +225,6 @@ public class CANFragment extends Fragment {
             startActivityForResult(Intent.createChooser(intent, "Select output file"),1001);
         });
 
-        // Modules
-        Spinner modulesSpinner = rootView.findViewById(R.id.modules_spinner);
-        Button loadButton = rootView.findViewById(R.id.load_module);
-
-        // Set up the items for the Spinner
-        String[] moduleOptions = new String[]{
-                "EMS CPC-USB/ARM7 CAN/USB interface",
-                "ESD USB/2 CAN/USB interface",
-                "Geschwister Schneider UG interfaces",
-                "IFI CAN_FD IP",
-                "Kvaser CAN/USB interface",
-                "Microchip MCP251x SPI CAN controllers",
-                "PEAK PCAN-USB/Pro (CAN 2.0b/CAN-FD)",
-                "8 devices USB2CAN interface"
-        };
-
-        // Link item to corresponding kernel names
-        Map<String, String> moduleCommands = new HashMap<>();
-        moduleCommands.put("EMS CPC-USB/ARM7 CAN/USB interface", "ems_usb");
-        moduleCommands.put("ESD USB/2 CAN/USB interface", "esd_usb2");
-        moduleCommands.put("Geschwister Schneider UG interfaces", "gs_usb");
-        moduleCommands.put("IFI CAN_FD IP", "ifi_canfd");
-        moduleCommands.put("Kvaser CAN/USB interface", "kvaser_usb");
-        moduleCommands.put("Microchip MCP251x SPI CAN controllers", "mcp251x");
-        moduleCommands.put("PEAK PCAN-USB/Pro (CAN 2.0b/CAN-FD)", "peak_usb");
-        moduleCommands.put("8 devices USB2CAN interface", "usb_8dev");
-
-        ArrayAdapter<String> ModulesAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, moduleOptions);
-        ModulesAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        modulesSpinner.setAdapter(ModulesAdapter);
-
-        // Access the modules layout
-        modules_path = modulesLayout.findViewById(R.id.modulesPath);
-        String LastModulesPath = sharedpreferences.getString("last_modulespath", "");
-        if (!LastModulesPath.isEmpty()) modules_path.setText(LastModulesPath);
-
-        String ModulesPath = modules_path.getText().toString();
-
-        // Set OnClickListener for the Load button with Modules tab logic
-        loadButton.setOnClickListener(v -> {
-            String selectedModule = modulesSpinner.getSelectedItem().toString();
-            String kernelModuleName = moduleCommands.get(selectedModule);
-            String ModulesPathFull = ModulesPath + "/" + System.getProperty("os.version");
-
-            if (kernelModuleName != null) {
-                String isModuleLoaded = exe.RunAsRootOutput("lsmod | cut -d' ' -f1 | grep " + kernelModuleName);
-
-                if (isModuleLoaded.contains(kernelModuleName)) {
-                    String unloadCommand = exe.RunAsRootOutput("rmmod " + kernelModuleName + " && echo Success || echo Failed");
-                    if (unloadCommand.contains("Success")) {
-                        Toast.makeText(requireActivity().getApplicationContext(), "Module Unloaded: " + selectedModule + " - " + kernelModuleName, Toast.LENGTH_LONG).show();
-                    } else {
-                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to unload: " + selectedModule + " - " + kernelModuleName, Toast.LENGTH_LONG).show();
-                    }
-                } else {
-                    String toggle_module = exe.RunAsRootOutput("insmod " + ModulesPathFull + "/" + selectedModule + ".ko && echo Success || echo Failed");
-                    if (toggle_module.contains("Success")) {
-                        Toast.makeText(requireActivity().getApplicationContext(), "Module Loaded: " + selectedModule + " - " + kernelModuleName + " with insmod.", Toast.LENGTH_LONG).show();
-                    } else {
-                        String loadCommand = exe.RunAsRootOutput("modprobe -d " + ModulesPathFull + " " + kernelModuleName + " && echo Success || echo Failed");
-                        if (loadCommand.contains("Success")) {
-                            Toast.makeText(requireActivity().getApplicationContext(), "Module Loaded: " + selectedModule + " - " + kernelModuleName + " with modprobe.", Toast.LENGTH_LONG).show();
-                        } else {
-                            Toast.makeText(requireActivity().getApplicationContext(), "Failed to load: " + selectedModule + " - " + kernelModuleName + " with modprobe.", Toast.LENGTH_LONG).show();
-                        }
-                    }
-                }
-            }
-
-            activity.invalidateOptionsMenu();
-        });
-
         // Interfaces
         // Declare SharedPreferences at the class level
         SharedPreferences preferences = requireActivity().getSharedPreferences("CANInterfaceState", Context.MODE_PRIVATE);
@@ -338,7 +265,7 @@ public class CANFragment extends Fragment {
                     return;
                 }
                 if (isStarted) {
-                    String stopCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && modprobe -r can-raw can-gw can-bcm can && echo Success || echo Failed");
+                    String stopCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && echo Success || echo Failed");
                     stopCanIface = stopCanIface.trim();
                     if (stopCanIface.contains("FATAL:") || stopCanIface.contains("Failed")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to stop " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
@@ -348,7 +275,7 @@ public class CANFragment extends Fragment {
                         Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
                     }
                 } else {
-                    String startCanIface = exe.RunAsChrootOutput("modprobe -a can can-raw can-gw can-bcm && sudo ip link set " + selected_caniface + " type can bitrate " + selected_uartspeed + " && sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
+                    String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " type can bitrate " + selected_uartspeed + " && sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
                     startCanIface = startCanIface.trim();
                     if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
@@ -396,7 +323,7 @@ public class CANFragment extends Fragment {
                 }
 
                 if (isStarted) {
-                    String stopVCanIface = exe.RunAsChrootOutput("modprobe -r can-raw can-gw can-bcm vcan can && echo Success || echo Failed");
+                    String stopVCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && sudo ip link delete " + selected_caniface + " && echo Success || echo Failed");
                     stopVCanIface = stopVCanIface.trim();
                     if (stopVCanIface.contains("FATAL:") || stopVCanIface.contains("Failed")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to stop " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
@@ -406,7 +333,7 @@ public class CANFragment extends Fragment {
                         Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
                     }
                 } else {
-                    String startVCanIface = exe.RunAsChrootOutput("modprobe -a vcan can can-raw can-gw can-bcm;sudo ip link add dev " + selected_caniface + " type vcan && sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && sudo ip link set up " + selected_caniface + " && echo Success || echo Failed");
+                    String startVCanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type vcan && sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
                     startVCanIface = startVCanIface.trim();
                     if (startVCanIface.contains("FATAL:") || startVCanIface.contains("Failed")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
@@ -463,7 +390,7 @@ public class CANFragment extends Fragment {
                 }
 
                 if (isStarted) {
-                    String stopSLCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && sleep 1 && sudo slcan_attach -d " + selected_usb + " && sleep 1 && modprobe -r can-raw can-gw can-bcm can slcan && echo Success || echo Failed");
+                    String stopSLCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && sleep 1 && sudo slcan_attach -d " + selected_usb + " && echo Success || echo Failed");
                     stopSLCanIface = stopSLCanIface.trim();
                     if (stopSLCanIface.contains("FATAL:") || stopSLCanIface.contains("Failed")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to stop " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
@@ -473,11 +400,10 @@ public class CANFragment extends Fragment {
                         Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
                     }
                 } else {
-                    String startSLCanIface = exe.RunAsChrootOutput("modprobe -a can slcan can-raw can-gw can-bcm && " +
-                            "sudo slcan_attach -f -s" + selected_canSpeed + " -o " + selected_usb + " && " +
+                    String startSLCanIface = exe.RunAsChrootOutput("sudo slcan_attach -f -s" + selected_canSpeed + " -o " + selected_usb + " && " +
                             "if timeout 5 sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartspeed + " " + selected_usb + " " + selected_caniface + "; then " +
                             "sudo ip link set up " + selected_caniface + " && echo Success || echo Failed; " +
-                            "else echo 'TIMED OUT' && modprobe -r can-raw can-gw can-bcm can slcan;sudo slcan_attach -d " + selected_usb + ";sudo ip link set " + selected_caniface + " down;fi;");
+                            "else echo 'TIMED OUT' && sudo slcan_attach -d " + selected_usb + ";sudo ip link set " + selected_caniface + " down;fi;");
                     startSLCanIface = startSLCanIface.trim();
                     if (startSLCanIface.contains("FATAL:") || startSLCanIface.contains("Failed") || startSLCanIface.contains("TIMED OUT")) {
                         if (startSLCanIface.contains("TIMED OUT")) {
