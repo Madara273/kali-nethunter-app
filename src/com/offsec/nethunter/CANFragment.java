@@ -156,7 +156,10 @@ public class CANFragment extends Fragment {
 
         //Refresh Status
         ImageButton RefreshUSB = rootView.findViewById(R.id.refreshUSB);
-        RefreshUSB.setOnClickListener(v -> refresh(rootView));
+        RefreshUSB.setOnClickListener(v -> {
+            Toast.makeText(getContext(), "Refreshing USB...", Toast.LENGTH_SHORT).show();
+            refresh(rootView);
+        });
         AsyncTask.execute(() -> refresh(rootView));
 
         //Settings
