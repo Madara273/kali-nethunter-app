@@ -559,7 +559,7 @@
                     android:id="@+id/start_diagtest"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="diag_test" />
+                    android:text="DiagTest" />
 
 
             </LinearLayout>
