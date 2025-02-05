@@ -616,6 +616,15 @@ public class CANFragment extends Fragment {
             activity.invalidateOptionsMenu();
         });
 
+        //Start diag_test
+        Button diagTestButton = rootView.findViewById(R.id.start_diagtest);
+
+        diagTestButton.setOnClickListener(v ->  {
+            run_cmd("diag_test");
+
+            activity.invalidateOptionsMenu();
+        });
+
         // USB-CAN
         DebugCheckbox.setOnClickListener( v -> {
             if (DebugCheckbox.isChecked())
