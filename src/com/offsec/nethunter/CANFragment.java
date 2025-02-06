@@ -67,7 +67,7 @@ public class CANFragment extends Fragment {
     private String flow_control = "hw";
     private SharedPreferences sharedpreferences;
     private Context context;
-    private static Activity activity;
+    private Activity activity;
 
     public static CANFragment newInstance(int sectionNumber) {
         CANFragment fragment = new CANFragment();
@@ -87,7 +87,6 @@ public class CANFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.can, container, false);
-        View modulesLayout = inflater.inflate(R.layout.modules, container, false);
 
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
@@ -401,13 +400,14 @@ public class CANFragment extends Fragment {
                     }
                 } else {
                     String startSLCanIface = exe.RunAsChrootOutput("sudo slcan_attach -f -s" + selected_canSpeed + " -o " + selected_usb + " && " +
-                            "if timeout 5 sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartspeed + " " + selected_usb + " " + selected_caniface + "; then " +
+                            "if timeout -k 6 5 sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartspeed + " " + selected_usb + " " + selected_caniface + "; then " +
                             "sudo ip link set up " + selected_caniface + " && echo Success || echo Failed; " +
-                            "else echo 'TIMED OUT' && sudo slcan_attach -d " + selected_usb + ";sudo ip link set " + selected_caniface + " down;fi;");
+                            "else if [ $? -eq 124 -o $? -eq 137 ]; then echo 'TIMED OUT'; sudo slcan_attach -d " + selected_usb + ";sudo ip link set " + selected_caniface + " down;fi;fi;");
+
                     startSLCanIface = startSLCanIface.trim();
                     if (startSLCanIface.contains("FATAL:") || startSLCanIface.contains("Failed") || startSLCanIface.contains("TIMED OUT")) {
                         if (startSLCanIface.contains("TIMED OUT")) {
-                            Toast.makeText(requireActivity().getApplicationContext(), "Timed Out! Try switching flow control.", Toast.LENGTH_LONG).show();
+                            Toast.makeText(requireActivity().getApplicationContext(), "Timed Out! Unplug/Replug your adapter and try switching flow control.", Toast.LENGTH_LONG).show();
                         } else {
                             Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                         }
@@ -780,7 +780,9 @@ public class CANFragment extends Fragment {
                 int lastiface = sharedpreferences.getInt("selected_usb", 0);
                 ttyUSB.setSelection(lastiface);
                 String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
-                Toast.makeText(requireActivity().getApplicationContext(), detected_device, Toast.LENGTH_LONG).show();
+                if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
+                    Toast.makeText(requireActivity().getApplicationContext(), detected_device, Toast.LENGTH_LONG).show();
+                }
             }
         });
     }
@@ -881,7 +883,7 @@ public class CANFragment extends Fragment {
     // Bridge side functions
     ////
 
-    public static void run_cmd(String cmd) {
+    public void run_cmd(String cmd) {
         Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
         activity.startActivity(intent);
     }
