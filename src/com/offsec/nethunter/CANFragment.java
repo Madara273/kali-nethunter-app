@@ -401,7 +401,7 @@ public class CANFragment extends Fragment {
                 } else {
                     String startSLCanIface = exe.RunAsChrootOutput("sudo slcan_attach -f -s" + selected_canSpeed + " -o " + selected_usb + " && " +
                             "if timeout -k 6 5 sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartspeed + " " + selected_usb + " " + selected_caniface + "; then " +
-                            "sudo ip link set up " + selected_caniface + " && echo Success || echo Failed; " +
+                            "sudo ip link set " + selected_caniface + " up && echo Success || echo Failed; " +
                             "else if [ $? -eq 124 -o $? -eq 137 ]; then echo 'TIMED OUT'; sudo slcan_attach -d " + selected_usb + ";sudo ip link set " + selected_caniface + " down;fi;fi;");
 
                     startSLCanIface = startSLCanIface.trim();
