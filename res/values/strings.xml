@@ -298,6 +298,7 @@
     <string name="drawertitlepineapple">Pineapple Connector</string>
     <string name="drawertitlegps">Wardriving</string>
     <string name="drawertitledeauth">DeAuth</string>
+    <string name="drawertitlecan">CAN Arsenal</string>
     <string name="drawertitlesettings">Settings</string>
     <string name="drawertitlekernel">Kernel</string>
     <string name="drawertitlemodules">Modules</string>
@@ -552,4 +553,8 @@
     <string name="builderinfo">IamCOD3X</string>
     <string name="build_version">1.0</string>
     <string name="moduleInfo">Module Based on PulseDroid by dront78</string>
+
+    <!-- CAN -->
+    <string name="can_description">This module allow you to use CAN Bus with various tools. Kernel device should have CAN support enabled, for more information look at the documentation in the menu.</string>
+
 </resources>
