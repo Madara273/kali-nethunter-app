@@ -251,12 +251,12 @@ public class CANFragment extends Fragment {
             String selected_uartspeed = SelectedUartSpeed.getText().toString();
             boolean isStarted = buttonStates.get("start_caniface");
 
-            //String checkCAN = exe.RunAsChrootOutput("ls -1 /sys/class/net/ | grep can");
-            //checkCAN = checkCAN.trim();
-            //if (checkCAN.isEmpty()) {
-            //    Toast.makeText(requireActivity().getApplicationContext(), "No CAN device detected! Please connect your CAN device.", Toast.LENGTH_LONG).show();
-            //    return;
-            //}
+            String checkCAN = exe.RunAsChrootOutput("ls -1 /sys/class/net/ | grep can;ls -1 /dev/ttyUSB*;ls -1 /dev/rfcomm*;ls -1 /dev/ttyACM*");
+            checkCAN = checkCAN.trim();
+            if (checkCAN.isEmpty()) {
+                Toast.makeText(requireActivity().getApplicationContext(), "No CAN device detected! Please connect your CAN device.", Toast.LENGTH_LONG).show();
+                return;
+            }
 
             if (selected_caniface != null && !selected_caniface.isEmpty()
                     && selected_uartspeed != null && !selected_uartspeed.isEmpty()) {
@@ -382,12 +382,12 @@ public class CANFragment extends Fragment {
             String selected_uartspeed = SelectedUartSpeed.getText().toString();
             boolean isStarted = buttonStates.get("start_slcaniface");
 
-            //String checkUSB = exe.RunAsChrootOutput("ls -1 /dev/ttyUSB*");
-            //checkUSB = checkUSB.trim();
-            //if (checkUSB.isEmpty()) {
-            //    Toast.makeText(requireActivity().getApplicationContext(), "No CAN Device detected! Please connect your CAN Device.", Toast.LENGTH_LONG).show();
-            //    return;
-            //}
+            String checkUSB = exe.RunAsChrootOutput("ls -1 /sys/class/net/ | grep can;ls -1 /dev/ttyUSB*;ls -1 /dev/rfcomm*;ls -1 /dev/ttyACM*");
+            checkUSB = checkUSB.trim();
+            if (checkUSB.isEmpty()) {
+                Toast.makeText(requireActivity().getApplicationContext(), "No CAN Device detected! Please connect your CAN Device.", Toast.LENGTH_LONG).show();
+                return;
+            }
 
             if (selected_caniface != null && !selected_caniface.isEmpty()
                     && selected_uartspeed != null && !selected_uartspeed.isEmpty()
