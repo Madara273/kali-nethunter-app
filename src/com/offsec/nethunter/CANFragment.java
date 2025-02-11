@@ -844,7 +844,7 @@ public class CANFragment extends Fragment {
 
     //Documentation item
     public void RunDocumentation() {
-        String url = "https://github.com/V0lk3n/NetHunter-CANArsenal";
+        String url = "https://www.kali.org/docs/nethunter/nethunter-canarsenal/";
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         activity.startActivity(intent);
     }
