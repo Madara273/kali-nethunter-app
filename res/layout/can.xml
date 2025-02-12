@@ -116,11 +116,11 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
                     android:layout_weight="3"
-                    android:text="USB Device :"
+                    android:text="Device :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <Spinner
-                    android:id="@+id/usb_interface"
+                    android:id="@+id/device_interface"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:dropDownWidth="wrap_content"
@@ -203,11 +203,18 @@
                     android:layout_marginStart="20dp"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
+                <CheckBox
+                    android:id="@+id/flowcontrol_statut"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
                 <TextView
                     android:id="@+id/left_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
+                    android:layout_marginStart="8dp"
                     android:layout_marginEnd="8dp"
                     android:text="hw"
                     android:textAppearance="?android:attr/textAppearanceSmall"/>
@@ -232,7 +239,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="MTU :"
-                    android:layout_marginStart="70dp"
+                    android:layout_marginStart="30dp"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <EditText

@@ -43,10 +43,12 @@ public class CANFragment extends Fragment {
     public static final String TAG = "CANFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
     private final ShellExecuter exe = new ShellExecuter();
+    private CheckBox FlowControlCheckbox;
     private CheckBox DebugCheckbox;
     private CheckBox IDCheckbox;
     private CheckBox DataCheckbox;
     private CheckBox SleepCheckbox;
+    private String flow_controlCMD = "";
     private String debugCMD = "";
     private String idCMD = "";
     private String dataCMD = "";
@@ -106,6 +108,7 @@ public class CANFragment extends Fragment {
         SelectedCanSpeedUSB = rootView.findViewById(R.id.canspeed_usb);
 
         //Checkboxes
+        FlowControlCheckbox = rootView.findViewById(R.id.flowcontrol_statut);
         DebugCheckbox = rootView.findViewById(R.id.debug_canusb);
         IDCheckbox = rootView.findViewById(R.id.id_canusb);
         DataCheckbox = rootView.findViewById(R.id.data_canusb);
@@ -123,29 +126,29 @@ public class CANFragment extends Fragment {
         }
 
         //USB interfaces
-        final Spinner ttyUSB = rootView.findViewById(R.id.usb_interface);
+        final Spinner deviceList = rootView.findViewById(R.id.device_interface);
 
-        final String[] outputUSB = {""};
-        AsyncTask.execute(() -> outputUSB[0] = exe.RunAsChrootOutput("ls -1 /sys/class/net/ | grep can;ls -1 /dev/ttyUSB*"));
+        final String[] outputDevice = {""};
+        AsyncTask.execute(() -> outputDevice[0] = exe.RunAsChrootOutput("ls -1 /sys/class/net/ | grep can;ls -1 /dev/ttyUSB*;ls -1 /dev/rfcomm*;ls -1 /dev/ttyACM*"));
 
-        final ArrayList<String> usbIfaces = new ArrayList<>();
-        if (outputUSB[0].isEmpty()) {
-            usbIfaces.add("None");
-            ttyUSB.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, usbIfaces));
+        final ArrayList<String> deviceIfaces = new ArrayList<>();
+        if (outputDevice[0].isEmpty()) {
+            deviceIfaces.add("None");
+            deviceList.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, deviceIfaces));
         } else {
-            final String[] usbifacesArray = outputUSB[0].split("\n");
-            ttyUSB.setAdapter(new ArrayAdapter(requireContext(),android.R.layout.simple_list_item_1, usbifacesArray));
+            final String[] deviceifacesArray = outputDevice[0].split("\n");
+            deviceList.setAdapter(new ArrayAdapter(requireContext(),android.R.layout.simple_list_item_1, deviceifacesArray));
             String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
             if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
                 Toast.makeText(requireActivity().getApplicationContext(), detected_device, Toast.LENGTH_LONG).show();
             }
         }
 
-        ttyUSB.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        deviceList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
                 selected_usb = parentView.getItemAtPosition(pos).toString();
-                sharedpreferences.edit().putInt("selected_usb", ttyUSB.getSelectedItemPosition()).apply();
+                sharedpreferences.edit().putInt("selected_usb", deviceList.getSelectedItemPosition()).apply();
             }
             @Override
             public void onNothingSelected(AdapterView<?> parentView) {
@@ -155,7 +158,7 @@ public class CANFragment extends Fragment {
         //Refresh Status
         ImageButton RefreshUSB = rootView.findViewById(R.id.refreshUSB);
         RefreshUSB.setOnClickListener(v -> {
-            Toast.makeText(getContext(), "Refreshing USB...", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getContext(), "Refreshing Devices...", Toast.LENGTH_SHORT).show();
             refresh(rootView);
         });
         AsyncTask.execute(() -> refresh(rootView));
@@ -248,7 +251,7 @@ public class CANFragment extends Fragment {
             String selected_uartspeed = SelectedUartSpeed.getText().toString();
             boolean isStarted = buttonStates.get("start_caniface");
 
-            String checkCAN = exe.RunAsChrootOutput("ls -1 /sys/class/net/ | grep can");
+            String checkCAN = exe.RunAsChrootOutput("ls -1 /sys/class/net/ | grep can;ls -1 /dev/ttyUSB*;ls -1 /dev/rfcomm*;ls -1 /dev/ttyACM*");
             checkCAN = checkCAN.trim();
             if (checkCAN.isEmpty()) {
                 Toast.makeText(requireActivity().getApplicationContext(), "No CAN device detected! Please connect your CAN device.", Toast.LENGTH_LONG).show();
@@ -259,10 +262,10 @@ public class CANFragment extends Fragment {
                     && selected_uartspeed != null && !selected_uartspeed.isEmpty()) {
 
                 // Validate CAN interface format
-                if (!selected_caniface.matches("^can\\d+$")) {
-                    Toast.makeText(requireActivity().getApplicationContext(), "The CAN interface should have a numeric suffix, such as 'can0', 'can1', etc.", Toast.LENGTH_LONG).show();
-                    return;
-                }
+                //if (!selected_caniface.matches("^can\\d+$")) {
+                //    Toast.makeText(requireActivity().getApplicationContext(), "The CAN interface should have a numeric suffix, such as 'can0', 'can1', etc.", Toast.LENGTH_LONG).show();
+                //    return;
+                //}
                 if (isStarted) {
                     String stopCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && echo Success || echo Failed");
                     stopCanIface = stopCanIface.trim();
@@ -316,10 +319,10 @@ public class CANFragment extends Fragment {
                     && selected_mtu != null && !selected_mtu.isEmpty()) {
 
                 // Validate VCAN interface format
-                if (!selected_caniface.matches("^vcan\\d+$")) {
-                    Toast.makeText(requireActivity().getApplicationContext(), "The VCAN interface should have a numeric suffix, such as 'vcan0', 'vcan1', etc.", Toast.LENGTH_LONG).show();
-                    return;
-                }
+                //if (!selected_caniface.matches("^vcan\\d+$")) {
+                //    Toast.makeText(requireActivity().getApplicationContext(), "The VCAN interface should have a numeric suffix, such as 'vcan0', 'vcan1', etc.", Toast.LENGTH_LONG).show();
+                //    return;
+                //}
 
                 if (isStarted) {
                     String stopVCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && sudo ip link delete " + selected_caniface + " && echo Success || echo Failed");
@@ -360,6 +363,14 @@ public class CANFragment extends Fragment {
         });
 
         // Start SLCAN interface
+        FlowControlCheckbox.setOnClickListener( v -> {
+            if (FlowControlCheckbox.isChecked()) {
+                flow_controlCMD = " -t " + flow_control;
+            } else {
+                flow_controlCMD = "";
+            }
+        });
+
         Button StartSLCanButton = rootView.findViewById(R.id.start_slcaniface);
 
         // Set initial button text based on saved state
@@ -371,7 +382,7 @@ public class CANFragment extends Fragment {
             String selected_uartspeed = SelectedUartSpeed.getText().toString();
             boolean isStarted = buttonStates.get("start_slcaniface");
 
-            String checkUSB = exe.RunAsChrootOutput("ls -1 /dev/ttyUSB*");
+            String checkUSB = exe.RunAsChrootOutput("ls -1 /sys/class/net/ | grep can;ls -1 /dev/ttyUSB*;ls -1 /dev/rfcomm*;ls -1 /dev/ttyACM*");
             checkUSB = checkUSB.trim();
             if (checkUSB.isEmpty()) {
                 Toast.makeText(requireActivity().getApplicationContext(), "No CAN Device detected! Please connect your CAN Device.", Toast.LENGTH_LONG).show();
@@ -383,10 +394,10 @@ public class CANFragment extends Fragment {
                     && selected_canSpeed != null && !selected_canSpeed.isEmpty()) {
 
                 // Validate SLCAN interface format
-                if (!selected_caniface.matches("^slcan\\d+$")) {
-                    Toast.makeText(requireActivity().getApplicationContext(), "The SLCAN interface should have a numeric suffix, such as 'slcan0', 'slcan1', etc.", Toast.LENGTH_LONG).show();
-                    return;
-                }
+                //if (!selected_caniface.matches("^slcan\\d+$")) {
+                //    Toast.makeText(requireActivity().getApplicationContext(), "The SLCAN interface should have a numeric suffix, such as 'slcan0', 'slcan1', etc.", Toast.LENGTH_LONG).show();
+                //    return;
+                //}
 
                 if (isStarted) {
                     String stopSLCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && sleep 1 && sudo slcan_attach -d " + selected_usb + " && echo Success || echo Failed");
@@ -400,7 +411,7 @@ public class CANFragment extends Fragment {
                     }
                 } else {
                     String startSLCanIface = exe.RunAsChrootOutput("sudo slcan_attach -f -s" + selected_canSpeed + " -o " + selected_usb + " && " +
-                            "if timeout -k 6 5 sudo slcand -o -s" + selected_canSpeed + " -t " + flow_control + " -S " + selected_uartspeed + " " + selected_usb + " " + selected_caniface + "; then " +
+                            "if timeout -k 6 5 sudo slcand -s" + selected_canSpeed + flow_controlCMD + " -S " + selected_uartspeed + " " + selected_usb + " " + selected_caniface + "; then " +
                             "sudo ip link set " + selected_caniface + " up && echo Success || echo Failed; " +
                             "else if [ $? -eq 124 -o $? -eq 137 ]; then echo 'TIMED OUT'; sudo slcan_attach -d " + selected_usb + ";sudo ip link set " + selected_caniface + " down;fi;fi;");
 
@@ -764,21 +775,21 @@ public class CANFragment extends Fragment {
 
     //Refresh main
     private void refresh(View CANFragment) {
-        final Spinner ttyUSB = CANFragment.findViewById(R.id.usb_interface);
+        final Spinner deviceList = CANFragment.findViewById(R.id.device_interface);
         SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
         requireActivity().runOnUiThread(() -> {
-            String outputUSB = exe.RunAsChrootOutput("ls -1 /sys/class/net/ | grep can;ls -1 /dev/ttyUSB*");
-            final ArrayList<String> usbIfaces = new ArrayList<>();
-            if (outputUSB.isEmpty()) {
-                usbIfaces.add("None");
-                ttyUSB.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, usbIfaces));
-                sharedpreferences.edit().putInt("selected_usb", ttyUSB.getSelectedItemPosition()).apply();
+            String outputDevice = exe.RunAsChrootOutput("ls -1 /sys/class/net/ | grep can;ls -1 /dev/ttyUSB*;ls -1 /dev/rfcomm*;ls -1 /dev/ttyACM*");
+            final ArrayList<String> deviceIfaces = new ArrayList<>();
+            if (outputDevice.isEmpty()) {
+                deviceIfaces.add("None");
+                deviceList.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, deviceIfaces));
+                sharedpreferences.edit().putInt("selected_device", deviceList.getSelectedItemPosition()).apply();
             } else {
-                final String[] usbifacesArray = outputUSB.split("\n");
-                ttyUSB.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, usbifacesArray));
-                int lastiface = sharedpreferences.getInt("selected_usb", 0);
-                ttyUSB.setSelection(lastiface);
+                final String[] deviceifacesArray = outputDevice.split("\n");
+                deviceList.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, deviceifacesArray));
+                int lastiface = sharedpreferences.getInt("selected_device", 0);
+                deviceList.setSelection(lastiface);
                 String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
                 if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
                     Toast.makeText(requireActivity().getApplicationContext(), detected_device, Toast.LENGTH_LONG).show();
@@ -833,7 +844,7 @@ public class CANFragment extends Fragment {
 
     //Documentation item
     public void RunDocumentation() {
-        String url = "https://github.com/V0lk3n/NetHunter-CANArsenal";
+        String url = "https://www.kali.org/docs/nethunter/nethunter-canarsenal/";
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         activity.startActivity(intent);
     }
