@@ -29,6 +29,7 @@
                 android:layout_marginBottom="10dp"
                 android:layout_height="1dp"
                 android:background="?android:attr/listDivider" />
+
             <TextView
                 android:id="@+id/can_desc"
                 android:layout_width="match_parent"
@@ -379,6 +380,87 @@
                 android:padding="10dp">
 
                 <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:text="Attach :"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <Button
+                    android:id="@+id/start_ldattach"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="20dp"
+                    android:ems="7"
+                    android:text="Ldattach" />
+
+                <EditText
+                    android:id="@+id/ldattach_cmd"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="20dp"
+                    android:ems="20"
+                    android:gravity="left|bottom"
+                    android:inputType="text"
+                    android:saveEnabled="false"
+                    android:text="ldattach --debug --speed 38400 --eightbits --noparity --onestopbit --iflag -ICRNL,INLCR,-IXOFF 30 /dev/rfcomm0"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <Button
+                    android:id="@+id/start_slcanattach"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="20dp"
+                    android:ems="7"
+                    android:text="Slcan_attach" />
+
+                <EditText
+                    android:id="@+id/slcanattach_cmd"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="20dp"
+                    android:ems="20"
+                    android:gravity="left|bottom"
+                    android:inputType="text"
+                    android:saveEnabled="false"
+                    android:text="slcan_attach -f -s6 -o /dev/ttyUSB0"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <TextView
                     android:id="@+id/textView11"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -415,6 +497,99 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="▶ SLCAN" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:text="Bluetooth CAN :"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+            <TextView
+                    android:id="@+id/something"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_horizontal|center"
+                    android:gravity="center"
+                    android:text="You need to enable Bluebinder, DBUS, Bluetooth, Interface in BT Arsenal prior using this." />
+
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:text="Target :"
+                    android:textAppearance="?android:attr/textAppearanceMedium" />
+
+                <EditText
+                    android:id="@+id/bttarget"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="20dp"
+                    android:inputType="text"
+                    android:saveEnabled="false"
+                    android:text="0a:1b:2c:3d:4e:5f:6a:7b"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <Button
+                    android:id="@+id/start_rfcommbinder"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="rfcomm bind" />
+
+                <Button
+                    android:id="@+id/start_socketcand"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="socketcand" />
+
+                <Button
+                    android:id="@+id/start_btcaniface"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="▶ BT CAN" />
 
             </LinearLayout>
 

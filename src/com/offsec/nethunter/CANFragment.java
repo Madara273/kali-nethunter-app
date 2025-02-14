@@ -98,6 +98,9 @@ public class CANFragment extends Fragment {
         SelectedUartSpeed = rootView.findViewById(R.id.uart_speed);
         SelectedMtu = rootView.findViewById(R.id.mtu);
         final EditText cansend_sequence = rootView.findViewById(R.id.cansend_sequence);
+        final EditText ldattach_cmd = rootView.findViewById(R.id.ldattach_cmd);
+        final EditText slcanattach_cmd = rootView.findViewById(R.id.slcanattach_cmd);
+        final EditText bt_target_mac = rootView.findViewById(R.id.bttarget);
         final EditText CustomCmd = rootView.findViewById(R.id.customcmd);
 
         SelectedRHost = rootView.findViewById(R.id.cannelloni_rhost);
@@ -226,6 +229,40 @@ public class CANFragment extends Fragment {
             intent.setAction(Intent.ACTION_GET_CONTENT);
             startActivityForResult(Intent.createChooser(intent, "Select output file"),1001);
         });
+
+        // Attach
+        //Start LDAttach
+        Button LdAttachButton = rootView.findViewById(R.id.start_ldattach);
+
+        LdAttachButton.setOnClickListener(v ->  {
+            String ldattachcmd = ldattach_cmd.getText().toString();
+
+            if (ldattachcmd != null && !ldattachcmd.isEmpty()) {
+                run_cmd(ldattachcmd);
+                Toast.makeText(requireActivity().getApplicationContext(), "Press CTRL+C to stop.", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(requireActivity().getApplicationContext(), "Please set your ldattach commmand!", Toast.LENGTH_LONG).show();
+            }
+
+            activity.invalidateOptionsMenu();
+        });
+
+        //Start SLCAN_Attach
+        Button SlcanAttachButton = rootView.findViewById(R.id.start_slcanattach);
+
+        SlcanAttachButton.setOnClickListener(v ->  {
+            String slcanattachcmd = slcanattach_cmd.getText().toString();
+
+            if (slcanattachcmd != null && !slcanattachcmd.isEmpty()) {
+                run_cmd(slcanattachcmd);
+                Toast.makeText(requireActivity().getApplicationContext(), "Press CTRL+C to stop.", Toast.LENGTH_LONG).show();
+            } else {
+                Toast.makeText(requireActivity().getApplicationContext(), "Please set your slcan_attach command!", Toast.LENGTH_LONG).show();
+            }
+
+            activity.invalidateOptionsMenu();
+        });
+
 
         // Interfaces
         // Declare SharedPreferences at the class level
@@ -400,7 +437,7 @@ public class CANFragment extends Fragment {
                 //}
 
                 if (isStarted) {
-                    String stopSLCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && sleep 1 && sudo slcan_attach -d " + selected_usb + " && echo Success || echo Failed");
+                    String stopSLCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && echo Success || echo Failed");
                     stopSLCanIface = stopSLCanIface.trim();
                     if (stopSLCanIface.contains("FATAL:") || stopSLCanIface.contains("Failed")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to stop " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
@@ -410,8 +447,7 @@ public class CANFragment extends Fragment {
                         Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
                     }
                 } else {
-                    String startSLCanIface = exe.RunAsChrootOutput("sudo slcan_attach -f -s" + selected_canSpeed + " -o " + selected_usb + " && " +
-                            "if timeout -k 6 5 sudo slcand -s" + selected_canSpeed + flow_controlCMD + " -S " + selected_uartspeed + " " + selected_usb + " " + selected_caniface + "; then " +
+                    String startSLCanIface = exe.RunAsChrootOutput("if timeout 5 sudo slcand -s" + selected_canSpeed + flow_controlCMD + " -S " + selected_uartspeed + " " + selected_usb + " " + selected_caniface + "; then " +
                             "sudo ip link set " + selected_caniface + " up && echo Success || echo Failed; " +
                             "else if [ $? -eq 124 -o $? -eq 137 ]; then echo 'TIMED OUT'; sudo slcan_attach -d " + selected_usb + ";sudo ip link set " + selected_caniface + " down;fi;fi;");
 
@@ -446,6 +482,51 @@ public class CANFragment extends Fragment {
             editor.putBoolean("start_slcaniface", buttonStates.get("start_slcaniface"));
             editor.apply();
 
+            activity.invalidateOptionsMenu();
+        });
+
+        //BT CAN
+        //Start rfcomm binder
+        Button RfcommBinderButton = rootView.findViewById(R.id.start_rfcommbinder);
+
+        RfcommBinderButton.setOnClickListener(v ->  {
+            String selected_caniface = SelectedIface.getText().toString();
+            String bt_target = bt_target_mac.getText().toString();
+
+            if (selected_caniface != null && !selected_caniface.isEmpty() &&
+                    bt_target != null && !bt_target.isEmpty()) {
+                run_cmd("rfcomm bind " + selected_caniface + " " + bt_target);
+            } else {
+                Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface and Target field is set!", Toast.LENGTH_LONG).show();
+            }
+            activity.invalidateOptionsMenu();
+        });
+
+        //Start Socketcand
+        Button SocketCandButton = rootView.findViewById(R.id.start_socketcand);
+
+        SocketCandButton.setOnClickListener(v ->  {
+            String selected_caniface = SelectedIface.getText().toString();
+
+            if (selected_caniface != null && !selected_caniface.isEmpty()) {
+                run_cmd("socketcand -i " + selected_caniface);
+            } else {
+                Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface field is set!", Toast.LENGTH_LONG).show();
+            }
+            activity.invalidateOptionsMenu();
+        });
+
+        //Start BT CAN
+        Button BtCanIfaceButton = rootView.findViewById(R.id.start_btcaniface);
+
+        BtCanIfaceButton.setOnClickListener(v ->  {
+            String selected_caniface = SelectedIface.getText().toString();
+
+            if (selected_caniface != null && !selected_caniface.isEmpty()) {
+                run_cmd("sudo ip link set " + selected_caniface + " up");
+            } else {
+                Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface field is set!", Toast.LENGTH_LONG).show();
+            }
             activity.invalidateOptionsMenu();
         });
 
