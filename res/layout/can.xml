@@ -94,7 +94,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
-                    android:layout_weight="3"
+                    android:layout_weight="5"
+                    android:gravity="right|bottom"
                     android:ems="10"
                     android:inputType="text"
                     android:saveEnabled="false"
@@ -158,6 +159,7 @@
 
             </LinearLayout>
 
+            <!--
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -180,6 +182,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
                     android:layout_weight="3"
+                    android:gravity="right|bottom"
                     android:ems="10"
                     android:inputType="number"
                     android:saveEnabled="false"
@@ -188,7 +191,59 @@
                     tools:ignore="TouchTargetSizeCheck" />
 
             </LinearLayout>
+            -->
 
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/textView6"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="MTU :"
+                    android:layout_marginStart="20dp"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                <EditText
+                    android:id="@+id/mtu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="20dp"
+                    android:gravity="right|bottom"
+                    android:inputType="number"
+                    android:saveEnabled="false"
+                    android:text="72"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15dp"
+                    android:text="Target :"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                <EditText
+                    android:id="@+id/bttarget"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_weight="1"
+                    android:gravity="right|bottom"
+                    android:inputType="number"
+                    android:saveEnabled="false"
+                    android:text="0A:1B:2C:3D:4E:5F:6A:7B"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+            </LinearLayout>
+<!--
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -249,6 +304,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="15dp"
                     android:layout_marginEnd="20dp"
+                    android:gravity="right|bottom"
                     android:inputType="number"
                     android:saveEnabled="false"
                     android:text="72"
@@ -256,7 +312,7 @@
                     tools:ignore="TouchTargetSizeCheck" />
 
             </LinearLayout>
-
+-->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -266,9 +322,8 @@
 
                 <TextView
                     android:id="@+id/textView7"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="3"
                     android:layout_marginStart="20dp"
                     android:text="Sequence :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
@@ -277,8 +332,10 @@
                     android:id="@+id/cansend_sequence"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
                     android:layout_marginEnd="20dp"
-                    android:ems="13"
+                    android:gravity="left|bottom"
+                    android:ems="20"
                     android:inputType="text"
                     android:saveEnabled="false"
                     android:text="01a#11223344AABBCCDD"
@@ -309,7 +366,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
-                    android:gravity="center"
+                    android:gravity="left|bottom"
                     android:inputType="text"
                     android:saveEnabled="false"
                     android:text="/root/candump/dump.log"
@@ -347,7 +404,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
-                    android:gravity="center"
+                    android:gravity="left|bottom"
                     android:inputType="text"
                     android:saveEnabled="false"
                     android:text="/root/candump/dump.log"
@@ -380,14 +437,14 @@
                 android:padding="10dp">
 
                 <TextView
+                    android:id="@+id/textView11"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="3"
                     android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
-                    android:text="Attach :"
+                    android:text="Interface :"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
-
 
             </LinearLayout>
 
@@ -404,7 +461,7 @@
                     android:layout_height="match_parent"
                     android:layout_marginStart="20dp"
                     android:ems="7"
-                    android:text="Ldattach" />
+                    android:text="ldattach" />
 
                 <EditText
                     android:id="@+id/ldattach_cmd"
@@ -416,7 +473,38 @@
                     android:gravity="left|bottom"
                     android:inputType="text"
                     android:saveEnabled="false"
-                    android:text="ldattach --debug --speed 38400 --eightbits --noparity --onestopbit --iflag -ICRNL,INLCR,-IXOFF 30 /dev/rfcomm0"
+                    android:text="ldattach --debug --speed 38400 --eightbits --noparity --onestopbit --iflag -ICRNL,INLCR,-IXOFF 29 /dev/rfcomm0"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <Button
+                    android:id="@+id/start_slcand"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="20dp"
+                    android:ems="7"
+                    android:text="slcand" />
+
+                <EditText
+                    android:id="@+id/slcand_cmd"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="20dp"
+                    android:ems="20"
+                    android:gravity="left|bottom"
+                    android:inputType="text"
+                    android:saveEnabled="false"
+                    android:text="slcand -s6 -t hw -S 125000 /dev/ttyUSB0 can0"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
 
@@ -435,7 +523,7 @@
                     android:layout_height="match_parent"
                     android:layout_marginStart="20dp"
                     android:ems="7"
-                    android:text="Slcan_attach" />
+                    android:text="slcan_attach" />
 
                 <EditText
                     android:id="@+id/slcanattach_cmd"
@@ -447,120 +535,7 @@
                     android:gravity="left|bottom"
                     android:inputType="text"
                     android:saveEnabled="false"
-                    android:text="slcan_attach -f -s6 -o /dev/ttyUSB0"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-                <TextView
-                    android:id="@+id/textView11"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="3"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    android:text="Interface :"
-                    android:textAppearance="?android:attr/textAppearanceMedium" />
-
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-                <Button
-                    android:id="@+id/start_caniface"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="▶ CAN" />
-
-                <Button
-                    android:id="@+id/start_vcaniface"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="▶ VCAN" />
-
-                <Button
-                    android:id="@+id/start_slcaniface"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="▶ SLCAN" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="3"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    android:text="Bluetooth CAN :"
-                    android:textAppearance="?android:attr/textAppearanceMedium" />
-
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-            <TextView
-                    android:id="@+id/something"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="center_horizontal|center"
-                    android:gravity="center"
-                    android:text="You need to enable Bluebinder, DBUS, Bluetooth, Interface in BT Arsenal prior using this." />
-
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:text="Target :"
-                    android:textAppearance="?android:attr/textAppearanceMedium" />
-
-                <EditText
-                    android:id="@+id/bttarget"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:layout_marginEnd="20dp"
-                    android:inputType="text"
-                    android:saveEnabled="false"
-                    android:text="0a:1b:2c:3d:4e:5f:6a:7b"
+                    android:text="slcan_attach -s6 -o /dev/ttyUSB0"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
 
@@ -585,11 +560,39 @@
                     android:layout_height="wrap_content"
                     android:text="socketcand" />
 
-                <Button
-                    android:id="@+id/start_btcaniface"
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="▶ BT CAN" />
+                    android:layout_marginStart="20dp"
+                    android:text="CAN Type :"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                <Spinner
+                    android:id="@+id/cantype_spinner"
+                    android:layout_marginStart="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:dropDownWidth="wrap_content"
+                    android:saveEnabled="false"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <Button
+                    android:id="@+id/start_caniface"
+                    android:layout_marginStart="45dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="▶ CAN" />
 
             </LinearLayout>
 
