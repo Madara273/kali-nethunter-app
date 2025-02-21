@@ -4,7 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    tools:ignore="Autofill,HardcodedText,LabelFor,TouchTargetSizeCheck,TooManyViews,UselessParent,InefficientWeight,RtlHardcoded,ContentDescription,ButtonStyle">
+    tools:ignore="Autofill,HardcodedText,LabelFor,TouchTargetSizeCheck,TooManyViews,UselessParent,InefficientWeight,RtlHardcoded,ContentDescription,ButtonStyle,DuplicateSpeakableTextCheck">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -38,7 +38,8 @@
                 android:layout_gravity="center_horizontal|center"
                 android:gravity="center"
                 android:padding="10dp"
-                android:text="@string/can_description" />
+                android:text="@string/can_description"
+                tools:ignore="VisualLintLongText" />
 
             <View
                 android:id="@+id/divider2"
@@ -180,7 +181,7 @@
                     android:saveEnabled="false"
                     android:text="0A:1B:2C:3D:4E:5F:6A:7B"
                     android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    tools:ignore="TouchTargetSizeCheck,VisualLintTextFieldSize" />
 
             </LinearLayout>
 
@@ -250,8 +251,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
                     android:text="Browse"
-                    android:textColor="#ffffffff"
-                    tools:ignore="DuplicateSpeakableTextCheck" />
+                    android:textColor="#ffffffff"/>
 
             </LinearLayout>
 
@@ -464,7 +464,8 @@
                     android:layout_marginEnd="20dp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="▶ CAN" />
+                    android:text="▶ CAN"
+                    tools:ignore="VisualLintButtonSize" />
 
             </LinearLayout>
 
@@ -821,7 +822,8 @@
                     android:id="@+id/start_cannelloni"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Start Cannelloni" />
+                    android:text="Start Cannelloni"
+                    tools:ignore="VisualLintButtonSize" />
 
             </LinearLayout>
 
@@ -918,7 +920,7 @@
                     android:saveEnabled="false"
                     android:text="canbusload can0@100000 -r -t -b -c"
                     android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    tools:ignore="TouchTargetSizeCheck,VisualLintTextFieldSize" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/start_customcmd"

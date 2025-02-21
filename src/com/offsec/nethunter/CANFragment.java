@@ -250,7 +250,7 @@ public class CANFragment extends Fragment {
         // Spinner for CAN interfaces
         // USB interfaces
         final Spinner canTypeList = rootView.findViewById(R.id.cantype_spinner);
-        final String[] interfaceTypeOptions = {"CAN", "VCAN", "SLCAN"};
+        final String[] interfaceTypeOptions = {"can", "vcan", "slcan"};
 
         canTypeList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, interfaceTypeOptions));
 
@@ -443,7 +443,7 @@ public class CANFragment extends Fragment {
         Button FreediagButton = rootView.findViewById(R.id.start_freediag);
 
         FreediagButton.setOnClickListener(v ->  {
-            run_cmd("freediag");
+            run_cmd("sudo -u kali freediag");
 
             activity.invalidateOptionsMenu();
         });
@@ -452,7 +452,7 @@ public class CANFragment extends Fragment {
         Button diagTestButton = rootView.findViewById(R.id.start_diagtest);
 
         diagTestButton.setOnClickListener(v ->  {
-            run_cmd("diag_test");
+            run_cmd("sudo -u kali diag_test");
 
             activity.invalidateOptionsMenu();
         });
@@ -738,13 +738,14 @@ public class CANFragment extends Fragment {
     //Setup item
     public void RunSetup() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        run_cmd("echo -ne \"\\033]0;CAN Arsenal Setup\\007\" && clear; echo '\\nUpdating and Installing Packages...\\n' && apt update && apt install -y can-utils libsdl2-dev libsdl2-image-dev can-utils maven autoconf make cmake && " +
+        run_cmd("echo -ne \"\\033]0;CAN Arsenal Setup\\007\" && clear; echo '\\nUpdating and Installing Packages...\\n' && apt update && apt install -y can-utils libsdl2-dev libsdl2-image-dev libconfig-dev libsocketcan-dev can-utils maven autoconf make cmake meson&& " +
                 "echo '\\nSetting up environment...' && if [[ -d /root/candump ]]; then echo '\\nFolder /root/candump detected!'; else echo '\\nCreating /root/candump folder...'; sudo mkdir -p /root/candump;fi;" +
                 "if [[ -d /opt/car_hacking ]]; then echo 'Folder /opt/car_hacking detected!'; else echo '\\nCreating /opt/car_hacking folder...'; sudo mkdir -p /opt/car_hacking;fi;" +
                 "if [[ -f /usr/bin/cangen && -f /usr/bin/cansniffer && -f /usr/bin/candump && -f /usr/bin/cansend && -f /usr/bin/canplayer && -d /opt/car_hacking/can-utils ]]; then echo '\\nCan-utils is installed!'; else echo '\\nInstalling Can-Utils...\\n'; cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/can-utils.git; cd /opt/car_hacking/can-utils; sudo make; sudo make install;fi;" +
                 "if [[ -f /usr/local/bin/cannelloni ]]; then echo 'Cannelloni is installed!'; else echo '\\nInstalling Cannelloni\\n'; cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/cannelloni.git; cd /opt/car_hacking/cannelloni; sudo cmake -DCMAKE_BUILD_TYPE=Release; sudo make; sudo make install;fi;" +
                 "if [[ -f /usr/local/bin/canusb ]]; then echo 'USB-CAN is installed!'; else echo '\\nInstalling USB-CAN\\n'; cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/usb-can.git; cd /opt/car_hacking/usb-can;sudo gcc -o canusb canusb.c; sudo cp canusb /usr/local/bin/canusb;fi;" +
                 "if [[ -f /usr/local/bin/freediag && -f /usr/local/bin/diag_test ]]; then echo 'Freediag is installed!'; else echo '\\nInstalling Freediag\\n'; cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/freediag.git; cd /opt/car_hacking/freediag;./build_simple.sh; sudo cp build/scantool/freediag /usr/local/bin/freediag && sudo cp build/scantool/diag_test /usr/local/bin/diag_test;fi;" +
+                "if [[ -f /usr/local/sbin/socketcand ]]; then echo 'Socketcand is Installed!'; else echo '\\nInstalling Socketcand\\n'; cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/socketcand.git; cd /opt/car_hacking/socketcand; sudo meson setup -Dlibconfig=true --buildtype=release build; sudo meson compile -C build; sudo meson install -C build;fi; " +
                 "echo '\\nSetup done!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }
@@ -757,6 +758,7 @@ public class CANFragment extends Fragment {
                 "if [[ -f /usr/local/bin/cannelloni && -d /opt/car_hacking/cannelloni  ]]; then echo '\\nCannelloni detected! Updating...\\n'; cd /opt/car_hacking/cannelloni; sudo git pull; sudo cmake -DCMAKE_BUILD_TYPE=Release; sudo make; sudo make install; else echo '\\nCannelloni not detected! Please run Setup first.';fi; " +
                 "if [[ -f /usr/local/bin/canusb && -d /opt/car_hacking/usb-can  ]]; then echo '\\nUSB-CAN detected! Updating...\\n'; cd /opt/car_hacking/usb-can; sudo git pull; sudo gcc -o canusb canusb.c; sudo cp canusb /usr/local/bin/canusb; else echo '\\nUSB-CAN not detected! Please run Setup first.';fi; " +
                 "if [[ -f /usr/local/bin/freediag && -f /usr/local/bin/diag_test && -d /opt/car_hacking/freediag  ]]; then echo '\\nFreediag detected! Updating...\\n'; cd /opt/car_hacking/freediag; sudo git pull;./build_simple.sh; sudo cp build/scantool/freediag /usr/local/bin/freediag && sudo cp build/scantool/diag_test /usr/local/bin/diag_test; else echo '\\nFreediag not detected! Please run Setup first.';fi; " +
+                "if [[ -f /usr/local/sbin/socketcand && -d /opt/car_hacking/socketcand ]]; then echo '\\nSocketcand detected! Updating...\\n'; cd /opt/car_hacking; cd /opt/car_hacking/socketcand; sudo git pull; sudo meson setup -Dlibconfig=true --buildtype=release build; sudo meson compile -C build; sudo meson install -C build; else echo '\\nSocketcand not detected! Please run Setup first.';fi; " +
                 "echo '\\nEverything is updated! Closing in 3secs..'; sleep 3 && exit");
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }
