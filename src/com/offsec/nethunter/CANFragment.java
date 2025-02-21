@@ -1,5 +1,6 @@
 package com.offsec.nethunter;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -80,6 +81,7 @@ public class CANFragment extends Fragment {
         activity = getActivity();
     }
 
+    @SuppressLint("SetTextI18n")
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.can, container, false);
@@ -130,10 +132,10 @@ public class CANFragment extends Fragment {
         final ArrayList<String> deviceIfaces = new ArrayList<>();
         if (outputDevice[0].isEmpty()) {
             deviceIfaces.add("None");
-            deviceList.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, deviceIfaces));
+            deviceList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, deviceIfaces));
         } else {
             final String[] deviceifacesArray = outputDevice[0].split("\n");
-            deviceList.setAdapter(new ArrayAdapter(requireContext(),android.R.layout.simple_list_item_1, deviceifacesArray));
+            deviceList.setAdapter(new ArrayAdapter<>(requireContext(),android.R.layout.simple_list_item_1, deviceifacesArray));
             String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
             if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
                 Toast.makeText(requireActivity().getApplicationContext(), detected_device, Toast.LENGTH_LONG).show();
@@ -190,7 +192,7 @@ public class CANFragment extends Fragment {
         LdAttachButton.setOnClickListener(v ->  {
             String ldattachcmd = ldattach_cmd.getText().toString();
 
-            if (ldattachcmd != null && !ldattachcmd.isEmpty()) {
+            if (!ldattachcmd.isEmpty()) {
                 run_cmd(ldattachcmd);
                 Toast.makeText(requireActivity().getApplicationContext(), "Press CTRL+C to stop.", Toast.LENGTH_LONG).show();
             } else {
@@ -206,7 +208,7 @@ public class CANFragment extends Fragment {
         SlcandAttachButton.setOnClickListener(v ->  {
             String slcandcmd = slcand_cmd.getText().toString();
 
-            if (slcandcmd != null && !slcandcmd.isEmpty()) {
+            if (!slcandcmd.isEmpty()) {
                 run_cmd(slcandcmd);
                 Toast.makeText(requireActivity().getApplicationContext(), "Press CTRL+C to stop.", Toast.LENGTH_LONG).show();
             } else {
@@ -222,7 +224,7 @@ public class CANFragment extends Fragment {
         SlcanAttachButton.setOnClickListener(v ->  {
             String slcanattachcmd = slcanattach_cmd.getText().toString();
 
-            if (slcanattachcmd != null && !slcanattachcmd.isEmpty()) {
+            if (!slcanattachcmd.isEmpty()) {
                 run_cmd(slcanattachcmd);
                 Toast.makeText(requireActivity().getApplicationContext(), "Press CTRL+C to stop.", Toast.LENGTH_LONG).show();
             } else {
@@ -268,16 +270,15 @@ public class CANFragment extends Fragment {
         Button StartCanButton = rootView.findViewById(R.id.start_caniface);
 
         // Set initial button text based on saved state
-        StartCanButton.setText(buttonStates.get("start_caniface") ? "⏹ CAN" : "▶ CAN");
+        StartCanButton.setText(Boolean.TRUE.equals(buttonStates.get("start_caniface")) ? "⏹ CAN" : "▶ CAN");
 
         StartCanButton.setOnClickListener(v -> {
             String selected_caniface = SelectedIface.getText().toString();
             String selected_mtu = SelectedMtu.getText().toString();
             String interface_type = sharedpreferences.getString("cantype_selected", "");
-            boolean isStarted = buttonStates.get("start_caniface");
+            boolean isStarted = Boolean.TRUE.equals(buttonStates.get("start_caniface"));
 
-            if (selected_caniface != null && !selected_caniface.isEmpty()
-                    && selected_mtu != null && !selected_mtu.isEmpty()) {
+            if (!selected_caniface.isEmpty() && !selected_mtu.isEmpty()) {
                 if (isStarted) {
                     String stopCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && sudo ip link delete " + selected_caniface + " && echo Success || echo Failed");
                     stopCanIface = stopCanIface.trim();
@@ -300,17 +301,17 @@ public class CANFragment extends Fragment {
                     }
                 }
             } else {
-                if (selected_caniface == null || selected_caniface.isEmpty()) {
+                if (selected_caniface.isEmpty()) {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please set a CAN interface!", Toast.LENGTH_LONG).show();
                 }
 
-                if (selected_mtu == null || selected_mtu.isEmpty()) {
+                if (selected_mtu.isEmpty()) {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please set a MTU value!", Toast.LENGTH_LONG).show();
                 }
             }
 
             // Save button state to SharedPreferences
-            editor.putBoolean("start_caniface", buttonStates.get("start_caniface"));
+            editor.putBoolean("start_caniface", Boolean.TRUE.equals(buttonStates.get("start_caniface")));
             editor.apply();
 
             activity.invalidateOptionsMenu();
@@ -323,8 +324,7 @@ public class CANFragment extends Fragment {
             String selected_caniface = SelectedIface.getText().toString();
             String bt_target = bt_target_mac.getText().toString();
 
-            if (selected_caniface != null && !selected_caniface.isEmpty() &&
-                    bt_target != null && !bt_target.isEmpty()) {
+            if (!selected_caniface.isEmpty() && !bt_target.isEmpty()) {
                 run_cmd("rfcomm bind " + selected_caniface + " " + bt_target);
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface and Target field is set!", Toast.LENGTH_LONG).show();
@@ -338,7 +338,7 @@ public class CANFragment extends Fragment {
         SocketCandButton.setOnClickListener(v ->  {
             String selected_caniface = SelectedIface.getText().toString();
 
-            if (selected_caniface != null && !selected_caniface.isEmpty()) {
+            if (!selected_caniface.isEmpty()) {
                 run_cmd("socketcand -i " + selected_caniface);
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface field is set!", Toast.LENGTH_LONG).show();
@@ -353,7 +353,7 @@ public class CANFragment extends Fragment {
         CanGenButton.setOnClickListener(v ->  {
             String selected_caniface = SelectedIface.getText().toString();
 
-            if (selected_caniface != null && !selected_caniface.isEmpty()) {
+            if (!selected_caniface.isEmpty()) {
                 run_cmd("cangen " + selected_caniface + " -v");
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface field is set!", Toast.LENGTH_LONG).show();
@@ -367,7 +367,7 @@ public class CANFragment extends Fragment {
         CanSnifferButton.setOnClickListener(v ->  {
             String selected_caniface = SelectedIface.getText().toString();
 
-            if (selected_caniface != null && !selected_caniface.isEmpty()) {
+            if (!selected_caniface.isEmpty()) {
                 run_cmd("cansniffer " + selected_caniface);
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface field is set!", Toast.LENGTH_LONG).show();
@@ -383,8 +383,7 @@ public class CANFragment extends Fragment {
             String selected_caniface = SelectedIface.getText().toString();
             String outputfile = outputfilepath.getText().toString();
 
-            if (selected_caniface != null && !selected_caniface.isEmpty()
-                    && outputfile != null && !outputfile.isEmpty()) {
+            if (!selected_caniface.isEmpty() && !outputfile.isEmpty()) {
                 run_cmd("candump " + selected_caniface + " -f " + outputfile);
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface and Output File fields is set!", Toast.LENGTH_LONG).show();
@@ -400,8 +399,7 @@ public class CANFragment extends Fragment {
             String selected_caniface = SelectedIface.getText().toString();
             String sequence = cansend_sequence.getText().toString();
 
-            if (selected_caniface != null && !selected_caniface.isEmpty()
-                    && sequence != null && !sequence.isEmpty()) {
+            if (!selected_caniface.isEmpty() && !sequence.isEmpty()) {
                 run_cmd("cansend " + selected_caniface + " " + sequence);
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface and Sequence fields is set!", Toast.LENGTH_LONG).show();
@@ -416,7 +414,7 @@ public class CANFragment extends Fragment {
         CanPlayerButton.setOnClickListener(v ->  {
             String inputfile = inputfilepath.getText().toString();
 
-            if (inputfile != null && !inputfile.isEmpty()) {
+            if (!inputfile.isEmpty()) {
                 run_cmd("canplayer -I " + inputfile);
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your Input File field is set!", Toast.LENGTH_LONG).show();
@@ -432,7 +430,7 @@ public class CANFragment extends Fragment {
             new BootKali("cp " + NhPaths.APP_SD_FILES_PATH + "/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh && chmod +x /opt/car_hacking/sequence_finder.sh").run_bg();
             String inputfile = inputfilepath.getText().toString();
 
-            if (inputfile != null && !inputfile.isEmpty()) {
+            if (!inputfile.isEmpty()) {
                 run_cmd("/opt/car_hacking/sequence_finder.sh " + inputfile);
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your Input File field is set!", Toast.LENGTH_LONG).show();
@@ -498,9 +496,7 @@ public class CANFragment extends Fragment {
             String USBCANSpeed = SelectedCanSpeedUSB.getText().toString();
             String USBBaudrate = SelectedBaudrateUSB.getText().toString();
 
-            if (selected_usb != null && !selected_usb.isEmpty()
-                    && USBCANSpeed != null && !USBCANSpeed.isEmpty()
-                    && USBBaudrate != null && !USBBaudrate.isEmpty()) {
+            if (selected_usb != null && !selected_usb.isEmpty() && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
                 run_cmd("canusb -d " + selected_usb + " -s " + USBCANSpeed + " -b " + USBBaudrate + debugCMD);
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your USB Device and USB CAN Speed, Baudrate fields is set!", Toast.LENGTH_LONG).show();
@@ -516,9 +512,7 @@ public class CANFragment extends Fragment {
             String USBCANSpeed = SelectedCanSpeedUSB.getText().toString();
             String USBBaudrate = SelectedBaudrateUSB.getText().toString();
 
-            if (selected_usb != null && !selected_usb.isEmpty()
-                    && USBCANSpeed != null && !USBCANSpeed.isEmpty()
-                    && USBBaudrate != null && !USBBaudrate.isEmpty()) {
+            if (selected_usb != null && !selected_usb.isEmpty() && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
                 run_cmd("canusb -d " + selected_usb + " -s " + USBCANSpeed + " -b " + USBBaudrate + debugCMD + idCMD + dataCMD + sleepCMD);
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your USB Device and USB CAN Speed, Baudrate, Data fields is set!", Toast.LENGTH_LONG).show();
@@ -536,10 +530,7 @@ public class CANFragment extends Fragment {
             String rport = SelectedRPort.getText().toString();
             String lport = SelectedLPort.getText().toString();
 
-            if (selected_caniface != null && !selected_caniface.isEmpty()
-                    && rhost != null && !rhost.isEmpty()
-                    && rport != null && !rport.isEmpty()
-                    && lport !=null && !lport.isEmpty()) {
+            if (!selected_caniface.isEmpty() && !rhost.isEmpty() && !rport.isEmpty() && !lport.isEmpty()) {
                 run_cmd("sudo cannelloni -I " + selected_caniface + " -R " + rhost + " -r " + rport + " -l " + lport);
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface, RHOST, RPORT, LPORT fields is set!", Toast.LENGTH_LONG).show();
@@ -556,8 +547,7 @@ public class CANFragment extends Fragment {
             String inputfile = inputfilepath.getText().toString();
             String outputfile = outputfilepath.getText().toString();
 
-            if (inputfile != null && !inputfile.isEmpty()
-                    && outputfile != null && !outputfile.isEmpty()) {
+            if (!inputfile.isEmpty() && !outputfile.isEmpty()) {
                 run_cmd("asc2log -I " + inputfile + " -O " + outputfile);
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your Input and Output File fields is set!", Toast.LENGTH_LONG).show();
@@ -574,9 +564,7 @@ public class CANFragment extends Fragment {
             String inputfile = inputfilepath.getText().toString();
             String outputfile = outputfilepath.getText().toString();
 
-            if (selected_caniface != null && !selected_caniface.isEmpty()
-                    && inputfile != null && !inputfile.isEmpty()
-                    && outputfile != null && !outputfile.isEmpty()) {
+            if (!selected_caniface.isEmpty() && !inputfile.isEmpty() && !outputfile.isEmpty()) {
                 run_cmd("log2asc -I " + inputfile + " -O " + outputfile + " " + selected_caniface);
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface, Input and Output File fields is set!", Toast.LENGTH_LONG).show();
@@ -591,7 +579,7 @@ public class CANFragment extends Fragment {
         CustomCmdButton.setOnClickListener(v ->  {
             String command = CustomCmd.getText().toString();
 
-            if (command != null && !command.isEmpty()) {
+            if (!command.isEmpty()) {
                 run_cmd(command);
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your Custom Command field is set!", Toast.LENGTH_LONG).show();
@@ -680,11 +668,11 @@ public class CANFragment extends Fragment {
             final ArrayList<String> deviceIfaces = new ArrayList<>();
             if (outputDevice.isEmpty()) {
                 deviceIfaces.add("None");
-                deviceList.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, deviceIfaces));
+                deviceList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, deviceIfaces));
                 sharedpreferences.edit().putInt("selected_device", deviceList.getSelectedItemPosition()).apply();
             } else {
                 final String[] deviceifacesArray = outputDevice.split("\n");
-                deviceList.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, deviceifacesArray));
+                deviceList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, deviceifacesArray));
                 int lastiface = sharedpreferences.getInt("selected_device", 0);
                 deviceList.setSelection(lastiface);
                 String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
@@ -702,6 +690,7 @@ public class CANFragment extends Fragment {
     }
 
     //Menu Items
+    @SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
@@ -792,7 +781,7 @@ public class CANFragment extends Fragment {
     ////
 
     public void run_cmd(String cmd) {
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
         activity.startActivity(intent);
     }
 }
