@@ -140,67 +140,6 @@
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/textView3"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="3"
-                    android:layout_marginStart="20dp"
-                    android:text="CAN Speed :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <Spinner
-                    android:id="@+id/canspeed_spinner"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:dropDownWidth="wrap_content"
-                    android:saveEnabled="false"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-            </LinearLayout>
-
-            <!--
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-                <TextView
-                    android:id="@+id/textView4"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_weight="3"
-                    android:text="UART Speed (baud) :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <EditText
-                    android:id="@+id/uart_speed"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="20dp"
-                    android:layout_weight="3"
-                    android:gravity="right|bottom"
-                    android:ems="10"
-                    android:inputType="number"
-                    android:saveEnabled="false"
-                    android:text="125000"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-            </LinearLayout>
-            -->
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-                <TextView
                     android:id="@+id/textView6"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -243,76 +182,7 @@
                     tools:ignore="TouchTargetSizeCheck" />
 
             </LinearLayout>
-<!--
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
 
-                <TextView
-                    android:id="@+id/textView5"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Flow Control :"
-                    android:layout_marginStart="20dp"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <CheckBox
-                    android:id="@+id/flowcontrol_statut"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="5dp"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <TextView
-                    android:id="@+id/left_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:text="hw"
-                    android:textAppearance="?android:attr/textAppearanceSmall"/>
-
-                <Switch
-                    android:id="@+id/flow_control_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="false"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <TextView
-                    android:id="@+id/right_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="sw"
-                    android:textAppearance="?android:attr/textAppearanceSmall"/>
-
-                <TextView
-                    android:id="@+id/textView6"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="MTU :"
-                    android:layout_marginStart="30dp"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <EditText
-                    android:id="@+id/mtu"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="15dp"
-                    android:layout_marginEnd="20dp"
-                    android:gravity="right|bottom"
-                    android:inputType="number"
-                    android:saveEnabled="false"
-                    android:text="72"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-            </LinearLayout>
--->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
