@@ -459,7 +459,7 @@ public class VNCFragment extends Fragment {
                 if (iswatch) {
                     Toast.makeText(getActivity().getApplicationContext(), "Use password 123456 with root user for KeX on Smartwatch.", Toast.LENGTH_LONG).show();
                     run_cmd("echo -ne \"\\033]0;KeX Setup\\007\" && clear;echo 'Setting root:123456 KeX credentials..' && sleep 2 && echo 123456\\\\n123456\\\\nn\\\\n | vncpasswd;echo 'Done! Exiting..' && sleep 2 && exit");
-                } else run_cmd("echo -ne \"\\033]0;Setting up Server\\007\" && clear;chmod +x ~/.vnc/xstartup && clear;echo $'\n'\"Please enter your new VNC server password\"$'\n' && sudo -u " + selected_user + " vncpasswd && sleep 2 && exit"); // since is a kali command we can send it as is
+                } else run_cmd("echo -ne \"\\033]0;Setting up Server\\007\" && clear;chmod +x ~/.vnc/xstartup && clear;echo $'\n'\"Please enter your new VNC server password\"$'\n' && " + "if [ \"" + selected_user + "\" == \"root\" ]; then " + "  if [ ! -d /root/.config/tigervnc ]; then mkdir -p /root/.config/tigervnc; fi; " + "fi; " + "sudo -u " + selected_user + " vncpasswd && sleep 2 && exit"); // since is a kali command we can send it as is
             }
         });
         addClickListener(StartVNCButton, v -> {
