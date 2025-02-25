@@ -58,6 +58,7 @@ public class CANFragment extends Fragment {
     private TextView SelectedID;
     private TextView SelectedIface;
     private TextView SelectedMtu;
+    private TextView SelectedBitrate;
     private TextView SelectedRHost;
     private TextView SelectedRPort;
     private TextView SelectedLPort;
@@ -92,6 +93,7 @@ public class CANFragment extends Fragment {
 
         SelectedIface = rootView.findViewById(R.id.can_iface);
         SelectedMtu = rootView.findViewById(R.id.mtu);
+        SelectedBitrate = rootView.findViewById(R.id.bitrate_iface);
         final EditText cansend_sequence = rootView.findViewById(R.id.cansend_sequence);
         final EditText ldattach_cmd = rootView.findViewById(R.id.ldattach_cmd);
         final EditText slcand_cmd = rootView.findViewById(R.id.slcand_cmd);
@@ -275,6 +277,7 @@ public class CANFragment extends Fragment {
         StartCanButton.setOnClickListener(v -> {
             String selected_caniface = SelectedIface.getText().toString();
             String selected_mtu = SelectedMtu.getText().toString();
+            String selected_bitrate = SelectedBitrate.getText().toString();
             String interface_type = sharedpreferences.getString("cantype_selected", "");
             boolean isStarted = Boolean.TRUE.equals(buttonStates.get("start_caniface"));
 
@@ -290,7 +293,7 @@ public class CANFragment extends Fragment {
                         Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
                     }
                 } else {
-                    String startCanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
+                    String startCanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && sudo ip link set " + selected_caniface + "bitrate " + selected_bitrate + " && sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
                     startCanIface = startCanIface.trim();
                     if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();

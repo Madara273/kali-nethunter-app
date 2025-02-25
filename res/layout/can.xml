@@ -420,6 +420,25 @@
                 android:orientation="horizontal"
                 android:padding="10dp">
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Bitrate :"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                <EditText
+                    android:id="@+id/bitrate_iface"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="20dp"
+                    android:gravity="left|bottom"
+                    android:inputType="text"
+                    android:saveEnabled="false"
+                    android:text="500000"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
                 <Button
                     android:id="@+id/start_rfcommbinder"
                     android:layout_width="wrap_content"
