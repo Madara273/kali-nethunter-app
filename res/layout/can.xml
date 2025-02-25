@@ -3,7 +3,8 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    tools:ignore="Autofill,HardcodedText,LabelFor,TouchTargetSizeCheck,TooManyViews,UselessParent,InefficientWeight,RtlHardcoded,ContentDescription,ButtonStyle,DuplicateSpeakableTextCheck">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -29,6 +30,7 @@
                 android:layout_marginBottom="10dp"
                 android:layout_height="1dp"
                 android:background="?android:attr/listDivider" />
+
             <TextView
                 android:id="@+id/can_desc"
                 android:layout_width="match_parent"
@@ -36,7 +38,8 @@
                 android:layout_gravity="center_horizontal|center"
                 android:gravity="center"
                 android:padding="10dp"
-                android:text="@string/can_description" />
+                android:text="@string/can_description"
+                tools:ignore="VisualLintLongText" />
 
             <View
                 android:id="@+id/divider2"
@@ -93,7 +96,8 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
-                    android:layout_weight="3"
+                    android:layout_weight="5"
+                    android:gravity="right|bottom"
                     android:ems="10"
                     android:inputType="text"
                     android:saveEnabled="false"
@@ -138,121 +142,46 @@
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/textView3"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="3"
-                    android:layout_marginStart="20dp"
-                    android:text="CAN Speed :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <Spinner
-                    android:id="@+id/canspeed_spinner"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:dropDownWidth="wrap_content"
-                    android:saveEnabled="false"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-                <TextView
-                    android:id="@+id/textView4"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_weight="3"
-                    android:text="UART Speed (baud) :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <EditText
-                    android:id="@+id/uart_speed"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="20dp"
-                    android:layout_weight="3"
-                    android:ems="10"
-                    android:inputType="number"
-                    android:saveEnabled="false"
-                    android:text="125000"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-                <TextView
-                    android:id="@+id/textView5"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Flow Control :"
-                    android:layout_marginStart="20dp"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <CheckBox
-                    android:id="@+id/flowcontrol_statut"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="5dp"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <TextView
-                    android:id="@+id/left_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="8dp"
-                    android:text="hw"
-                    android:textAppearance="?android:attr/textAppearanceSmall"/>
-
-                <Switch
-                    android:id="@+id/flow_control_switch"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:checked="false"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <TextView
-                    android:id="@+id/right_label"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="sw"
-                    android:textAppearance="?android:attr/textAppearanceSmall"/>
-
-                <TextView
                     android:id="@+id/textView6"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="MTU :"
-                    android:layout_marginStart="30dp"
+                    android:layout_marginStart="20dp"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <EditText
                     android:id="@+id/mtu"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="15dp"
+                    android:layout_marginStart="10dp"
                     android:layout_marginEnd="20dp"
+                    android:gravity="right|bottom"
                     android:inputType="number"
                     android:saveEnabled="false"
                     android:text="72"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="15dp"
+                    android:text="Target :"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                <EditText
+                    android:id="@+id/bttarget"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_weight="1"
+                    android:gravity="right|bottom"
+                    android:inputType="number"
+                    android:saveEnabled="false"
+                    android:text="0A:1B:2C:3D:4E:5F:6A:7B"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck,VisualLintTextFieldSize" />
 
             </LinearLayout>
 
@@ -265,9 +194,8 @@
 
                 <TextView
                     android:id="@+id/textView7"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="3"
                     android:layout_marginStart="20dp"
                     android:text="Sequence :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
@@ -276,8 +204,10 @@
                     android:id="@+id/cansend_sequence"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
                     android:layout_marginEnd="20dp"
-                    android:ems="13"
+                    android:gravity="left|bottom"
+                    android:ems="20"
                     android:inputType="text"
                     android:saveEnabled="false"
                     android:text="01a#11223344AABBCCDD"
@@ -308,12 +238,12 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
-                    android:gravity="center"
+                    android:gravity="left|bottom"
                     android:inputType="text"
                     android:saveEnabled="false"
                     android:text="/root/candump/dump.log"
                     android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    tools:ignore="TouchTargetSizeCheck,DuplicateSpeakableTextCheck" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/inputfilebrowse"
@@ -321,7 +251,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
                     android:text="Browse"
-                    android:textColor="#ffffffff" />
+                    android:textColor="#ffffffff"/>
 
             </LinearLayout>
 
@@ -346,7 +276,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
-                    android:gravity="center"
+                    android:gravity="left|bottom"
                     android:inputType="text"
                     android:saveEnabled="false"
                     android:text="/root/candump/dump.log"
@@ -388,6 +318,98 @@
                     android:text="Interface :"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <Button
+                    android:id="@+id/start_ldattach"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="20dp"
+                    android:ems="7"
+                    android:text="ldattach" />
+
+                <EditText
+                    android:id="@+id/ldattach_cmd"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="20dp"
+                    android:ems="20"
+                    android:gravity="left|bottom"
+                    android:inputType="text"
+                    android:saveEnabled="false"
+                    android:text="ldattach --debug --speed 38400 --eightbits --noparity --onestopbit --iflag -ICRNL,INLCR,-IXOFF 29 /dev/rfcomm0"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <Button
+                    android:id="@+id/start_slcand"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="20dp"
+                    android:ems="7"
+                    android:text="slcand" />
+
+                <EditText
+                    android:id="@+id/slcand_cmd"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="20dp"
+                    android:ems="20"
+                    android:gravity="left|bottom"
+                    android:inputType="text"
+                    android:saveEnabled="false"
+                    android:text="slcand -s6 -t hw -S 125000 /dev/ttyUSB0 can0"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <Button
+                    android:id="@+id/start_slcanattach"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="20dp"
+                    android:ems="7"
+                    android:text="slcan_attach" />
+
+                <EditText
+                    android:id="@+id/slcanattach_cmd"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="20dp"
+                    android:ems="20"
+                    android:gravity="left|bottom"
+                    android:inputType="text"
+                    android:saveEnabled="false"
+                    android:text="slcan_attach -s6 -o /dev/ttyUSB0"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
 
             </LinearLayout>
 
@@ -399,22 +421,51 @@
                 android:padding="10dp">
 
                 <Button
+                    android:id="@+id/start_rfcommbinder"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="rfcomm bind" />
+
+                <Button
+                    android:id="@+id/start_socketcand"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="socketcand" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:text="CAN Type :"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                <Spinner
+                    android:id="@+id/cantype_spinner"
+                    android:layout_marginStart="10dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:dropDownWidth="wrap_content"
+                    android:saveEnabled="false"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <Button
                     android:id="@+id/start_caniface"
-                    android:layout_width="wrap_content"
+                    android:layout_marginStart="45dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="▶ CAN" />
-
-                <Button
-                    android:id="@+id/start_vcaniface"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="▶ VCAN" />
-
-                <Button
-                    android:id="@+id/start_slcaniface"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="▶ SLCAN" />
+                    android:text="▶ CAN"
+                    tools:ignore="VisualLintButtonSize" />
 
             </LinearLayout>
 
@@ -771,7 +822,8 @@
                     android:id="@+id/start_cannelloni"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Start Cannelloni" />
+                    android:text="Start Cannelloni"
+                    tools:ignore="VisualLintButtonSize" />
 
             </LinearLayout>
 
@@ -868,7 +920,7 @@
                     android:saveEnabled="false"
                     android:text="canbusload can0@100000 -r -t -b -c"
                     android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    tools:ignore="TouchTargetSizeCheck,VisualLintTextFieldSize" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/start_customcmd"
