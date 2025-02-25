@@ -339,7 +339,7 @@ public class CANFragment extends Fragment {
             String selected_caniface = SelectedIface.getText().toString();
 
             if (!selected_caniface.isEmpty()) {
-                run_cmd("socketcand -i " + selected_caniface);
+                run_cmd("socketcand -v -l wlan0 -i " + selected_caniface);
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface field is set!", Toast.LENGTH_LONG).show();
             }
