@@ -283,8 +283,14 @@ public class CANFragment extends Fragment {
 
             if (!selected_caniface.isEmpty() && !selected_mtu.isEmpty()) {
                 if (isStarted) {
-                    String stopCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && sudo ip link delete " + selected_caniface + " && echo Success || echo Failed");
+                    String stopCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && echo Success || echo Failed");
                     stopCanIface = stopCanIface.trim();
+                    if("vcan".equals(interface_type)){
+                        String delVcanIface = exe.RunAsChrootOutput("sudo ip link delete " + selected_caniface + " && echo Success || echo Failed");
+                        if (delVcanIface.contains("FATAL:") || delVcanIface.contains("Failed")) {
+                            Toast.makeText(requireActivity().getApplicationContext(), "Failed to delete " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                        }
+                    }
                     if (stopCanIface.contains("FATAL:") || stopCanIface.contains("Failed")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to stop " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                     } else {
@@ -293,8 +299,21 @@ public class CANFragment extends Fragment {
                         Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
                     }
                 } else {
-                    String startCanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && sudo ip link set " + selected_caniface + "bitrate " + selected_bitrate + " && sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
+                    if("can".equals(interface_type)){
+                        String SetBitrateIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + "bitrate " + selected_bitrate + " && echo Success || echo Failed");
+                        if (SetBitrateIface.contains("FATAL:") || SetBitrateIface.contains("Failed")) {
+                            Toast.makeText(requireActivity().getApplicationContext(), "Failed to set " + selected_caniface + " bitrate!", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                    if("vcan".equals(interface_type)){
+                        String addVcanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && echo Success || echo Failed");
+                        if (addVcanIface.contains("FATAL:") || addVcanIface.contains("Failed")) {
+                            Toast.makeText(requireActivity().getApplicationContext(), "Failed to add " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                    String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
                     startCanIface = startCanIface.trim();
+
                     if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                     } else {

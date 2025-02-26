@@ -158,7 +158,7 @@
                     android:gravity="right|bottom"
                     android:inputType="number"
                     android:saveEnabled="false"
-                    android:text="72"
+                    android:text="16"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
 
@@ -376,7 +376,7 @@
                     android:gravity="left|bottom"
                     android:inputType="text"
                     android:saveEnabled="false"
-                    android:text="slcand -s6 -t hw -S 500000 /dev/ttyUSB0 can0"
+                    android:text="slcand -s6 -t sw -S 500000 /dev/ttyUSB0"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
 
