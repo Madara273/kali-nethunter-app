@@ -512,6 +512,7 @@ public class CANFragment extends Fragment {
         });
 
         //Start USB-CAN Dump
+        // Pre-Release : Will remove one button to replace with "Run", as both command will end to be the same depending settings.
         Button USBCanDumpButton = rootView.findViewById(R.id.start_canusb_dump);
 
         USBCanDumpButton.setOnClickListener(v ->  {

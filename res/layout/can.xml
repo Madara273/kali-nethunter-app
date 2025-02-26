@@ -321,6 +321,27 @@
             </LinearLayout>
 
             <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:textAlignment="center"
+                android:padding="10dp"
+                >
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="3"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:text="Note : ldattach may crash your android device"
+                    android:textAlignment="center"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+            </LinearLayout>
+
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
@@ -376,7 +397,7 @@
                     android:gravity="left|bottom"
                     android:inputType="text"
                     android:saveEnabled="false"
-                    android:text="slcand -s6 -t sw -S 500000 /dev/ttyUSB0"
+                    android:text="slcand -s6 -t sw -S 200000 /dev/ttyUSB0"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
 
@@ -435,7 +456,7 @@
                     android:gravity="left|bottom"
                     android:inputType="text"
                     android:saveEnabled="false"
-                    android:text="500000"
+                    android:text="200000"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
 
@@ -622,7 +643,7 @@
                     android:layout_marginStart="2dp"
                     android:inputType="number"
                     android:saveEnabled="false"
-                    android:text="9600"
+                    android:text="200000"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
 
@@ -650,7 +671,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="Debug"
+                    android:text="TTY Output"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
             </LinearLayout>
@@ -681,25 +702,6 @@
                     tools:ignore="TouchTargetSizeCheck" />
 
                 <CheckBox
-                    android:id="@+id/data_canusb"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:text="Data : "
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <EditText
-                    android:id="@+id/data_value_canusb"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="2dp"
-                    android:inputType="text"
-                    android:saveEnabled="false"
-                    android:text="CAFE"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <CheckBox
                     android:id="@+id/sleep_canusb"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -717,6 +719,35 @@
                     android:text="200"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="286dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/data_canusb"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="Data : "
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                <EditText
+                    android:id="@+id/data_value_canusb"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
+                    android:inputType="text"
+                    android:saveEnabled="false"
+                    android:text="0C1A2F3E0C1A2F3"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
 
             </LinearLayout>
 
