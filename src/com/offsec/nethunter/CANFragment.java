@@ -58,6 +58,7 @@ public class CANFragment extends Fragment {
     private TextView SelectedID;
     private TextView SelectedIface;
     private TextView SelectedMtu;
+    private TextView SelectedBitrate;
     private TextView SelectedRHost;
     private TextView SelectedRPort;
     private TextView SelectedLPort;
@@ -92,6 +93,7 @@ public class CANFragment extends Fragment {
 
         SelectedIface = rootView.findViewById(R.id.can_iface);
         SelectedMtu = rootView.findViewById(R.id.mtu);
+        SelectedBitrate = rootView.findViewById(R.id.bitrate_iface);
         final EditText cansend_sequence = rootView.findViewById(R.id.cansend_sequence);
         final EditText ldattach_cmd = rootView.findViewById(R.id.ldattach_cmd);
         final EditText slcand_cmd = rootView.findViewById(R.id.slcand_cmd);
@@ -275,13 +277,20 @@ public class CANFragment extends Fragment {
         StartCanButton.setOnClickListener(v -> {
             String selected_caniface = SelectedIface.getText().toString();
             String selected_mtu = SelectedMtu.getText().toString();
+            String selected_bitrate = SelectedBitrate.getText().toString();
             String interface_type = sharedpreferences.getString("cantype_selected", "");
             boolean isStarted = Boolean.TRUE.equals(buttonStates.get("start_caniface"));
 
             if (!selected_caniface.isEmpty() && !selected_mtu.isEmpty()) {
                 if (isStarted) {
-                    String stopCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && sudo ip link delete " + selected_caniface + " && echo Success || echo Failed");
+                    String stopCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && echo Success || echo Failed");
                     stopCanIface = stopCanIface.trim();
+                    if("vcan".equals(interface_type)){
+                        String delVcanIface = exe.RunAsChrootOutput("sudo ip link delete " + selected_caniface + " && echo Success || echo Failed");
+                        if (delVcanIface.contains("FATAL:") || delVcanIface.contains("Failed")) {
+                            Toast.makeText(requireActivity().getApplicationContext(), "Failed to delete " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                        }
+                    }
                     if (stopCanIface.contains("FATAL:") || stopCanIface.contains("Failed")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to stop " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                     } else {
@@ -290,8 +299,21 @@ public class CANFragment extends Fragment {
                         Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
                     }
                 } else {
-                    String startCanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
+                    if("can".equals(interface_type)){
+                        String SetBitrateIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + "bitrate " + selected_bitrate + " && echo Success || echo Failed");
+                        if (SetBitrateIface.contains("FATAL:") || SetBitrateIface.contains("Failed")) {
+                            Toast.makeText(requireActivity().getApplicationContext(), "Failed to set " + selected_caniface + " bitrate!", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                    if("vcan".equals(interface_type)){
+                        String addVcanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && echo Success || echo Failed");
+                        if (addVcanIface.contains("FATAL:") || addVcanIface.contains("Failed")) {
+                            Toast.makeText(requireActivity().getApplicationContext(), "Failed to add " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                        }
+                    }
+                    String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
                     startCanIface = startCanIface.trim();
+
                     if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                     } else {
@@ -339,7 +361,7 @@ public class CANFragment extends Fragment {
             String selected_caniface = SelectedIface.getText().toString();
 
             if (!selected_caniface.isEmpty()) {
-                run_cmd("socketcand -i " + selected_caniface);
+                run_cmd("socketcand -v -l wlan0 -i " + selected_caniface);
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface field is set!", Toast.LENGTH_LONG).show();
             }
@@ -490,6 +512,7 @@ public class CANFragment extends Fragment {
         });
 
         //Start USB-CAN Dump
+        // Pre-Release : Will remove one button to replace with "Run", as both command will end to be the same depending settings.
         Button USBCanDumpButton = rootView.findViewById(R.id.start_canusb_dump);
 
         USBCanDumpButton.setOnClickListener(v ->  {
