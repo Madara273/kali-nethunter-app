@@ -258,6 +258,7 @@ public class SettingsFragment extends Fragment {
         EditText BootanimationPath = rootView.findViewById(R.id.bootanimation_path);
         ShellExecuter exe = new ShellExecuter();
         String bootanimation_path = exe.RunAsRootOutput("find /product /vendor /system -name \"*ootanimation.zip\"");
+        String bootanimation_mount = exe.RunAsRootOutput("mount | grep ootanimation");
 
         if (Objects.equals(bootanimation_path, "")) {
             BootanimationPath.setText("Bootanimation path not found");
@@ -292,13 +293,20 @@ public class SettingsFragment extends Fragment {
         Button InstallBootAnimationButton = rootView.findViewById(R.id.set_bootanimation);
         addClickListener(InstallBootAnimationButton, v -> {
             File AnimationZip = new File(nh.SD_PATH + "/bootanimation.zip");
-                    if (AnimationZip.length() == 0)
-                        Toast.makeText(getActivity().getApplicationContext(), "Bootanimation zip is not created!!", Toast.LENGTH_SHORT).show();
-                    else {
-                        run_cmd_android("echo -ne \"\\033]0;Installing animation\\007\" && clear;grep ' / ' /proc/mounts | grep -qv 'rootfs' || grep -q ' /system_root ' /proc/mounts && SYSTEM=/ || SYSTEM=/system " +
-                                "&& mount -o rw,remount $SYSTEM && cp " + nh.SD_PATH + "/bootanimation.zip " + BootanimationPath.getText().toString() + " " +
-                                "&& echo \"Done. Please reboot to check the result! Exiting in 3secs..\" && sleep 3 && exit");
-                    }
+            if (AnimationZip.length() == 0)
+                Toast.makeText(getActivity().getApplicationContext(), "Bootanimation zip is not created!!", Toast.LENGTH_SHORT).show();
+            else {
+                if (bootanimation_mount.equals("")) {
+                    String mount_path = exe.RunAsRootOutput("mount | grep \"media/bootanimation\" | awk {'print $3'}");
+                    run_cmd_android("echo -ne \"\\033]0;Installing animation\\007\" && clear;grep ' / ' /proc/mounts | grep -qv 'rootfs' || grep -q ' /system_root ' /proc/mounts && SYSTEM=/ || SYSTEM=/system " +
+                            "&& mount -o rw,remount " + mount_path + " && cp " + nh.SD_PATH + "/bootanimation.zip " + BootanimationPath.getText().toString() + " " +
+                            "&& echo \"Done. Please reboot to check the result! Exiting in 3secs..\" && sleep 3 && exit");
+                } else {
+                    run_cmd_android("echo -ne \"\\033]0;Installing animation\\007\" && clear;grep ' / ' /proc/mounts | grep -qv 'rootfs' || grep -q ' /system_root ' /proc/mounts && SYSTEM=/ || SYSTEM=/system " +
+                            "&& mount -o rw,remount $SYSTEM && cp " + nh.SD_PATH + "/bootanimation.zip " + BootanimationPath.getText().toString() + " " +
+                            "&& echo \"Done. Please reboot to check the result! Exiting in 3secs..\" && sleep 3 && exit");
+                }
+            }
         });
 
         //Backup
