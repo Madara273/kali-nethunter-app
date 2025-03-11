@@ -122,7 +122,7 @@ public class KernelFragment extends Fragment {
 
         flashButton.setOnClickListener( v -> {
             String kernelfilepath = kernelPath.getText().toString();
-            run_cmd_android(NhPaths.APP_SCRIPTS_PATH + "/bin/magic-flash.sh " + kernelfilepath + " | awk 'gsub(/ui_print /,\" \") && !/^ $/'; echo 'Exiting..';exit");
+            run_cmd_android(NhPaths.APP_SCRIPTS_PATH + "/bin/magic-flash " + kernelfilepath + " | awk 'gsub(/ui_print /,\" \") && !/^ $/'; echo 'Exiting..';exit");
         });
         return rootView;
     }
@@ -221,13 +221,13 @@ public class KernelFragment extends Fragment {
                         builderInner.setTitle("Multiple kernels available. Please select");
                         builderInner.setItems(kernelsArray, (dialog2, which2) -> {
                             run_cmd_android("echo -ne \"\\033]0;Flashing Kernel\\007\" && clear;cd /sdcard && curl https://gitlab.com/yesimxev/kali-nethunter-kernels/-/raw/main/" + kernelsArray[which2] + " > " + kernelsArray[which2] + "; " +
-                                    NhPaths.APP_SCRIPTS_PATH + "/bin/magic-flash.sh " + kernelsArray[which2] + " | awk 'gsub(/ui_print /,\" \") && !/^ $/'; echo 'Exiting..';exit");
+                                    NhPaths.APP_SCRIPTS_PATH + "/bin/magic-flash " + kernelsArray[which2] + " | awk 'gsub(/ui_print /,\" \") && !/^ $/'; echo 'Exiting..';exit");
                             Toast.makeText(requireActivity().getApplicationContext(), "Downloading to /sdcard and flashing...", Toast.LENGTH_SHORT).show();
                         });
                         builderInner.show();
                     } else {
                         run_cmd_android("echo -ne \"\\033]0;Flashing Kernel\\007\" && clear;cd /sdcard && curl https://gitlab.com/yesimxev/kali-nethunter-kernels/-/raw/main/" + kernel_zip + " > " + kernel_zip + "; " +
-                                NhPaths.APP_SCRIPTS_PATH + "/bin/magic-flash.sh " + kernel_zip + " | awk 'gsub(/ui_print /,\" \") && !/^ $/'; echo 'Exiting..'; exit");
+                                NhPaths.APP_SCRIPTS_PATH + "/bin/magic-flash " + kernel_zip + " | awk 'gsub(/ui_print /,\" \") && !/^ $/'; echo 'Exiting..'; exit");
                         Toast.makeText(requireActivity().getApplicationContext(), "Downloading to /sdcard and flashing...", Toast.LENGTH_SHORT).show();
                     }
                     });
