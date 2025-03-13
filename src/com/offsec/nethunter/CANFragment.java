@@ -229,7 +229,6 @@ public class CANFragment extends Fragment {
             SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
             // Common used variables
-
             SelectedIface = rootView.findViewById(R.id.can_iface);
             SelectedMtu = rootView.findViewById(R.id.mtu);
             SelectedBitrate = rootView.findViewById(R.id.bitrate_iface);
@@ -548,6 +547,7 @@ public class CANFragment extends Fragment {
     }
 
     public static class ToolsFragment extends CANFragment {
+        final ShellExecuter exe = new ShellExecuter();
         private Context context;
         private Activity activity;
         private TextView SelectedIface;
@@ -567,6 +567,7 @@ public class CANFragment extends Fragment {
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.can_tools, container, false);
 
+            SelectedIface = rootView.findViewById(R.id.can_iface);
             SelectedRHost = rootView.findViewById(R.id.cannelloni_rhost);
             SelectedRPort = rootView.findViewById(R.id.cannelloni_rport);
             SelectedLPort = rootView.findViewById(R.id.cannelloni_lport);
@@ -574,6 +575,7 @@ public class CANFragment extends Fragment {
             final EditText CustomCmd = rootView.findViewById(R.id.customcmd);
 
             final EditText cansend_sequence = rootView.findViewById(R.id.cansend_sequence);
+
             //Input File
             final EditText inputfilepath = rootView.findViewById(R.id.inputfilepath);
             final Button inputfilebrowse = rootView.findViewById(R.id.inputfilebrowse);
@@ -781,6 +783,7 @@ public class CANFragment extends Fragment {
     }
 
     public static class CANUSBFragment extends CANFragment {
+        final ShellExecuter exe = new ShellExecuter();
         private CheckBox DebugCheckbox;
         private CheckBox IDCheckbox;
         private CheckBox DataCheckbox;
@@ -789,12 +792,12 @@ public class CANFragment extends Fragment {
         private String idCMD = "";
         private String dataCMD = "";
         private String sleepCMD = "";
+        private TextView SelectedIface;
         private TextView SelectedBaudrateUSB;
         private TextView SelectedCanSpeedUSB;
         private TextView SelectedData;
         private TextView SelectedID;
         private TextView SelectedSleep;
-        private String selected_usb;
         private Context context;
         private Activity activity;
 
@@ -810,6 +813,8 @@ public class CANFragment extends Fragment {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.can_canusb, container, false);
+
+            SelectedIface = rootView.findViewById(R.id.can_iface);
 
             SelectedBaudrateUSB = rootView.findViewById(R.id.baudrate_usb);
             SelectedCanSpeedUSB = rootView.findViewById(R.id.canspeed_usb);
@@ -862,11 +867,12 @@ public class CANFragment extends Fragment {
             Button USBCanDumpButton = rootView.findViewById(R.id.start_canusb_dump);
 
             USBCanDumpButton.setOnClickListener(v -> {
+                String selected_caniface = SelectedIface.getText().toString();
                 String USBCANSpeed = SelectedCanSpeedUSB.getText().toString();
                 String USBBaudrate = SelectedBaudrateUSB.getText().toString();
 
-                if (selected_usb != null && !selected_usb.isEmpty() && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
-                    run_cmd("canusb -d " + selected_usb + " -s " + USBCANSpeed + " -b " + USBBaudrate + debugCMD);
+                if (!selected_caniface.isEmpty() && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
+                    run_cmd("canusb -d " + selected_caniface + " -s " + USBCANSpeed + " -b " + USBBaudrate + debugCMD);
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your USB Device and USB CAN Speed, Baudrate fields is set!", Toast.LENGTH_LONG).show();
                 }
@@ -878,11 +884,12 @@ public class CANFragment extends Fragment {
             Button USBCanSendButton = rootView.findViewById(R.id.start_canusb_send);
 
             USBCanSendButton.setOnClickListener(v -> {
+                String selected_caniface = SelectedIface.getText().toString();
                 String USBCANSpeed = SelectedCanSpeedUSB.getText().toString();
                 String USBBaudrate = SelectedBaudrateUSB.getText().toString();
 
-                if (selected_usb != null && !selected_usb.isEmpty() && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
-                    run_cmd("canusb -d " + selected_usb + " -s " + USBCANSpeed + " -b " + USBBaudrate + debugCMD + idCMD + dataCMD + sleepCMD);
+                if (!selected_caniface.isEmpty() && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
+                    run_cmd("canusb -d " + selected_caniface + " -s " + USBCANSpeed + " -b " + USBBaudrate + debugCMD + idCMD + dataCMD + sleepCMD);
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your USB Device and USB CAN Speed, Baudrate, Data fields is set!", Toast.LENGTH_LONG).show();
                 }

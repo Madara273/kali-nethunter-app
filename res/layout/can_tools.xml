@@ -22,7 +22,7 @@
                 android:layout_gravity="center_horizontal|center"
                 android:gravity="center"
                 android:padding="10dp"
-                android:text="Experimental Version" />
+                android:text="Pre-Release" />
 
             <View
                 android:id="@+id/divider9"
@@ -38,7 +38,7 @@
                 android:layout_gravity="center_horizontal|center"
                 android:gravity="center"
                 android:padding="10dp"
-                android:text="@string/can_description"
+                android:text="@string/can_tools_desc"
                 tools:ignore="VisualLintLongText" />
 
             <View
@@ -64,15 +64,6 @@
                     android:text="Settings :"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
-                <ImageButton
-                    android:id="@+id/refreshUSB"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="20dp"
-                    android:ems="10"
-                    app:srcCompat="@drawable/ic_action_refresh"
-                    tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
-
             </LinearLayout>
 
             <LinearLayout
@@ -83,21 +74,26 @@
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/usb_if"
+                    android:id="@+id/textView2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
                     android:layout_weight="3"
-                    android:text="Device :"
+                    android:text="CAN interface :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
-                <Spinner
-                    android:id="@+id/device_interface"
+                <EditText
+                    android:id="@+id/can_iface"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:dropDownWidth="wrap_content"
+                    android:layout_marginEnd="20dp"
+                    android:layout_weight="5"
+                    android:gravity="right|bottom"
+                    android:ems="10"
+                    android:inputType="text"
                     android:saveEnabled="false"
-                    android:spinnerMode="dropdown"
+                    android:text="can0"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
 
             </LinearLayout>
