@@ -406,12 +406,12 @@ public class CANFragment extends Fragment {
                             Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
                         }
                     } else {
-                        if ("can".equals(interface_type)) {
-                            String SetBitrateIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + "bitrate " + selected_bitrate + " && echo Success || echo Failed");
-                            if (SetBitrateIface.contains("FATAL:") || SetBitrateIface.contains("Failed")) {
-                                Toast.makeText(requireActivity().getApplicationContext(), "Failed to set " + selected_caniface + " bitrate!", Toast.LENGTH_LONG).show();
-                            }
-                        }
+                        //if ("can".equals(interface_type)) {
+                        //    String SetBitrateIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + "bitrate " + selected_bitrate + " && echo Success || echo Failed");
+                        //    if (SetBitrateIface.contains("FATAL:") || SetBitrateIface.contains("Failed")) {
+                        //        Toast.makeText(requireActivity().getApplicationContext(), "Failed to set " + selected_caniface + " bitrate!", Toast.LENGTH_LONG).show();
+                        //    }
+                        //}
                         if ("vcan".equals(interface_type)) {
                             String addVcanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && echo Success || echo Failed");
                             if (addVcanIface.contains("FATAL:") || addVcanIface.contains("Failed")) {
