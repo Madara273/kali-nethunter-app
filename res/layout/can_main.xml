@@ -303,6 +303,37 @@
                 android:padding="10dp">
 
                 <Button
+                    android:id="@+id/start_hlcand"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="20dp"
+                    android:ems="7"
+                    android:text="hlcand" />
+
+                <EditText
+                    android:id="@+id/hlcand_cmd"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="20dp"
+                    android:ems="20"
+                    android:gravity="left|bottom"
+                    android:inputType="text"
+                    android:saveEnabled="false"
+                    android:text="hlcand -F -s 500000 /dev/ttyUSB0"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <Button
                     android:id="@+id/start_slcanattach"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"

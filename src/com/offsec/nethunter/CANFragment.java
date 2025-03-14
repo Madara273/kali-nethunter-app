@@ -147,6 +147,7 @@ public class CANFragment extends Fragment {
                 "if [[ -f /usr/local/bin/canusb ]]; then echo 'USB-CAN is installed!'; else echo '\\nInstalling USB-CAN\\n'; cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/usb-can.git; cd /opt/car_hacking/usb-can;sudo gcc -o canusb canusb.c; sudo cp canusb /usr/local/bin/canusb;fi;" +
                 "if [[ -f /usr/local/bin/freediag && -f /usr/local/bin/diag_test ]]; then echo 'Freediag is installed!'; else echo '\\nInstalling Freediag\\n'; cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/freediag.git; cd /opt/car_hacking/freediag;./build_simple.sh; sudo cp build/scantool/freediag /usr/local/bin/freediag && sudo cp build/scantool/diag_test /usr/local/bin/diag_test;fi;" +
                 "if [[ -f /usr/local/sbin/socketcand ]]; then echo 'Socketcand is Installed!'; else echo '\\nInstalling Socketcand\\n'; cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/socketcand.git; cd /opt/car_hacking/socketcand; sudo meson setup -Dlibconfig=true --buildtype=release build; sudo meson compile -C build; sudo meson install -C build;fi; " +
+                "if [[ -f /usr/local/bin/hlcand ]]; then echo 'hlcand is Installed!'; else echo '\\nInstalling hlcancand\\n'; cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/usb-can-2.git; cd /opt/car_hacking/usb-can-2; sudo ./build.sh; cp -f src/hlcand /usr/local/bin/hlcand;fi; " +
                 "echo '\\nSetup done!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }
@@ -160,6 +161,7 @@ public class CANFragment extends Fragment {
                 "if [[ -f /usr/local/bin/canusb && -d /opt/car_hacking/usb-can  ]]; then echo '\\nUSB-CAN detected! Updating...\\n'; cd /opt/car_hacking/usb-can; sudo git pull; sudo gcc -o canusb canusb.c; sudo cp canusb /usr/local/bin/canusb; else echo '\\nUSB-CAN not detected! Please run Setup first.';fi; " +
                 "if [[ -f /usr/local/bin/freediag && -f /usr/local/bin/diag_test && -d /opt/car_hacking/freediag  ]]; then echo '\\nFreediag detected! Updating...\\n'; cd /opt/car_hacking/freediag; sudo git pull;./build_simple.sh; sudo cp build/scantool/freediag /usr/local/bin/freediag && sudo cp build/scantool/diag_test /usr/local/bin/diag_test; else echo '\\nFreediag not detected! Please run Setup first.';fi; " +
                 "if [[ -f /usr/local/sbin/socketcand && -d /opt/car_hacking/socketcand ]]; then echo '\\nSocketcand detected! Updating...\\n'; cd /opt/car_hacking; cd /opt/car_hacking/socketcand; sudo git pull; sudo meson setup -Dlibconfig=true --buildtype=release build; sudo meson compile -C build; sudo meson install -C build; else echo '\\nSocketcand not detected! Please run Setup first.';fi; " +
+                "if [[ -f /usr/local/bin/hlcand ]]; then echo 'hlcand detected! Updating...\\n'; cd /opt/car_hacking/usb-can-2; sudo git pull; sudo ./build.sh; sudo cp -f src/hlcand /usr/local/bin/hlcand; else echo '\\nhlcand not detected! Please run Setup first.';fi; " +
                 "echo '\\nEverything is updated! Closing in 3secs..'; sleep 3 && exit");
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }
@@ -235,6 +237,7 @@ public class CANFragment extends Fragment {
 
             final EditText ldattach_cmd = rootView.findViewById(R.id.ldattach_cmd);
             final EditText slcand_cmd = rootView.findViewById(R.id.slcand_cmd);
+            final EditText hlcand_cmd = rootView.findViewById(R.id.hlcand_cmd);
             final EditText slcanattach_cmd = rootView.findViewById(R.id.slcanattach_cmd);
             final EditText bt_target_mac = rootView.findViewById(R.id.bttarget);
 
@@ -320,6 +323,20 @@ public class CANFragment extends Fragment {
 
                 if (!slcanattachcmd.isEmpty()) {
                     run_cmd(slcanattachcmd);
+                    Toast.makeText(requireActivity().getApplicationContext(), "Press CTRL+C to stop.", Toast.LENGTH_LONG).show();
+                } else {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please set your slcan_attach command!", Toast.LENGTH_LONG).show();
+                }
+            });
+
+            //Start hlcan
+            Button hlcandButton = rootView.findViewById(R.id.start_hlcand);
+
+            SlcanAttachButton.setOnClickListener(v -> {
+                String hlcandcmd = hlcand_cmd.getText().toString();
+
+                if (!hlcandcmd.isEmpty()) {
+                    run_cmd(hlcandcmd);
                     Toast.makeText(requireActivity().getApplicationContext(), "Press CTRL+C to stop.", Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please set your slcan_attach command!", Toast.LENGTH_LONG).show();
@@ -862,25 +879,7 @@ public class CANFragment extends Fragment {
                 }
             });
 
-            //Start USB-CAN Dump
-            // Pre-Release : Will remove one button to replace with "Run", as both command will end to be the same depending settings.
-            Button USBCanDumpButton = rootView.findViewById(R.id.start_canusb_dump);
-
-            USBCanDumpButton.setOnClickListener(v -> {
-                String selected_caniface = SelectedIface.getText().toString();
-                String USBCANSpeed = SelectedCanSpeedUSB.getText().toString();
-                String USBBaudrate = SelectedBaudrateUSB.getText().toString();
-
-                if (!selected_caniface.isEmpty() && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
-                    run_cmd("canusb -d " + selected_caniface + " -s " + USBCANSpeed + " -b " + USBBaudrate + debugCMD);
-                } else {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your USB Device and USB CAN Speed, Baudrate fields is set!", Toast.LENGTH_LONG).show();
-                }
-
-                activity.invalidateOptionsMenu();
-            });
-
-            //Start USB-CAN Send
+            //Start USB-CAN
             Button USBCanSendButton = rootView.findViewById(R.id.start_canusb_send);
 
             USBCanSendButton.setOnClickListener(v -> {
