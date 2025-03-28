@@ -332,7 +332,7 @@ public class CANFragment extends Fragment {
             //Start hlcan
             Button hlcandButton = rootView.findViewById(R.id.start_hlcand);
 
-            SlcanAttachButton.setOnClickListener(v -> {
+            hlcandButton.setOnClickListener(v -> {
                 String hlcandcmd = hlcand_cmd.getText().toString();
 
                 if (!hlcandcmd.isEmpty()) {

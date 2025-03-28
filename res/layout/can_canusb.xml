@@ -66,26 +66,27 @@
 
             </LinearLayout>
 
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:gravity="center"
+                android:orientation="horizontal"
                 android:padding="10dp">
 
                 <TextView
                     android:id="@+id/textView2"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:text="CAN USB Device :"
+                    android:layout_weight="3"
+                    android:text="Device :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <EditText
                     android:id="@+id/can_iface"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="2dp"
                     android:layout_marginEnd="20dp"
                     android:gravity="right|bottom"
                     android:inputType="text"
@@ -94,19 +95,48 @@
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
 
+
             </LinearLayout>
 
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:gravity="center"
-                android:orientation="horizontal" >
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/usb_if"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_weight="3"
+                    android:text="Device :"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                <Spinner
+                    android:id="@+id/device_interface"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:dropDownWidth="wrap_content"
+                    android:saveEnabled="false"
+                    android:spinnerMode="dropdown"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
 
                 <TextView
                     android:id="@+id/textView14"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
                     android:text="Baudrate :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -114,9 +144,9 @@
                     android:id="@+id/baudrate_usb"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="2dp"
                     android:inputType="number"
                     android:saveEnabled="false"
+                    android:gravity="right|bottom"
                     android:text="200000"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -125,17 +155,18 @@
                     android:id="@+id/textView15"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="100dp"
                     android:text="CAN Speed :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <EditText
                     android:id="@+id/canspeed_usb"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="2dp"
+                    android:layout_marginEnd="20dp"
                     android:inputType="number"
                     android:saveEnabled="false"
+                    android:gravity="right|bottom"
                     android:text="500000"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -143,17 +174,18 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_width="wrap_content"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:gravity="center"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:padding="10dp">
+
 
                 <CheckBox
                     android:id="@+id/debug_canusb"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="20dp"
                     android:text="TTY Output"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -161,6 +193,7 @@
                     android:id="@+id/id_canusb"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
                     android:text="ID :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -179,7 +212,7 @@
                     android:id="@+id/sleep_canusb"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="20dp"
                     android:text="Sleep (ms) : "
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
@@ -197,25 +230,27 @@
             </LinearLayout>
 
             <LinearLayout
-                android:layout_width="286dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:gravity="center"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:padding="10dp">
 
                 <CheckBox
                     android:id="@+id/data_canusb"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="20dp"
                     android:text="Data : "
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <EditText
                     android:id="@+id/data_value_canusb"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
+                    android:layout_marginEnd="20dp"
+                    android:gravity="right|bottom"
                     android:inputType="text"
                     android:saveEnabled="false"
                     android:text="0C1A2F3E0C1A2F3"
@@ -235,8 +270,10 @@
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/start_canusb_send"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="50dp"
+                    android:layout_marginEnd="50dp"
                     android:text="Run" />
 
             </LinearLayout>
