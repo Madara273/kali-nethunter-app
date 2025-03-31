@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -83,6 +84,12 @@ public class WPSFragment extends Fragment {
         SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
 
+        //Enabling wifi in case it's down
+        if (iswatch) {
+            exe.RunAsRoot(new String[]{"ifconfig wlan0 up"});
+        }
+        else exe.RunAsRoot(new String[]{"svc wifi enable"});
+
         //WIFI Scanner
         Button scanButton = rootView.findViewById(R.id.scanwps);
         scanButton.setOnClickListener(view -> scanWifi());
@@ -91,11 +98,16 @@ public class WPSFragment extends Fragment {
         ArrayAdapter WPSadapter = new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, arrayList);
         WPSList.setAdapter(WPSadapter);
 
-        //Reset interface on WearOS, thanks to "Auto" enabling, might also needed on phones
+        //Reset interface
         Button resetifaceButton = rootView.findViewById(R.id.resetinterface);
         resetifaceButton.setOnClickListener(view -> {
-            if (iswatch) exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting off; sleep 1 && settings put system clockwork_wifi_setting on"});
-            else exe.RunAsRoot(new String[]{"svc wifi disable; sleep 1 && svc wifi enable"});
+            AsyncTask.execute(() -> {
+                getActivity().runOnUiThread(() -> {
+                    if (iswatch) exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting off; sleep 1 && settings put system clockwork_wifi_setting on && ifconfig wlan0 up"});
+                    else exe.RunAsRoot(new String[]{"svc wifi disable; sleep 1 && svc wifi enable"});
+                    Toast.makeText(getActivity().getApplicationContext(), "Done", Toast.LENGTH_SHORT).show();
+                });
+            });
         });
 
         //Select target network
@@ -106,7 +118,7 @@ public class WPSFragment extends Fragment {
                 if (selected_target.equals("No nearby WPS networks") || selected_target.equals("Please reset the interface!")){
                     selected_network = "";
                 }
-                else selected_network = exe.RunAsRootOutput("echo \"" + selected_target + "\" | cut -d ';' -f 1");
+                else selected_network = exe.RunAsRootOutput("echo \"" + selected_target + "\" | cut -d ' ' -f 1");
             }
             @Override
             public void onNothingSelected(AdapterView<?> parentView) {
@@ -183,18 +195,8 @@ public class WPSFragment extends Fragment {
             customPIN = CustomPIN.getText().toString();
             delayTIME = DelayTime.getText().toString();
             if (!selected_network.equals("")) {
-                if (iswatch) {
-                    exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting on"});
-                } else exe.RunAsRoot(new String[]{"svc wifi enable"});
                 run_cmd("python3 /sdcard/nh_files/modules/oneshot.py -b " + selected_network +
                         " -i " + selected_interface + pixieCMD + pixieforceCMD + bruteCMD + customPINCMD + customPIN + delayCMD + delayTIME + pbcCMD);
-                //WearOS iface control is weird, hence reset is needed
-                if (iswatch)
-                    AsyncTask.execute(() -> {
-                        getActivity().runOnUiThread(() -> {
-                            exe.RunAsRoot(new String[]{"sleep 12 && settings put system clockwork_wifi_setting off; sleep 2 && ip link set wlan0 up"});
-                        });
-                    });
             }
             else Toast.makeText(getActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
         });
@@ -218,38 +220,39 @@ public class WPSFragment extends Fragment {
     }
 
     private void scanWifi() {
-        AsyncTask.execute(() -> {
-            getActivity().runOnUiThread(() -> {
-                //Disabling bluetooth so wifi will be definitely available for scanning
-                if (iswatch) {
-                    exe.RunAsRoot(new String[]{"svc bluetooth disable; ifconfig wlan0 down; ifconfig wlan0 up; settings put system clockwork_wifi_setting on"});
-                }
-                else exe.RunAsRoot(new String[]{"svc wifi enable"});
+        arrayList.clear();
+        arrayList.add("Scanning..");
+        WPSList.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, arrayList));
+        WPSList.setVisibility(View.VISIBLE);
+        Handler handler = new Handler();
+        arrayList.clear();
+        arrayList.add("Scanning..");
+        WPSList.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, arrayList));
+        handler.postDelayed(new Runnable() {
+            public void run() {
                 arrayList.clear();
                 arrayList.add("Scanning...");
                 WPSList.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, arrayList));
-                WPSList.setVisibility(View.VISIBLE);
-            });
-            String outputScanLog = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd python3 /sdcard/nh_files/modules/oneshot.py -i wlan0 -s | grep -E '[0-9])' | awk '{print $2\";\"$3}'");
+            }
+        } , 1500);
+        AsyncTask.execute(() -> {
+            String selected_interface = SelectedIface.getText().toString();
+            String outputScanLog = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd python3 /sdcard/nh_files/modules/oneshot.py -i " + selected_interface + " -s | grep -E '[0-9])' | tr -s ' ' | cut -d ' ' -f 2-3");
             getActivity().runOnUiThread(() -> {
-                final String[] arrayList = outputScanLog.split("\n");
+            final String[] arrayList = outputScanLog.split("\n");
                 ArrayAdapter targetsadapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, arrayList);
                 if (outputScanLog.equals("")) {
                     final ArrayList<String> notargets = new ArrayList<>();
                     notargets.add("No nearby WPS networks");
                     WPSList.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, notargets));
                 } else if (outputScanLog.equals("Error:;command")){
-                    final ArrayList<String> notargets = new ArrayList<>();
-                    notargets.add("Please reset the interface!");
-                    WPSList.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, notargets));
+                final ArrayList<String> notargets = new ArrayList<>();
+                notargets.add("Please reset the interface!");
+                WPSList.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, notargets));
                 } else {
-                    WPSList.setAdapter(targetsadapter);
+                WPSList.setAdapter(targetsadapter);
                 }
             });
-            if (iswatch) {
-                //re-enabling bluetooth
-                exe.RunAsRoot(new String[]{"svc bluetooth enable"});
-            }
         });
     }
 
