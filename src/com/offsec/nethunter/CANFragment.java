@@ -6,7 +6,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.view.LayoutInflater;
@@ -40,6 +39,8 @@ import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.Map;
 import java.util.HashMap;
 
@@ -48,6 +49,7 @@ public class CANFragment extends Fragment {
     private SharedPreferences sharedpreferences;
     private Context context;
     private Activity activity;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private static final String ARG_SECTION_NUMBER = "section_number";
 
     public static CANFragment newInstance(int sectionNumber) {
@@ -84,13 +86,13 @@ public class CANFragment extends Fragment {
         return rootView;
     }
 
-    //Menu
+    // Menu
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater menuinflater) {
         menuinflater.inflate(R.menu.can, menu);
     }
 
-    //Menu Items
+    // Menu Items
     @SuppressLint("NonConstantResourceId")
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -112,7 +114,7 @@ public class CANFragment extends Fragment {
         }
     }
 
-    //First Setup
+    // First Setup
     public void SetupDialog() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
@@ -129,14 +131,14 @@ public class CANFragment extends Fragment {
         builder.show();
     }
 
-    //Documentation item
+    // Documentation item
     public void RunDocumentation() {
         String url = "https://www.kali.org/docs/nethunter/nethunter-canarsenal/";
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
         activity.startActivity(intent);
     }
 
-    //Setup item
+    // Setup item
     public void RunSetup() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         run_cmd("echo -ne \"\\033]0;CAN Arsenal Setup\\007\" && clear; echo '\\nUpdating and Installing Packages...\\n' && apt update && apt install -y can-utils libsdl2-dev libsdl2-image-dev libconfig-dev libsocketcan-dev can-utils maven autoconf make cmake meson&& " +
@@ -152,7 +154,7 @@ public class CANFragment extends Fragment {
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }
 
-    //Update item
+    // Update item
     public void RunUpdate() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         run_cmd("echo -ne \"\\033]0;CAN Arsenal Update\\007\" && clear; echo '\\nUpdating Packages...\\n' && apt update && apt install -y can-utils libsdl2-dev libsdl2-image-dev can-utils maven autoconf make cmake && " +
@@ -212,6 +214,7 @@ public class CANFragment extends Fragment {
     public static class MainFragment extends CANFragment {
         private Context context;
         final ShellExecuter exe = new ShellExecuter();
+        private final ExecutorService executorService = Executors.newSingleThreadExecutor();
         private TextView SelectedIface;
         private TextView SelectedMtu;
         private TextView SelectedBitrate;
@@ -241,17 +244,18 @@ public class CANFragment extends Fragment {
             final EditText slcanattach_cmd = rootView.findViewById(R.id.slcanattach_cmd);
             final EditText bt_target_mac = rootView.findViewById(R.id.bttarget);
 
-            //First run
+            // First run
             Boolean setupdone = sharedpreferences.getBoolean("setup_done", false);
             if (!setupdone.equals(true)) {
                 SetupDialog();
             }
 
-            //USB interfaces
+            // USB interfaces
+            // TODO : Should be moved to can_canusb
             final Spinner deviceList = rootView.findViewById(R.id.device_interface);
 
             final String[] outputDevice = {""};
-            AsyncTask.execute(() -> outputDevice[0] = exe.RunAsChrootOutput("ls -1 /sys/class/net/ | grep can;ls -1 /dev/ttyUSB*;ls -1 /dev/rfcomm*;ls -1 /dev/ttyACM*"));
+            executorService.submit(() -> outputDevice[0] = exe.RunAsChrootOutput("ls -1 /sys/class/net/ | grep can;ls -1 /dev/ttyUSB*;ls -1 /dev/rfcomm*;ls -1 /dev/ttyACM*"));
 
             final ArrayList<String> deviceIfaces = new ArrayList<>();
             if (outputDevice[0].isEmpty()) {
@@ -278,16 +282,16 @@ public class CANFragment extends Fragment {
                 }
             });
 
-            //Refresh Status
+            // Refresh Status
             ImageButton RefreshUSB = rootView.findViewById(R.id.refreshUSB);
             RefreshUSB.setOnClickListener(v -> {
                 Toast.makeText(getContext(), "Refreshing Devices...", Toast.LENGTH_SHORT).show();
                 refresh(rootView);
             });
-            AsyncTask.execute(() -> refresh(rootView));
+            executorService.submit(() -> refresh(rootView));
 
             // Attach
-            //Start LDAttach
+            // Start LDAttach
             Button LdAttachButton = rootView.findViewById(R.id.start_ldattach);
 
             LdAttachButton.setOnClickListener(v -> {
@@ -301,7 +305,7 @@ public class CANFragment extends Fragment {
                 }
             });
 
-            //Start slcand
+            // Start slcand
             Button SlcandAttachButton = rootView.findViewById(R.id.start_slcand);
 
             SlcandAttachButton.setOnClickListener(v -> {
@@ -315,7 +319,7 @@ public class CANFragment extends Fragment {
                 }
             });
 
-            //Start SLCAN_Attach
+            // Start SLCAN_Attach
             Button SlcanAttachButton = rootView.findViewById(R.id.start_slcanattach);
 
             SlcanAttachButton.setOnClickListener(v -> {
@@ -329,7 +333,7 @@ public class CANFragment extends Fragment {
                 }
             });
 
-            //Start hlcan
+            // Start hlcan
             Button hlcandButton = rootView.findViewById(R.id.start_hlcand);
 
             hlcandButton.setOnClickListener(v -> {
@@ -406,12 +410,12 @@ public class CANFragment extends Fragment {
                             Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
                         }
                     } else {
-                        //if ("can".equals(interface_type)) {
-                        //    String SetBitrateIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + "bitrate " + selected_bitrate + " && echo Success || echo Failed");
-                        //    if (SetBitrateIface.contains("FATAL:") || SetBitrateIface.contains("Failed")) {
-                        //        Toast.makeText(requireActivity().getApplicationContext(), "Failed to set " + selected_caniface + " bitrate!", Toast.LENGTH_LONG).show();
-                        //    }
-                        //}
+                        // if ("can".equals(interface_type)) {
+                        //     String SetBitrateIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + "bitrate " + selected_bitrate + " && echo Success || echo Failed");
+                        //     if (SetBitrateIface.contains("FATAL:") || SetBitrateIface.contains("Failed")) {
+                        //         Toast.makeText(requireActivity().getApplicationContext(), "Failed to set " + selected_caniface + " bitrate!", Toast.LENGTH_LONG).show();
+                        //     }
+                        // }
                         if ("vcan".equals(interface_type)) {
                             String addVcanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && echo Success || echo Failed");
                             if (addVcanIface.contains("FATAL:") || addVcanIface.contains("Failed")) {
@@ -444,7 +448,7 @@ public class CANFragment extends Fragment {
                 editor.apply();
             });
 
-            //Start rfcomm binder
+            // Start rfcomm binder
             Button RfcommBinderButton = rootView.findViewById(R.id.start_rfcommbinder);
 
             RfcommBinderButton.setOnClickListener(v -> {
@@ -458,7 +462,7 @@ public class CANFragment extends Fragment {
                 }
             });
 
-            //Start Socketcand
+            // Start Socketcand
             Button SocketCandButton = rootView.findViewById(R.id.start_socketcand);
 
             SocketCandButton.setOnClickListener(v -> {
@@ -471,8 +475,8 @@ public class CANFragment extends Fragment {
                 }
             });
 
-            //Author Contact
-            //Website
+            // Author Contact
+            // Website
             ImageView AuthorWebsiteButton = rootView.findViewById(R.id.author_website);
             AuthorWebsiteButton.setOnClickListener(v -> {
                 String url = "https://v0lk3n.github.io";
@@ -480,7 +484,7 @@ public class CANFragment extends Fragment {
                 startActivity(intent);
             });
 
-            //𝕏
+            // 𝕏
             ImageView AuthorXButton = rootView.findViewById(R.id.author_x);
             AuthorXButton.setOnClickListener(v -> {
                 String url = "https://x.com/v0lk3n";
@@ -488,7 +492,7 @@ public class CANFragment extends Fragment {
                 startActivity(intent);
             });
 
-            //BlueSky
+            // BlueSky
             ImageView AuthorBlueskyButton = rootView.findViewById(R.id.author_bluesky);
             AuthorBlueskyButton.setOnClickListener(v -> {
                 String url = "https://bsky.app/profile/v0lk3n.bsky.social";
@@ -496,7 +500,7 @@ public class CANFragment extends Fragment {
                 startActivity(intent);
             });
 
-            //Mastodon
+            // Mastodon
             ImageView AuthorMastodonButton = rootView.findViewById(R.id.author_mastodon);
             AuthorMastodonButton.setOnClickListener(v -> {
                 String url = "https://infosec.exchange/@v0lk3n";
@@ -504,7 +508,7 @@ public class CANFragment extends Fragment {
                 startActivity(intent);
             });
 
-            //Instagram
+            // Instagram
             ImageView AuthorInstagramButton = rootView.findViewById(R.id.author_instagram);
             AuthorInstagramButton.setOnClickListener(v -> {
                 String url = "https://www.instagram.com/v0lk3n_/";
@@ -512,7 +516,7 @@ public class CANFragment extends Fragment {
                 startActivity(intent);
             });
 
-            //Discord
+            // Discord
             ImageView AuthorDiscordButton = rootView.findViewById(R.id.author_discord);
             AuthorDiscordButton.setOnClickListener(v -> {
                 String url = "https://discord.com/users/343776454762430484";
@@ -520,7 +524,7 @@ public class CANFragment extends Fragment {
                 startActivity(intent);
             });
 
-            //GitHub
+            // GitHub
             ImageView AuthorGitHubButton = rootView.findViewById(R.id.author_github);
             AuthorGitHubButton.setOnClickListener(v -> {
                 String url = "https://github.com/V0lk3n";
@@ -528,7 +532,7 @@ public class CANFragment extends Fragment {
                 startActivity(intent);
             });
 
-            //GitLab
+            // GitLab
             ImageView AuthorGitLabButton = rootView.findViewById(R.id.author_gitlab);
             AuthorGitLabButton.setOnClickListener(v -> {
                 String url = "https://gitlab.com/V0lk3n";
@@ -537,7 +541,7 @@ public class CANFragment extends Fragment {
             });
             return rootView;
         }
-        //Refresh main
+        // Refresh main
         private void refresh(View CANFragment) {
             final Spinner deviceList = CANFragment.findViewById(R.id.device_interface);
             SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
@@ -593,7 +597,7 @@ public class CANFragment extends Fragment {
 
             final EditText cansend_sequence = rootView.findViewById(R.id.cansend_sequence);
 
-            //Input File
+            // Input File
             final EditText inputfilepath = rootView.findViewById(R.id.inputfilepath);
             final Button inputfilebrowse = rootView.findViewById(R.id.inputfilebrowse);
 
@@ -605,7 +609,7 @@ public class CANFragment extends Fragment {
                 startActivityForResult(Intent.createChooser(intent, "Select input file"), 1001);
             });
 
-            //Output File
+            // Output File
             final EditText outputfilepath = rootView.findViewById(R.id.outputfilepath);
             final Button outputfilebrowse = rootView.findViewById(R.id.outputfilebrowse);
 
@@ -617,8 +621,8 @@ public class CANFragment extends Fragment {
                 startActivityForResult(Intent.createChooser(intent, "Select output file"), 1001);
             });
 
-            //Tools
-            //Start CanGen
+            // Tools
+            // Start CanGen
             Button CanGenButton = rootView.findViewById(R.id.start_cangen);
 
             CanGenButton.setOnClickListener(v -> {
@@ -632,7 +636,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
 
-            //Start CanSniffer
+            // Start CanSniffer
             Button CanSnifferButton = rootView.findViewById(R.id.start_cansniffer);
 
             CanSnifferButton.setOnClickListener(v -> {
@@ -647,7 +651,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
 
-            //Start CanDump
+            // Start CanDump
             Button CanDumpButton = rootView.findViewById(R.id.start_candump);
 
             CanDumpButton.setOnClickListener(v -> {
@@ -663,7 +667,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
 
-            //Start CanSend
+            // Start CanSend
             Button CanSendButton = rootView.findViewById(R.id.start_cansend);
 
             CanSendButton.setOnClickListener(v -> {
@@ -679,7 +683,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
 
-            //Start CanPlayer
+            // Start CanPlayer
             Button CanPlayerButton = rootView.findViewById(R.id.start_canplayer);
 
             CanPlayerButton.setOnClickListener(v -> {
@@ -694,7 +698,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
 
-            //Start SequenceFinder
+            // Start SequenceFinder
             final Button SequenceFinderButton = rootView.findViewById(R.id.start_sequencefinder);
 
             SequenceFinderButton.setOnClickListener(v -> {
@@ -710,7 +714,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
 
-            //Start Freediag
+            // Start Freediag
             Button FreediagButton = rootView.findViewById(R.id.start_freediag);
 
             FreediagButton.setOnClickListener(v -> {
@@ -719,7 +723,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
 
-            //Start diag_test
+            // Start diag_test
             Button diagTestButton = rootView.findViewById(R.id.start_diagtest);
 
             diagTestButton.setOnClickListener(v -> {
@@ -728,7 +732,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
 
-            //Cannelloni
+            // Cannelloni
             Button CannelloniButton = rootView.findViewById(R.id.start_cannelloni);
 
             CannelloniButton.setOnClickListener(v ->  {
@@ -746,8 +750,8 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
 
-            //Logging
-            //Start Asc2Log
+            // Logging
+            // Start Asc2Log
             Button Asc2LogButton = rootView.findViewById(R.id.start_asc2log);
 
             Asc2LogButton.setOnClickListener(v ->  {
@@ -763,7 +767,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
 
-            //Start Log2asc
+            // Start Log2asc
             Button Log2AscButton = rootView.findViewById(R.id.start_log2asc);
 
             Log2AscButton.setOnClickListener(v ->  {
@@ -780,7 +784,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
 
-            //Start CustomCommand
+            // Start CustomCommand
             Button CustomCmdButton = rootView.findViewById(R.id.start_customcmd);
 
             CustomCmdButton.setOnClickListener(v ->  {
@@ -836,13 +840,13 @@ public class CANFragment extends Fragment {
             SelectedBaudrateUSB = rootView.findViewById(R.id.baudrate_usb);
             SelectedCanSpeedUSB = rootView.findViewById(R.id.canspeed_usb);
 
-            //Checkboxes
+            // Checkboxes
             DebugCheckbox = rootView.findViewById(R.id.debug_canusb);
             IDCheckbox = rootView.findViewById(R.id.id_canusb);
             DataCheckbox = rootView.findViewById(R.id.data_canusb);
             SleepCheckbox = rootView.findViewById(R.id.sleep_canusb);
 
-            //Checkboxes values
+            // Checkboxes values
             SelectedID = rootView.findViewById(R.id.id_value_canusb);
             SelectedData = rootView.findViewById(R.id.data_value_canusb);
             SelectedSleep = rootView.findViewById(R.id.sleep_value_canusb);
@@ -879,7 +883,7 @@ public class CANFragment extends Fragment {
                 }
             });
 
-            //Start USB-CAN
+            // Start USB-CAN
             Button USBCanSendButton = rootView.findViewById(R.id.start_canusb_send);
 
             USBCanSendButton.setOnClickListener(v -> {
