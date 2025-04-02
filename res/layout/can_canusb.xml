@@ -64,6 +64,15 @@
                     android:text="CAN-USB :"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
+                <ImageButton
+                    android:id="@+id/refreshUSB"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="20dp"
+                    android:ems="10"
+                    app:srcCompat="@drawable/ic_action_refresh"
+                    tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
+
             </LinearLayout>
 
 
