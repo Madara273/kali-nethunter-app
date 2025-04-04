@@ -761,8 +761,6 @@ public class CANFragment extends Fragment {
             SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
             View rootView = inflater.inflate(R.layout.can_canusb, container, false);
 
-            SelectedIface = rootView.findViewById(R.id.can_iface);
-
             SelectedBaudrateUSB = rootView.findViewById(R.id.baudrate_usb);
             SelectedCanSpeedUSB = rootView.findViewById(R.id.canspeed_usb);
 
@@ -852,12 +850,11 @@ public class CANFragment extends Fragment {
             Button USBCanSendButton = rootView.findViewById(R.id.start_canusb_send);
 
             USBCanSendButton.setOnClickListener(v -> {
-                String selected_caniface = SelectedIface.getText().toString();
                 String USBCANSpeed = SelectedCanSpeedUSB.getText().toString();
                 String USBBaudrate = SelectedBaudrateUSB.getText().toString();
 
-                if (!selected_caniface.isEmpty() && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
-                    run_cmd("canusb -d " + selected_caniface + " -s " + USBCANSpeed + " -b " + USBBaudrate + debugCMD + idCMD + dataCMD + sleepCMD);
+                if (!selected_usb.isEmpty() && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
+                    run_cmd("canusb -d " + selected_usb + " -s " + USBCANSpeed + " -b " + USBBaudrate + debugCMD + idCMD + dataCMD + sleepCMD);
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your USB Device and USB CAN Speed, Baudrate, Data fields is set!", Toast.LENGTH_LONG).show();
                 }

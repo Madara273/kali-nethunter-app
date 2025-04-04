@@ -75,38 +75,6 @@
 
             </LinearLayout>
 
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-                <TextView
-                    android:id="@+id/textView2"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_weight="3"
-                    android:text="Device :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <EditText
-                    android:id="@+id/can_iface"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="20dp"
-                    android:gravity="right|bottom"
-                    android:inputType="text"
-                    android:saveEnabled="false"
-                    android:text="/dev/ttyUSB0"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-
-            </LinearLayout>
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -196,7 +164,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
                     android:text="TTY Output"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
 
                 <CheckBox
                     android:id="@+id/id_canusb"
@@ -204,7 +173,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
                     android:text="ID :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
 
                 <EditText
                     android:id="@+id/id_value_canusb"
@@ -223,7 +193,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
                     android:text="Sleep (ms) : "
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
 
                 <EditText
                     android:id="@+id/sleep_value_canusb"
@@ -251,7 +222,8 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
                     android:text="Data : "
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
 
                 <EditText
                     android:id="@+id/data_value_canusb"
