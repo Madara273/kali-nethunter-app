@@ -316,7 +316,6 @@ public class CANFragment extends Fragment {
 
             // Can Type Spinner
             // Spinner for CAN interfaces
-            // USB interfaces
             final Spinner canTypeList = rootView.findViewById(R.id.cantype_spinner);
             final String[] interfaceTypeOptions = {"can", "vcan", "slcan"};
 
@@ -334,7 +333,7 @@ public class CANFragment extends Fragment {
                 }
             });
 
-            // Start CAN interface (For experimental version)
+            // Start CAN interface
             Button StartCanButton = rootView.findViewById(R.id.start_caniface);
 
             // Set initial button text based on saved state
@@ -732,20 +731,26 @@ public class CANFragment extends Fragment {
         private CheckBox IDCheckbox;
         private CheckBox DataCheckbox;
         private CheckBox SleepCheckbox;
+        private CheckBox CountCheckbox;
+        private CheckBox ModeCheckbox;
         private String debugCMD = "";
         private String idCMD = "";
         private String dataCMD = "";
         private String sleepCMD = "";
+        private String countCMD = "";
+        private String modeCMD = "";
         private TextView SelectedIface;
         private TextView SelectedBaudrateUSB;
         private TextView SelectedCanSpeedUSB;
         private TextView SelectedData;
         private TextView SelectedID;
         private TextView SelectedSleep;
+        private TextView SelectedCount;
         private Context context;
         private Activity activity;
         private final ExecutorService executorService = Executors.newSingleThreadExecutor();
         private String selected_usb;
+        private String canusbmode_selected;
 
 
         @Override
@@ -769,11 +774,14 @@ public class CANFragment extends Fragment {
             IDCheckbox = rootView.findViewById(R.id.id_canusb);
             DataCheckbox = rootView.findViewById(R.id.data_canusb);
             SleepCheckbox = rootView.findViewById(R.id.sleep_canusb);
+            CountCheckbox = rootView.findViewById(R.id.count_canusb);
+            ModeCheckbox = rootView.findViewById(R.id.mode_canusb);
 
             // Checkboxes values
             SelectedID = rootView.findViewById(R.id.id_value_canusb);
             SelectedData = rootView.findViewById(R.id.data_value_canusb);
             SelectedSleep = rootView.findViewById(R.id.sleep_value_canusb);
+            SelectedCount = rootView.findViewById(R.id.count_value_canusb);
 
             // USB interfaces
             final Spinner deviceList = rootView.findViewById(R.id.device_interface);
@@ -814,6 +822,24 @@ public class CANFragment extends Fragment {
             });
             executorService.submit(() -> refresh(rootView));
 
+            // Can-Usb Mode Spinner
+            final Spinner canusbModeList = rootView.findViewById(R.id.canusb_mode_spinner);
+            final String[] modeOptions = {"0", "1", "2"};
+
+            canusbModeList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, modeOptions));
+
+            canusbModeList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                    String canusbmode_selected = parentView.getItemAtPosition(pos).toString();
+                    sharedpreferences.edit().putString("canusbmode_selected", canusbmode_selected).apply();
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parentView) {
+                }
+            });
+
             // USB-CAN
             DebugCheckbox.setOnClickListener(v -> {
                 if (DebugCheckbox.isChecked())
@@ -845,6 +871,22 @@ public class CANFragment extends Fragment {
                     sleepCMD = "";
                 }
             });
+            CountCheckbox.setOnClickListener(v -> {
+                if (CountCheckbox.isChecked()) {
+                    String selected_count = SelectedCount.getText().toString();
+                    countCMD = " -n " + selected_count;
+                } else {
+                    countCMD = "";
+                }
+            });
+            ModeCheckbox.setOnClickListener(v -> {
+                String USBCANMode = sharedpreferences.getString("canusbmode_selected", "");
+                if (ModeCheckbox.isChecked()) {
+                    modeCMD = " -m " + USBCANMode;
+                } else {
+                    modeCMD = "";
+                }
+            });
 
             // Start USB-CAN
             Button USBCanSendButton = rootView.findViewById(R.id.start_canusb_send);
@@ -854,7 +896,7 @@ public class CANFragment extends Fragment {
                 String USBBaudrate = SelectedBaudrateUSB.getText().toString();
 
                 if (!selected_usb.isEmpty() && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
-                    run_cmd("canusb -d " + selected_usb + " -s " + USBCANSpeed + " -b " + USBBaudrate + debugCMD + idCMD + dataCMD + sleepCMD);
+                    run_cmd("canusb -d " + selected_usb + " -s " + USBCANSpeed + " -b " + USBBaudrate + debugCMD + idCMD + dataCMD + sleepCMD + countCMD + modeCMD);
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your USB Device and USB CAN Speed, Baudrate, Data fields is set!", Toast.LENGTH_LONG).show();
                 }
