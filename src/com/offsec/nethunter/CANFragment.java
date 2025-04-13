@@ -45,7 +45,6 @@ import java.util.Map;
 import java.util.HashMap;
 
 public class CANFragment extends Fragment {
-    private ViewPager mViewPager;
     private SharedPreferences sharedpreferences;
     private Context context;
     private Activity activity;
@@ -71,7 +70,7 @@ public class CANFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.can, container, false);
         CANFragment.TabsPagerAdapter tabsPagerAdapter = new CANFragment.TabsPagerAdapter(getChildFragmentManager());
 
-        mViewPager = rootView.findViewById(R.id.pagerCAN);
+        ViewPager mViewPager = rootView.findViewById(R.id.pagerCAN);
         mViewPager.setAdapter(tabsPagerAdapter);
         mViewPager.setOffscreenPageLimit(4);
         mViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
@@ -256,7 +255,7 @@ public class CANFragment extends Fragment {
                     run_cmd(ldattachcmd);
                     Toast.makeText(requireActivity().getApplicationContext(), "Press CTRL+C to stop.", Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Please set your ldattach commmand!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please set your ldattach command!", Toast.LENGTH_LONG).show();
                 }
             });
 
@@ -505,7 +504,6 @@ public class CANFragment extends Fragment {
     }
 
     public static class ToolsFragment extends CANFragment {
-        private Context context;
         private Activity activity;
         private TextView SelectedIface;
         private TextView SelectedRHost;
@@ -515,7 +513,6 @@ public class CANFragment extends Fragment {
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            context = getContext();
             activity = getActivity();
         }
 
@@ -753,7 +750,6 @@ public class CANFragment extends Fragment {
         private String sleepCMD = "";
         private String countCMD = "";
         private String modeCMD = "";
-        private TextView SelectedIface;
         private TextView SelectedBaudrateUSB;
         private TextView SelectedCanSpeedUSB;
         private TextView SelectedData;
@@ -764,8 +760,6 @@ public class CANFragment extends Fragment {
         private Activity activity;
         private final ExecutorService executorService = Executors.newSingleThreadExecutor();
         private String selected_usb;
-        private String canusbmode_selected;
-
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
