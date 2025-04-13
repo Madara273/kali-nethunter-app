@@ -356,12 +356,6 @@
                 android:padding="10dp">
 
                 <Button
-                    android:id="@+id/reset_iface"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Reset Interface" />
-
-                <Button
                     android:id="@+id/start_rfcommbinder"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -401,12 +395,20 @@
 
                 <Button
                     android:id="@+id/start_caniface"
-                    android:layout_marginStart="45dp"
-                    android:layout_marginEnd="20dp"
-                    android:layout_width="match_parent"
+                    android:layout_marginStart="10dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="▶ CAN"
                     tools:ignore="VisualLintButtonSize" />
+
+                <ImageButton
+                    android:id="@+id/reset_iface"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="20dp"
+                    app:srcCompat="@drawable/ic_action_refresh"
+                    tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
 
             </LinearLayout>
 
@@ -449,80 +451,88 @@
                     android:id="@+id/author_website"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:src="@drawable/ic_website"
-                    android:contentDescription="Website"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:contentDescription="Website"
+                    android:focusable="true"
+                    android:src="@drawable/ic_website"
+                    tools:ignore="TouchTargetSizeCheck,ImageContrastCheck" />
 
                 <ImageView
                     android:id="@+id/author_x"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="25dp"
-                    android:src="@drawable/ic_x"
-                    android:contentDescription="X"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:contentDescription="X"
+                    android:focusable="true"
+                    android:src="@drawable/ic_x"
+                    tools:ignore="TouchTargetSizeCheck" />
 
                 <ImageView
                     android:id="@+id/author_bluesky"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="25dp"
-                    android:src="@drawable/ic_bluesky"
-                    android:contentDescription="Bluesky"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:contentDescription="Bluesky"
+                    android:focusable="true"
+                    android:src="@drawable/ic_bluesky"
+                    tools:ignore="TouchTargetSizeCheck" />
 
                 <ImageView
                     android:id="@+id/author_mastodon"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="25dp"
-                    android:src="@drawable/ic_mastodon"
-                    android:contentDescription="Mastodon"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:contentDescription="Mastodon"
+                    android:focusable="true"
+                    android:src="@drawable/ic_mastodon"
+                    tools:ignore="TouchTargetSizeCheck,DuplicateSpeakableTextCheck" />
 
                 <ImageView
                     android:id="@+id/author_instagram"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="25dp"
-                    android:src="@drawable/ic_instagram"
-                    android:contentDescription="Mastodon"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:contentDescription="Mastodon"
+                    android:focusable="true"
+                    android:src="@drawable/ic_instagram"
+                    tools:ignore="TouchTargetSizeCheck" />
 
                 <ImageView
                     android:id="@+id/author_discord"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="25dp"
-                    android:src="@drawable/ic_discord"
-                    android:contentDescription="Discord"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:contentDescription="Discord"
+                    android:focusable="true"
+                    android:src="@drawable/ic_discord"
+                    tools:ignore="TouchTargetSizeCheck" />
 
                 <ImageView
                     android:id="@+id/author_github"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="25dp"
-                    android:src="@drawable/ic_github"
-                    android:contentDescription="GitHub"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:contentDescription="GitHub"
+                    android:focusable="true"
+                    android:src="@drawable/ic_github"
+                    tools:ignore="TouchTargetSizeCheck" />
 
                 <ImageView
                     android:id="@+id/author_gitlab"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="25dp"
-                    android:src="@drawable/ic_gitlab"
-                    android:contentDescription="GitLab"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:contentDescription="GitLab"
+                    android:focusable="true"
+                    android:src="@drawable/ic_gitlab"
+                    tools:ignore="TouchTargetSizeCheck" />
 
 
             </LinearLayout>
