@@ -399,7 +399,7 @@ public class CANFragment extends Fragment {
 
             ResetIfaceButton.setOnClickListener(v -> {
                 new BootKali("cp " + NhPaths.APP_SD_FILES_PATH + "/can_arsenal/can_reset.sh /opt/car_hacking/can_reset.sh && chmod +x /opt/car_hacking/can_reset.sh").run_bg();
-                exe.RunAsChrootOutput("/opt/car_hacking/sequence_finder.sh");
+                exe.RunAsChrootOutput("bash /opt/car_hacking/can_reset.sh");
                 buttonStates.put("start_caniface", false);
                 StartCanButton.setText("▶ CAN");
                 Toast.makeText(requireActivity().getApplicationContext(), "Interface reset!", Toast.LENGTH_LONG).show();
