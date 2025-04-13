@@ -205,58 +205,6 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
-                android:textAlignment="center"
-                android:padding="10dp"
-                >
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="3"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    android:text="Note : ldattach may crash your android device"
-                    android:textAlignment="center"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-                <Button
-                    android:id="@+id/start_ldattach"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="20dp"
-                    android:ems="7"
-                    android:text="ldattach" />
-
-                <EditText
-                    android:id="@+id/ldattach_cmd"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="20dp"
-                    android:ems="20"
-                    android:gravity="left|bottom"
-                    android:inputType="text"
-                    android:saveEnabled="false"
-                    android:text="ldattach --debug --speed 38400 --eightbits --noparity --onestopbit --iflag -ICRNL,INLCR,-IXOFF 29 /dev/rfcomm0"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"
                 android:orientation="horizontal"
@@ -264,87 +212,21 @@
 
                 <Button
                     android:id="@+id/start_slcand"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="20dp"
-                    android:ems="7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="slcand" />
-
-                <EditText
-                    android:id="@+id/slcand_cmd"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="20dp"
-                    android:ems="20"
-                    android:gravity="left|bottom"
-                    android:inputType="text"
-                    android:saveEnabled="false"
-                    android:text="slcand -s6 -t sw -S 200000 /dev/ttyUSB0"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
 
                 <Button
                     android:id="@+id/start_hlcand"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="20dp"
-                    android:ems="7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="hlcand" />
 
-                <EditText
-                    android:id="@+id/hlcand_cmd"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="20dp"
-                    android:ems="20"
-                    android:gravity="left|bottom"
-                    android:inputType="text"
-                    android:saveEnabled="false"
-                    android:text="hlcand -F -s 500000 /dev/ttyUSB0"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
                 <Button
-                    android:id="@+id/start_slcanattach"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="20dp"
-                    android:ems="7"
-                    android:text="slcan_attach" />
-
-                <EditText
-                    android:id="@+id/slcanattach_cmd"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="8dp"
-                    android:layout_marginEnd="20dp"
-                    android:ems="20"
-                    android:gravity="left|bottom"
-                    android:inputType="text"
-                    android:saveEnabled="false"
-                    android:text="slcan_attach -s6 -o /dev/ttyUSB0"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    android:id="@+id/start_socketcand"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="socketcand" />
 
             </LinearLayout>
 
@@ -356,16 +238,22 @@
                 android:padding="10dp">
 
                 <Button
+                    android:id="@+id/start_slcanattach"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="slcan_attach" />
+
+                <Button
+                    android:id="@+id/start_ldattach"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ldattach" />
+
+                <Button
                     android:id="@+id/start_rfcommbinder"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="rfcomm bind" />
-
-                <Button
-                    android:id="@+id/start_socketcand"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="socketcand" />
 
             </LinearLayout>
 

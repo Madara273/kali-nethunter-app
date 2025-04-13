@@ -2,6 +2,7 @@ package com.offsec.nethunter;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -232,10 +233,6 @@ public class CANFragment extends Fragment {
             SelectedIface = rootView.findViewById(R.id.can_iface);
             SelectedMtu = rootView.findViewById(R.id.mtu);
 
-            final EditText ldattach_cmd = rootView.findViewById(R.id.ldattach_cmd);
-            final EditText slcand_cmd = rootView.findViewById(R.id.slcand_cmd);
-            final EditText hlcand_cmd = rootView.findViewById(R.id.hlcand_cmd);
-            final EditText slcanattach_cmd = rootView.findViewById(R.id.slcanattach_cmd);
             final EditText bt_target_mac = rootView.findViewById(R.id.bttarget);
 
             // First run
@@ -244,63 +241,202 @@ public class CANFragment extends Fragment {
                 SetupDialog();
             }
 
-            // Attach
-            // Start LDAttach
+            // Attach and Daemon
+            // ldattach
             Button LdAttachButton = rootView.findViewById(R.id.start_ldattach);
 
-            LdAttachButton.setOnClickListener(v -> {
-                String ldattachcmd = ldattach_cmd.getText().toString();
+            // Access SharedPreferences
+            SharedPreferences ldAttach_prefs = requireActivity().getSharedPreferences("ldAttach_prefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editorLdAttach = ldAttach_prefs.edit();
 
-                if (!ldattachcmd.isEmpty()) {
-                    run_cmd(ldattachcmd);
+            // Load the saved command or use a default
+            String savedCmd_ldAttach = ldAttach_prefs.getString("ldAttach_cmd", "ldattach --debug --speed 38400 --eightbits --noparity --onestopbit --iflag -ICRNL,INLCR,-IXOFF 29 /dev/rfcomm0");
+            String[] ldAttachCmdHolder = { savedCmd_ldAttach };
+
+            // Short click runs the command
+            LdAttachButton.setOnClickListener(v -> {
+                String ldAttachRun = ldAttachCmdHolder[0];
+
+                if (!ldAttachRun.isEmpty()) {
+                    run_cmd(ldAttachRun);
                     Toast.makeText(requireActivity().getApplicationContext(), "Press CTRL+C to stop.", Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please set your ldattach command!", Toast.LENGTH_LONG).show();
                 }
             });
 
-            // Start slcand
-            Button SlcandAttachButton = rootView.findViewById(R.id.start_slcand);
+            // Long click lets user edit the command
+            LdAttachButton.setOnLongClickListener(v -> {
+                AlertDialog.Builder builder_ldAttach = new AlertDialog.Builder(requireContext());
+                builder_ldAttach.setTitle("Edit Command");
 
-            SlcandAttachButton.setOnClickListener(v -> {
-                String slcandcmd = slcand_cmd.getText().toString();
+                final EditText input_ldAttach = new EditText(requireContext());
+                input_ldAttach.setText(ldAttachCmdHolder[0]);
+                builder_ldAttach.setView(input_ldAttach);
 
-                if (!slcandcmd.isEmpty()) {
-                    run_cmd(slcandcmd);
+                builder_ldAttach.setPositiveButton("Save", (dialog, which) -> {
+                    String newLdAttachCmd = input_ldAttach.getText().toString();
+                    ldAttachCmdHolder[0] = newLdAttachCmd;
+
+                    // Save to SharedPreferences
+                    editorLdAttach.putString("ldAttach_cmd", newLdAttachCmd);
+                    editorLdAttach.apply();
+
+                    Toast.makeText(requireActivity().getApplicationContext(), "Command updated!", Toast.LENGTH_SHORT).show();
+                });
+
+                builder_ldAttach.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+                builder_ldAttach.show();
+                return true; // long click handled
+            });
+
+            // slcand
+            Button SlcandButton = rootView.findViewById(R.id.start_slcand);
+
+            // Access SharedPreferences
+            SharedPreferences slcand_prefs = requireActivity().getSharedPreferences("slcand_prefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editorSlcand = slcand_prefs.edit();
+
+            // Load the saved command or use a default
+            String savedCmd_slcand = slcand_prefs.getString("slcand_cmd", "slcand -s6 -t sw -S 200000 /dev/ttyUSB0");
+            String[] slcandCmdHolder = { savedCmd_slcand };
+
+            // Short click runs the command
+            SlcandButton.setOnClickListener(v -> {
+                String slcandRun = slcandCmdHolder[0];
+
+                if (!slcandRun.isEmpty()) {
+                    run_cmd(slcandRun);
                     Toast.makeText(requireActivity().getApplicationContext(), "Press CTRL+C to stop.", Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please set your slcand command!", Toast.LENGTH_LONG).show();
                 }
             });
 
-            // Start SLCAN_Attach
+            // Long click lets user edit the command
+            SlcandButton.setOnLongClickListener(v -> {
+                AlertDialog.Builder builder_slcand = new AlertDialog.Builder(requireContext());
+                builder_slcand.setTitle("Edit Command");
+
+                final EditText input_slcand = new EditText(requireContext());
+                input_slcand.setText(slcandCmdHolder[0]);
+                builder_slcand.setView(input_slcand);
+
+                builder_slcand.setPositiveButton("Save", (dialog, which) -> {
+                    String newSlcandCmd = input_slcand.getText().toString();
+                    slcandCmdHolder[0] = newSlcandCmd;
+
+                    // Save to SharedPreferences
+                    editorSlcand.putString("slcand_cmd", newSlcandCmd);
+                    editorSlcand.apply();
+
+                    Toast.makeText(requireActivity().getApplicationContext(), "Command updated!", Toast.LENGTH_SHORT).show();
+                });
+
+                builder_slcand.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+                builder_slcand.show();
+                return true; // long click handled
+            });
+
+            // slcan_attach
             Button SlcanAttachButton = rootView.findViewById(R.id.start_slcanattach);
 
-            SlcanAttachButton.setOnClickListener(v -> {
-                String slcanattachcmd = slcanattach_cmd.getText().toString();
+            // Access SharedPreferences
+            SharedPreferences slcanAttach_prefs = requireActivity().getSharedPreferences("slcanAttach_prefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editorSlcanAttach = slcanAttach_prefs.edit();
 
-                if (!slcanattachcmd.isEmpty()) {
-                    run_cmd(slcanattachcmd);
+            // Load the saved command or use a default
+            String savedCmd_slcanAttach = slcanAttach_prefs.getString("slcanAttach_cmd", "slcan_attach -s6 -o /dev/ttyUSB0");
+            String[] slcanAttachCmdHolder = { savedCmd_slcanAttach };
+
+            // Short click runs the command
+            SlcanAttachButton.setOnClickListener(v -> {
+                String slcanAttachRun = slcanAttachCmdHolder[0];
+
+                if (!slcanAttachRun.isEmpty()) {
+                    run_cmd(slcanAttachRun);
                     Toast.makeText(requireActivity().getApplicationContext(), "Press CTRL+C to stop.", Toast.LENGTH_LONG).show();
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please set your slcan_attach command!", Toast.LENGTH_LONG).show();
                 }
             });
 
-            // Start hlcan
+            // Long click lets user edit the command
+            SlcanAttachButton.setOnLongClickListener(v -> {
+                AlertDialog.Builder builder_slcanAttach = new AlertDialog.Builder(requireContext());
+                builder_slcanAttach.setTitle("Edit Command");
+
+                final EditText input_slcanAttach = new EditText(requireContext());
+                input_slcanAttach.setText(slcanAttachCmdHolder[0]);
+                builder_slcanAttach.setView(input_slcanAttach);
+
+                builder_slcanAttach.setPositiveButton("Save", (dialog, which) -> {
+                    String newSlcanAttachCmd = input_slcanAttach.getText().toString();
+                    slcanAttachCmdHolder[0] = newSlcanAttachCmd;
+
+                    // Save to SharedPreferences
+                    editorSlcanAttach.putString("slcanAttach_cmd", newSlcanAttachCmd);
+                    editorSlcanAttach.apply();
+
+                    Toast.makeText(requireActivity().getApplicationContext(), "Command updated!", Toast.LENGTH_SHORT).show();
+                });
+
+                builder_slcanAttach.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+                builder_slcanAttach.show();
+                return true; // long click handled
+            });
+
+            // hlcan
             Button hlcandButton = rootView.findViewById(R.id.start_hlcand);
 
-            hlcandButton.setOnClickListener(v -> {
-                String hlcandcmd = hlcand_cmd.getText().toString();
+            // Access SharedPreferences
+            SharedPreferences hlcand_prefs = requireActivity().getSharedPreferences("hlcand_prefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editorHlcand = hlcand_prefs.edit();
 
-                if (!hlcandcmd.isEmpty()) {
-                    run_cmd(hlcandcmd);
+            // Load the saved command or use a default
+            String savedCmd_hlcand = hlcand_prefs.getString("hlcand_cmd", "hlcand -F -s 500000 /dev/ttyUSB0");
+            String[] hlcandCmdHolder = { savedCmd_hlcand };
+
+            // Short click runs the command
+            hlcandButton.setOnClickListener(v -> {
+                String hlcandRun = hlcandCmdHolder[0];
+
+                if (!hlcandRun.isEmpty()) {
+                    run_cmd(hlcandRun);
                     Toast.makeText(requireActivity().getApplicationContext(), "Press CTRL+C to stop.", Toast.LENGTH_LONG).show();
                 } else {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Please set your slcan_attach command!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please set your hlcand command!", Toast.LENGTH_LONG).show();
                 }
             });
 
+            // Long click lets user edit the command
+            hlcandButton.setOnLongClickListener(v -> {
+                AlertDialog.Builder builder_hlcand = new AlertDialog.Builder(requireContext());
+                builder_hlcand.setTitle("Edit Command");
+
+                final EditText input_hlcand = new EditText(requireContext());
+                input_hlcand.setText(hlcandCmdHolder[0]);
+                builder_hlcand.setView(input_hlcand);
+
+                builder_hlcand.setPositiveButton("Save", (dialog, which) -> {
+                    String newHlcandCmd = input_hlcand.getText().toString();
+                    hlcandCmdHolder[0] = newHlcandCmd;
+
+                    // Save to SharedPreferences
+                    editorHlcand.putString("hlcand_cmd", newHlcandCmd);
+                    editorHlcand.apply();
+
+                    Toast.makeText(requireActivity().getApplicationContext(), "Command updated!", Toast.LENGTH_SHORT).show();
+                });
+
+                builder_hlcand.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+                builder_hlcand.show();
+                return true; // long click handled
+            });
 
             // Interfaces
             // Declare SharedPreferences at the class level
