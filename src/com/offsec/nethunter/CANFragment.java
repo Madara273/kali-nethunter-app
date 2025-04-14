@@ -9,6 +9,9 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Parcelable;
+import android.text.SpannableString;
+import android.text.method.LinkMovementMethod;
+import android.text.util.Linkify;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -34,12 +37,14 @@ import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.BootKali;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.util.ArrayList;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.Map;
@@ -108,6 +113,10 @@ public class CANFragment extends Fragment {
                 sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
                 RunUpdate();
                 return true;
+            case R.id.about:
+                sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+                RunAbout();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -169,6 +178,23 @@ public class CANFragment extends Fragment {
                 "if [[ -f /opt/car_hacking/sequence_finder.sh ]]; then echo 'can_reset.sh detected! Updating...\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh; sudo chmod +x /opt/car_hacking/sequence_finder.sh; else echo '\\nsequence_finder.sh script not detected! Please run Setup first.';fi; " +
                 "echo '\\nEverything is updated! Closing in 3secs..'; sleep 3 && exit");
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
+    }
+
+    public void RunAbout() {
+        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        MaterialAlertDialogBuilder aboutDialog = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
+        aboutDialog.setTitle("About CAN Arsenal");
+
+        TextView message = new TextView(requireContext());
+        message.setText(getResources().getText(R.string.about_author));
+        message.setMovementMethod(LinkMovementMethod.getInstance());
+        message.setPadding(50, 40, 50, 0);
+        message.setMovementMethod(LinkMovementMethod.getInstance());
+        Linkify.addLinks(message, Linkify.WEB_URLS);
+
+        aboutDialog.setView(message);
+        aboutDialog.setNegativeButton("Close", (dialog, id) -> dialog.cancel());
+        aboutDialog.show();
     }
 
     public static class TabsPagerAdapter extends FragmentPagerAdapter {
