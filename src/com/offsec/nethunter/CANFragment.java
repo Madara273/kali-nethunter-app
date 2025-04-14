@@ -149,6 +149,8 @@ public class CANFragment extends Fragment {
                 "if [[ -f /usr/local/bin/freediag && -f /usr/local/bin/diag_test ]]; then echo 'Freediag is installed!'; else echo '\\nInstalling Freediag\\n'; cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/freediag.git; cd /opt/car_hacking/freediag;./build_simple.sh; sudo cp build/scantool/freediag /usr/local/bin/freediag && sudo cp build/scantool/diag_test /usr/local/bin/diag_test;fi;" +
                 "if [[ -f /usr/local/sbin/socketcand ]]; then echo 'Socketcand is Installed!'; else echo '\\nInstalling Socketcand\\n'; cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/socketcand.git; cd /opt/car_hacking/socketcand; sudo meson setup -Dlibconfig=true --buildtype=release build; sudo meson compile -C build; sudo meson install -C build;fi; " +
                 "if [[ -f /usr/local/bin/hlcand ]]; then echo 'hlcand is Installed!'; else echo '\\nInstalling hlcancand\\n'; cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/usb-can-2.git; cd /opt/car_hacking/usb-can-2; sudo ./build.sh; cp -f src/hlcand /usr/local/bin/hlcand;fi; " +
+                "if [[ -f /opt/car_hacking/can_reset.sh ]]; then echo 'can_reset.sh is Installed!'; else echo '\\nInstalling can_reset.sh\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/can_reset.sh /opt/car_hacking/can_reset.sh; sudo chmod +x /opt/car_hacking/can_reset.sh;fi; " +
+                "if [[ -f /opt/car_hacking/sequence_finder.sh ]]; then echo 'sequence_finder.sh is Installed!'; else echo '\\nInstalling sequence_finder.sh\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh; sudo chmod +x /opt/car_hacking/sequence_finder.sh;fi; " +
                 "echo '\\nSetup done!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }
@@ -163,6 +165,8 @@ public class CANFragment extends Fragment {
                 "if [[ -f /usr/local/bin/freediag && -f /usr/local/bin/diag_test && -d /opt/car_hacking/freediag  ]]; then echo '\\nFreediag detected! Updating...\\n'; cd /opt/car_hacking/freediag; sudo git pull;./build_simple.sh; sudo cp build/scantool/freediag /usr/local/bin/freediag && sudo cp build/scantool/diag_test /usr/local/bin/diag_test; else echo '\\nFreediag not detected! Please run Setup first.';fi; " +
                 "if [[ -f /usr/local/sbin/socketcand && -d /opt/car_hacking/socketcand ]]; then echo '\\nSocketcand detected! Updating...\\n'; cd /opt/car_hacking; cd /opt/car_hacking/socketcand; sudo git pull; sudo meson setup -Dlibconfig=true --buildtype=release build; sudo meson compile -C build; sudo meson install -C build; else echo '\\nSocketcand not detected! Please run Setup first.';fi; " +
                 "if [[ -f /usr/local/bin/hlcand ]]; then echo 'hlcand detected! Updating...\\n'; cd /opt/car_hacking/usb-can-2; sudo git pull; sudo ./build.sh; sudo cp -f src/hlcand /usr/local/bin/hlcand; else echo '\\nhlcand not detected! Please run Setup first.';fi; " +
+                "if [[ -f /opt/car_hacking/can_reset.sh ]]; then echo 'can_reset.sh detected! Updating...\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/can_reset.sh /opt/car_hacking/can_reset.sh; sudo chmod +x /opt/car_hacking/can_reset.sh; else echo '\\ncan_reset.sh script not detected! Please run Setup first.';fi; " +
+                "if [[ -f /opt/car_hacking/sequence_finder.sh ]]; then echo 'can_reset.sh detected! Updating...\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh; sudo chmod +x /opt/car_hacking/sequence_finder.sh; else echo '\\nsequence_finder.sh script not detected! Please run Setup first.';fi; " +
                 "echo '\\nEverything is updated! Closing in 3secs..'; sleep 3 && exit");
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }
@@ -498,15 +502,19 @@ public class CANFragment extends Fragment {
                             Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
                         }
                     } else {
+                        if ("can".equals(interface_type)) {
+                            String setMTU = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && echo Success || echo Failed");
+                            if (setMTU.contains("FATAL:") || setMTU.contains("Failed")) {
+                                Toast.makeText(requireActivity().getApplicationContext(), "Failed to set " + selected_mtu + " as MTU value on " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                            }
+                        }
                         if ("vcan".equals(interface_type)) {
                             String addVcanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && echo Success || echo Failed");
                             if (addVcanIface.contains("FATAL:") || addVcanIface.contains("Failed")) {
                                 Toast.makeText(requireActivity().getApplicationContext(), "Failed to add " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                             }
                         }
-                        String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
-                        startCanIface = startCanIface.trim();
-
+                        String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
                         if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
                             Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                         } else {
@@ -534,14 +542,13 @@ public class CANFragment extends Fragment {
             Button ResetIfaceButton = rootView.findViewById(R.id.reset_iface);
 
             ResetIfaceButton.setOnClickListener(v -> {
-                new BootKali("cp " + NhPaths.APP_SD_FILES_PATH + "/can_arsenal/can_reset.sh /opt/car_hacking/can_reset.sh && chmod +x /opt/car_hacking/can_reset.sh").run_bg();
-                exe.RunAsChrootOutput("bash /opt/car_hacking/can_reset.sh");
+                exe.RunAsChrootOutput("/opt/car_hacking/can_reset.sh");
                 buttonStates.put("start_caniface", false);
                 StartCanButton.setText("▶ CAN");
-                Toast.makeText(requireActivity().getApplicationContext(), "Interface reset!", Toast.LENGTH_LONG).show();
                 // Save button state to SharedPreferences
                 editor.putBoolean("start_caniface", Boolean.TRUE.equals(buttonStates.get("start_caniface")));
                 editor.apply();
+                Toast.makeText(requireActivity().getApplicationContext(), "Interface reset!", Toast.LENGTH_LONG).show();
             });
 
             // Start rfcomm binder
@@ -652,7 +659,7 @@ public class CANFragment extends Fragment {
             activity = getActivity();
         }
 
-        @SuppressLint("SetTextI18n")
+
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.can_tools, container, false);
@@ -771,7 +778,6 @@ public class CANFragment extends Fragment {
             final Button SequenceFinderButton = rootView.findViewById(R.id.start_sequencefinder);
 
             SequenceFinderButton.setOnClickListener(v -> {
-                new BootKali("cp " + NhPaths.APP_SD_FILES_PATH + "/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh && chmod +x /opt/car_hacking/sequence_finder.sh").run_bg();
                 String inputfile = inputfilepath.getText().toString();
 
                 if (!inputfile.isEmpty()) {
@@ -1097,7 +1103,7 @@ public class CANFragment extends Fragment {
     ////
 
     public void run_cmd(String cmd) {
-        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
         activity.startActivity(intent);
     }
 }

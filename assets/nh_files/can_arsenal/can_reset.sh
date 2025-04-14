@@ -8,15 +8,15 @@ for iface in $interfaces; do
     echo "Processing interface: $iface"
 
     # Bring down the interface
-    sudo ip link set "$iface" down
+    sudo ip link set $iface down
 
     # Detect the interface type (can, vcan, etc.)
-    type=$(ip -details link show "$iface" | grep -oP 'link/\K\w+')
+    type=$(ip -details link show $iface | grep -oP 'link/\K\w+')
 
     case "$type" in
         vcan)
             echo "Deleting vcan interface: $iface"
-            sudo ip link delete "$iface" type vcan
+            sudo ip link delete $iface type vcan
             ;;
         can)
             echo "Interface $iface is a real CAN device — just brought it down."
