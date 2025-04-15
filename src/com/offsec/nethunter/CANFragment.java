@@ -898,7 +898,7 @@ public class CANFragment extends Fragment {
             final Spinner deviceList = rootView.findViewById(R.id.device_interface);
 
             final String[] outputDevice = {""};
-            executorService.submit(() -> outputDevice[0] = exe.RunAsChrootOutput("ls -1 /sys/class/net/ | grep can;ls -1 /dev/ttyUSB*;ls -1 /dev/rfcomm*;ls -1 /dev/ttyACM*"));
+            executorService.submit(() -> outputDevice[0] = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';ls -1 /dev/ttyUSB*;ls -1 /dev/rfcomm*;ls -1 /dev/ttyACM*"));
 
             final ArrayList<String> deviceIfaces = new ArrayList<>();
             if (outputDevice[0].isEmpty()) {
