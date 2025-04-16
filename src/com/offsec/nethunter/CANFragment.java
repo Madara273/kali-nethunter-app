@@ -158,6 +158,7 @@ public class CANFragment extends Fragment {
                 "if [[ -f /usr/local/bin/freediag && -f /usr/local/bin/diag_test ]]; then echo 'Freediag is installed!'; else echo '\\nInstalling Freediag\\n'; cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/freediag.git; cd /opt/car_hacking/freediag;./build_simple.sh; sudo cp build/scantool/freediag /usr/local/bin/freediag && sudo cp build/scantool/diag_test /usr/local/bin/diag_test;fi;" +
                 "if [[ -f /usr/local/sbin/socketcand ]]; then echo 'Socketcand is Installed!'; else echo '\\nInstalling Socketcand\\n'; cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/socketcand.git; cd /opt/car_hacking/socketcand; sudo meson setup -Dlibconfig=true --buildtype=release build; sudo meson compile -C build; sudo meson install -C build;fi; " +
                 "if [[ -f /usr/local/bin/hlcand ]]; then echo 'hlcand is Installed!'; else echo '\\nInstalling hlcancand\\n'; cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/usb-can-2.git; cd /opt/car_hacking/usb-can-2; sudo ./build.sh; cp -f src/hlcand /usr/local/bin/hlcand;fi; " +
+                "if [[ -f /usr/local/bin/caringcaribou ]]; then echo 'CaringCaribou is Installed!'; else echo '\\nInstalling CaringCaribou\\n'; cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/caringcaribou.git; cd /opt/car_hacking/caringcaribou; sudo python setup.py install;fi; " +
                 "if [[ -f /opt/car_hacking/can_reset.sh ]]; then echo 'can_reset.sh is Installed!'; else echo '\\nInstalling can_reset.sh\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/can_reset.sh /opt/car_hacking/can_reset.sh; sudo chmod +x /opt/car_hacking/can_reset.sh;fi; " +
                 "if [[ -f /opt/car_hacking/sequence_finder.sh ]]; then echo 'sequence_finder.sh is Installed!'; else echo '\\nInstalling sequence_finder.sh\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh; sudo chmod +x /opt/car_hacking/sequence_finder.sh;fi; " +
                 "echo '\\nSetup done!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
@@ -174,6 +175,7 @@ public class CANFragment extends Fragment {
                 "if [[ -f /usr/local/bin/freediag && -f /usr/local/bin/diag_test && -d /opt/car_hacking/freediag  ]]; then echo '\\nFreediag detected! Updating...\\n'; cd /opt/car_hacking/freediag; sudo git pull;./build_simple.sh; sudo cp build/scantool/freediag /usr/local/bin/freediag && sudo cp build/scantool/diag_test /usr/local/bin/diag_test; else echo '\\nFreediag not detected! Please run Setup first.';fi; " +
                 "if [[ -f /usr/local/sbin/socketcand && -d /opt/car_hacking/socketcand ]]; then echo '\\nSocketcand detected! Updating...\\n'; cd /opt/car_hacking; cd /opt/car_hacking/socketcand; sudo git pull; sudo meson setup -Dlibconfig=true --buildtype=release build; sudo meson compile -C build; sudo meson install -C build; else echo '\\nSocketcand not detected! Please run Setup first.';fi; " +
                 "if [[ -f /usr/local/bin/hlcand ]]; then echo 'hlcand detected! Updating...\\n'; cd /opt/car_hacking/usb-can-2; sudo git pull; sudo ./build.sh; sudo cp -f src/hlcand /usr/local/bin/hlcand; else echo '\\nhlcand not detected! Please run Setup first.';fi; " +
+                "if [[ -f /usr/local/bin/caringcaribou ]]; then echo 'CaringCaribou detected! Updating...\\n'; cd /opt/car_hacking/caringcaribou; sudo git pull; sudo python setup.py install; else echo '\\nCaringCaribou not detected! Please run Setup first.';fi; " +
                 "if [[ -f /opt/car_hacking/can_reset.sh ]]; then echo 'can_reset.sh detected! Updating...\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/can_reset.sh /opt/car_hacking/can_reset.sh; sudo chmod +x /opt/car_hacking/can_reset.sh; else echo '\\ncan_reset.sh script not detected! Please run Setup first.';fi; " +
                 "if [[ -f /opt/car_hacking/sequence_finder.sh ]]; then echo 'can_reset.sh detected! Updating...\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh; sudo chmod +x /opt/car_hacking/sequence_finder.sh; else echo '\\nsequence_finder.sh script not detected! Please run Setup first.';fi; " +
                 "echo '\\nEverything is updated! Closing in 3secs..'; sleep 3 && exit");
@@ -210,8 +212,10 @@ public class CANFragment extends Fragment {
                     return new CANFragment.MainFragment();
                 case 1:
                     return new CANFragment.ToolsFragment();
-                default:
+                case 2:
                     return new CANFragment.CANUSBFragment();
+                default:
+                    return new CANFragment.CANCARIBOUFragment();
             }
         }
 
@@ -228,6 +232,8 @@ public class CANFragment extends Fragment {
         @Override
         public CharSequence getPageTitle(int position) {
             switch (position) {
+                case 3:
+                    return "Caring Caribou";
                 case 2:
                     return "CAN-USB";
                 case 1:
@@ -1056,6 +1062,47 @@ public class CANFragment extends Fragment {
                     }
                 }
             });
+        }
+    }
+
+    public static class CANCARIBOUFragment extends CANFragment {
+        final ShellExecuter exe = new ShellExecuter();
+        private Context context;
+        private Activity activity;
+        private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+        private TextView SelectedIface;
+
+        @Override
+        public void onCreate(@Nullable Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            context = getContext();
+            activity = getActivity();
+        }
+
+        @SuppressLint("SetTextI18n")
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+            View rootView = inflater.inflate(R.layout.can_caribou, container, false);
+
+            SelectedIface = rootView.findViewById(R.id.can_iface);
+
+            // Start Listener
+            Button CaribouListenerButton = rootView.findViewById(R.id.start_listener);
+
+            CaribouListenerButton.setOnClickListener(v -> {
+                String selected_caniface = SelectedIface.getText().toString();
+
+                if (!selected_caniface.isEmpty()) {
+                    run_cmd("caringcaribou -i " + selected_caniface + " listener");
+                } else {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
+                }
+
+                activity.invalidateOptionsMenu();
+            });
+
+            return rootView;
         }
     }
 
