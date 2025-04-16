@@ -528,25 +528,40 @@ public class CANFragment extends Fragment {
                             Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " stopped!", Toast.LENGTH_LONG).show();
                         }
                     } else {
-                        if ("can".equals(interface_type)) {
-                            String setMTU = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && echo Success || echo Failed");
-                            if (setMTU.contains("FATAL:") || setMTU.contains("Failed")) {
-                                Toast.makeText(requireActivity().getApplicationContext(), "Failed to set " + selected_mtu + " as MTU value on " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
-                            }
-                        }
                         if ("vcan".equals(interface_type)) {
                             String addVcanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && echo Success || echo Failed");
                             if (addVcanIface.contains("FATAL:") || addVcanIface.contains("Failed")) {
                                 Toast.makeText(requireActivity().getApplicationContext(), "Failed to add " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                             }
                         }
-                        String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
-                        if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
-                            Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                        if ("can".equals(interface_type)) {
+                            String usbDevice = exe.RunAsChrootOutput("ls -1 /dev/ttyUSB*;ls -1 /dev/rfcomm*;ls -1 /dev/ttyACM*");
+                            if (usbDevice.isEmpty()) {
+                                Toast.makeText(requireActivity().getApplicationContext(), "No CAN Hardware detected, please plug you'r adapter and try again.", Toast.LENGTH_LONG).show();
+                            } else {
+                                String setMTU = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && echo Success || echo Failed");
+                                if (setMTU.contains("FATAL:") || setMTU.contains("Failed")) {
+                                    Toast.makeText(requireActivity().getApplicationContext(), "Failed to set " + selected_mtu + " as MTU value on " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                                } else {
+                                    String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
+                                    if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
+                                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                                    } else {
+                                        buttonStates.put("start_caniface", true);
+                                        StartCanButton.setText("⏹ CAN");
+                                        Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " started!", Toast.LENGTH_LONG).show();
+                                    }
+                                }
+                            }
                         } else {
-                            buttonStates.put("start_caniface", true);
-                            StartCanButton.setText("⏹ CAN");
-                            Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " started!", Toast.LENGTH_LONG).show();
+                            String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
+                            if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
+                                Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
+                            } else {
+                                buttonStates.put("start_caniface", true);
+                                StartCanButton.setText("⏹ CAN");
+                                Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " started!", Toast.LENGTH_LONG).show();
+                            }
                         }
                     }
                 } else {
