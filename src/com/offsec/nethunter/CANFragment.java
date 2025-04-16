@@ -1071,6 +1071,7 @@ public class CANFragment extends Fragment {
         private Activity activity;
         private final ExecutorService executorService = Executors.newSingleThreadExecutor();
         private TextView SelectedIface;
+        private TextView SelectedID;
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -1086,6 +1087,7 @@ public class CANFragment extends Fragment {
             View rootView = inflater.inflate(R.layout.can_caribou, container, false);
 
             SelectedIface = rootView.findViewById(R.id.can_iface);
+            SelectedID = rootView.findViewById(R.id.caribou_id);
 
             // Start Listener
             Button CaribouListenerButton = rootView.findViewById(R.id.start_listener);
@@ -1095,6 +1097,38 @@ public class CANFragment extends Fragment {
 
                 if (!selected_caniface.isEmpty()) {
                     run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " listener");
+                } else {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
+                }
+
+                activity.invalidateOptionsMenu();
+            });
+
+            // Start UDS Discovery
+            Button CaribouUDSDiscoveryButton = rootView.findViewById(R.id.start_uds_discovery);
+
+            CaribouUDSDiscoveryButton.setOnClickListener(v -> {
+                String selected_caniface = SelectedIface.getText().toString();
+                String selected_id = SelectedID.getText().toString();
+
+                if (!selected_caniface.isEmpty()) {
+                    run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds discovery -min " + selected_id);
+                } else {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
+                }
+
+                activity.invalidateOptionsMenu();
+            });
+
+            // Start UDS Services
+            Button CaribouUDSServicesButton = rootView.findViewById(R.id.start_uds_services);
+
+            CaribouUDSServicesButton.setOnClickListener(v -> {
+                String selected_caniface = SelectedIface.getText().toString();
+                String selected_id = SelectedID.getText().toString();
+
+                if (!selected_caniface.isEmpty()) {
+                    run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds services " + selected_id);
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
                 }
