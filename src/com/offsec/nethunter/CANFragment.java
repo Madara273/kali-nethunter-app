@@ -78,7 +78,7 @@ public class CANFragment extends Fragment {
 
         ViewPager mViewPager = rootView.findViewById(R.id.pagerCAN);
         mViewPager.setAdapter(tabsPagerAdapter);
-        mViewPager.setOffscreenPageLimit(4);
+        mViewPager.setOffscreenPageLimit(5);
         mViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
@@ -226,7 +226,7 @@ public class CANFragment extends Fragment {
 
         @Override
         public int getCount() {
-            return 3;
+            return 4;
         }
 
         @Override
@@ -1094,7 +1094,7 @@ public class CANFragment extends Fragment {
                 String selected_caniface = SelectedIface.getText().toString();
 
                 if (!selected_caniface.isEmpty()) {
-                    run_cmd("caringcaribou -i " + selected_caniface + " listener");
+                    run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " listener");
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
                 }
