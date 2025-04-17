@@ -1104,15 +1104,48 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
 
-            // Start UDS Discovery
-            Button CaribouUDSDiscoveryButton = rootView.findViewById(R.id.start_uds_discovery);
+            // UDS
+            SharedPreferences preferencesUDS = requireActivity().getSharedPreferences("UDSModule", Context.MODE_PRIVATE);
+
+            // Store UDS Module
+            Map<String, Boolean> udsMode = new HashMap<>();
+
+            // Load saved button states from SharedPreferences when fragment/activity is created
+            udsMode.put("start_uds", preferencesUDS.getBoolean("start_uds", false));
+
+            // UDS Spinner
+            final Spinner UDSList = rootView.findViewById(R.id.uds_spinner);
+            final String[] UDSTypeOptions = {"discovery","services"};
+
+            UDSList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, UDSTypeOptions));
+
+            UDSList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                    String uds_selected = parentView.getItemAtPosition(pos).toString();
+                    sharedpreferences.edit().putString("uds_selected", uds_selected).apply();
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parentView) {
+                }
+            });
+
+            // Start UDS
+            Button CaribouUDSDiscoveryButton = rootView.findViewById(R.id.start_uds);
 
             CaribouUDSDiscoveryButton.setOnClickListener(v -> {
                 String selected_caniface = SelectedIface.getText().toString();
                 String selected_id = SelectedID.getText().toString();
+                String uds_module = sharedpreferences.getString("uds_selected", "");
 
                 if (!selected_caniface.isEmpty()) {
-                    run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds discovery -min " + selected_id);
+                    if ("discovery".equals(uds_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds discovery -min " + selected_id);
+                    }
+                    if ("services".equals(uds_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds services " + selected_id);
+                    }
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
                 }
@@ -1120,20 +1153,83 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
 
-            // Start UDS Services
-            Button CaribouUDSServicesButton = rootView.findViewById(R.id.start_uds_services);
+            // XCP
+            SharedPreferences preferencesXCP = requireActivity().getSharedPreferences("XCPModule", Context.MODE_PRIVATE);
 
-            CaribouUDSServicesButton.setOnClickListener(v -> {
+            // Store XCP Module
+            Map<String, Boolean> xcpMode = new HashMap<>();
+
+            // Load saved button states from SharedPreferences when fragment/activity is created
+            xcpMode.put("start_xcp", preferencesXCP.getBoolean("start_xcp", false));
+
+            // XCP Spinner
+            final Spinner XCPList = rootView.findViewById(R.id.xcp_spinner);
+            final String[] XCPOptions = {"discovery","info","dump"};
+
+            XCPList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, XCPOptions));
+
+            XCPList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                    String xcp_selected = parentView.getItemAtPosition(pos).toString();
+                    sharedpreferences.edit().putString("xcp_selected", xcp_selected).apply();
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parentView) {
+                }
+            });
+
+            // Start XCP
+            Button CaribouXCPButton = rootView.findViewById(R.id.start_xcp);
+
+            CaribouXCPButton.setOnClickListener(v -> {
                 String selected_caniface = SelectedIface.getText().toString();
                 String selected_id = SelectedID.getText().toString();
+                String xcp_module = sharedpreferences.getString("xcp_selected", "");
 
                 if (!selected_caniface.isEmpty()) {
-                    run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds services " + selected_id);
+                    if ("discovery".equals(xcp_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp discovery -min " + selected_id);
+                    }
+                    if ("info".equals(xcp_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp info " + selected_id);
+                    }
+                    if ("dump".equals(xcp_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp dump " + selected_id + " -f /root/caribou/bootloader.hex");
+                    }
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
                 }
 
                 activity.invalidateOptionsMenu();
+            });
+
+            // Fuzzer
+            SharedPreferences preferencesFUZZER = requireActivity().getSharedPreferences("FUZZERModule", Context.MODE_PRIVATE);
+
+            // Store FUZZER Module
+            Map<String, Boolean> fuzzerMode = new HashMap<>();
+
+            // Load saved button states from SharedPreferences when fragment/activity is created
+            fuzzerMode.put("start_fuzzer", preferencesFUZZER.getBoolean("start_fuzzer", false));
+
+            // FUZZER Spinner
+            final Spinner FUZZERList = rootView.findViewById(R.id.fuzzer_spinner);
+            final String[] FUZZEROptions = {"brute","identify","mutate","random","replay"};
+
+            FUZZERList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, FUZZEROptions));
+
+            FUZZERList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                    String fuzzer_selected = parentView.getItemAtPosition(pos).toString();
+                    sharedpreferences.edit().putString("fuzzer_selected", fuzzer_selected).apply();
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parentView) {
+                }
             });
 
             return rootView;
