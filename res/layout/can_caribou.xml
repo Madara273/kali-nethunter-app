@@ -89,61 +89,60 @@
                 android:orientation="horizontal"
                 android:padding="10dp">
 
-                <TextView
-                    android:id="@+id/textView9"
+                <CheckBox
+                    android:id="@+id/caribou_id"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
                     android:text="ID :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
 
                 <EditText
-                    android:id="@+id/caribou_id"
+                    android:id="@+id/caribou_id_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:layout_marginEnd="20dp"
-                    android:gravity="left|bottom"
+                    android:layout_marginStart="2dp"
                     android:inputType="text"
                     android:saveEnabled="false"
                     android:text="0x003"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
 
-                <TextView
-                    android:id="@+id/textView10"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Src. :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <EditText
+                <CheckBox
                     android:id="@+id/caribou_src"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
-                    android:layout_marginEnd="20dp"
-                    android:gravity="left|bottom"
+                    android:text="Src. :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <EditText
+                    android:id="@+id/caribou_src_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
                     android:inputType="text"
                     android:saveEnabled="false"
                     android:text="0x3e8"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
 
-                <TextView
-                    android:id="@+id/textView11"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Dst. :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <EditText
+                <CheckBox
                     android:id="@+id/caribou_dst"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
-                    android:layout_marginEnd="20dp"
-                    android:gravity="left|bottom"
+                    android:text="Dst. :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <EditText
+                    android:id="@+id/caribou_dst_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
                     android:inputType="text"
                     android:saveEnabled="false"
                     android:text="0x3e9"
@@ -159,41 +158,40 @@
                 android:orientation="horizontal"
                 android:padding="10dp">
 
-                <TextView
-                    android:id="@+id/textView12"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:text="Start Address :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <EditText
+                <CheckBox
                     android:id="@+id/caribou_start_addr"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
-                    android:gravity="left|bottom"
+                    android:text="Start Addr. :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <EditText
+                    android:id="@+id/caribou_start_addr_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
                     android:inputType="text"
                     android:saveEnabled="false"
                     android:text="0x1fffb000"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
 
-                <TextView
-                    android:id="@+id/textView13"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:text="Length :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <EditText
+                <CheckBox
                     android:id="@+id/caribou_length"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="10dp"
-                    android:layout_marginEnd="20dp"
-                    android:gravity="left|bottom"
+                    android:text="Length :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <EditText
+                    android:id="@+id/caribou_length_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="2dp"
                     android:inputType="text"
                     android:saveEnabled="false"
                     android:text="0x4800"
@@ -372,12 +370,12 @@
                     android:gravity="left|bottom"
                     android:inputType="text"
                     android:saveEnabled="false"
-                    android:text="/root/caribou/bootloader.hex"
+                    android:text="/root/caribou/log.txt"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck,DuplicateSpeakableTextCheck" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/inputfilebrowse"
+                    android:id="@+id/cariboufilebrowse"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
@@ -453,7 +451,7 @@
                     tools:ignore="TouchTargetSizeCheck" />
 
                 <Button
-                    android:id="@+id/start_Fuzzer"
+                    android:id="@+id/start_fuzzer"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="RUN" />

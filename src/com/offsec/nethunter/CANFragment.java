@@ -1071,7 +1071,39 @@ public class CANFragment extends Fragment {
         private Activity activity;
         private final ExecutorService executorService = Executors.newSingleThreadExecutor();
         private TextView SelectedIface;
+        private CheckBox IdCheckbox;
+        private CheckBox SrcCheckbox;
+        private CheckBox DstCheckbox;
+        private CheckBox AddrCheckbox;
+        private CheckBox LengthCheckbox;
+        private CheckBox MinCheckbox;
+        private CheckBox MaxCheckbox;
+        private CheckBox DelayCheckbox;
+        private CheckBox SeedCheckbox;
+        private CheckBox CandumpFormatCheckbox;
+        private CheckBox LoopCheckbox;
+        private CheckBox ReverseCheckbox;
+        private String idValue = "";
+        private String srcValue = "";
+        private String dstValue = "";
+        private String addrValue = "";
+        private String lengthValue = "";
+        private String minValue = "";
+        private String maxValue = "";
+        private String delayValue = "";
+        private String seedValue = "";
+        private String candumpFormat = "";
+        private String loopEnabled = "";
+        private String reverseEnabled = "";
         private TextView SelectedID;
+        private TextView SelectedSRC;
+        private TextView SelectedDST;
+        private TextView SelectedADDR;
+        private TextView SelectedLENGTH;
+        private TextView SelectedMin;
+        private TextView SelectedMax;
+        private TextView SelectedDelay;
+        private TextView SelectedSeed;
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -1087,7 +1119,147 @@ public class CANFragment extends Fragment {
             View rootView = inflater.inflate(R.layout.can_caribou, container, false);
 
             SelectedIface = rootView.findViewById(R.id.can_iface);
-            SelectedID = rootView.findViewById(R.id.caribou_id);
+
+            // Checkboxes
+            IdCheckbox = rootView.findViewById(R.id.caribou_id);
+            SrcCheckbox = rootView.findViewById(R.id.caribou_src);
+            DstCheckbox = rootView.findViewById(R.id.caribou_dst);
+            AddrCheckbox = rootView.findViewById(R.id.caribou_start_addr);
+            LengthCheckbox = rootView.findViewById(R.id.caribou_length);
+            MinCheckbox = rootView.findViewById(R.id.caribou_min);
+            MaxCheckbox = rootView.findViewById(R.id.caribou_max);
+            DelayCheckbox = rootView.findViewById(R.id.caribou_delay);
+            SeedCheckbox = rootView.findViewById(R.id.caribou_seed);
+            CandumpFormatCheckbox = rootView.findViewById(R.id.caribou_candump_format);
+            LoopCheckbox = rootView.findViewById(R.id.caribou_loop);
+            ReverseCheckbox = rootView.findViewById(R.id.caribou_reverse);
+
+            // Checkboxes values
+            SelectedID = rootView.findViewById(R.id.caribou_id_value);
+            SelectedSRC = rootView.findViewById(R.id.caribou_src_value);
+            SelectedDST = rootView.findViewById(R.id.caribou_dst_value);
+            SelectedADDR = rootView.findViewById(R.id.caribou_start_addr_value);
+            SelectedLENGTH = rootView.findViewById(R.id.caribou_length_value);
+            SelectedMin = rootView.findViewById(R.id.caribou_min_value);
+            SelectedMax = rootView.findViewById(R.id.caribou_max_value);
+            SelectedDelay = rootView.findViewById(R.id.caribou_delay_value);
+            SelectedSeed = rootView.findViewById(R.id.caribou_seed_value);
+
+            IdCheckbox.setOnClickListener(v -> {
+                if (IdCheckbox.isChecked()) {
+                    String selected_id = SelectedID.getText().toString();
+                    idValue = " " + selected_id;
+                } else {
+                    idValue = "";
+                }
+            });
+
+            SrcCheckbox.setOnClickListener(v -> {
+                if (SrcCheckbox.isChecked()) {
+                    String selected_src = SelectedSRC.getText().toString();
+                    srcValue = " " + selected_src;
+                } else {
+                    srcValue = "";
+                }
+            });
+
+            DstCheckbox.setOnClickListener(v -> {
+                if (DstCheckbox.isChecked()) {
+                    String selected_dst = SelectedDST.getText().toString();
+                    dstValue = " " + selected_dst;
+                } else {
+                    dstValue = "";
+                }
+            });
+
+            AddrCheckbox.setOnClickListener(v -> {
+                if (AddrCheckbox.isChecked()) {
+                    String selected_addr = SelectedADDR.getText().toString();
+                    addrValue = " " + selected_addr;
+                } else {
+                    addrValue = "";
+                }
+            });
+
+            LengthCheckbox.setOnClickListener(v -> {
+                if (LengthCheckbox.isChecked()) {
+                    String selected_length = SelectedLENGTH.getText().toString();
+                    lengthValue = " " + selected_length;
+                } else {
+                    lengthValue = "";
+                }
+            });
+
+            MinCheckbox.setOnClickListener(v -> {
+                if (MinCheckbox.isChecked()) {
+                    String selected_min = SelectedMin.getText().toString();
+                    minValue = " -min " + selected_min;
+                } else {
+                    minValue = "";
+                }
+            });
+
+            MaxCheckbox.setOnClickListener(v -> {
+                if (MaxCheckbox.isChecked()) {
+                    String selected_max = SelectedMax.getText().toString();
+                    maxValue = " -max " + selected_max;
+                } else {
+                    maxValue = "";
+                }
+            });
+
+            DelayCheckbox.setOnClickListener(v -> {
+                if (DelayCheckbox.isChecked()) {
+                    String selected_delay = SelectedDelay.getText().toString();
+                    delayValue = " -d " + selected_delay;
+                } else {
+                    delayValue = "";
+                }
+            });
+
+            SeedCheckbox.setOnClickListener(v -> {
+                if (SeedCheckbox.isChecked()) {
+                    String selected_seed = SelectedSeed.getText().toString();
+                    seedValue = " --seed " + selected_seed;
+                } else {
+                    seedValue = "";
+                }
+            });
+
+            CandumpFormatCheckbox.setOnClickListener(v -> {
+                if (CandumpFormatCheckbox.isChecked())
+                    candumpFormat = " -t";
+                else
+                    candumpFormat = "";
+            });
+
+            LoopCheckbox.setOnClickListener(v -> {
+                if (LoopCheckbox.isChecked())
+                    loopEnabled = " -l";
+                else
+                    loopEnabled = "";
+            });
+
+            ReverseCheckbox.setOnClickListener(v -> {
+                if (ReverseCheckbox.isChecked())
+                    reverseEnabled = " -r";
+                else
+                    reverseEnabled = "";
+            });
+
+            // File
+            final EditText cariboufilepath = rootView.findViewById(R.id.caribou_file);
+            final Button cariboufilebrowse = rootView.findViewById(R.id.cariboufilebrowse);
+
+            cariboufilebrowse.setOnClickListener(v -> {
+                Intent intent = new Intent();
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("*/*");
+                String[] mimeTypes = {"text/plain", "application/octet-stream"};
+                intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(Intent.createChooser(intent, "Select input file"), 1001);
+            });
 
             // Start Listener
             Button CaribouListenerButton = rootView.findViewById(R.id.start_listener);
@@ -1096,7 +1268,7 @@ public class CANFragment extends Fragment {
                 String selected_caniface = SelectedIface.getText().toString();
 
                 if (!selected_caniface.isEmpty()) {
-                    run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " listener");
+                    run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " listener" + reverseEnabled);
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
                 }
@@ -1132,19 +1304,18 @@ public class CANFragment extends Fragment {
             });
 
             // Start UDS
-            Button CaribouUDSDiscoveryButton = rootView.findViewById(R.id.start_uds);
+            Button CaribouUDSButton = rootView.findViewById(R.id.start_uds);
 
-            CaribouUDSDiscoveryButton.setOnClickListener(v -> {
+            CaribouUDSButton.setOnClickListener(v -> {
                 String selected_caniface = SelectedIface.getText().toString();
-                String selected_id = SelectedID.getText().toString();
                 String uds_module = sharedpreferences.getString("uds_selected", "");
 
                 if (!selected_caniface.isEmpty()) {
                     if ("discovery".equals(uds_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds discovery -min " + selected_id);
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds discovery " + minValue + maxValue + delayValue);
                     }
                     if ("services".equals(uds_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds services " + selected_id);
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds services " + srcValue + dstValue);
                     }
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
@@ -1185,18 +1356,17 @@ public class CANFragment extends Fragment {
 
             CaribouXCPButton.setOnClickListener(v -> {
                 String selected_caniface = SelectedIface.getText().toString();
-                String selected_id = SelectedID.getText().toString();
                 String xcp_module = sharedpreferences.getString("xcp_selected", "");
 
                 if (!selected_caniface.isEmpty()) {
                     if ("discovery".equals(xcp_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp discovery -min " + selected_id);
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp discovery" + minValue + maxValue);
                     }
                     if ("info".equals(xcp_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp info " + selected_id);
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp info" + srcValue + dstValue);
                     }
                     if ("dump".equals(xcp_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp dump " + selected_id + " -f /root/caribou/bootloader.hex");
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp dump" + srcValue + dstValue + addrValue + lengthValue + " -f /root/caribou/bootloader.hex");
                     }
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
@@ -1230,6 +1400,37 @@ public class CANFragment extends Fragment {
                 @Override
                 public void onNothingSelected(AdapterView<?> parentView) {
                 }
+            });
+
+            // Start FUZZER
+            Button CaribouFUZZERButton = rootView.findViewById(R.id.start_fuzzer);
+
+            CaribouFUZZERButton.setOnClickListener(v -> {
+                String selected_caniface = SelectedIface.getText().toString();
+                String cariboufile = cariboufilepath.getText().toString();
+                String fuzzer_module = sharedpreferences.getString("fuzzer_selected", "");
+
+                if (!selected_caniface.isEmpty()) {
+                    if ("brute".equals(fuzzer_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer brute" + idValue + " " + cariboufile);
+                    }
+                    if ("identify".equals(fuzzer_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer identify " + cariboufile);
+                    }
+                    if ("mutate".equals(fuzzer_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer mutate" + idValue + " " + cariboufile);
+                    }
+                    if ("random".equals(fuzzer_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer random" + minValue + seedValue + " " + cariboufile);
+                    }
+                    if ("replay".equals(fuzzer_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer replay " + cariboufile);
+                    }
+                } else {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
+                }
+
+                activity.invalidateOptionsMenu();
             });
 
             return rootView;
