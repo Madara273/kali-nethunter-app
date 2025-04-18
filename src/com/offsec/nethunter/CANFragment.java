@@ -1452,7 +1452,7 @@ public class CANFragment extends Fragment {
 
             // UDS_FUZZ Spinner
             final Spinner UDS_FUZZList = rootView.findViewById(R.id.udsFuzz_spinner);
-            final String[] UDS_FUZZTypeOptions = {"delay_fuzzer","seed_randomness_fuzzer"};
+            final String[] UDS_FUZZTypeOptions = {"delay","seed"};
 
             UDS_FUZZList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, UDS_FUZZTypeOptions));
 
