@@ -1077,6 +1077,7 @@ public class CANFragment extends Fragment {
         private CheckBox CandumpFormatCheckbox;
         private CheckBox LoopCheckbox;
         private CheckBox ReverseCheckbox;
+        private CheckBox SaveOutputCheckbox;
         private String idValue = "";
         private String srcValue = "";
         private String dstValue = "";
@@ -1088,6 +1089,7 @@ public class CANFragment extends Fragment {
         private String seedValue = "";
         private String candumpFormat = "";
         private String loopEnabled = "";
+        private String outputEnabled = "";
         private String reverseEnabled = "";
         private TextView SelectedID;
         private TextView SelectedSRC;
@@ -1112,6 +1114,20 @@ public class CANFragment extends Fragment {
             SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
             View rootView = inflater.inflate(R.layout.can_caribou, container, false);
 
+            // File
+            final EditText cariboufilepath = rootView.findViewById(R.id.caribou_file);
+            final Button cariboufilebrowse = rootView.findViewById(R.id.cariboufilebrowse);
+
+            cariboufilebrowse.setOnClickListener(v -> {
+                Intent intent = new Intent();
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+                intent.setType("*/*");
+                String[] mimeTypes = {"text/plain", "application/octet-stream"};
+                intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
+                intent.setAction(Intent.ACTION_GET_CONTENT);
+                startActivityForResult(Intent.createChooser(intent, "Select input file"), 1001);
+            });
+
             SelectedIface = rootView.findViewById(R.id.can_iface);
 
             // Checkboxes
@@ -1127,6 +1143,7 @@ public class CANFragment extends Fragment {
             CandumpFormatCheckbox = rootView.findViewById(R.id.caribou_candump_format);
             LoopCheckbox = rootView.findViewById(R.id.caribou_loop);
             ReverseCheckbox = rootView.findViewById(R.id.caribou_reverse);
+            SaveOutputCheckbox = rootView.findViewById(R.id.caribou_save_output);
 
             // Checkboxes values
             SelectedID = rootView.findViewById(R.id.caribou_id_value);
@@ -1241,18 +1258,13 @@ public class CANFragment extends Fragment {
                     reverseEnabled = "";
             });
 
-            // File
-            final EditText cariboufilepath = rootView.findViewById(R.id.caribou_file);
-            final Button cariboufilebrowse = rootView.findViewById(R.id.cariboufilebrowse);
-
-            cariboufilebrowse.setOnClickListener(v -> {
-                Intent intent = new Intent();
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("*/*");
-                String[] mimeTypes = {"text/plain", "application/octet-stream"};
-                intent.putExtra(Intent.EXTRA_MIME_TYPES, mimeTypes);
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                startActivityForResult(Intent.createChooser(intent, "Select input file"), 1001);
+            SaveOutputCheckbox.setOnClickListener(v -> {
+                if (SaveOutputCheckbox.isChecked()) {
+                    String file = cariboufilepath.getText().toString();
+                    outputEnabled = " -f " + file;
+                } else {
+                    outputEnabled = "";
+                }
             });
 
             // Start Listener
@@ -1268,6 +1280,117 @@ public class CANFragment extends Fragment {
                 }
 
                 activity.invalidateOptionsMenu();
+            });
+
+            // DoIp
+            SharedPreferences preferencesDoIp = requireActivity().getSharedPreferences("DoIpModule", Context.MODE_PRIVATE);
+
+            // Store DoIp Module
+            Map<String, Boolean> DoIpMode = new HashMap<>();
+
+            // Load saved button states from SharedPreferences when fragment/activity is created
+            DoIpMode.put("start_doip", preferencesDoIp.getBoolean("start_doip", false));
+
+            // DoIp Spinner
+            final Spinner DoIpList = rootView.findViewById(R.id.doip_spinner);
+            final String[] DoIpOptions = {"discovery","dump_dids","ecu_reset","security_seed","seed_randomness_fuzzer","services","testerpresent"};
+
+            DoIpList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, DoIpOptions));
+
+            DoIpList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                    String doip_selected = parentView.getItemAtPosition(pos).toString();
+                    sharedpreferences.edit().putString("doip_selected", doip_selected).apply();
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parentView) {
+                }
+            });
+
+            // Fuzzer
+            SharedPreferences preferencesFUZZER = requireActivity().getSharedPreferences("FUZZERModule", Context.MODE_PRIVATE);
+
+            // Store FUZZER Module
+            Map<String, Boolean> fuzzerMode = new HashMap<>();
+
+            // Load saved button states from SharedPreferences when fragment/activity is created
+            fuzzerMode.put("start_fuzzer", preferencesFUZZER.getBoolean("start_fuzzer", false));
+
+            // FUZZER Spinner
+            final Spinner FUZZERList = rootView.findViewById(R.id.fuzzer_spinner);
+            final String[] FUZZEROptions = {"brute","identify","mutate","random","replay"};
+
+            FUZZERList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, FUZZEROptions));
+
+            FUZZERList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                    String fuzzer_selected = parentView.getItemAtPosition(pos).toString();
+                    sharedpreferences.edit().putString("fuzzer_selected", fuzzer_selected).apply();
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parentView) {
+                }
+            });
+
+            // Start FUZZER
+            Button CaribouFUZZERButton = rootView.findViewById(R.id.start_fuzzer);
+
+            CaribouFUZZERButton.setOnClickListener(v -> {
+                String selected_caniface = SelectedIface.getText().toString();
+                String fuzzer_module = sharedpreferences.getString("fuzzer_selected", "");
+
+                if (!selected_caniface.isEmpty()) {
+                    if ("brute".equals(fuzzer_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer brute" + idValue + outputEnabled);
+                    }
+                    if ("identify".equals(fuzzer_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer identify" + outputEnabled);
+                    }
+                    if ("mutate".equals(fuzzer_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer mutate" + idValue + outputEnabled);
+                    }
+                    if ("random".equals(fuzzer_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer random" + minValue + seedValue + outputEnabled);
+                    }
+                    if ("replay".equals(fuzzer_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer replay" + outputEnabled);
+                    }
+                } else {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
+                }
+
+                activity.invalidateOptionsMenu();
+            });
+
+            // Send
+            SharedPreferences preferencesSEND = requireActivity().getSharedPreferences("SENDModule", Context.MODE_PRIVATE);
+
+            // Store SEND Module
+            Map<String, Boolean> sendMode = new HashMap<>();
+
+            // Load saved button states from SharedPreferences when fragment/activity is created
+            sendMode.put("start_send", preferencesSEND.getBoolean("start_send", false));
+
+            // SEND Spinner
+            final Spinner SENDList = rootView.findViewById(R.id.send_spinner);
+            final String[] SENDTypeOptions = {"file","message"};
+
+            SENDList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, SENDTypeOptions));
+
+            SENDList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                    String send_selected = parentView.getItemAtPosition(pos).toString();
+                    sharedpreferences.edit().putString("send_selected", send_selected).apply();
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parentView) {
+                }
             });
 
             // UDS
@@ -1306,16 +1429,43 @@ public class CANFragment extends Fragment {
 
                 if (!selected_caniface.isEmpty()) {
                     if ("discovery".equals(uds_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds discovery " + minValue + maxValue + delayValue);
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds discovery" + minValue + maxValue + delayValue);
                     }
                     if ("services".equals(uds_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds services " + srcValue + dstValue);
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds services" + srcValue + dstValue);
                     }
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
                 }
 
                 activity.invalidateOptionsMenu();
+            });
+
+            // UDS_FUZZ
+            SharedPreferences preferencesUDS_FUZZ = requireActivity().getSharedPreferences("UDS_FUZZModule", Context.MODE_PRIVATE);
+
+            // Store UDS Module
+            Map<String, Boolean> uds_fuzzMode = new HashMap<>();
+
+            // Load saved button states from SharedPreferences when fragment/activity is created
+            uds_fuzzMode.put("start_uds_fuzz", preferencesUDS_FUZZ.getBoolean("start_uds_fuzz", false));
+
+            // UDS_FUZZ Spinner
+            final Spinner UDS_FUZZList = rootView.findViewById(R.id.udsFuzz_spinner);
+            final String[] UDS_FUZZTypeOptions = {"delay_fuzzer","seed_randomness_fuzzer"};
+
+            UDS_FUZZList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, UDS_FUZZTypeOptions));
+
+            UDS_FUZZList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                    String uds_fuzz_selected = parentView.getItemAtPosition(pos).toString();
+                    sharedpreferences.edit().putString("uds_fuzz_selected", uds_fuzz_selected).apply();
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parentView) {
+                }
             });
 
             // XCP
@@ -1360,65 +1510,7 @@ public class CANFragment extends Fragment {
                         run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp info" + srcValue + dstValue);
                     }
                     if ("dump".equals(xcp_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp dump" + srcValue + dstValue + addrValue + lengthValue + " -f /root/caribou/bootloader.hex");
-                    }
-                } else {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
-                }
-
-                activity.invalidateOptionsMenu();
-            });
-
-            // Fuzzer
-            SharedPreferences preferencesFUZZER = requireActivity().getSharedPreferences("FUZZERModule", Context.MODE_PRIVATE);
-
-            // Store FUZZER Module
-            Map<String, Boolean> fuzzerMode = new HashMap<>();
-
-            // Load saved button states from SharedPreferences when fragment/activity is created
-            fuzzerMode.put("start_fuzzer", preferencesFUZZER.getBoolean("start_fuzzer", false));
-
-            // FUZZER Spinner
-            final Spinner FUZZERList = rootView.findViewById(R.id.fuzzer_spinner);
-            final String[] FUZZEROptions = {"brute","identify","mutate","random","replay"};
-
-            FUZZERList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, FUZZEROptions));
-
-            FUZZERList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                    String fuzzer_selected = parentView.getItemAtPosition(pos).toString();
-                    sharedpreferences.edit().putString("fuzzer_selected", fuzzer_selected).apply();
-                }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> parentView) {
-                }
-            });
-
-            // Start FUZZER
-            Button CaribouFUZZERButton = rootView.findViewById(R.id.start_fuzzer);
-
-            CaribouFUZZERButton.setOnClickListener(v -> {
-                String selected_caniface = SelectedIface.getText().toString();
-                String cariboufile = cariboufilepath.getText().toString();
-                String fuzzer_module = sharedpreferences.getString("fuzzer_selected", "");
-
-                if (!selected_caniface.isEmpty()) {
-                    if ("brute".equals(fuzzer_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer brute" + idValue + " " + cariboufile);
-                    }
-                    if ("identify".equals(fuzzer_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer identify " + cariboufile);
-                    }
-                    if ("mutate".equals(fuzzer_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer mutate" + idValue + " " + cariboufile);
-                    }
-                    if ("random".equals(fuzzer_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer random" + minValue + seedValue + " " + cariboufile);
-                    }
-                    if ("replay".equals(fuzzer_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer replay " + cariboufile);
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp dump" + srcValue + dstValue + addrValue + lengthValue + outputEnabled);
                     }
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
