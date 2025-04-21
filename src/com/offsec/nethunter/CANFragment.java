@@ -17,6 +17,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -30,6 +33,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
@@ -72,7 +76,7 @@ public class CANFragment extends Fragment {
 
         ViewPager mViewPager = rootView.findViewById(R.id.pagerCAN);
         mViewPager.setAdapter(tabsPagerAdapter);
-        mViewPager.setOffscreenPageLimit(5);
+        mViewPager.setOffscreenPageLimit(6);
         mViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
@@ -143,7 +147,7 @@ public class CANFragment extends Fragment {
     // Setup item
     public void RunSetup() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        run_cmd("echo -ne \"\\033]0;CAN Arsenal Setup\\007\" && clear; echo '\\nUpdating and Installing Packages...\\n' && apt update && apt install -y can-utils libsdl2-dev libsdl2-image-dev libconfig-dev libsocketcan-dev can-utils maven autoconf make cmake meson&& " +
+        run_cmd("echo -ne \"\\033]0;CAN Arsenal Setup\\007\" && clear; echo '\\nUpdating and Installing Packages...\\n' && apt update && apt install -y can-utils libsdl2-dev libsdl2-image-dev libconfig-dev libsocketcan-dev can-utils maven autoconf make cmake meson xserver-xephyr x11vnc novnc git python3-pip websockify fluxbox expect && " +
                 "echo '\\nSetting up environment...' && if [[ -d /root/candump ]]; then echo '\\nFolder /root/candump detected!'; else echo '\\nCreating /root/candump folder...'; sudo mkdir -p /root/candump;fi;" +
                 "if [[ -d /opt/car_hacking ]]; then echo 'Folder /opt/car_hacking detected!'; else echo '\\nCreating /opt/car_hacking folder...'; sudo mkdir -p /opt/car_hacking;fi;" +
                 "if [[ -f /usr/bin/cangen && -f /usr/bin/cansniffer && -f /usr/bin/candump && -f /usr/bin/cansend && -f /usr/bin/canplayer && -d /opt/car_hacking/can-utils ]]; then echo '\\nCan-utils is installed!'; else echo '\\nInstalling Can-Utils...\\n'; cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/can-utils.git; cd /opt/car_hacking/can-utils; sudo make; sudo make install;fi;" +
@@ -153,6 +157,8 @@ public class CANFragment extends Fragment {
                 "if [[ -f /usr/local/sbin/socketcand ]]; then echo 'Socketcand is Installed!'; else echo '\\nInstalling Socketcand\\n'; cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/socketcand.git; cd /opt/car_hacking/socketcand; sudo meson setup -Dlibconfig=true --buildtype=release build; sudo meson compile -C build; sudo meson install -C build;fi; " +
                 "if [[ -f /usr/local/bin/hlcand ]]; then echo 'hlcand is Installed!'; else echo '\\nInstalling hlcancand\\n'; cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/usb-can-2.git; cd /opt/car_hacking/usb-can-2; sudo ./build.sh; cp -f src/hlcand /usr/local/bin/hlcand;fi; " +
                 "if [[ -f /usr/local/bin/caringcaribou ]]; then echo 'CaringCaribou is Installed!'; else echo '\\nInstalling CaringCaribou\\n'; cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/caringcaribou.git; cd /opt/car_hacking/caringcaribou; sudo python setup.py install;fi; " +
+                "if [[ -f /opt/car_hacking/noVNC/utils/novnc_proxy ]]; then echo 'noVNC is Installed!'; else echo '\\nInstalling noVNC\\n'; cd /opt/car_hacking; sudo git clone https://github.com/novnc/noVNC.git;fi; " +
+                "if [[ -f /opt/car_hacking/ICSim/builddir/ICSIM ]]; then echo 'ICSIM is Installed!'; else echo '\\nInstalling ICSIM\\n'; cd /opt/car_hacking; sudo git clone https://github.com/zombieCraig/ICSim.git; cd /opt/car_hacking/ICSim;sudo cp /opt/car_hacking/can-utils/lib.o .;sudo meson setup builddir && cd builddir && sudo meson compile;sudo cp -f /sdcard/nh_files/can_arsenal/icsim_start.sh /opt/car_hacking/icsim_start.sh; sudo chmod +x /opt/car_hacking/icsim_start.sh;fi; " +
                 "if [[ -f /opt/car_hacking/can_reset.sh ]]; then echo 'can_reset.sh is Installed!'; else echo '\\nInstalling can_reset.sh\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/can_reset.sh /opt/car_hacking/can_reset.sh; sudo chmod +x /opt/car_hacking/can_reset.sh;fi; " +
                 "if [[ -f /opt/car_hacking/sequence_finder.sh ]]; then echo 'sequence_finder.sh is Installed!'; else echo '\\nInstalling sequence_finder.sh\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh; sudo chmod +x /opt/car_hacking/sequence_finder.sh;fi; " +
                 "echo '\\nSetup done!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
@@ -162,7 +168,7 @@ public class CANFragment extends Fragment {
     // Update item
     public void RunUpdate() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        run_cmd("echo -ne \"\\033]0;CAN Arsenal Update\\007\" && clear; echo '\\nUpdating Packages...\\n' && apt update && apt install -y can-utils libsdl2-dev libsdl2-image-dev can-utils maven autoconf make cmake && " +
+        run_cmd("echo -ne \"\\033]0;CAN Arsenal Update\\007\" && clear; echo '\\nUpdating Packages...\\n' && apt update && apt install -y can-utils libsdl2-dev libsdl2-image-dev libconfig-dev libsocketcan-dev can-utils maven autoconf make cmake meson xserver-xephyr x11vnc novnc git python3-pip websockify fluxbox expect && " +
                 "if [[ -f /usr/bin/cangen && -f /usr/bin/cansniffer && -f /usr/bin/candump && -f /usr/bin/cansend && -f /usr/bin/canplayer && -d /opt/car_hacking/can-utils  ]]; then echo '\\nCan-Utils detected! Updating...\\n'; cd /opt/car_hacking/can-utils; sudo git pull; sudo make; sudo make install; else echo '\\nCan-Utils not detected! Please run Setup first.';fi; " +
                 "if [[ -f /usr/local/bin/cannelloni && -d /opt/car_hacking/cannelloni  ]]; then echo '\\nCannelloni detected! Updating...\\n'; cd /opt/car_hacking/cannelloni; sudo git pull; sudo cmake -DCMAKE_BUILD_TYPE=Release; sudo make; sudo make install; else echo '\\nCannelloni not detected! Please run Setup first.';fi; " +
                 "if [[ -f /usr/local/bin/canusb && -d /opt/car_hacking/usb-can  ]]; then echo '\\nUSB-CAN detected! Updating...\\n'; cd /opt/car_hacking/usb-can; sudo git pull; sudo gcc -o canusb canusb.c; sudo cp canusb /usr/local/bin/canusb; else echo '\\nUSB-CAN not detected! Please run Setup first.';fi; " +
@@ -170,6 +176,8 @@ public class CANFragment extends Fragment {
                 "if [[ -f /usr/local/sbin/socketcand && -d /opt/car_hacking/socketcand ]]; then echo '\\nSocketcand detected! Updating...\\n'; cd /opt/car_hacking; cd /opt/car_hacking/socketcand; sudo git pull; sudo meson setup -Dlibconfig=true --buildtype=release build; sudo meson compile -C build; sudo meson install -C build; else echo '\\nSocketcand not detected! Please run Setup first.';fi; " +
                 "if [[ -f /usr/local/bin/hlcand ]]; then echo 'hlcand detected! Updating...\\n'; cd /opt/car_hacking/usb-can-2; sudo git pull; sudo ./build.sh; sudo cp -f src/hlcand /usr/local/bin/hlcand; else echo '\\nhlcand not detected! Please run Setup first.';fi; " +
                 "if [[ -f /usr/local/bin/caringcaribou ]]; then echo 'CaringCaribou detected! Updating...\\n'; cd /opt/car_hacking/caringcaribou; sudo git pull; sudo python setup.py install; else echo '\\nCaringCaribou not detected! Please run Setup first.';fi; " +
+                "if [[ -f /opt/car_hacking/noVNC/utils/novnc_proxy ]]; then echo 'noVNC detected! Updating...\\n'; else echo '\\nInstalling noVNC\\n'; cd /opt/car_hacking/noVNC; sudo git pull; else echo '\\noVNC not detected! Please run Setup first.'fi; " +
+                "if [[ -f /opt/car_hacking/ICSim/builddir/ICSIM ]]; then echo 'ICSIM detected! Updating...\\n'; else echo '\\nInstalling ICSIM\\n'; cd /opt/car_hacking/ICSim; sudo git pull; sudo meson setup builddir && sudo cp /opt/car_hacking/can-utils/lib.o . && cd builddir && sudo meson compile; sudo cp -f /sdcard/nh_files/can_arsenal/icsim_start.sh /opt/car_hacking/icsim_start.sh; sudo chmod +x /opt/car_hacking/icsim_start.sh; else echo '\\ICSIM not detected! Please run Setup first.'fi; " +
                 "if [[ -f /opt/car_hacking/can_reset.sh ]]; then echo 'can_reset.sh detected! Updating...\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/can_reset.sh /opt/car_hacking/can_reset.sh; sudo chmod +x /opt/car_hacking/can_reset.sh; else echo '\\ncan_reset.sh script not detected! Please run Setup first.';fi; " +
                 "if [[ -f /opt/car_hacking/sequence_finder.sh ]]; then echo 'can_reset.sh detected! Updating...\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh; sudo chmod +x /opt/car_hacking/sequence_finder.sh; else echo '\\nsequence_finder.sh script not detected! Please run Setup first.';fi; " +
                 "echo '\\nEverything is updated! Closing in 3secs..'; sleep 3 && exit");
@@ -208,8 +216,10 @@ public class CANFragment extends Fragment {
                     return new CANFragment.ToolsFragment();
                 case 2:
                     return new CANFragment.CANUSBFragment();
-                default:
+                case 3:
                     return new CANFragment.CANCARIBOUFragment();
+                default:
+                    return new CANFragment.CANICSIMFragment();
             }
         }
 
@@ -220,12 +230,14 @@ public class CANFragment extends Fragment {
 
         @Override
         public int getCount() {
-            return 4;
+            return 5;
         }
 
         @Override
         public CharSequence getPageTitle(int position) {
             switch (position) {
+                case 4:
+                    return "ICSIM";
                 case 3:
                     return "Caring Caribou";
                 case 2:
@@ -1518,6 +1530,56 @@ public class CANFragment extends Fragment {
 
                 activity.invalidateOptionsMenu();
             });
+
+            return rootView;
+        }
+    }
+
+    public static class CANICSIMFragment extends CANFragment {
+        private Activity activity;
+        private TextView SelectedIface;
+
+        @Override
+        public void onCreate(@Nullable Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            activity = getActivity();
+        }
+
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.can_icsim, container, false);
+
+            WebView myBrowser;
+
+            SelectedIface = rootView.findViewById(R.id.can_iface);
+
+            // START ICSIM
+            Button runICSIM = rootView.findViewById(R.id.run_icsim);
+
+            runICSIM.setOnClickListener(v -> {
+                String selected_caniface = SelectedIface.getText().toString();
+
+                if (!selected_caniface.isEmpty()) {
+                    run_cmd("./opt/car_hacking/icsim_start.sh && ./opt/car_hacking/ICSim/builddir/icsim " + selected_caniface + " &");
+                } else {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface field is set!", Toast.LENGTH_LONG).show();
+                }
+                activity.invalidateOptionsMenu();
+            });
+
+            // Get reference to the WebView
+            myBrowser = rootView.findViewById(R.id.icsim);
+
+            // Enable JavaScript and other settings
+            WebSettings webSettings = myBrowser.getSettings();
+            webSettings.setJavaScriptEnabled(true);
+
+            // Make links open in the WebView instead of a browser
+            myBrowser.setWebViewClient(new WebViewClient());
+
+            // Load a URL
+            myBrowser.loadUrl("http://kali:6080/vnc.html?host=kali&port=6080");
 
             return rootView;
         }
