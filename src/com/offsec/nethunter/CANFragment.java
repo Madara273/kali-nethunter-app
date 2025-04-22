@@ -1544,6 +1544,27 @@ public class CANFragment extends Fragment {
                 }
             });
 
+            // Start UDS_FUZZ
+            Button CaribouUDS_FUZZButton = rootView.findViewById(R.id.start_udsFuzz);
+
+            CaribouUDS_FUZZButton.setOnClickListener(v -> {
+                String selected_caniface = SelectedIface.getText().toString();
+                String udsFuzz_module = sharedpreferences.getString("udsFuzz_selected", "");
+
+                if (!selected_caniface.isEmpty()) {
+                    if ("delay".equals(udsFuzz_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds_fuzz delay_fuzzer" + srcValue + dstValue);
+                    }
+                    if ("seed".equals(udsFuzz_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds_fuzz seed_randomness_fuzzer" + srcValue + dstValue);
+                    }
+                } else {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
+                }
+
+                activity.invalidateOptionsMenu();
+            });
+
             // XCP
             SharedPreferences preferencesXCP = requireActivity().getSharedPreferences("XCPModule", Context.MODE_PRIVATE);
 
