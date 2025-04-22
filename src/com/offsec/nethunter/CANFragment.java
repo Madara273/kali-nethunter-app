@@ -1078,6 +1078,8 @@ public class CANFragment extends Fragment {
         private Activity activity;
         private final ExecutorService executorService = Executors.newSingleThreadExecutor();
         private TextView SelectedIface;
+        private TextView SelectedFile;
+        private TextView SelectedMessage;
         private CheckBox IdCheckbox;
         private CheckBox SrcCheckbox;
         private CheckBox DstCheckbox;
@@ -1142,6 +1144,8 @@ public class CANFragment extends Fragment {
             });
 
             SelectedIface = rootView.findViewById(R.id.can_iface);
+            SelectedFile = rootView.findViewById(R.id.caribou_file);
+            SelectedMessage = rootView.findViewById(R.id.caribou_message);
 
             // Checkboxes
             IdCheckbox = rootView.findViewById(R.id.caribou_id);
@@ -1440,6 +1444,29 @@ public class CANFragment extends Fragment {
                 @Override
                 public void onNothingSelected(AdapterView<?> parentView) {
                 }
+            });
+
+            // Start SEND
+            Button CaribouSENDButton = rootView.findViewById(R.id.start_send);
+
+            CaribouSENDButton.setOnClickListener(v -> {
+                String selected_caniface = SelectedIface.getText().toString();
+                String selected_message = SelectedMessage.getText().toString();
+                String selected_file = SelectedFile.getText().toString();
+                String send_module = sharedpreferences.getString("send_selected", "");
+
+                if (!selected_caniface.isEmpty()) {
+                    if ("file".equals(send_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " send file " + selected_file);
+                    }
+                    if ("message".equals(send_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " send message " + selected_message);
+                    }
+                } else {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
+                }
+
+                activity.invalidateOptionsMenu();
             });
 
             // UDS
