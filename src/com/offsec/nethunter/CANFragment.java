@@ -1322,6 +1322,42 @@ public class CANFragment extends Fragment {
                 }
             });
 
+            // Start DoIp
+            Button CaribouDoIpButton = rootView.findViewById(R.id.start_doip);
+
+            CaribouDoIpButton.setOnClickListener(v -> {
+                String selected_caniface = SelectedIface.getText().toString();
+                String doip_module = sharedpreferences.getString("doip_selected", "");
+
+                if (!selected_caniface.isEmpty()) {
+                    if ("discovery".equals(doip_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " doip discovery" + minValue + maxValue);
+                    }
+                    if ("dump_dids".equals(doip_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " doip dump_dids" + srcValue + dstValue);
+                    }
+                    if ("ecu_reset".equals(doip_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " doip ecu_reset" + srcValue + dstValue);
+                    }
+                    if ("security_seed".equals(doip_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " doip security_seed" + minValue + maxValue + srcValue + dstValue);
+                    }
+                    if ("seed_randomness_fuzzer".equals(doip_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " doip seed_randomness_fuzzer" + srcValue + dstValue);
+                    }
+                    if ("services".equals(doip_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " doip services" + srcValue + dstValue);
+                    }
+                    if ("testerpresent".equals(doip_module)) {
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " doip testerpresent" + srcValue + dstValue);
+                    }
+                } else {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
+                }
+
+                activity.invalidateOptionsMenu();
+            });
+
             // Fuzzer
             SharedPreferences preferencesFUZZER = requireActivity().getSharedPreferences("FUZZERModule", Context.MODE_PRIVATE);
 
