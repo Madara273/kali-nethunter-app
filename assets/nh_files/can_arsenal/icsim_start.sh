@@ -9,7 +9,7 @@ fi
 export DISPLAY=:1
 
 # launch virtual display
-Xvfb :1 -screen 0 1024x768x16 &
+Xvfb :1 -screen 0 692x350x16 &
 
 # launch window manager
 sleep 5
