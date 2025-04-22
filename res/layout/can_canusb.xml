@@ -106,7 +106,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:inputType="number"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:gravity="right|bottom"
                     android:text="200000"
                     android:textAppearance="?android:attr/textAppearanceSmall"
@@ -126,7 +126,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
                     android:inputType="number"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:gravity="right|bottom"
                     android:text="500000"
                     android:textAppearance="?android:attr/textAppearanceSmall"
@@ -165,7 +165,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:inputType="text"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:text="2"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -185,7 +185,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:inputType="number"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:text="200"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -213,7 +213,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:inputType="text"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:text="infinite"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -263,7 +263,7 @@
                     android:layout_marginEnd="20dp"
                     android:gravity="right|bottom"
                     android:inputType="text"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:text="0C1A2F3E0C1A2F3"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />

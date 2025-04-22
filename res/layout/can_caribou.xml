@@ -75,7 +75,7 @@
                     android:gravity="right|bottom"
                     android:ems="10"
                     android:inputType="text"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:text="can0"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -104,7 +104,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:inputType="text"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:text="0x003"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -124,7 +124,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:inputType="text"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:text="0x3e8"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -144,7 +144,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:inputType="text"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:text="0x3e9"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -173,7 +173,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:inputType="text"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:text="0x1fffb000"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -193,7 +193,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:inputType="text"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:text="0x4800"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -222,7 +222,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:inputType="text"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:text="2"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -242,7 +242,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:inputType="text"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:text="4"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -280,7 +280,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:inputType="text"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:text="1"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -300,7 +300,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="2dp"
                     android:inputType="text"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:text="0xabc123"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -367,7 +367,7 @@
                     android:gravity="left|bottom"
                     android:ems="20"
                     android:inputType="text"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:text="0x7a0#c0.ff.ee.00.11.22.33.44"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -399,7 +399,7 @@
                     android:gravity="left|bottom"
                     android:ems="12"
                     android:inputType="text"
-                    android:saveEnabled="false"
+                    android:saveEnabled="true"
                     android:text="/root/caribou/log.txt"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="TouchTargetSizeCheck,DuplicateSpeakableTextCheck" />

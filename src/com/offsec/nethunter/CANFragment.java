@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Parcelable;
 import android.text.method.LinkMovementMethod;
 import android.text.util.Linkify;
@@ -157,8 +158,8 @@ public class CANFragment extends Fragment {
                 "if [[ -f /usr/local/sbin/socketcand ]]; then echo 'Socketcand is Installed!'; else echo '\\nInstalling Socketcand\\n'; cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/socketcand.git; cd /opt/car_hacking/socketcand; sudo meson setup -Dlibconfig=true --buildtype=release build; sudo meson compile -C build; sudo meson install -C build;fi; " +
                 "if [[ -f /usr/local/bin/hlcand ]]; then echo 'hlcand is Installed!'; else echo '\\nInstalling hlcancand\\n'; cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/usb-can-2.git; cd /opt/car_hacking/usb-can-2; sudo ./build.sh; cp -f src/hlcand /usr/local/bin/hlcand;fi; " +
                 "if [[ -f /usr/local/bin/caringcaribou ]]; then echo 'CaringCaribou is Installed!'; else echo '\\nInstalling CaringCaribou\\n'; cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/caringcaribou.git; cd /opt/car_hacking/caringcaribou; sudo python setup.py install;fi; " +
-                "if [[ -f /opt/car_hacking/noVNC/utils/novnc_proxy ]]; then echo 'noVNC is Installed!'; else echo '\\nInstalling noVNC\\n'; cd /opt/car_hacking; sudo git clone https://github.com/novnc/noVNC.git;fi; " +
-                "if [[ -f /opt/car_hacking/ICSim/builddir/ICSIM ]]; then echo 'ICSIM is Installed!'; else echo '\\nInstalling ICSIM\\n'; cd /opt/car_hacking; sudo git clone https://github.com/zombieCraig/ICSim.git; cd /opt/car_hacking/ICSim;sudo cp /opt/car_hacking/can-utils/lib.o .;sudo meson setup builddir && cd builddir && sudo meson compile;sudo cp -f /sdcard/nh_files/can_arsenal/icsim_start.sh /opt/car_hacking/icsim_start.sh; sudo chmod +x /opt/car_hacking/icsim_start.sh;fi; " +
+                "if [[ -f /opt/noVNC/utils/novnc_proxy ]]; then echo 'noVNC is Installed!'; else echo '\\nInstalling noVNC\\n'; cd /opt/car_hacking; sudo git clone https://github.com/novnc/noVNC.git;fi; " +
+                "if [[ -f /opt/car_hacking/ICSim/builddir/ICSIM ]]; then echo 'ICSIM is Installed!'; else echo '\\nInstalling ICSIM\\n'; cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/ICSim.git; cd /opt/car_hacking/ICSim;sudo cp /opt/car_hacking/can-utils/lib.o .;sudo meson setup builddir && cd builddir && sudo meson compile;sudo cp -f /sdcard/nh_files/can_arsenal/icsim_start.sh /opt/car_hacking/icsim_start.sh; sudo chmod +x /opt/car_hacking/icsim_start.sh;fi; " +
                 "if [[ -f /opt/car_hacking/can_reset.sh ]]; then echo 'can_reset.sh is Installed!'; else echo '\\nInstalling can_reset.sh\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/can_reset.sh /opt/car_hacking/can_reset.sh; sudo chmod +x /opt/car_hacking/can_reset.sh;fi; " +
                 "if [[ -f /opt/car_hacking/sequence_finder.sh ]]; then echo 'sequence_finder.sh is Installed!'; else echo '\\nInstalling sequence_finder.sh\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh; sudo chmod +x /opt/car_hacking/sequence_finder.sh;fi; " +
                 "echo '\\nSetup done!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
@@ -176,7 +177,7 @@ public class CANFragment extends Fragment {
                 "if [[ -f /usr/local/sbin/socketcand && -d /opt/car_hacking/socketcand ]]; then echo '\\nSocketcand detected! Updating...\\n'; cd /opt/car_hacking; cd /opt/car_hacking/socketcand; sudo git pull; sudo meson setup -Dlibconfig=true --buildtype=release build; sudo meson compile -C build; sudo meson install -C build; else echo '\\nSocketcand not detected! Please run Setup first.';fi; " +
                 "if [[ -f /usr/local/bin/hlcand ]]; then echo 'hlcand detected! Updating...\\n'; cd /opt/car_hacking/usb-can-2; sudo git pull; sudo ./build.sh; sudo cp -f src/hlcand /usr/local/bin/hlcand; else echo '\\nhlcand not detected! Please run Setup first.';fi; " +
                 "if [[ -f /usr/local/bin/caringcaribou ]]; then echo 'CaringCaribou detected! Updating...\\n'; cd /opt/car_hacking/caringcaribou; sudo git pull; sudo python setup.py install; else echo '\\nCaringCaribou not detected! Please run Setup first.';fi; " +
-                "if [[ -f /opt/car_hacking/noVNC/utils/novnc_proxy ]]; then echo 'noVNC detected! Updating...\\n'; else echo '\\nInstalling noVNC\\n'; cd /opt/car_hacking/noVNC; sudo git pull; else echo '\\noVNC not detected! Please run Setup first.'fi; " +
+                "if [[ -f /opt/noVNC/utils/novnc_proxy ]]; then echo 'noVNC detected! Updating...\\n'; else echo '\\nInstalling noVNC\\n'; cd /opt/car_hacking/noVNC; sudo git pull; else echo '\\noVNC not detected! Please run Setup first.'fi; " +
                 "if [[ -f /opt/car_hacking/ICSim/builddir/ICSIM ]]; then echo 'ICSIM detected! Updating...\\n'; else echo '\\nInstalling ICSIM\\n'; cd /opt/car_hacking/ICSim; sudo git pull; sudo meson setup builddir && sudo cp /opt/car_hacking/can-utils/lib.o . && cd builddir && sudo meson compile; sudo cp -f /sdcard/nh_files/can_arsenal/icsim_start.sh /opt/car_hacking/icsim_start.sh; sudo chmod +x /opt/car_hacking/icsim_start.sh; else echo '\\ICSIM not detected! Please run Setup first.'fi; " +
                 "if [[ -f /opt/car_hacking/can_reset.sh ]]; then echo 'can_reset.sh detected! Updating...\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/can_reset.sh /opt/car_hacking/can_reset.sh; sudo chmod +x /opt/car_hacking/can_reset.sh; else echo '\\ncan_reset.sh script not detected! Please run Setup first.';fi; " +
                 "if [[ -f /opt/car_hacking/sequence_finder.sh ]]; then echo 'can_reset.sh detected! Updating...\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh; sudo chmod +x /opt/car_hacking/sequence_finder.sh; else echo '\\nsequence_finder.sh script not detected! Please run Setup first.';fi; " +
@@ -1535,9 +1536,11 @@ public class CANFragment extends Fragment {
         }
     }
 
+
     public static class CANICSIMFragment extends CANFragment {
         private Activity activity;
         private TextView SelectedIface;
+        private WebView myBrowser;
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -1545,41 +1548,49 @@ public class CANFragment extends Fragment {
             activity = getActivity();
         }
 
-
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.can_icsim, container, false);
 
-            WebView myBrowser;
-
             SelectedIface = rootView.findViewById(R.id.can_iface);
+            myBrowser = rootView.findViewById(R.id.icsim);
 
-            // START ICSIM
+            WebView myBrowser = rootView.findViewById(R.id.icsim);
+            WebSettings webSettings = myBrowser.getSettings();
+            webSettings.setJavaScriptEnabled(true);
+            webSettings.setDomStorageEnabled(true); // ← active localStorage
+
+            webSettings.setLoadWithOverviewMode(true);
+            webSettings.setUseWideViewPort(true);
+            webSettings.setBuiltInZoomControls(true);
+            webSettings.setDisplayZoomControls(false);
+
+            myBrowser.setWebViewClient(new WebViewClient());
+
+            // Bouton pour démarrer ICSIM
             Button runICSIM = rootView.findViewById(R.id.run_icsim);
-
             runICSIM.setOnClickListener(v -> {
                 String selected_caniface = SelectedIface.getText().toString();
 
                 if (!selected_caniface.isEmpty()) {
-                    run_cmd("./opt/car_hacking/icsim_start.sh && ./opt/car_hacking/ICSim/builddir/icsim " + selected_caniface + " &");
+                    run_cmd("su -c 'sh /opt/car_hacking/icsim_start.sh'");
+                    // Attendre un peu avant de charger noVNC (le temps que le serveur démarre)
+                    new Handler().postDelayed(() -> {
+                        myBrowser.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale");
+                    }, 15000); // Attente de 5 secondes (ajustable)
                 } else {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface field is set!", Toast.LENGTH_LONG).show();
+                    Toast.makeText(requireActivity(), "Please set a CAN interface!", Toast.LENGTH_LONG).show();
                 }
+
                 activity.invalidateOptionsMenu();
             });
 
-            // Get reference to the WebView
-            myBrowser = rootView.findViewById(R.id.icsim);
-
-            // Enable JavaScript and other settings
-            WebSettings webSettings = myBrowser.getSettings();
-            webSettings.setJavaScriptEnabled(true);
-
-            // Make links open in the WebView instead of a browser
-            myBrowser.setWebViewClient(new WebViewClient());
-
-            // Load a URL
-            myBrowser.loadUrl("http://kali:6080/vnc.html?host=kali&port=6080");
+            Button refreshButton = rootView.findViewById(R.id.refresh_icsim);
+            refreshButton.setOnClickListener(v -> {
+                Toast.makeText(activity, "Refreshing ICSim display...", Toast.LENGTH_SHORT).show();
+                myBrowser.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale");
+                myBrowser.reload();
+            });
 
             return rootView;
         }
