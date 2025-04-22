@@ -1,22 +1,27 @@
 #!/system/bin/sh
 
+CAN_IFACE="$1"
+
+if [ -z "$CAN_IFACE" ]; then
+    CAN_IFACE="vcan0"
+fi
+
 export DISPLAY=:1
 
-# Lancer un affichage virtuel
+# launch virtual display
 Xvfb :1 -screen 0 1024x768x16 &
 
-# Lancer un environnement de fenêtre simple (optionnel)
+# launch window manager
 sleep 5
 fluxbox &
 
-# Lancer le serveur VNC
+# launch VNC Server
 sleep 2
 x11vnc -display :1 -nopw -forever -bg -rfbport 5900
 
-# Lancer ICSIM (tu peux adapter le chemin)
 cd /opt/car_hacking/ICSim/builddir
-./icsim vcan0 &
+./icsim "$CAN_IFACE" &
 
-# Lancer le proxy noVNC
+# run noVNC proxy
 cd /opt/noVNC
 ./utils/novnc_proxy --vnc localhost:5900 --listen 6080

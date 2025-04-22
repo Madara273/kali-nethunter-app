@@ -1540,7 +1540,6 @@ public class CANFragment extends Fragment {
     public static class CANICSIMFragment extends CANFragment {
         private Activity activity;
         private TextView SelectedIface;
-        private WebView myBrowser;
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -1553,7 +1552,6 @@ public class CANFragment extends Fragment {
             View rootView = inflater.inflate(R.layout.can_icsim, container, false);
 
             SelectedIface = rootView.findViewById(R.id.can_iface);
-            myBrowser = rootView.findViewById(R.id.icsim);
 
             WebView myBrowser = rootView.findViewById(R.id.icsim);
             WebSettings webSettings = myBrowser.getSettings();
@@ -1567,17 +1565,16 @@ public class CANFragment extends Fragment {
 
             myBrowser.setWebViewClient(new WebViewClient());
 
-            // Bouton pour démarrer ICSIM
+            // ICSIM
             Button runICSIM = rootView.findViewById(R.id.run_icsim);
             runICSIM.setOnClickListener(v -> {
                 String selected_caniface = SelectedIface.getText().toString();
 
                 if (!selected_caniface.isEmpty()) {
-                    run_cmd("su -c 'sh /opt/car_hacking/icsim_start.sh'");
-                    // Attendre un peu avant de charger noVNC (le temps que le serveur démarre)
+                    run_cmd("su -c 'sh /opt/car_hacking/icsim_start.sh " + selected_caniface + "'");
                     new Handler().postDelayed(() -> {
                         myBrowser.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale");
-                    }, 15000); // Attente de 5 secondes (ajustable)
+                    }, 15000);
                 } else {
                     Toast.makeText(requireActivity(), "Please set a CAN interface!", Toast.LENGTH_LONG).show();
                 }
