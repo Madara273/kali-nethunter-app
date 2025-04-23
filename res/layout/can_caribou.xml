@@ -1,0 +1,682 @@
+<LinearLayout xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    tools:ignore="Autofill,HardcodedText,LabelFor,TouchTargetSizeCheck,TooManyViews,UselessParent,InefficientWeight,RtlHardcoded,ContentDescription,ButtonStyle,DuplicateSpeakableTextCheck">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/can_desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|center"
+                android:gravity="center"
+                android:padding="10dp"
+                android:text="@string/can_caribou_desc"
+                tools:ignore="VisualLintLongText" />
+
+            <View
+                android:id="@+id/divider2"
+                android:layout_width="match_parent"
+                android:layout_marginBottom="10dp"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/textView1"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_weight="3"
+                    android:text="Settings"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/textView2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:text="CAN interface :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
+
+                <EditText
+                    android:id="@+id/can_iface"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="20dp"
+                    android:gravity="end"
+                    android:inputType="text"
+                    android:text="can0"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/textView7"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:text="Message :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
+
+                <EditText
+                    android:id="@+id/caribou_message"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginStart="8dp"
+                    android:inputType="text"
+                    android:text="0x7a0#c0.ff.ee.00.11.22.33.44"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck"
+                    app:layout_constraintStart_toEndOf="@id/textView7"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/textView8"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:text="File :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
+
+                <EditText
+                    android:id="@+id/caribou_file"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
+                    android:inputType="text"
+                    android:text="/root/caribou/log.txt"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="TouchTargetSizeCheck,DuplicateSpeakableTextCheck"
+                    app:layout_constraintStart_toEndOf="@id/textView8"
+                    app:layout_constraintEnd_toStartOf="@id/cariboufilebrowse"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/cariboufilebrowse"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="20dp"
+                    android:text="Browse"
+                    android:textColor="#ffffffff"
+                    tools:ignore="DuplicateSpeakableTextCheck"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:columnCount="4"
+                android:rowCount="2"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/caribou_start_addr"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Start Addr. :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="0"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <EditText
+                    android:id="@+id/caribou_start_addr_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0x1fffb000"
+                    android:inputType="text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="1"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/caribou_length"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Length :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="2"
+                    android:layout_marginStart="12dp"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <EditText
+                    android:id="@+id/caribou_length_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0x4800"
+                    android:inputType="text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="3"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/caribou_separate_line"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Separate Line :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="1"
+                    android:layout_column="0"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <EditText
+                    android:id="@+id/caribou_separate_line_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="5"
+                    android:inputType="text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="1"
+                    android:layout_column="1"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/caribou_seed"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Seed :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="1"
+                    android:layout_column="2"
+                    android:layout_marginStart="12dp"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <EditText
+                    android:id="@+id/caribou_seed_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0xabc123"
+                    android:inputType="text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="1"
+                    android:layout_column="3"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+            </GridLayout>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:columnCount="6"
+                android:rowCount="5"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/caribou_id"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="ID :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="0"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <EditText
+                    android:id="@+id/caribou_id_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0x003"
+                    android:inputType="text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="1"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/caribou_src"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Src. :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="2"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <EditText
+                    android:id="@+id/caribou_src_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0x3e8"
+                    android:inputType="text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="3"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/caribou_dst"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Dst. :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="4"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <EditText
+                    android:id="@+id/caribou_dst_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="0x3e9"
+                    android:inputType="text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="5"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/caribou_min"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Min. :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="1"
+                    android:layout_column="0"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <EditText
+                    android:id="@+id/caribou_min_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2"
+                    android:inputType="text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="1"
+                    android:layout_column="1"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/caribou_max"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Max. :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="1"
+                    android:layout_column="2"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <EditText
+                    android:id="@+id/caribou_max_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="4"
+                    android:inputType="text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="1"
+                    android:layout_column="3"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/caribou_delay"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Delay :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="1"
+                    android:layout_column="4"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <EditText
+                    android:id="@+id/caribou_delay_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="1"
+                    android:inputType="text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="1"
+                    android:layout_column="5"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/caribou_candump_format"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Candump"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="2"
+                    android:layout_column="2"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/caribou_pad"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Pad"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="2"
+                    android:layout_column="0"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/caribou_save_output"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Output"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="2"
+                    android:layout_column="4"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/caribou_loop"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Loop"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="3"
+                    android:layout_column="0"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/caribou_reverse"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Reverse"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="3"
+                    android:layout_column="2"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+            </GridLayout>
+
+            <View
+                android:id="@+id/divider3"
+                android:layout_width="match_parent"
+                android:layout_marginBottom="10dp"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="10dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/textView3"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_weight="3"
+                    android:text="Modules"
+                    android:textAppearance="?android:attr/textAppearanceMedium"
+                    android:textStyle="bold" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="8dp"
+                android:gravity="center">
+
+                <Button
+                    android:id="@+id/start_dump"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Dump" />
+
+                <Button
+                    android:id="@+id/start_listener"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Listener" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:layout_marginVertical="8dp">
+
+                    <TextView
+                        android:id="@+id/label_fuzz"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Fuzz :"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <Spinner
+                        android:id="@+id/fuzzer_spinner"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        app:layout_constraintStart_toEndOf="@id/label_fuzz"
+                        app:layout_constraintEnd_toStartOf="@id/start_fuzzer"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        android:layout_marginHorizontal="8dp" />
+
+                    <Button
+                        android:id="@+id/start_fuzzer"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="RUN"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:layout_marginVertical="8dp">
+
+                    <TextView
+                        android:id="@+id/label_send"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Send :"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <Spinner
+                        android:id="@+id/send_spinner"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        app:layout_constraintStart_toEndOf="@id/label_send"
+                        app:layout_constraintEnd_toStartOf="@id/start_send"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        android:layout_marginHorizontal="8dp" />
+
+                    <Button
+                        android:id="@+id/start_send"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="RUN"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:layout_marginVertical="8dp">
+
+                    <TextView
+                        android:id="@+id/label_uds"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="UDS :"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <Spinner
+                        android:id="@+id/uds_spinner"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        app:layout_constraintStart_toEndOf="@id/label_uds"
+                        app:layout_constraintEnd_toStartOf="@id/start_uds"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        android:layout_marginHorizontal="8dp" />
+
+                    <Button
+                        android:id="@+id/start_uds"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="RUN"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:paddingStart="20dp"
+                    android:paddingEnd="20dp"
+                    android:layout_marginVertical="8dp">
+
+                    <TextView
+                        android:id="@+id/label_xcp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="XCP :"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+
+                    <Spinner
+                        android:id="@+id/xcp_spinner"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        app:layout_constraintStart_toEndOf="@id/label_xcp"
+                        app:layout_constraintEnd_toStartOf="@id/start_xcp"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        android:layout_marginHorizontal="8dp" />
+
+                    <Button
+                        android:id="@+id/start_xcp"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="RUN"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintBottom_toBottomOf="parent" />
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+            </LinearLayout>
+
+
+        </LinearLayout>
+
+    </ScrollView>
+
+</LinearLayout>
