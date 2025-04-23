@@ -1,7 +1,6 @@
 <LinearLayout xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     xmlns:android="http://schemas.android.com/apk/res/android"
     tools:ignore="Autofill,HardcodedText,LabelFor,TouchTargetSizeCheck,TooManyViews,UselessParent,InefficientWeight,RtlHardcoded,ContentDescription,ButtonStyle,DuplicateSpeakableTextCheck">
@@ -148,7 +147,6 @@
                     android:orientation="horizontal"
                     android:gravity="center_vertical">
 
-                    <!-- RPORT -->
                     <TextView
                         android:id="@+id/textView19"
                         android:layout_width="wrap_content"
@@ -167,13 +165,11 @@
                         android:text="20000"
                         android:textAppearance="?android:attr/textAppearanceSmall" />
 
-                    <!-- Spacer to push LPORT à droite -->
                     <View
                         android:layout_width="0dp"
                         android:layout_height="0dp"
                         android:layout_weight="1" />
 
-                    <!-- LPORT -->
                     <TextView
                         android:id="@+id/textView18"
                         android:layout_width="wrap_content"
