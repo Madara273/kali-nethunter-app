@@ -30,7 +30,7 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:layout_marginStart="20dp"
-            android:text="ICSim"
+            android:text="Settings"
             android:textAppearance="?android:attr/textAppearanceMedium"
             android:textStyle="bold"/>
 
