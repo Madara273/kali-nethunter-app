@@ -1308,6 +1308,21 @@ public class CANFragment extends Fragment {
                 }
             });
 
+            // Start Dump
+            Button CaribouDumpButton = rootView.findViewById(R.id.start_dump);
+
+            CaribouDumpButton.setOnClickListener(v -> {
+                String selected_caniface = SelectedIface.getText().toString();
+
+                if (!selected_caniface.isEmpty()) {
+                    run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " dump" + separateLineValue + candumpFormat + outputEnabled);
+                } else {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
+                }
+
+                activity.invalidateOptionsMenu();
+            });
+
             // Start Listener
             Button CaribouListenerButton = rootView.findViewById(R.id.start_listener);
 
@@ -1359,13 +1374,13 @@ public class CANFragment extends Fragment {
 
                 if (!selected_caniface.isEmpty()) {
                     if ("brute".equals(fuzzer_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer brute" + idValue + outputEnabled);
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer brute" + idValue);
                     }
                     if ("identify".equals(fuzzer_module)) {
                         run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer identify" + outputEnabled);
                     }
                     if ("mutate".equals(fuzzer_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer mutate" + idValue + outputEnabled);
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer mutate" + idValue);
                     }
                     if ("random".equals(fuzzer_module)) {
                         run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer random" + minValue + seedValue + outputEnabled);
@@ -1418,10 +1433,10 @@ public class CANFragment extends Fragment {
 
                 if (!selected_caniface.isEmpty()) {
                     if ("file".equals(send_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " send file " + selected_file);
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " send file" + delayValue + loopEnabled + " " + selected_file);
                     }
                     if ("message".equals(send_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " send message " + selected_message);
+                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " send message" + padEnabled + delayValue + loopEnabled + " " + selected_message);
                     }
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please chose a CAN Interface!", Toast.LENGTH_LONG).show();
