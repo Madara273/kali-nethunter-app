@@ -169,7 +169,6 @@
                 android:rowCount="3"
                 android:orientation="horizontal">
 
-                <!-- Ligne 1 : ID, Src, Dst -->
                 <CheckBox
                     android:id="@+id/caribou_id"
                     android:layout_width="wrap_content"
@@ -241,7 +240,6 @@
                     android:gravity="center_vertical"
                     tools:ignore="TouchTargetSizeCheck" />
 
-                <!-- Ligne 2 : Min, Max, Delay -->
                 <CheckBox
                     android:id="@+id/caribou_min"
                     android:layout_width="wrap_content"
@@ -315,88 +313,151 @@
 
             </GridLayout>
 
-
-            <LinearLayout
+            <GridLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:columnCount="4"
+                android:rowCount="2"
                 android:orientation="horizontal">
 
                 <CheckBox
                     android:id="@+id/caribou_start_addr"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
                     android:text="Start Addr. :"
                     android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="0"
+                    android:gravity="center_vertical"
                     tools:ignore="TouchTargetSizeCheck" />
 
                 <EditText
                     android:id="@+id/caribou_start_addr_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="2dp"
-                    android:inputType="text"
-                    android:saveEnabled="true"
                     android:text="0x1fffb000"
+                    android:inputType="text"
                     android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="1"
+                    android:gravity="center_vertical"
                     tools:ignore="TouchTargetSizeCheck" />
 
                 <CheckBox
                     android:id="@+id/caribou_length"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
                     android:text="Length :"
                     android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="2"
+                    android:layout_marginStart="12dp"
+                    android:gravity="center_vertical"
                     tools:ignore="TouchTargetSizeCheck" />
 
                 <EditText
                     android:id="@+id/caribou_length_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="2dp"
-                    android:inputType="text"
-                    android:saveEnabled="true"
                     android:text="0x4800"
+                    android:inputType="text"
                     android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="3"
+                    android:gravity="center_vertical"
                     tools:ignore="TouchTargetSizeCheck" />
 
-            </LinearLayout>
+                <CheckBox
+                    android:id="@+id/caribou_separate_line"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Separate Line :"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="1"
+                    android:layout_column="0"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="horizontal">
+                <EditText
+                    android:id="@+id/caribou_separate_line_value"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="5"
+                    android:inputType="text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="1"
+                    android:layout_column="1"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
 
                 <CheckBox
                     android:id="@+id/caribou_seed"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
                     android:text="Seed :"
                     android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="1"
+                    android:layout_column="2"
+                    android:layout_marginStart="12dp"
+                    android:gravity="center_vertical"
                     tools:ignore="TouchTargetSizeCheck" />
 
                 <EditText
                     android:id="@+id/caribou_seed_value"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="2dp"
-                    android:inputType="text"
-                    android:saveEnabled="true"
                     android:text="0xabc123"
+                    android:inputType="text"
                     android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="1"
+                    android:layout_column="3"
+                    android:gravity="center_vertical"
                     tools:ignore="TouchTargetSizeCheck" />
 
-            </LinearLayout>
+            </GridLayout>
 
-            <LinearLayout
+            <GridLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:columnCount="3"
+                android:rowCount="2"
                 android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/caribou_pad"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:text="Pad"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="0"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/caribou_candump_format"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Candump Format"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="1"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/caribou_save_output"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="20dp"
+                    android:text="Save Output"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="2"
+                    tools:ignore="TouchTargetSizeCheck" />
 
                 <CheckBox
                     android:id="@+id/caribou_reverse"
@@ -405,35 +466,22 @@
                     android:layout_marginStart="20dp"
                     android:text="Reverse"
                     android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <CheckBox
-                    android:id="@+id/caribou_candump_format"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:text="Candump"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
-                <CheckBox
-                    android:id="@+id/caribou_save_output"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:text="Output"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="1"
+                    android:layout_column="0"
                     tools:ignore="TouchTargetSizeCheck" />
 
                 <CheckBox
                     android:id="@+id/caribou_loop"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
+                    android:layout_marginEnd="20dp"
                     android:text="Loop"
                     android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="1"
+                    android:layout_column="2"
                     tools:ignore="TouchTargetSizeCheck" />
 
-            </LinearLayout>
+            </GridLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -485,45 +533,6 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <!-- DOIP -->
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:layout_marginVertical="8dp">
-
-                    <TextView
-                        android:id="@+id/label_doip"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="DoIp :"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent" />
-
-                    <Spinner
-                        android:id="@+id/doip_spinner"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        app:layout_constraintStart_toEndOf="@id/label_doip"
-                        app:layout_constraintEnd_toStartOf="@id/start_doip"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        android:layout_marginHorizontal="8dp" />
-
-                    <Button
-                        android:id="@+id/start_doip"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="RUN"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
-
-                <!-- FUZZ -->
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -561,7 +570,6 @@
                         app:layout_constraintBottom_toBottomOf="parent" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <!-- SEND -->
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -599,7 +607,6 @@
                         app:layout_constraintBottom_toBottomOf="parent" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <!-- UDS -->
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -637,45 +644,6 @@
                         app:layout_constraintBottom_toBottomOf="parent" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
-                <!-- UDS FUZZ -->
-                <androidx.constraintlayout.widget.ConstraintLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingStart="20dp"
-                    android:paddingEnd="20dp"
-                    android:layout_marginVertical="8dp">
-
-                    <TextView
-                        android:id="@+id/label_udsFuzz"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="UDS Fuzz :"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        app:layout_constraintStart_toStartOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent" />
-
-                    <Spinner
-                        android:id="@+id/udsFuzz_spinner"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        app:layout_constraintStart_toEndOf="@id/label_udsFuzz"
-                        app:layout_constraintEnd_toStartOf="@id/start_udsFuzz"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent"
-                        android:layout_marginHorizontal="8dp" />
-
-                    <Button
-                        android:id="@+id/start_udsFuzz"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="RUN"
-                        app:layout_constraintEnd_toEndOf="parent"
-                        app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent" />
-                </androidx.constraintlayout.widget.ConstraintLayout>
-
-                <!-- XCP -->
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
