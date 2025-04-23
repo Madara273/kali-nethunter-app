@@ -558,8 +558,8 @@
     <string name="can_description">This module allow you to use CAN Bus with various tools. Kernel device should have CAN support enabled, for more information look at the documentation in the menu.</string>
     <string name="can_tools_desc">Unleash the power of can-utils suite by managing logs and Generate, Dump, Sniff or Replay signals! You may also run car diagnosis using Freediag and transfert CAN frames between two machines using Canelloni tool!</string>
     <string name="can_canusb_desc">Use your CAN Analyzer USB by Dumping and sending signals using usb-can tool!</string>
-    <string name="can_caribou_desc">Caring Caribou tool. Work in Progress...</string>
+    <string name="can_caribou_desc">A friendly automotive security exploration tool.</string>
     <string name="can_icsim_desc">Instrument Cluster Simulator for SocketCAN</string>
     <!-- CAN About menu -->
-    <string name="about_author">ABOUT:\n\nFound a bug? A suggestion? Follow me on my networks and let me know!\n\nhttps://linktr.ee/v0lk3n\n\nCREDITS:\n\nMade with ♥ by V0lk3n\n\n- Fenugrec! For freediag tool.\nhttps://github.com/fenugrec\n\n- Kobolt! For can-usb.\nhttps://github.com/kobolt\n\n- Alexmohr! For can-usb fork.\nhttps://github.com/alexmohr\n\n- Linux-Can! For can-utils and socketcand.\nhttps://github.com/linux-can\n\n- Mguentner! For cannelloni.\nhttps://github.com/mguentner\n\n</string>
+    <string name="about_author">ABOUT:\n\nFound a bug? A suggestion? Follow me on my networks and let me know!\n\nhttps://linktr.ee/v0lk3n\n\nCREDITS:\n\nMade with ♥ by V0lk3n\n\n- Fenugrec! For freediag tool.\nhttps://github.com/fenugrec\n\n- Kobolt! For can-usb.\nhttps://github.com/kobolt\n\n- Alexmohr! For can-usb fork.\nhttps://github.com/alexmohr\n\n- Linux-Can! For can-utils and socketcand.\nhttps://github.com/linux-can\n\n- Mguentner! For cannelloni.\nhttps://github.com/mguentner\n\n- CaringCaribou!\nhttps://github.com/CaringCaribou\n\n- zombieCraig! For ICSim tool.\nhttps://github.com/zombieCraig\n\n</string>
 </resources>
