@@ -1093,6 +1093,8 @@ public class CANFragment extends Fragment {
         private CheckBox LoopCheckbox;
         private CheckBox ReverseCheckbox;
         private CheckBox SaveOutputCheckbox;
+        private CheckBox SeparateLineCheckbox;
+        private CheckBox PadCheckbox;
         private String idValue = "";
         private String srcValue = "";
         private String dstValue = "";
@@ -1102,10 +1104,12 @@ public class CANFragment extends Fragment {
         private String maxValue = "";
         private String delayValue = "";
         private String seedValue = "";
+        private String separateLineValue = "";
         private String candumpFormat = "";
         private String loopEnabled = "";
         private String outputEnabled = "";
         private String reverseEnabled = "";
+        private String padEnabled = "";
         private TextView SelectedID;
         private TextView SelectedSRC;
         private TextView SelectedDST;
@@ -1115,6 +1119,7 @@ public class CANFragment extends Fragment {
         private TextView SelectedMax;
         private TextView SelectedDelay;
         private TextView SelectedSeed;
+        private TextView SelectedSeparateLine;
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -1161,6 +1166,8 @@ public class CANFragment extends Fragment {
             LoopCheckbox = rootView.findViewById(R.id.caribou_loop);
             ReverseCheckbox = rootView.findViewById(R.id.caribou_reverse);
             SaveOutputCheckbox = rootView.findViewById(R.id.caribou_save_output);
+            PadCheckbox = rootView.findViewById(R.id.caribou_pad);
+            SeparateLineCheckbox = rootView.findViewById(R.id.caribou_separate_line);
 
             // Checkboxes values
             SelectedID = rootView.findViewById(R.id.caribou_id_value);
@@ -1172,6 +1179,7 @@ public class CANFragment extends Fragment {
             SelectedMax = rootView.findViewById(R.id.caribou_max_value);
             SelectedDelay = rootView.findViewById(R.id.caribou_delay_value);
             SelectedSeed = rootView.findViewById(R.id.caribou_seed_value);
+            SelectedSeparateLine = rootView.findViewById(R.id.caribou_separate_line_value);
 
             IdCheckbox.setOnClickListener(v -> {
                 if (IdCheckbox.isChecked()) {
@@ -1254,6 +1262,15 @@ public class CANFragment extends Fragment {
                 }
             });
 
+            SeparateLineCheckbox.setOnClickListener(v -> {
+                if (SeparateLineCheckbox.isChecked()) {
+                    String selected_separateLine = SelectedSeparateLine.getText().toString();
+                    separateLineValue = " -s " + selected_separateLine;
+                } else {
+                    separateLineValue = "";
+                }
+            });
+
             CandumpFormatCheckbox.setOnClickListener(v -> {
                 if (CandumpFormatCheckbox.isChecked())
                     candumpFormat = " -t";
@@ -1273,6 +1290,13 @@ public class CANFragment extends Fragment {
                     reverseEnabled = " -r";
                 else
                     reverseEnabled = "";
+            });
+
+            PadCheckbox.setOnClickListener(v -> {
+                if (PadCheckbox.isChecked())
+                    padEnabled = " -p";
+                else
+                    padEnabled = "";
             });
 
             SaveOutputCheckbox.setOnClickListener(v -> {
