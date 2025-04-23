@@ -50,70 +50,41 @@
 
             </LinearLayout>
 
-            <LinearLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
                 android:padding="10dp">
 
                 <TextView
                     android:id="@+id/textView2"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:layout_weight="3"
                     android:text="CAN interface :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
 
                 <EditText
                     android:id="@+id/can_iface"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
-                    android:layout_weight="5"
-                    android:gravity="right|bottom"
-                    android:ems="10"
+                    android:gravity="end"
                     android:inputType="text"
-                    android:saveEnabled="true"
                     android:text="can0"
                     android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    tools:ignore="TouchTargetSizeCheck"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"/>
 
-            </LinearLayout>
-<!--
-            <LinearLayout
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-                <TextView
-                    android:id="@+id/usb_if"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_weight="3"
-                    android:text="Device :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <Spinner
-                    android:id="@+id/device_interface"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:dropDownWidth="wrap_content"
-                    android:saveEnabled="false"
-                    android:spinnerMode="dropdown"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-            </LinearLayout>
--->
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
                 android:padding="10dp">
 
                 <TextView
@@ -122,43 +93,49 @@
                     android:layout_height="wrap_content"
                     android:text="MTU :"
                     android:layout_marginStart="20dp"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
 
                 <EditText
                     android:id="@+id/mtu"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
-                    android:layout_marginEnd="20dp"
-                    android:gravity="right|bottom"
                     android:inputType="number"
-                    android:saveEnabled="true"
                     android:text="16"
+                    android:gravity="end"
                     android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    tools:ignore="TouchTargetSizeCheck"
+                    app:layout_constraintStart_toEndOf="@id/textView6"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
 
                 <TextView
+                    android:id="@+id/textViewTarget"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="15dp"
                     android:text="Target :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    app:layout_constraintEnd_toStartOf="@id/bttarget"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
 
                 <EditText
                     android:id="@+id/bttarget"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="10dp"
                     android:layout_marginEnd="20dp"
-                    android:layout_weight="1"
-                    android:gravity="right|bottom"
-                    android:inputType="number"
-                    android:saveEnabled="true"
+                    android:inputType="text"
                     android:text="0A:1B:2C:3D:4E:5F:6A:7B"
+                    android:gravity="end"
                     android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck,VisualLintTextFieldSize" />
+                    tools:ignore="TouchTargetSizeCheck,VisualLintTextFieldSize"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
 
-            </LinearLayout>
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <View
                 android:id="@+id/divider3"
@@ -187,101 +164,131 @@
 
             </LinearLayout>
 
-            <LinearLayout
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
                 android:padding="10dp">
 
                 <TextView
+                    android:id="@+id/can_type_label"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
                     android:text="CAN Type :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
 
                 <Spinner
                     android:id="@+id/cantype_spinner"
-                    android:layout_marginStart="5dp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
                     android:dropDownWidth="wrap_content"
                     android:saveEnabled="false"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    tools:ignore="TouchTargetSizeCheck"
+                    app:layout_constraintStart_toEndOf="@id/can_type_label"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent" />
 
-                <Button
-                    android:id="@+id/start_caniface"
-                    android:layout_marginStart="2dp"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:text="▶ CAN"
-                    tools:ignore="VisualLintButtonSize" />
+                    android:orientation="horizontal"
+                    android:layout_marginStart="8dp"
+                    app:layout_constraintStart_toEndOf="@id/cantype_spinner"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    android:gravity="end">
 
-                <Button
-                    android:id="@+id/reset_iface"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="2dp"
-                    android:layout_marginEnd="20dp"
-                    android:text="Reset" />
+                    <Button
+                        android:id="@+id/start_caniface"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="▶ CAN"
+                        android:layout_marginEnd="4dp"
+                        android:layout_weight="1"
+                        android:minWidth="100dp" />
 
-            </LinearLayout>
+                    <Button
+                        android:id="@+id/reset_iface"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="Reset"
+                        android:layout_weight="1"
+                        android:minWidth="100dp" />
+                </LinearLayout>
 
-            <LinearLayout
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <GridLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:alignmentMode="alignMargins"
+                android:columnCount="3"
+                android:rowCount="2"
+                android:useDefaultMargins="true">
 
                 <Button
                     android:id="@+id/start_slcand"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_row="0"
+                    android:layout_column="0"
                     android:text="slcand" />
 
                 <Button
                     android:id="@+id/start_hlcand"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_row="0"
+                    android:layout_column="1"
                     android:text="hlcand" />
 
                 <Button
                     android:id="@+id/start_socketcand"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_row="0"
+                    android:layout_column="2"
                     android:text="socketcand" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
 
                 <Button
                     android:id="@+id/start_slcanattach"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_row="1"
+                    android:layout_column="0"
                     android:text="slcan_attach" />
 
                 <Button
                     android:id="@+id/start_ldattach"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_row="1"
+                    android:layout_column="1"
                     android:text="ldattach" />
 
                 <Button
                     android:id="@+id/start_rfcommbinder"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_columnWeight="1"
+                    android:layout_row="1"
+                    android:layout_column="2"
                     android:text="rfcomm bind" />
 
-            </LinearLayout>
+            </GridLayout>
 
         </LinearLayout>
 
