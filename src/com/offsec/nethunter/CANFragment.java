@@ -256,11 +256,13 @@ public class CANFragment extends Fragment {
     public static class MainFragment extends CANFragment {
         private Context context;
         final ShellExecuter exe = new ShellExecuter();
+        private CheckBox MTUCheckbox;
+        private String mtuValue = "";
+        private TextView SelectedMTU;
         private CheckBox TxqueuelenCheckbox;
         private String txqueuelenValue = "";
         private TextView SelectedTxqueuelen;
         private TextView SelectedIface;
-        private TextView SelectedMtu;
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -277,9 +279,10 @@ public class CANFragment extends Fragment {
 
             // Common used variables
             SelectedIface = rootView.findViewById(R.id.can_iface);
-            SelectedMtu = rootView.findViewById(R.id.mtu);
 
             // Checkboxes
+            MTUCheckbox = rootView.findViewById(R.id.can_mtu);
+            SelectedMTU = rootView.findViewById(R.id.can_mtu_value);
             TxqueuelenCheckbox = rootView.findViewById(R.id.can_iface_txqueuelen);
             SelectedTxqueuelen = rootView.findViewById(R.id.can_iface_txqueuelen_value);
 
@@ -522,6 +525,15 @@ public class CANFragment extends Fragment {
             Button StartCanButton = rootView.findViewById(R.id.start_caniface);
 
             // Checkboxes
+            MTUCheckbox.setOnClickListener(v -> {
+                if (MTUCheckbox.isChecked()) {
+                    String selected_mtu = SelectedMTU.getText().toString();
+                    mtuValue = " mtu " + selected_mtu;
+                } else {
+                    mtuValue = "";
+                }
+            });
+
             TxqueuelenCheckbox.setOnClickListener(v -> {
                 if (TxqueuelenCheckbox.isChecked()) {
                     String selected_txqueuelen = SelectedTxqueuelen.getText().toString();
@@ -536,11 +548,10 @@ public class CANFragment extends Fragment {
 
             StartCanButton.setOnClickListener(v -> {
                 String selected_caniface = SelectedIface.getText().toString();
-                String selected_mtu = SelectedMtu.getText().toString();
                 String interface_type = sharedpreferences.getString("cantype_selected", "");
                 boolean isStarted = Boolean.TRUE.equals(buttonStates.get("start_caniface"));
 
-                if (!selected_caniface.isEmpty() && !selected_mtu.isEmpty()) {
+                if (!selected_caniface.isEmpty()) {
                     if (isStarted) {
                         String stopCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && echo Success || echo Failed");
                         stopCanIface = stopCanIface.trim();
@@ -564,35 +575,22 @@ public class CANFragment extends Fragment {
                                 Toast.makeText(requireActivity().getApplicationContext(), "Failed to add " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                             }
                         }
-                        if ("can".equals(interface_type)) {
+                        if ("can".equals(interface_type) || "slcan".equals(interface_type)) {
                             String usbDevice = exe.RunAsChrootOutput("ls -1 /dev/ttyUSB*;ls -1 /dev/rfcomm*;ls -1 /dev/ttyACM*");
                             if (usbDevice.isEmpty()) {
                                 Toast.makeText(requireActivity().getApplicationContext(), "No CAN Hardware detected, please plug you'r adapter and try again.", Toast.LENGTH_LONG).show();
-                            } else {
-                                String setMTU = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && echo Success || echo Failed");
-                                if (setMTU.contains("FATAL:") || setMTU.contains("Failed")) {
-                                    Toast.makeText(requireActivity().getApplicationContext(), "Failed to set " + selected_mtu + " as MTU value on " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
-                                } else {
-                                    String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
-                                    if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
-                                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
-                                    } else {
-                                        if (TxqueuelenCheckbox.isChecked()) {
-                                            exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + txqueuelenValue + " && echo Success || echo Failed");
-                                        }
-                                        buttonStates.put("start_caniface", true);
-                                        StartCanButton.setText("⏹ CAN");
-                                        Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " started!", Toast.LENGTH_LONG).show();
-                                    }
-                                }
+                                return;
                             }
                         } else {
                             String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
                             if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
                                 Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                             } else {
-                                if (TxqueuelenCheckbox.isChecked()) {
+                                if (MTUCheckbox.isChecked()) {
                                     exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + txqueuelenValue + " && echo Success || echo Failed");
+                                }
+                                if (TxqueuelenCheckbox.isChecked()) {
+                                    exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + mtuValue + " && echo Success || echo Failed");
                                 }
                                 buttonStates.put("start_caniface", true);
                                 StartCanButton.setText("⏹ CAN");
@@ -603,10 +601,6 @@ public class CANFragment extends Fragment {
                 } else {
                     if (selected_caniface.isEmpty()) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Please set a CAN interface!", Toast.LENGTH_LONG).show();
-                    }
-
-                    if (selected_mtu.isEmpty()) {
-                        Toast.makeText(requireActivity().getApplicationContext(), "Please set a MTU value!", Toast.LENGTH_LONG).show();
                     }
                 }
 

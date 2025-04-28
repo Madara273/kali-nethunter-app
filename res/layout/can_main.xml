@@ -89,30 +89,6 @@
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/textView6"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="MTU :"
-                    android:layout_marginStart="20dp"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent" />
-
-                <EditText
-                    android:id="@+id/mtu"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:inputType="number"
-                    android:text="16"
-                    android:gravity="end"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck"
-                    app:layout_constraintStart_toEndOf="@id/textView6"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent" />
-
-                <TextView
                     android:id="@+id/textViewTarget"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -145,6 +121,24 @@
                 android:rowCount="1"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp">
+
+                <CheckBox
+                    android:id="@+id/can_mtu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="MTU :"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                <EditText
+                    android:id="@+id/can_mtu_value"
+                    android:layout_width="80dp"
+                    android:layout_height="wrap_content"
+                    android:inputType="text"
+                    android:text="16"
+                    android:maxLines="1"
+                    android:singleLine="true"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
+
 
                 <CheckBox
                     android:id="@+id/can_iface_txqueuelen"
