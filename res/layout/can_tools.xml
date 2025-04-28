@@ -263,7 +263,52 @@
                     android:text="Browse"
                     android:textColor="#ffffffff" />
 
+
             </LinearLayout>
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:columnCount="6"
+                android:rowCount="5"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/can_interactive"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Interactive"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="0"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/can_verbose"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Verbose"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="2"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/can_disable_loopback"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Disable Local Loopback"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="0"
+                    android:layout_column="4"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+            </GridLayout>
 
             <View
                 android:id="@+id/divider3"

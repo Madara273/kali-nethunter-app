@@ -664,6 +664,12 @@ public class CANFragment extends Fragment {
         private TextView SelectedRHost;
         private TextView SelectedRPort;
         private TextView SelectedLPort;
+        private CheckBox CanInteractiveCheckbox;
+        private String canInteractive = "";
+        private CheckBox CanVerboseCheckbox;
+        private String canVerbose = "";
+        private CheckBox CanDisableLoopbackCheckbox;
+        private String canDisableLoopback = "";
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -680,6 +686,27 @@ public class CANFragment extends Fragment {
             SelectedRHost = rootView.findViewById(R.id.cannelloni_rhost);
             SelectedRPort = rootView.findViewById(R.id.cannelloni_rport);
             SelectedLPort = rootView.findViewById(R.id.cannelloni_lport);
+
+            CanInteractiveCheckbox.setOnClickListener(v -> {
+                if (CanInteractiveCheckbox.isChecked())
+                    canInteractive = " -i";
+                else
+                    canInteractive = "";
+            });
+
+            CanVerboseCheckbox.setOnClickListener(v -> {
+                if (CanVerboseCheckbox.isChecked())
+                    canVerbose = " -v";
+                else
+                    canVerbose = "";
+            });
+
+            CanDisableLoopbackCheckbox.setOnClickListener(v -> {
+                if (CanDisableLoopbackCheckbox.isChecked())
+                    canDisableLoopback = " -x";
+                else
+                    canDisableLoopback = "";
+            });
 
             final EditText CustomCmd = rootView.findViewById(R.id.customcmd);
 
@@ -717,7 +744,7 @@ public class CANFragment extends Fragment {
                 String selected_caniface = SelectedIface.getText().toString();
 
                 if (!selected_caniface.isEmpty()) {
-                    run_cmd("cangen " + selected_caniface + " -v");
+                    run_cmd("cangen " + selected_caniface + canVerbose + canDisableLoopback);
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface field is set!", Toast.LENGTH_LONG).show();
                 }
@@ -778,7 +805,7 @@ public class CANFragment extends Fragment {
                 String inputfile = inputfilepath.getText().toString();
 
                 if (!inputfile.isEmpty()) {
-                    run_cmd("canplayer -I " + inputfile);
+                    run_cmd("canplayer -I " + inputfile + canInteractive + canVerbose + canDisableLoopback);
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your Input File field is set!", Toast.LENGTH_LONG).show();
                 }
