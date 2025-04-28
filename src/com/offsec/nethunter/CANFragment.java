@@ -256,6 +256,9 @@ public class CANFragment extends Fragment {
     public static class MainFragment extends CANFragment {
         private Context context;
         final ShellExecuter exe = new ShellExecuter();
+        private CheckBox TxqueuelenCheckbox;
+        private String txqueuelenValue = "";
+        private TextView SelectedTxqueuelen;
         private TextView SelectedIface;
         private TextView SelectedMtu;
 
@@ -275,6 +278,10 @@ public class CANFragment extends Fragment {
             // Common used variables
             SelectedIface = rootView.findViewById(R.id.can_iface);
             SelectedMtu = rootView.findViewById(R.id.mtu);
+
+            // Checkboxes
+            TxqueuelenCheckbox = rootView.findViewById(R.id.can_iface_txqueuelen);
+            SelectedTxqueuelen = rootView.findViewById(R.id.can_iface_txqueuelen_value);
 
             final EditText bt_target_mac = rootView.findViewById(R.id.bttarget);
 
@@ -514,6 +521,16 @@ public class CANFragment extends Fragment {
             // Start CAN interface
             Button StartCanButton = rootView.findViewById(R.id.start_caniface);
 
+            // Checkboxes
+            TxqueuelenCheckbox.setOnClickListener(v -> {
+                if (TxqueuelenCheckbox.isChecked()) {
+                    String selected_txqueuelen = SelectedTxqueuelen.getText().toString();
+                    txqueuelenValue = " txqueuelen " + selected_txqueuelen;
+                } else {
+                    txqueuelenValue = "";
+                }
+            });
+
             // Set initial button text based on saved state
             StartCanButton.setText(Boolean.TRUE.equals(buttonStates.get("start_caniface")) ? "⏹ CAN" : "▶ CAN");
 
@@ -560,6 +577,9 @@ public class CANFragment extends Fragment {
                                     if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
                                         Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                                     } else {
+                                        if (TxqueuelenCheckbox.isChecked()) {
+                                            exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + txqueuelenValue + " && echo Success || echo Failed");
+                                        }
                                         buttonStates.put("start_caniface", true);
                                         StartCanButton.setText("⏹ CAN");
                                         Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " started!", Toast.LENGTH_LONG).show();
@@ -571,6 +591,9 @@ public class CANFragment extends Fragment {
                             if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
                                 Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                             } else {
+                                if (TxqueuelenCheckbox.isChecked()) {
+                                    exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + txqueuelenValue + " && echo Success || echo Failed");
+                                }
                                 buttonStates.put("start_caniface", true);
                                 StartCanButton.setText("⏹ CAN");
                                 Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " started!", Toast.LENGTH_LONG).show();
