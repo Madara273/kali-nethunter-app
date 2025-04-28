@@ -687,6 +687,10 @@ public class CANFragment extends Fragment {
             SelectedRPort = rootView.findViewById(R.id.cannelloni_rport);
             SelectedLPort = rootView.findViewById(R.id.cannelloni_lport);
 
+            CanInteractiveCheckbox = rootView.findViewById(R.id.can_interactive);
+            CanVerboseCheckbox = rootView.findViewById(R.id.can_verbose);
+            CanDisableLoopbackCheckbox = rootView.findViewById(R.id.can_disable_loopback);
+
             CanInteractiveCheckbox.setOnClickListener(v -> {
                 if (CanInteractiveCheckbox.isChecked())
                     canInteractive = " -i";
