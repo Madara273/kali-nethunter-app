@@ -587,10 +587,10 @@ public class CANFragment extends Fragment {
                                 Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                             } else {
                                 if (MTUCheckbox.isChecked()) {
-                                    exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + txqueuelenValue + " && echo Success || echo Failed");
+                                    exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + mtuValue + " && echo Success || echo Failed");
                                 }
                                 if (TxqueuelenCheckbox.isChecked()) {
-                                    exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + mtuValue + " && echo Success || echo Failed");
+                                    exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + txqueuelenValue + " && echo Success || echo Failed");
                                 }
                                 buttonStates.put("start_caniface", true);
                                 StartCanButton.setText("⏹ CAN");
