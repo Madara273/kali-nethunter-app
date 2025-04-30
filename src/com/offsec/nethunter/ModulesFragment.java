@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,8 +22,8 @@ import androidx.fragment.app.Fragment;
 import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.ShellExecuter;
 
+import java.util.concurrent.Executors;
 import java.util.ArrayList;
-
 
 public class ModulesFragment extends Fragment {
     public static final String TAG = "ModulesFragment";
@@ -123,7 +122,7 @@ public class ModulesFragment extends Fragment {
         String ModulesPathFull = ModulesPath + "/" + System.getProperty("os.version");
         sharedpreferences.edit().putString("last_modulespath", ModulesPath).apply();
 
-        AsyncTask.execute(() -> requireActivity().runOnUiThread(() -> {
+        Executors.newSingleThreadExecutor().execute(() -> requireActivity().runOnUiThread(() -> {
             if (ModulesPath.isEmpty()) {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please enter path", Toast.LENGTH_SHORT).show();
             }
@@ -142,10 +141,11 @@ public class ModulesFragment extends Fragment {
             }
         }));
     }
+
     private void refreshModulesLoaded(View ModulesFragment) {
         final TextView modules_Loaded = ModulesFragment.findViewById(R.id.modules_loadedText);
 
-        AsyncTask.execute(() -> requireActivity().runOnUiThread(() -> {
+        Executors.newSingleThreadExecutor().execute(() -> requireActivity().runOnUiThread(() -> {
             String modules_loadedRaw = exe.RunAsRootOutput("lsmod | tail -n+2 | cut -d' ' -f1");
             if (!modules_loadedRaw.isEmpty()) {
                 modules_Loaded.setText(modules_loadedRaw);

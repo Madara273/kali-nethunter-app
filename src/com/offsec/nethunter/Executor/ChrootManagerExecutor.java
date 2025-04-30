@@ -1,6 +1,7 @@
-package com.offsec.nethunter.AsyncTask;
+package com.offsec.nethunter.Executor;
 
-import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.TextView;
 
 import com.offsec.nethunter.ChrootManagerFragment;
@@ -16,10 +17,14 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 
-public class ChrootManagerAsynctask extends AsyncTask<Object, Integer, Void> {
-    private ChrootManagerAsyncTaskListener listener;
+public class ChrootManagerExecutor {
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private ChrootManagerExecutorListener listener;
     private final ShellExecuter exe = new ShellExecuter();
     private final int ACTIONCODE;
     private int resultCode;
@@ -34,21 +39,26 @@ public class ChrootManagerAsynctask extends AsyncTask<Object, Integer, Void> {
     public static final int FIND_CHROOT = 7;
     public static final int ISSUE_BANNER = 8;
 
-    public ChrootManagerAsynctask(Integer ACTIONCODE){
+    public ChrootManagerExecutor(Integer ACTIONCODE){
         this.ACTIONCODE = ACTIONCODE;
     }
 
-    @Override
-    protected void onPreExecute() {
-        super.onPreExecute();
-        ChrootManagerFragment.isAsyncTaskRunning = true;
+    public void execute(Object... objects) {
+        mainHandler.post(this::onPreExecute);
+        executorService.submit(() -> {
+            doInBackground(objects);
+            mainHandler.post(this::onPostExecute);
+        });
+    }
+
+    private void onPreExecute() {
+        ChrootManagerFragment.isExecutorRunning = true;
         if (listener != null) {
-            listener.onAsyncTaskPrepare();
+            listener.onExecutorPrepare();
         }
     }
 
-    @Override
-    protected Void doInBackground(Object... objects) {
+    protected void doInBackground(Object... objects) {
         switch (ACTIONCODE) {
             case ISSUE_BANNER:
                 exe.RunAsRootOutput("echo \"" + objects[1].toString() + "\"", ((TextView)objects[0]));
@@ -112,38 +122,28 @@ public class ChrootManagerAsynctask extends AsyncTask<Object, Integer, Void> {
                 }
                 break;
         }
-        return null;
     }
 
-    @Override
-    protected void onProgressUpdate(Integer... progress) {
-        super.onProgressUpdate(progress);
+    private void publishProgress(int progress) {
         if (listener != null) {
-            listener.onAsyncTaskProgressUpdate(progress[0]);
+            listener.onExecutorProgressUpdate(progress);
         }
     }
 
-    @Override
-    protected void onPostExecute(Void aVoid) {
-        super.onPostExecute(aVoid);
+    private void onPostExecute() {
         if (listener != null) {
-            listener.onAsyncTaskFinished(resultCode, resultString);
+            listener.onExecutorFinished(resultCode, resultString);
         }
-        ChrootManagerFragment.isAsyncTaskRunning = false;
+        ChrootManagerFragment.isExecutorRunning = false;
     }
 
-    public void setListener(ChrootManagerAsyncTaskListener listener) {
+    public void setListener(ChrootManagerExecutorListener listener) {
         this.listener = listener;
     }
 
-    public interface ChrootManagerAsyncTaskListener {
-        void onAsyncTaskPrepare();
-        void onAsyncTaskProgressUpdate(int progress);
-        void onAsyncTaskFinished(int resultCode, ArrayList<String> resultString);
-    }
-
-    @Override
-    protected void onCancelled() {
-        super.onCancelled();
+    public interface ChrootManagerExecutorListener {
+        void onExecutorPrepare();
+        void onExecutorProgressUpdate(int progress);
+        void onExecutorFinished(int resultCode, ArrayList<String> resultString);
     }
 }
