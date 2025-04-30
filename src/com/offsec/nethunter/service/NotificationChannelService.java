@@ -17,7 +17,7 @@ import androidx.core.app.NotificationManagerCompat;
 import androidx.core.app.TaskStackBuilder;
 import androidx.core.content.ContextCompat;
 
-import com.offsec.nethunter.AsyncTask.CustomCommandsAsyncTask;
+import com.offsec.nethunter.Executor.CustomCommandsExecutor;
 import com.offsec.nethunter.BuildConfig;
 import com.offsec.nethunter.R;
 
@@ -158,13 +158,13 @@ public class NotificationChannelService extends IntentService {
                         final int returnCode = intent.getIntExtra("RETURNCODE", 0);
                         final String CMD = intent.getStringExtra("CMD");
                         String resultString = "";
-                        if (returnCode == CustomCommandsAsyncTask.ANDROID_CMD_SUCCESS) {
+                        if (returnCode == CustomCommandsExecutor.ANDROID_CMD_SUCCESS) {
                             resultString = "Return success.\nCommand: \"" + CMD + "\" has been executed in android environment.";
-                        } else if (returnCode == CustomCommandsAsyncTask.ANDROID_CMD_FAIL) {
+                        } else if (returnCode == CustomCommandsExecutor.ANDROID_CMD_FAIL) {
                             resultString = "Return error.\nCommand: \"" + CMD + "\" has been executed in android environment.";
-                        } else if (returnCode == CustomCommandsAsyncTask.KALI_CMD_SUCCESS) {
+                        } else if (returnCode == CustomCommandsExecutor.KALI_CMD_SUCCESS) {
                             resultString = "Return success.\nCommand: \"" + CMD + "\" has been executed in Kali chroot environment.";
-                        } else if (returnCode == CustomCommandsAsyncTask.KALI_CMD_FAIL) {
+                        } else if (returnCode == CustomCommandsExecutor.KALI_CMD_FAIL) {
                             resultString = "Return error.\nCommand: \"" + CMD + "\" has been executed in Kali chroot environment.";
                         }
                         builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)

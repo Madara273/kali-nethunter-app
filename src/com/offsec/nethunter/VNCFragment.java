@@ -188,12 +188,12 @@ public class VNCFragment extends Fragment {
         //HDMI resolution\
         File hdmiResFile = new File(nh.APP_SD_FILES_PATH + "/configs/hdmi-resolutions");
         String[] commandRES = {"sh", "-c", "cat " + hdmiResFile};
-        String outputRES = exe.Executer(commandRES);
+        String outputRES = exe.Executer(Arrays.toString(commandRES));
         final String[] resArray = outputRES.split("\n");
 
         //VNC resolution
         String[] commandVNCRES = {"sh", "-c", "cat " + vncResFile};
-        String outputVNCRES = exe.Executer(commandVNCRES);
+        String outputVNCRES = exe.Executer(Arrays.toString(commandVNCRES));
         final String[] vncresArray = outputVNCRES.split("\n");
 
         //HDMI Resolution spinner
