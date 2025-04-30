@@ -27,7 +27,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.offsec.nethunter.AsyncTask.ChrootManagerAsynctask;
+import com.offsec.nethunter.Executor.ChrootManagerExecutor;
 import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.service.CompatCheckService;
 import com.offsec.nethunter.service.NotificationChannelService;
@@ -67,12 +67,12 @@ public class ChrootManagerFragment extends Fragment {
     private Button backupChrootButton;
     private LinearLayout ChrootDesc;
     private static SharedPreferences sharedPreferences;
-    private ChrootManagerAsynctask chrootManagerAsynctask;
+    private ChrootManagerExecutor chrootManagerExecutor;
     private final Intent backPressedintent = new Intent();
     private static final int IS_MOUNTED = 0;
     private static final int IS_UNMOUNTED = 1;
     private static final int NEED_TO_INSTALL = 2;
-    public static boolean isAsyncTaskRunning = false;
+    public static boolean isExecutorRunning = false;
     private Context context;
     private Activity activity;
 
@@ -138,7 +138,7 @@ public class ChrootManagerFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        if (!isAsyncTaskRunning){
+        if (!isExecutorRunning){
             compatCheck();
         }
     }
@@ -157,7 +157,7 @@ public class ChrootManagerFragment extends Fragment {
         addMetaPkgButton = null;
         removeChrootButton = null;
         backupChrootButton = null;
-        chrootManagerAsynctask = null;
+        chrootManagerExecutor = null;
     }
 
     private void setEditButton(){
@@ -213,20 +213,20 @@ public class ChrootManagerFragment extends Fragment {
 
     private void setStartKaliButton() {
         mountChrootButton.setOnClickListener(view -> {
-            chrootManagerAsynctask = new ChrootManagerAsynctask(ChrootManagerAsynctask.MOUNT_CHROOT);
-            chrootManagerAsynctask.setListener(new ChrootManagerAsynctask.ChrootManagerAsyncTaskListener() {
+            chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.MOUNT_CHROOT);
+            chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
                 @Override
-                public void onAsyncTaskPrepare() {
+                public void onExecutorPrepare() {
                     setAllButtonEnable(false);
                 }
 
                 @Override
-                public void onAsyncTaskProgressUpdate(int progress) {
+                public void onExecutorProgressUpdate(int progress) {
 
                 }
 
                 @Override
-                public void onAsyncTaskFinished(int resultCode, ArrayList<String> resultString) {
+                public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
                     if (resultCode == 0){
                         setButtonVisibility(IS_MOUNTED);
                         setMountStatsTextView(IS_MOUNTED);
@@ -237,26 +237,26 @@ public class ChrootManagerFragment extends Fragment {
                 }
             });
             resultViewerLoggerTextView.setText("");
-            chrootManagerAsynctask.execute(resultViewerLoggerTextView);
+            chrootManagerExecutor.execute(resultViewerLoggerTextView);
         });
     }
 
     private void setStopKaliButton(){
         unmountChrootButton.setOnClickListener(view -> {
-            chrootManagerAsynctask = new ChrootManagerAsynctask(ChrootManagerAsynctask.UNMOUNT_CHROOT);
-            chrootManagerAsynctask.setListener(new ChrootManagerAsynctask.ChrootManagerAsyncTaskListener() {
+            chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.UNMOUNT_CHROOT);
+            chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
                 @Override
-                public void onAsyncTaskPrepare() {
+                public void onExecutorPrepare() {
                     setAllButtonEnable(false);
                 }
 
                 @Override
-                public void onAsyncTaskProgressUpdate(int progress) {
+                public void onExecutorProgressUpdate(int progress) {
 
                 }
 
                 @Override
-                public void onAsyncTaskFinished(int resultCode, ArrayList<String> resultString) {
+                public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
                     if (resultCode == 0){
                         setMountStatsTextView(IS_UNMOUNTED);
                         setButtonVisibility(IS_UNMOUNTED);
@@ -266,7 +266,7 @@ public class ChrootManagerFragment extends Fragment {
                 }
             });
             resultViewerLoggerTextView.setText("");
-            chrootManagerAsynctask.execute(resultViewerLoggerTextView);
+            chrootManagerExecutor.execute(resultViewerLoggerTextView);
         });
     }
 
@@ -351,27 +351,27 @@ public class ChrootManagerFragment extends Fragment {
             FilePath = exe.RunAsRootOutput("echo " + FilePath + " | sed -e 's/\\/document\\/primary:/\\/storage\\/emulated\\/0\\//g'");
             sharedPreferences.edit().putString(SharePrefTag.CHROOT_DEFAULT_BACKUP_SHAREPREF_TAG, FilePath).apply();
             NhPaths.showMessage(context, FilePath);
-            chrootManagerAsynctask = new ChrootManagerAsynctask(ChrootManagerAsynctask.INSTALL_CHROOT);
-            chrootManagerAsynctask.setListener(new ChrootManagerAsynctask.ChrootManagerAsyncTaskListener() {
+            chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.INSTALL_CHROOT);
+            chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
                 @Override
-                public void onAsyncTaskPrepare() {
+                public void onExecutorPrepare() {
                     context.startService(new Intent(context, NotificationChannelService.class).setAction(NotificationChannelService.INSTALLING));
                     broadcastBackPressedIntent(false);
                     setAllButtonEnable(false);
                 }
 
                 @Override
-                public void onAsyncTaskProgressUpdate(int progress) {}
+                public void onExecutorProgressUpdate(int progress) {}
 
                 @Override
-                public void onAsyncTaskFinished(int resultCode, ArrayList<String> resultString) {
+                public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
                     broadcastBackPressedIntent(true);
                     setAllButtonEnable(true);
                     compatCheck();
                 }
             });
             resultViewerLoggerTextView.setText("");
-            chrootManagerAsynctask.execute(resultViewerLoggerTextView, FilePath, NhPaths.CHROOT_PATH());
+            chrootManagerExecutor.execute(resultViewerLoggerTextView, FilePath, NhPaths.CHROOT_PATH());
 
         }
     }
@@ -397,28 +397,28 @@ public class ChrootManagerFragment extends Fragment {
                             .setTitle("Warning!")
                             .setMessage("This is your last chance!")
                             .setPositiveButton("Just do it.", (dialogInterface1, i1) -> {
-                                chrootManagerAsynctask = new ChrootManagerAsynctask(ChrootManagerAsynctask.REMOVE_CHROOT);
-                                chrootManagerAsynctask.setListener(new ChrootManagerAsynctask.ChrootManagerAsyncTaskListener() {
+                                chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.REMOVE_CHROOT);
+                                chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
                                     @Override
-                                    public void onAsyncTaskPrepare() {
+                                    public void onExecutorPrepare() {
                                         broadcastBackPressedIntent(false);
                                         setAllButtonEnable(false);
                                     }
 
                                     @Override
-                                    public void onAsyncTaskProgressUpdate(int progress) {
+                                    public void onExecutorProgressUpdate(int progress) {
 
                                     }
 
                                     @Override
-                                    public void onAsyncTaskFinished(int resultCode, ArrayList<String> resultString) {
+                                    public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
                                         broadcastBackPressedIntent(true);
                                         setAllButtonEnable(true);
                                         compatCheck();
                                     }
                                 });
                                 resultViewerLoggerTextView.setText("");
-                                chrootManagerAsynctask.execute(resultViewerLoggerTextView);
+                                chrootManagerExecutor.execute(resultViewerLoggerTextView);
                             })
                             .setNegativeButton("Okay, I'm sorry.", (dialogInterface12, i12) -> {
 
@@ -439,17 +439,17 @@ public class ChrootManagerFragment extends Fragment {
                 .setView(prog)
                 .create();
 
-        chrootManagerAsynctask = new ChrootManagerAsynctask(ChrootManagerAsynctask.DOWNLOAD_CHROOT);
-        chrootManagerAsynctask.setListener(new ChrootManagerAsynctask.ChrootManagerAsyncTaskListener() {
+        chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.DOWNLOAD_CHROOT);
+        chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
             @Override
-            public void onAsyncTaskPrepare() {
+            public void onExecutorPrepare() {
                 broadcastBackPressedIntent(false);
                 setAllButtonEnable(false);
                 progressDialog.show();
             }
 
             @Override
-            public void onAsyncTaskProgressUpdate(int progress) {
+            public void onExecutorProgressUpdate(int progress) {
                 ProgressBar progressBar = prog;
                 if (progressBar != null) {
                     progressBar.setProgress(progress);
@@ -462,12 +462,12 @@ public class ChrootManagerFragment extends Fragment {
             }
 
             @Override
-            public void onAsyncTaskFinished(int resultCode, ArrayList<String> resultString) {
+            public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
                 // Handle task completion
             }
         });
         resultViewerLoggerTextView.setText("");
-        chrootManagerAsynctask.execute(resultViewerLoggerTextView, IMAGE_SERVER, IMAGE_DIRECTORY + targetDownloadFileName, downloadDir.getAbsolutePath() + "/" + targetDownloadFileName);
+        chrootManagerExecutor.execute(resultViewerLoggerTextView, IMAGE_SERVER, IMAGE_DIRECTORY + targetDownloadFileName, downloadDir.getAbsolutePath() + "/" + targetDownloadFileName);
     }
 
     private void setAddMetaPkgButton() {
@@ -535,52 +535,52 @@ public class ChrootManagerFragment extends Fragment {
                     AlertDialog ad2 = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat).create();
                     ad2.setMessage("File exists already, do you want to overwrite it anyway?");
                     ad2.setButton(DialogInterface.BUTTON_POSITIVE, "YES", (dialogInterface1, i1) -> {
-                        chrootManagerAsynctask = new ChrootManagerAsynctask(ChrootManagerAsynctask.BACKUP_CHROOT);
-                        chrootManagerAsynctask.setListener(new ChrootManagerAsynctask.ChrootManagerAsyncTaskListener() {
+                        chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.BACKUP_CHROOT);
+                        chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
                             @Override
-                            public void onAsyncTaskPrepare() {
+                            public void onExecutorPrepare() {
                                 context.startService(new Intent(context, NotificationChannelService.class).setAction(NotificationChannelService.BACKINGUP));
                                 broadcastBackPressedIntent(false);
                                 setAllButtonEnable(false);
                             }
 
                             @Override
-                            public void onAsyncTaskProgressUpdate(int progress) {
+                            public void onExecutorProgressUpdate(int progress) {
 
                             }
 
                             @Override
-                            public void onAsyncTaskFinished(int resultCode, ArrayList<String> resultString) {
+                            public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
                                 broadcastBackPressedIntent(true);
                                 setAllButtonEnable(true);
                             }
                         });
                         resultViewerLoggerTextView.setText("");
-                        chrootManagerAsynctask.execute(resultViewerLoggerTextView, NhPaths.CHROOT_PATH(), backupFullPathEditText.getText().toString());
+                        chrootManagerExecutor.execute(resultViewerLoggerTextView, NhPaths.CHROOT_PATH(), backupFullPathEditText.getText().toString());
                     });
                     ad2.show();
                 } else {
-                    chrootManagerAsynctask = new ChrootManagerAsynctask(ChrootManagerAsynctask.BACKUP_CHROOT);
-                    chrootManagerAsynctask.setListener(new ChrootManagerAsynctask.ChrootManagerAsyncTaskListener() {
+                    chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.BACKUP_CHROOT);
+                    chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
                         @Override
-                        public void onAsyncTaskPrepare() {
+                        public void onExecutorPrepare() {
                             context.startService(new Intent(context, NotificationChannelService.class).setAction(NotificationChannelService.BACKINGUP));
                             broadcastBackPressedIntent(false);
                             setAllButtonEnable(false);
                         }
 
                         @Override
-                        public void onAsyncTaskProgressUpdate(int progress) {
+                        public void onExecutorProgressUpdate(int progress) {
 
                         }
 
                         @Override
-                        public void onAsyncTaskFinished(int resultCode, ArrayList<String> resultString) {
+                        public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
                             broadcastBackPressedIntent(true);
                             setAllButtonEnable(true);
                         }
                     });
-                    chrootManagerAsynctask.execute(resultViewerLoggerTextView, NhPaths.CHROOT_PATH(), backupFullPathEditText.getText().toString());
+                    chrootManagerExecutor.execute(resultViewerLoggerTextView, NhPaths.CHROOT_PATH(), backupFullPathEditText.getText().toString());
                 }
             });
             ad.show();
@@ -589,23 +589,23 @@ public class ChrootManagerFragment extends Fragment {
 
     private void showBanner() {
         resultViewerLoggerTextView.setText("");
-        chrootManagerAsynctask = new ChrootManagerAsynctask(ChrootManagerAsynctask.ISSUE_BANNER);
-        chrootManagerAsynctask.execute(resultViewerLoggerTextView, getResources().getString(R.string.aboutchroot));
+        chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.ISSUE_BANNER);
+        chrootManagerExecutor.execute(resultViewerLoggerTextView, getResources().getString(R.string.aboutchroot));
     }
 
     private void compatCheck() {
-        chrootManagerAsynctask = new ChrootManagerAsynctask(ChrootManagerAsynctask.CHECK_CHROOT);
-        chrootManagerAsynctask.setListener(new ChrootManagerAsynctask.ChrootManagerAsyncTaskListener() {
+        chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.CHECK_CHROOT);
+        chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
             @Override
-            public void onAsyncTaskPrepare() {
+            public void onExecutorPrepare() {
                 broadcastBackPressedIntent(false);
             }
 
             @Override
-            public void onAsyncTaskProgressUpdate(int progress) { }
+            public void onExecutorProgressUpdate(int progress) { }
 
             @Override
-            public void onAsyncTaskFinished(int resultCode, ArrayList<String> resultString) {
+            public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
                 broadcastBackPressedIntent(true);
                 setButtonVisibility(resultCode);
                 setMountStatsTextView(resultCode);
@@ -614,7 +614,7 @@ public class ChrootManagerFragment extends Fragment {
             }
         });
         resultViewerLoggerTextView.setText("");
-        chrootManagerAsynctask.execute(resultViewerLoggerTextView, sharedPreferences.getString(SharePrefTag.CHROOT_PATH_SHAREPREF_TAG, ""));
+        chrootManagerExecutor.execute(resultViewerLoggerTextView, sharedPreferences.getString(SharePrefTag.CHROOT_PATH_SHAREPREF_TAG, ""));
     }
 
     private void setMountStatsTextView(int MODE) {

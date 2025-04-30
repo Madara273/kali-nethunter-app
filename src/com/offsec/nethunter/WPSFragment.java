@@ -4,7 +4,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.LayoutInflater;
@@ -27,10 +26,12 @@ import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.ArrayList;
 
-
 public class WPSFragment extends Fragment {
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     public static final String TAG = "WPSFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
     private TextView SelectedIface;
@@ -101,11 +102,13 @@ public class WPSFragment extends Fragment {
         //Reset interface
         Button resetifaceButton = rootView.findViewById(R.id.resetinterface);
         resetifaceButton.setOnClickListener(view -> {
-            AsyncTask.execute(() -> {
-                getActivity().runOnUiThread(() -> {
-                    if (iswatch) exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting off; sleep 1 && settings put system clockwork_wifi_setting on && ifconfig wlan0 up"});
-                    else exe.RunAsRoot(new String[]{"svc wifi disable; sleep 1 && svc wifi enable"});
-                    Toast.makeText(getActivity().getApplicationContext(), "Done", Toast.LENGTH_SHORT).show();
+            executor.execute(() -> {
+                activity.runOnUiThread(() -> {
+                    if (iswatch)
+                        exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting off; sleep 1 && settings put system clockwork_wifi_setting on && ifconfig wlan0 up"});
+                    else
+                        exe.RunAsRoot(new String[]{"svc wifi disable; sleep 1 && svc wifi enable"});
+                    Toast.makeText(activity.getApplicationContext(), "Done", Toast.LENGTH_SHORT).show();
                 });
             });
         });
@@ -217,6 +220,7 @@ public class WPSFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        executor.shutdown();
     }
 
     private void scanWifi() {
@@ -228,29 +232,28 @@ public class WPSFragment extends Fragment {
         arrayList.clear();
         arrayList.add("Scanning..");
         WPSList.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, arrayList));
-        handler.postDelayed(new Runnable() {
-            public void run() {
-                arrayList.clear();
-                arrayList.add("Scanning...");
-                WPSList.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, arrayList));
-            }
-        } , 1500);
-        AsyncTask.execute(() -> {
+        handler.postDelayed(() -> {
+            arrayList.clear();
+            arrayList.add("Scanning...");
+            WPSList.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, arrayList));
+        }, 1500);
+
+        executor.execute(() -> {
             String selected_interface = SelectedIface.getText().toString();
             String outputScanLog = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd python3 /sdcard/nh_files/modules/oneshot.py -i " + selected_interface + " -s | grep -E '[0-9])' | tr -s ' ' | cut -d ' ' -f 2-3");
-            getActivity().runOnUiThread(() -> {
-            final String[] arrayList = outputScanLog.split("\n");
+            activity.runOnUiThread(() -> {
+                final String[] arrayList = outputScanLog.split("\n");
                 ArrayAdapter targetsadapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, arrayList);
                 if (outputScanLog.equals("")) {
                     final ArrayList<String> notargets = new ArrayList<>();
                     notargets.add("No nearby WPS networks");
                     WPSList.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, notargets));
-                } else if (outputScanLog.equals("Error:;command")){
-                final ArrayList<String> notargets = new ArrayList<>();
-                notargets.add("Please reset the interface!");
-                WPSList.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, notargets));
+                } else if (outputScanLog.equals("Error:;command")) {
+                    final ArrayList<String> notargets = new ArrayList<>();
+                    notargets.add("Please reset the interface!");
+                    WPSList.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, notargets));
                 } else {
-                WPSList.setAdapter(targetsadapter);
+                    WPSList.setAdapter(targetsadapter);
                 }
             });
         });

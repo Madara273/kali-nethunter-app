@@ -21,7 +21,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.offsec.nethunter.AsyncTask.MacchangerAsyncTask;
+import com.offsec.nethunter.Executor.MacchangerExecutor;
 import com.offsec.nethunter.utils.NhPaths;
 
 import java.net.NetworkInterface;
@@ -161,15 +161,23 @@ public class MacchangerFragment extends Fragment {
     }
 
     private void setHostNameEditText(){
-        MacchangerAsyncTask macchangerAsyncTask = new MacchangerAsyncTask(MacchangerAsyncTask.GETHOSTNAME);
-        macchangerAsyncTask.setListener(new MacchangerAsyncTask.MacchangerAsyncTaskListener() {
+        MacchangerExecutor macchangerExecutor = new MacchangerExecutor(MacchangerExecutor.GETHOSTNAME);
+        macchangerExecutor.setListener(new MacchangerExecutor.MacchangerExecutorListener() {
             @Override
-            public void onAsyncTaskPrepare() {
+            public void onPrepare() {
 
             }
 
             @Override
-            public void onAsyncTaskFinished(Object result) {
+            public void onFinished(Object result) {
+
+            }
+
+            public void onExecutorPrepare() {
+
+            }
+
+            public void onExecutorFinished(Object result) {
                 if (result != null) {
                     netHostNameEditText.setText(result.toString());
                     currentHostNameTextView.setText(result.toString());
@@ -179,25 +187,33 @@ public class MacchangerFragment extends Fragment {
                 }
             }
         });
-        macchangerAsyncTask.execute();
+        macchangerExecutor.execute();
     }
 
     private void setSetHostnameButton(){
         setHostNameButton.setOnClickListener(v -> {
-            MacchangerAsyncTask macchangerAsyncTask = new MacchangerAsyncTask(MacchangerAsyncTask.SETHOSTNAME);
-            macchangerAsyncTask.setListener(new MacchangerAsyncTask.MacchangerAsyncTaskListener() {
+            MacchangerExecutor macchangerExecutor = new MacchangerExecutor(MacchangerExecutor.SETHOSTNAME);
+            macchangerExecutor.setListener(new MacchangerExecutor.MacchangerExecutorListener() {
                 @Override
-                public void onAsyncTaskPrepare() {
+                public void onPrepare() {
 
                 }
 
                 @Override
-                public void onAsyncTaskFinished(Object result) {
+                public void onFinished(Object result) {
+
+                }
+
+                public void onExecutorPrepare() {
+
+                }
+
+                public void onExecutorFinished(Object result) {
                     NhPaths.showMessage(context, "net.hostname is set to " + netHostNameEditText.getText().toString());
                     setHostNameEditText();
                 }
             });
-            macchangerAsyncTask.execute(netHostNameEditText.getText().toString());
+            macchangerExecutor.execute(netHostNameEditText.getText().toString());
         });
     }
 
@@ -308,15 +324,23 @@ public class MacchangerFragment extends Fragment {
 
     private void setResetMacButton() {
         resetMacButton.setOnClickListener(v -> {
-            MacchangerAsyncTask macchangerAsyncTask = new MacchangerAsyncTask(MacchangerAsyncTask.GETORIGINMAC);
-            macchangerAsyncTask.setListener(new MacchangerAsyncTask.MacchangerAsyncTaskListener() {
+            MacchangerExecutor macchangerExecutor = new MacchangerExecutor(MacchangerExecutor.GETORIGINMAC);
+            macchangerExecutor.setListener(new MacchangerExecutor.MacchangerExecutorListener() {
                 @Override
-                public void onAsyncTaskPrepare() {
+                public void onPrepare() {
 
                 }
 
                 @Override
-                public void onAsyncTaskFinished(Object result) {
+                public void onFinished(Object result) {
+
+                }
+
+                public void onExecutorPrepare() {
+
+                }
+
+                public void onExecutorFinished(Object result) {
                     MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(activity, R.style.DialogStyle);
                     final AlertDialog ad = adb.create();
                     String originalMac = result.toString();
@@ -330,15 +354,23 @@ public class MacchangerFragment extends Fragment {
                         ad1.setCancelable(false);
                         ad1.setMessage("Changing MAC address on " + interfaceSpinner.getSelectedItem().toString().toLowerCase() + ". Please wait..");
 
-                        MacchangerAsyncTask macchangerAsyncTask1 = new MacchangerAsyncTask(MacchangerAsyncTask.SETMAC);
-                        macchangerAsyncTask1.setListener(new MacchangerAsyncTask.MacchangerAsyncTaskListener() {
+                        MacchangerExecutor macchangerExecutor1 = new MacchangerExecutor(MacchangerExecutor.SETMAC);
+                        macchangerExecutor1.setListener(new MacchangerExecutor.MacchangerExecutorListener() {
                             @Override
-                            public void onAsyncTaskPrepare() {
-                                ad1.show();
+                            public void onPrepare() {
+
                             }
 
                             @Override
-                            public void onAsyncTaskFinished(Object result1) {
+                            public void onFinished(Object result) {
+
+                            }
+
+                            public void onExecutorPrepare() {
+                                ad1.show();
+                            }
+
+                            public void onExecutorFinished(Object result1) {
                                 ad1.dismiss();
                                 if ((int)result1 == 0){
                                     NhPaths.showMessage(context, "The MAC address of " + interfaceSpinner.getSelectedItem().toString().toLowerCase() +
@@ -349,12 +381,12 @@ public class MacchangerFragment extends Fragment {
                                 reloadImageButton.performClick();
                             }
                         });
-                        macchangerAsyncTask1.execute(interfaceSpinner.getSelectedItem().toString().toLowerCase(), result.toString());
+                        macchangerExecutor1.execute(interfaceSpinner.getSelectedItem().toString().toLowerCase(), result.toString());
                     });
                     ad.show();
                 }
             });
-            macchangerAsyncTask.execute(interfaceSpinner.getSelectedItem().toString().toLowerCase());
+            macchangerExecutor.execute(interfaceSpinner.getSelectedItem().toString().toLowerCase());
         });
     }
 
@@ -372,15 +404,23 @@ public class MacchangerFragment extends Fragment {
             ad.setCancelable(false);
             ad.setMessage("Changing MAC address on " + interfaceSpinner.getSelectedItem().toString().toLowerCase() + ". Please wait..");
 
-            MacchangerAsyncTask macchangerAsyncTask = new MacchangerAsyncTask(MacchangerAsyncTask.SETMAC);
-            macchangerAsyncTask.setListener(new MacchangerAsyncTask.MacchangerAsyncTaskListener() {
+            MacchangerExecutor macchangerExecutor = new MacchangerExecutor(MacchangerExecutor.SETMAC);
+            macchangerExecutor.setListener(new MacchangerExecutor.MacchangerExecutorListener() {
                 @Override
-                public void onAsyncTaskPrepare() {
-                    ad.show();
+                public void onPrepare() {
+
                 }
 
                 @Override
-                public void onAsyncTaskFinished(Object result) {
+                public void onFinished(Object result) {
+
+                }
+
+                public void onExecutorPrepare() {
+                    ad.show();
+                }
+
+                public void onExecutorFinished(Object result) {
                     ad.dismiss();
                     if ((int)result == 0){
                         NhPaths.showMessage(context, "The MAC address of " + interfaceSpinner.getSelectedItem().toString().toLowerCase() +
@@ -395,7 +435,7 @@ public class MacchangerFragment extends Fragment {
                     reloadImageButton.performClick();
                 }
             });
-            macchangerAsyncTask.execute(interfaceSpinner.getSelectedItem().toString().toLowerCase(), macAddress);
+            macchangerExecutor.execute(interfaceSpinner.getSelectedItem().toString().toLowerCase(), macAddress);
         });
     }
 }

@@ -8,7 +8,6 @@ import android.util.Log;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
-
 public class PermissionCheck {
     private static final String TAG = "PermissionCheck";
     private final Activity activity;
@@ -30,7 +29,7 @@ public class PermissionCheck {
         this.context = context;
     }
 
-    //First check the permissions everytime the app is freshly run.
+    // First check the permissions everytime the app is freshly run.
     public void checkPermissions(String[] PERMISSIONS, int REQUEST_CODE) {
         if (!hasPermissions(context, PERMISSIONS)) {
             ActivityCompat.requestPermissions(activity, PERMISSIONS, REQUEST_CODE);
@@ -57,5 +56,14 @@ public class PermissionCheck {
         }
         Log.d(TAG, "All permissions are granted.");
         return true;
+    }
+
+    public void requestPermissions() {
+        if (!isAllPermitted(DEFAULT_PERMISSIONS)) {
+            checkPermissions(DEFAULT_PERMISSIONS, DEFAULT_PERMISSION_RQCODE);
+        }
+        if (!isAllPermitted(NH_TERM_PERMISSIONS)) {
+            checkPermissions(NH_TERM_PERMISSIONS, NH_TERM_PERMISSIONS_RQCODE);
+        }
     }
 }

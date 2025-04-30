@@ -554,6 +554,8 @@
     <string name="build_version">1.0</string>
     <string name="moduleInfo">Module Based on PulseDroid by dront78</string>
 
+    <string name="duckhunter_conversion_failed">Conversion failed.</string>
+
     <!-- CAN -->
     <string name="can_description">This module allow you to use CAN Bus with various tools. Kernel device should have CAN support enabled, for more information look at the documentation in the menu.</string>
     <string name="can_tools_desc">Unleash the power of can-utils suite by managing logs and Generate, Dump, Sniff or Replay signals! You may also run car diagnosis using Freediag and transfert CAN frames between two machines using Canelloni tool!</string>

@@ -10,7 +10,6 @@ import android.graphics.Color;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
@@ -48,9 +47,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.Executors;
 import java.util.ArrayList;
 import java.util.Objects;
-
 
 public class BTFragment extends Fragment {
     private ViewPager mViewPager;
@@ -266,7 +265,7 @@ public class BTFragment extends Fragment {
         public void onResume(){
             super.onResume();
             Toast.makeText(requireActivity().getApplicationContext(), "Status updated", Toast.LENGTH_SHORT).show();
-            AsyncTask.execute(() -> refresh(requireView().getRootView()));
+            Executors.newSingleThreadExecutor().execute(() -> refresh(requireView().getRootView()));
         }
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -305,7 +304,7 @@ public class BTFragment extends Fragment {
 
             //Bluetooth interfaces
             final String[] outputHCI = {""};
-            AsyncTask.execute(() -> outputHCI[0] = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig | grep hci | cut -d: -f1"));
+            Executors.newSingleThreadExecutor().execute(() -> outputHCI[0] = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig | grep hci | cut -d: -f1"));
             final ArrayList<String> hciIfaces = new ArrayList<>();
             if (outputHCI[0].isEmpty()) {
                 hciIfaces.add("None");
@@ -330,7 +329,7 @@ public class BTFragment extends Fragment {
             //Refresh Status
             ImageButton RefreshStatus = rootView.findViewById(R.id.refreshStatus);
             RefreshStatus.setOnClickListener(v -> refresh(rootView));
-            AsyncTask.execute(() -> refresh(rootView));
+            Executors.newSingleThreadExecutor().execute(() -> refresh(rootView));
 
             //Internal bluetooth support
             final Button bluebinderButton = rootView.findViewById(R.id.bluebinder_button);
@@ -457,7 +456,7 @@ public class BTFragment extends Fragment {
                     String hci_current = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig "+ selected_iface + " | grep 'UP RUNNING' | cut -f2 -d$'\\t'");
                     if (hci_current.equals("UP RUNNING ")) {
                         final String scantime = BTtime.getText().toString();
-                        AsyncTask.execute(() -> {
+                        Executors.newSingleThreadExecutor().execute(() -> {
                             requireActivity().runOnUiThread(() -> {
                                 final ArrayList<String> scanning = new ArrayList<>();
                                 scanning.add("Scanning..");
@@ -684,7 +683,7 @@ public class BTFragment extends Fragment {
             Button StartSDPButton = rootView.findViewById(R.id.start_sdp);
             StartSDPButton.setOnClickListener( v -> {
                 Toast.makeText(getContext(), "Discovery started..\nCheck the output below", Toast.LENGTH_SHORT).show();
-                AsyncTask.execute(() -> startSDPtool(rootView));
+                Executors.newSingleThreadExecutor().execute(() -> startSDPtool(rootView));
             });
             return rootView;
         }
@@ -912,7 +911,7 @@ public class BTFragment extends Fragment {
                 if (cw_listenfile.length() == 0) {
                     Toast.makeText(getContext(), "File not found!", Toast.LENGTH_SHORT).show();
                 } else {
-                    AsyncTask.execute(() -> {
+                    Executors.newSingleThreadExecutor().execute(() -> {
                         InputStream s = null;
                         try {
                             s = new FileInputStream(cw_listenfile);
@@ -965,7 +964,7 @@ public class BTFragment extends Fragment {
         public void onResume(){
             super.onResume();
             Toast.makeText(requireActivity().getApplicationContext(), "Status updated", Toast.LENGTH_SHORT).show();
-            AsyncTask.execute(() -> refresh_badbt(requireView().getRootView()));
+            Executors.newSingleThreadExecutor().execute(() -> refresh_badbt(requireView().getRootView()));
         }
 
         @Override

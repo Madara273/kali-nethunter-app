@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -35,6 +34,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.concurrent.Executors;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -155,7 +155,7 @@ public class KernelFragment extends Fragment {
     }
     private void checkKernel(View KernelFragment, String custom) {
 
-        AsyncTask.execute(() -> requireActivity().runOnUiThread(() -> {
+        Executors.newSingleThreadExecutor().execute(() -> requireActivity().runOnUiThread(() -> {
             String codename = "";
             if (custom.equals("")) {
                 codename = Build.DEVICE;
