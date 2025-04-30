@@ -256,8 +256,13 @@ public class CANFragment extends Fragment {
     public static class MainFragment extends CANFragment {
         private Context context;
         final ShellExecuter exe = new ShellExecuter();
+        private CheckBox MTUCheckbox;
+        private String mtuValue = "";
+        private TextView SelectedMTU;
+        private CheckBox TxqueuelenCheckbox;
+        private String txqueuelenValue = "";
+        private TextView SelectedTxqueuelen;
         private TextView SelectedIface;
-        private TextView SelectedMtu;
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -274,7 +279,12 @@ public class CANFragment extends Fragment {
 
             // Common used variables
             SelectedIface = rootView.findViewById(R.id.can_iface);
-            SelectedMtu = rootView.findViewById(R.id.mtu);
+
+            // Checkboxes
+            MTUCheckbox = rootView.findViewById(R.id.can_mtu);
+            SelectedMTU = rootView.findViewById(R.id.can_mtu_value);
+            TxqueuelenCheckbox = rootView.findViewById(R.id.can_iface_txqueuelen);
+            SelectedTxqueuelen = rootView.findViewById(R.id.can_iface_txqueuelen_value);
 
             final EditText bt_target_mac = rootView.findViewById(R.id.bttarget);
 
@@ -514,16 +524,34 @@ public class CANFragment extends Fragment {
             // Start CAN interface
             Button StartCanButton = rootView.findViewById(R.id.start_caniface);
 
+            // Checkboxes
+            MTUCheckbox.setOnClickListener(v -> {
+                if (MTUCheckbox.isChecked()) {
+                    String selected_mtu = SelectedMTU.getText().toString();
+                    mtuValue = " mtu " + selected_mtu;
+                } else {
+                    mtuValue = "";
+                }
+            });
+
+            TxqueuelenCheckbox.setOnClickListener(v -> {
+                if (TxqueuelenCheckbox.isChecked()) {
+                    String selected_txqueuelen = SelectedTxqueuelen.getText().toString();
+                    txqueuelenValue = " txqueuelen " + selected_txqueuelen;
+                } else {
+                    txqueuelenValue = "";
+                }
+            });
+
             // Set initial button text based on saved state
             StartCanButton.setText(Boolean.TRUE.equals(buttonStates.get("start_caniface")) ? "⏹ CAN" : "▶ CAN");
 
             StartCanButton.setOnClickListener(v -> {
                 String selected_caniface = SelectedIface.getText().toString();
-                String selected_mtu = SelectedMtu.getText().toString();
                 String interface_type = sharedpreferences.getString("cantype_selected", "");
                 boolean isStarted = Boolean.TRUE.equals(buttonStates.get("start_caniface"));
 
-                if (!selected_caniface.isEmpty() && !selected_mtu.isEmpty()) {
+                if (!selected_caniface.isEmpty()) {
                     if (isStarted) {
                         String stopCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && echo Success || echo Failed");
                         stopCanIface = stopCanIface.trim();
@@ -547,30 +575,23 @@ public class CANFragment extends Fragment {
                                 Toast.makeText(requireActivity().getApplicationContext(), "Failed to add " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                             }
                         }
-                        if ("can".equals(interface_type)) {
+                        if ("can".equals(interface_type) || "slcan".equals(interface_type)) {
                             String usbDevice = exe.RunAsChrootOutput("ls -1 /dev/ttyUSB*;ls -1 /dev/rfcomm*;ls -1 /dev/ttyACM*");
                             if (usbDevice.isEmpty()) {
                                 Toast.makeText(requireActivity().getApplicationContext(), "No CAN Hardware detected, please plug you'r adapter and try again.", Toast.LENGTH_LONG).show();
-                            } else {
-                                String setMTU = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && echo Success || echo Failed");
-                                if (setMTU.contains("FATAL:") || setMTU.contains("Failed")) {
-                                    Toast.makeText(requireActivity().getApplicationContext(), "Failed to set " + selected_mtu + " as MTU value on " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
-                                } else {
-                                    String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
-                                    if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
-                                        Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
-                                    } else {
-                                        buttonStates.put("start_caniface", true);
-                                        StartCanButton.setText("⏹ CAN");
-                                        Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " started!", Toast.LENGTH_LONG).show();
-                                    }
-                                }
+                                return;
                             }
                         } else {
                             String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
                             if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
                                 Toast.makeText(requireActivity().getApplicationContext(), "Failed to start " + selected_caniface + " interface!", Toast.LENGTH_LONG).show();
                             } else {
+                                if (MTUCheckbox.isChecked()) {
+                                    exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + mtuValue + " && echo Success || echo Failed");
+                                }
+                                if (TxqueuelenCheckbox.isChecked()) {
+                                    exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + txqueuelenValue + " && echo Success || echo Failed");
+                                }
                                 buttonStates.put("start_caniface", true);
                                 StartCanButton.setText("⏹ CAN");
                                 Toast.makeText(requireActivity().getApplicationContext(), "Interface " + selected_caniface + " started!", Toast.LENGTH_LONG).show();
@@ -580,10 +601,6 @@ public class CANFragment extends Fragment {
                 } else {
                     if (selected_caniface.isEmpty()) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Please set a CAN interface!", Toast.LENGTH_LONG).show();
-                    }
-
-                    if (selected_mtu.isEmpty()) {
-                        Toast.makeText(requireActivity().getApplicationContext(), "Please set a MTU value!", Toast.LENGTH_LONG).show();
                     }
                 }
 
@@ -641,6 +658,12 @@ public class CANFragment extends Fragment {
         private TextView SelectedRHost;
         private TextView SelectedRPort;
         private TextView SelectedLPort;
+        private CheckBox CanInteractiveCheckbox;
+        private String canInteractive = "";
+        private CheckBox CanVerboseCheckbox;
+        private String canVerbose = "";
+        private CheckBox CanDisableLoopbackCheckbox;
+        private String canDisableLoopback = "";
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -657,6 +680,31 @@ public class CANFragment extends Fragment {
             SelectedRHost = rootView.findViewById(R.id.cannelloni_rhost);
             SelectedRPort = rootView.findViewById(R.id.cannelloni_rport);
             SelectedLPort = rootView.findViewById(R.id.cannelloni_lport);
+
+            CanInteractiveCheckbox = rootView.findViewById(R.id.can_interactive);
+            CanVerboseCheckbox = rootView.findViewById(R.id.can_verbose);
+            CanDisableLoopbackCheckbox = rootView.findViewById(R.id.can_disable_loopback);
+
+            CanInteractiveCheckbox.setOnClickListener(v -> {
+                if (CanInteractiveCheckbox.isChecked())
+                    canInteractive = " -i";
+                else
+                    canInteractive = "";
+            });
+
+            CanVerboseCheckbox.setOnClickListener(v -> {
+                if (CanVerboseCheckbox.isChecked())
+                    canVerbose = " -v";
+                else
+                    canVerbose = "";
+            });
+
+            CanDisableLoopbackCheckbox.setOnClickListener(v -> {
+                if (CanDisableLoopbackCheckbox.isChecked())
+                    canDisableLoopback = " -x";
+                else
+                    canDisableLoopback = "";
+            });
 
             final EditText CustomCmd = rootView.findViewById(R.id.customcmd);
 
@@ -694,7 +742,7 @@ public class CANFragment extends Fragment {
                 String selected_caniface = SelectedIface.getText().toString();
 
                 if (!selected_caniface.isEmpty()) {
-                    run_cmd("cangen " + selected_caniface + " -v");
+                    run_cmd("cangen " + selected_caniface + canVerbose + canDisableLoopback);
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface field is set!", Toast.LENGTH_LONG).show();
                 }
@@ -755,7 +803,7 @@ public class CANFragment extends Fragment {
                 String inputfile = inputfilepath.getText().toString();
 
                 if (!inputfile.isEmpty()) {
-                    run_cmd("canplayer -I " + inputfile);
+                    run_cmd("canplayer -I " + inputfile + canInteractive + canVerbose + canDisableLoopback);
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your Input File field is set!", Toast.LENGTH_LONG).show();
                 }

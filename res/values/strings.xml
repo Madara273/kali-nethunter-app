@@ -558,8 +558,8 @@
 
     <!-- CAN -->
     <string name="can_description">This module allow you to use CAN Bus with various tools. Kernel device should have CAN support enabled, for more information look at the documentation in the menu.</string>
-    <string name="can_tools_desc">Unleash the power of can-utils suite by managing logs and Generate, Dump, Sniff or Replay signals! You may also run car diagnosis using Freediag and transfert CAN frames between two machines using Canelloni tool!</string>
-    <string name="can_canusb_desc">Use your CAN Analyzer USB by Dumping and sending signals using usb-can tool!</string>
+    <string name="can_tools_desc">Unleash the power of can-utils suite by managing logs and Generate, Dump, Sniff or Replay signals! You may also run car diagnosis using Freediag and transfert CAN frames between two machines using Cannelloni tool!</string>
+    <string name="can_canusb_desc">Use your CAN Analyzer USB by Dumping and Sending signals using usb-can tool!</string>
     <string name="can_caribou_desc">A friendly automotive security exploration tool.</string>
     <string name="can_icsim_desc">Instrument Cluster Simulator for SocketCAN</string>
     <!-- CAN About menu -->

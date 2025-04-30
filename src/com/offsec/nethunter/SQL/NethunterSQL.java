@@ -34,7 +34,7 @@ public class NethunterSQL extends SQLiteOpenHelper {
             {"5", "CAN Status", NhPaths.BUSYBOX + " ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$' || echo \"CAN interface not found.\nPlease enable in CAN Arsenal.\"", "\\n", "1"},
             {"6", "NetHunter Terminal Status", "[ \"$(pm list packages | grep 'com.offsec.nhterm')\" ] && echo \"NetHunter Terminal is installed.\" || echo \"NetHunter Terminal is NOT yet installed.\"", "\\n", "1"},
             {"7", "Network Interface Status", " ip -o addr show | " + NhPaths.BUSYBOX + " awk '{print $2, $3, $4}'", "\\n", "1"},
-            {"8", "External IP", NhPaths.BUSYBOX + " wget -qO - icanhazip.com", "0"}
+            {"8", "External IP", NhPaths.BUSYBOX + " wget -qO - icanhazip.com", "\\n", "1"}
     };
 
     public static synchronized NethunterSQL getInstance(Context context){

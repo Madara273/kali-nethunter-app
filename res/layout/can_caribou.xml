@@ -413,17 +413,6 @@
                     tools:ignore="TouchTargetSizeCheck" />
 
                 <CheckBox
-                    android:id="@+id/caribou_candump_format"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Candump"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="2"
-                    android:layout_column="2"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <CheckBox
                     android:id="@+id/caribou_pad"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -431,6 +420,17 @@
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     android:layout_row="2"
                     android:layout_column="0"
+                    android:gravity="center_vertical"
+                    tools:ignore="TouchTargetSizeCheck" />
+
+                <CheckBox
+                    android:id="@+id/caribou_candump_format"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Candump"
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    android:layout_row="2"
+                    android:layout_column="2"
                     android:gravity="center_vertical"
                     tools:ignore="TouchTargetSizeCheck" />
 
@@ -640,6 +640,7 @@
                     android:layout_height="wrap_content"
                     android:paddingStart="20dp"
                     android:paddingEnd="20dp"
+                    android:layout_marginBottom="20dp"
                     android:layout_marginVertical="8dp">
 
                     <TextView
