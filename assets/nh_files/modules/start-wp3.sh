@@ -21,7 +21,7 @@ fi
 
 echo "Checking default rule number.."
 for table in $(ip rule list | awk -F"lookup" '{print $2}'); do
-DEF=`ip route show table $table|grep default|grep $NETIFACE`
+DEF=$(ip route show table $table|grep default|grep $NETIFACE)
   if ! [ -z "$DEF" ]; then
      break
   fi
@@ -34,7 +34,7 @@ if ip link show $APIFACE; then
   echo "$APIFACE exists, continuing.."
 else
   if [[ $WLAN0TO1 == 1 ]]; then
-    if [[ `iw list | grep '* AP'` == *"* AP"* ]]; then
+    if [[ $(iw list | grep '* AP') == *"* AP"* ]]; then
       echo "wlan0 supports AP mode, creating AP interface.."
       iw dev wlan0 interface add $APIFACE type __ap
       ip addr flush $APIFACE

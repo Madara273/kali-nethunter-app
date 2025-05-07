@@ -310,7 +310,7 @@ public class LocationUpdateService extends Service implements
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
                 .setAutoCancel(false)
-                .setSmallIcon(R.drawable.ic_stat_ic_nh_notificaiton)
+                .setSmallIcon(R.drawable.ic_stat_ic_nh_notification)
                 .setContentText(notificationText)
                 .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
                 .setContentTitle(notificationTitle)
@@ -416,7 +416,7 @@ public class LocationUpdateService extends Service implements
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
                 .setAutoCancel(false)
-                .setSmallIcon(R.drawable.ic_stat_ic_nh_notificaiton)
+                .setSmallIcon(R.drawable.ic_stat_ic_nh_notification)
                 .setContent(contentView)
                 // .setContentText("contentText")
                 // .setStyle(new NotificationCompat.BigTextStyle().bigText(updatedText))

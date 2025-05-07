@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse         # Handle arguments
-import os               # To write hid comands to system
+import os               # To write hid commands to system
 
 '''
 
