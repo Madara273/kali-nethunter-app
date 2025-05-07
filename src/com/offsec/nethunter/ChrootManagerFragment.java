@@ -12,6 +12,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
@@ -36,9 +37,16 @@ import com.offsec.nethunter.utils.SharePrefTag;
 import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Objects;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -46,12 +54,14 @@ import androidx.appcompat.widget.LinearLayoutCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
-
 public class ChrootManagerFragment extends Fragment {
     public static final String TAG = "ChrootManager";
+    private ActivityResultLauncher<Intent> filePickerLauncher;
     private static final String ARG_SECTION_NUMBER = "section_number";
     private static final String IMAGE_SERVER = "image-nethunter.kali.org";
     private static final String IMAGE_DIRECTORY = "/nethunter-fs/kali-daily/";
+    //private static final String IMAGE_SERVER = "kali.download";
+    //private static final String IMAGE_DIRECTORY = "/nethunter-images/current/rootfs/";
     private static String ARCH = "";
     private static String MINORFULL = "";
     private TextView mountStatsTextView;
@@ -127,12 +137,76 @@ public class ChrootManagerFragment extends Fragment {
         setRemoveChrootButton();
         setAddMetaPkgButton();
         setBackupChrootButton();
+
         // WearOS optimisation
         SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
         if (iswatch) {
             kaliViewFolderlinearLayout.setVisibility(View.GONE);
         }
+
+        // Register ActivityResultLauncher for file picking
+        filePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                        Uri fileUri = result.getData().getData();
+                        if (fileUri != null) {
+                            File outFile = new File(context.getFilesDir(), "restore.tar.xz");
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                try (InputStream in = context.getContentResolver().openInputStream(fileUri);
+                                     OutputStream out = Files.newOutputStream(outFile.toPath())) {
+                                    byte[] buffer = new byte[4096];
+                                    int bytesRead;
+                                    long totalBytes = 0;
+                                    while (true) {
+                                        assert in != null;
+                                        if ((bytesRead = in.read(buffer)) == -1) break;
+                                        out.write(buffer, 0, bytesRead);
+                                        totalBytes += bytesRead;
+                                    }
+                                    out.flush();
+                                    if (outFile.length() == 0 || totalBytes == 0) {
+                                        NhPaths.showMessage(context, "Copied file is empty. Please select a valid backup.");
+                                        return;
+                                    }
+                                    try (InputStream checkIn = new FileInputStream(outFile)) {
+                                        byte[] magic = new byte[6];
+                                        if (checkIn.read(magic) == 6) {
+                                            if (!(magic[0] == (byte) 0xFD && magic[1] == '7' && magic[2] == 'z' && magic[3] == 'X' && magic[4] == 'Z' && magic[5] == 0x00)) {
+                                                NhPaths.showMessage(context, "File does not appear to be a valid .xz archive.");
+                                                return;
+                                            }
+                                        }
+                                    }
+                                    sharedPreferences.edit().putString(SharePrefTag.CHROOT_DEFAULT_BACKUP_SHAREPREF_TAG, outFile.getAbsolutePath()).apply();
+                                    chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.INSTALL_CHROOT);
+                                    chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
+                                        @Override
+                                        public void onExecutorPrepare() {
+                                            context.startService(new Intent(context, NotificationChannelService.class).setAction(NotificationChannelService.INSTALLING));
+                                            broadcastBackPressedIntent(false);
+                                            setAllButtonEnable(false);
+                                        }
+                                        @Override public void onExecutorProgressUpdate(int progress) {}
+                                        @Override public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
+                                            broadcastBackPressedIntent(true);
+                                            setAllButtonEnable(true);
+                                            compatCheck();
+                                        }
+                                    });
+                                    resultViewerLoggerTextView.setText("");
+                                    chrootManagerExecutor.execute(resultViewerLoggerTextView, outFile.getAbsolutePath(), NhPaths.CHROOT_PATH());
+                                } catch (IOException e) {
+                                    NhPaths.showMessage(context, "Failed to copy file: " + e.getMessage());
+                                }
+                            }
+                        } else {
+                            NhPaths.showMessage(context, "No file selected.");
+                        }
+                    }
+                }
+        );
     }
 
     @Override
@@ -221,9 +295,7 @@ public class ChrootManagerFragment extends Fragment {
                 }
 
                 @Override
-                public void onExecutorProgressUpdate(int progress) {
-
-                }
+                public void onExecutorProgressUpdate(int progress) {}
 
                 @Override
                 public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
@@ -251,9 +323,7 @@ public class ChrootManagerFragment extends Fragment {
                 }
 
                 @Override
-                public void onExecutorProgressUpdate(int progress) {
-
-                }
+                public void onExecutorProgressUpdate(int progress) {}
 
                 @Override
                 public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
@@ -310,6 +380,7 @@ public class ChrootManagerFragment extends Fragment {
                                 assert minorfullSpinner != null;
                                 MINORFULL = minorfullSpinner.getSelectedItemPosition() == 0 ? "full" : "minimal";
                                 String targetDownloadFileName = "kali-nethunter-daily-dev-rootfs-" + MINORFULL + "-" + ARCH + ".tar.xz";
+                                //String targetDownloadFileName = "kali-nethunter-rootfs-" + MINORFULL + "-" + ARCH + ".tar.xz";
 
                                 if (new File(downloadDir, targetDownloadFileName).exists()) {
                                     new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
@@ -337,44 +408,12 @@ public class ChrootManagerFragment extends Fragment {
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
                 intent.setType("application/x-xz");
                 intent.setAction(Intent.ACTION_GET_CONTENT);
-                startActivityForResult(Intent.createChooser(intent, "Select zip file"),1001);
+                filePickerLauncher.launch(Intent.createChooser(intent, "Select zip file"));
                 dialog.cancel();
             });
         });
     }
-    public void onActivityResult(int requestCode, int resultCode,
-                                 Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1001 && (resultCode == Activity.RESULT_OK)) {
-            ShellExecuter exe = new ShellExecuter();
-            String FilePath = Objects.requireNonNull(data.getData()).getPath();
-            FilePath = exe.RunAsRootOutput("echo " + FilePath + " | sed -e 's/\\/document\\/primary:/\\/storage\\/emulated\\/0\\//g'");
-            sharedPreferences.edit().putString(SharePrefTag.CHROOT_DEFAULT_BACKUP_SHAREPREF_TAG, FilePath).apply();
-            NhPaths.showMessage(context, FilePath);
-            chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.INSTALL_CHROOT);
-            chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
-                @Override
-                public void onExecutorPrepare() {
-                    context.startService(new Intent(context, NotificationChannelService.class).setAction(NotificationChannelService.INSTALLING));
-                    broadcastBackPressedIntent(false);
-                    setAllButtonEnable(false);
-                }
 
-                @Override
-                public void onExecutorProgressUpdate(int progress) {}
-
-                @Override
-                public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
-                    broadcastBackPressedIntent(true);
-                    setAllButtonEnable(true);
-                    compatCheck();
-                }
-            });
-            resultViewerLoggerTextView.setText("");
-            chrootManagerExecutor.execute(resultViewerLoggerTextView, FilePath, NhPaths.CHROOT_PATH());
-
-        }
-    }
     @NonNull
     public MaterialAlertDialogBuilder getMaterialAlertDialogBuilder(File downloadDir, String targetDownloadFileName) {
         MaterialAlertDialogBuilder adb3 = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
@@ -431,43 +470,83 @@ public class ChrootManagerFragment extends Fragment {
     }
 
     private void startDownloadChroot(String targetDownloadFileName, File downloadDir) {
-        ProgressBar prog = new ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal);
+        if (activity == null || context == null) return;
+
+        ProgressBar progressBar = new ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal);
         AlertDialog progressDialog = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
                 .setTitle("Downloading " + targetDownloadFileName)
                 .setMessage("Please do NOT kill the app or clear recent apps..")
                 .setCancelable(false)
-                .setView(prog)
+                .setView(progressBar)
                 .create();
 
         chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.DOWNLOAD_CHROOT);
         chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
             @Override
             public void onExecutorPrepare() {
-                broadcastBackPressedIntent(false);
-                setAllButtonEnable(false);
-                progressDialog.show();
+                if (activity != null) {
+                    activity.runOnUiThread(() -> {
+                        broadcastBackPressedIntent(false);
+                        setAllButtonEnable(false);
+                        progressDialog.show();
+                    });
+                }
             }
 
             @Override
             public void onExecutorProgressUpdate(int progress) {
-                ProgressBar progressBar = prog;
-                if (progressBar != null) {
-                    progressBar.setProgress(progress);
-                }
-                if (progress == 100) {
-                    progressDialog.dismiss();
-                    broadcastBackPressedIntent(true);
-                    setAllButtonEnable(true);
+                if (activity != null) {
+                    activity.runOnUiThread(() -> {
+                        progressBar.setProgress(progress);
+                        if (progress == 100) {
+                            progressDialog.dismiss();
+                            broadcastBackPressedIntent(true);
+                            setAllButtonEnable(true);
+                        }
+                    });
                 }
             }
 
             @Override
             public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
-                // Handle task completion
+                if (activity != null) {
+                    activity.runOnUiThread(() -> {
+                        if (resultCode == 0) {
+                            NhPaths.showMessage(context, "Download completed successfully.");
+                        } else {
+                            NhPaths.showMessage(context, "Download failed. Please try again.");
+                        }
+                    });
+                }
             }
         });
+
         resultViewerLoggerTextView.setText("");
-        chrootManagerExecutor.execute(resultViewerLoggerTextView, IMAGE_SERVER, IMAGE_DIRECTORY + targetDownloadFileName, downloadDir.getAbsolutePath() + "/" + targetDownloadFileName);
+        chrootManagerExecutor.execute(
+                resultViewerLoggerTextView,
+                IMAGE_SERVER,
+                IMAGE_DIRECTORY + targetDownloadFileName,
+                new File(downloadDir, targetDownloadFileName).getAbsolutePath()
+        );
+    }
+
+    private ProgressBar createProgressBar() {
+        return new ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal);
+    }
+
+    private AlertDialog createProgressDialog(String fileName, ProgressBar progressBar) {
+        return new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+                .setTitle("Downloading " + fileName)
+                .setMessage("Please do NOT kill the app or clear recent apps..")
+                .setCancelable(false)
+                .setView(progressBar)
+                .create();
+    }
+
+    private void runOnUiThread(Runnable action) {
+        if (activity != null) {
+            activity.runOnUiThread(action);
+        }
     }
 
     private void setAddMetaPkgButton() {
