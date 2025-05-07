@@ -11,6 +11,7 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,8 +23,13 @@ import androidx.fragment.app.Fragment;
 import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.ShellExecuter;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.ArrayList;
 
 public class ModulesFragment extends Fragment {
     public static final String TAG = "ModulesFragment";
@@ -43,51 +49,54 @@ public class ModulesFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getContext();
         activity = getActivity();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.modules, container, false);
-        SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
-        //Use last path
+        // Use last path
         modules_path = rootView.findViewById(R.id.modulesPath);
-        String LastModulesPath = sharedpreferences.getString("last_modulespath", "");
-        if (!LastModulesPath.isEmpty()) modules_path.setText(LastModulesPath);
+        if (activity != null) {
+            SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+            String LastModulesPath = sharedpreferences.getString("last_modulespath", "");
+            if (!LastModulesPath.isEmpty()) modules_path.setText(LastModulesPath);
+        }
 
-        //Refresh Modules
+        // Refresh Modules
         Button refreshButton = rootView.findViewById(R.id.refresh);
         refreshButton.setOnClickListener(view -> refreshModules(rootView));
         refreshModules(rootView);
-        refreshModulesLoaded(rootView);
-        //String ModulesPath = modules_path.getText().toString();
 
-        //Modules toggle
+        // Modules toggle
         ListView modules = rootView.findViewById(R.id.modulesList);
-        String ModulesPath = modules_path.getText().toString();
         modules.setOnItemClickListener((adapterView, view, i, l) -> {
-            String ModulesPathFull = ModulesPath + "/" + System.getProperty("os.version");
+            String modulesPath = modules_path.getText().toString();
+            String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
+            String ModulesPathFull = sanitizedModulesPath; // Do not append kernel version
             String selected_module = modules.getItemAtPosition(i).toString();
             String is_it_loaded = exe.RunAsRootOutput("lsmod | cut -d' ' -f1 | grep " + selected_module);
+            ImageView statusIcon = view.findViewById(R.id.moduleStatusIcon);
 
-            if (is_it_loaded.equals(selected_module)){
+            if (is_it_loaded.equals(selected_module)) {
                 String disable_module = exe.RunAsRootOutput("rmmod " + selected_module + " && echo Success || echo Failed");
                 if (disable_module.contains("Success")) {
                     Toast.makeText(requireActivity().getApplicationContext(), "Module Disabled", Toast.LENGTH_LONG).show();
+                    if (statusIcon != null) statusIcon.setImageResource(R.drawable.ic_module_not_loaded);
                 } else {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Failed - rmmod "+ selected_module, Toast.LENGTH_LONG).show();
+                    Toast.makeText(requireActivity().getApplicationContext(), "Failed - rmmod " + selected_module, Toast.LENGTH_LONG).show();
                 }
             } else {
                 String toggle_module = exe.RunAsRootOutput("insmod " + ModulesPathFull + "/" + selected_module + ".ko && echo Success || echo Failed");
                 if (toggle_module.contains("Success")) {
-                    refreshModulesLoaded(rootView);
                     Toast.makeText(requireActivity().getApplicationContext(), "Module enabled with insmod", Toast.LENGTH_LONG).show();
+                    if (statusIcon != null) statusIcon.setImageResource(R.drawable.ic_module_loaded);
                 } else {
                     toggle_module = exe.RunAsRootOutput("modprobe -d " + ModulesPathFull + " " + selected_module + " && echo Success || echo Failed");
                     if (toggle_module.contains("Success")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Module enabled with modprobe", Toast.LENGTH_LONG).show();
+                        if (statusIcon != null) statusIcon.setImageResource(R.drawable.ic_module_loaded);
                     } else {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed - modprobe -d " + ModulesPathFull + " " + selected_module, Toast.LENGTH_LONG).show();
                     }
@@ -103,56 +112,105 @@ public class ModulesFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-    }
+    private void refreshModules(View rootView) {
+        SharedPreferences sharedpreferences = null;
+        if (activity != null) {
+            sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        }
+        final ListView modules = rootView.findViewById(R.id.modulesList);
 
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-    }
+        modules_path = rootView.findViewById(R.id.modulesPath);
+        String modulesPath = modules_path.getText().toString();
+        String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
+        if (sharedpreferences != null) {
+            sharedpreferences.edit().putString("last_modulespath", modulesPath).apply();
+        }
 
-    private void refreshModules(View ModulesFragment) {
-        SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        final ListView modules = ModulesFragment.findViewById(R.id.modulesList);
-
-        modules_path = ModulesFragment.findViewById(R.id.modulesPath);
-        String ModulesPath = modules_path.getText().toString();
-        String ModulesPathFull = ModulesPath + "/" + System.getProperty("os.version");
-        sharedpreferences.edit().putString("last_modulespath", ModulesPath).apply();
-
-        Executors.newSingleThreadExecutor().execute(() -> requireActivity().runOnUiThread(() -> {
-            if (ModulesPath.isEmpty()) {
-                Toast.makeText(requireActivity().getApplicationContext(), "Please enter path", Toast.LENGTH_SHORT).show();
-            }
-            else {
-                String modulesRaw = exe.RunAsRootOutput("find " + ModulesPathFull + " -name *.ko -printf \"%f\\n\" | sed 's/\\.ko$//1'");
-                final String[] modulesArray = modulesRaw.split("\n");
-                ArrayAdapter<String> modulesAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, modulesArray);
-
-                if (!modulesRaw.isEmpty()) {
-                    modules.setAdapter(modulesAdapter);
-                } else {
-                    final ArrayList<String> nomodules = new ArrayList<>();
-                    nomodules.add("No modules found");
-                    modules.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, nomodules));
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            if (sanitizedModulesPath.isEmpty()) {
+                Activity currentActivity = getActivity();
+                if (currentActivity != null) {
+                    currentActivity.runOnUiThread(() ->
+                            Toast.makeText(currentActivity.getApplicationContext(), "Please enter path", Toast.LENGTH_SHORT).show()
+                    );
                 }
+                return;
             }
-        }));
+
+            // Execute `find` command once
+            String modulesRaw = exe.RunAsRootOutput("find " + sanitizedModulesPath + " -name *.ko -printf \"%f\\n\" | sed 's/\\.ko$//1'");
+            final String[] modulesArray = modulesRaw.split("\n");
+
+            // Execute `lsmod` once and cache results
+            String loadedModulesRaw = exe.RunAsRootOutput("lsmod | cut -d' ' -f1");
+            List<String> loadedModules = Arrays.asList(loadedModulesRaw.split("\n"));
+
+            // Prepare module states
+            Map<String, Boolean> moduleStates = new HashMap<>();
+            for (String module : modulesArray) {
+                moduleStates.put(module, loadedModules.contains(module));
+            }
+
+            Activity currentActivity = getActivity();
+            if (currentActivity != null) {
+                currentActivity.runOnUiThread(() -> {
+                    if (!modulesRaw.isEmpty()) {
+                        ModuleListAdapter adapter = new ModuleListAdapter(requireContext(), Arrays.asList(modulesArray), moduleStates);
+                        modules.setAdapter(adapter);
+                    } else {
+                        modules.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, Collections.singletonList("No modules found")));
+                    }
+                });
+            }
+        });
     }
 
-    private void refreshModulesLoaded(View ModulesFragment) {
-        final TextView modules_Loaded = ModulesFragment.findViewById(R.id.modules_loadedText);
+    static class ModuleListAdapter extends ArrayAdapter<String> {
+        private final List<String> modules;
+        private final Context context;
+        private final Map<String, Boolean> moduleStates;
 
-        Executors.newSingleThreadExecutor().execute(() -> requireActivity().runOnUiThread(() -> {
-            String modules_loadedRaw = exe.RunAsRootOutput("lsmod | tail -n+2 | cut -d' ' -f1");
-            if (!modules_loadedRaw.isEmpty()) {
-                modules_Loaded.setText(modules_loadedRaw);
+        public ModuleListAdapter(Context context, List<String> modules, Map<String, Boolean> moduleStates) {
+            super(context, R.layout.module_list_item, modules);
+            this.context = context;
+            this.modules = modules;
+            this.moduleStates = moduleStates;
+        }
+
+        private static class ViewHolder {
+            TextView textView;
+            ImageView statusIcon;
+        }
+
+        @NonNull
+        @Override
+        public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+            ViewHolder holder;
+            if (convertView == null) {
+                LayoutInflater inflater = LayoutInflater.from(context);
+                convertView = inflater.inflate(R.layout.module_list_item, parent, false);
+                holder = new ViewHolder();
+                holder.textView = convertView.findViewById(R.id.moduleName);
+                holder.statusIcon = convertView.findViewById(R.id.moduleStatusIcon);
+                convertView.setTag(holder);
             } else {
-                modules_Loaded.setText("No modules loaded");
+                holder = (ViewHolder) convertView.getTag();
             }
-        }));
+
+            String moduleName = modules.get(position);
+            holder.textView.setText(moduleName);
+
+            // Set icon based on module state
+            Boolean isLoaded = moduleStates.get(moduleName);
+            if (isLoaded != null && isLoaded) {
+                holder.statusIcon.setImageResource(R.drawable.ic_module_loaded);
+            } else {
+                holder.statusIcon.setImageResource(R.drawable.ic_module_not_loaded);
+            }
+
+            return convertView;
+        }
     }
 
     ////
@@ -167,14 +225,16 @@ public class ModulesFragment extends Fragment {
     public static class PreferencesData {
         private static final String PREF_NAME = "com.offsec.nethunter_preferences";
 
+        private static SharedPreferences getSharedPreferences(Context context) {
+            return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
+        }
+
         public static void saveString(Context context, String key, String value) {
-            SharedPreferences sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-            sharedPrefs.edit().putString(key, value).apply();
+            getSharedPreferences(context).edit().putString(key, value).apply();
         }
 
         public static String getString(Context context, String key, String defaultValue) {
-            SharedPreferences sharedPrefs = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-            return sharedPrefs.getString(key, defaultValue);
+            return getSharedPreferences(context).getString(key, defaultValue);
         }
     }
 }
