@@ -37,7 +37,7 @@ android {
     defaultConfig {
         minSdk 21
         //noinspection ExpiredTargetSdkVersion
-        targetSdkVersion 28
+        targetSdk 28
         //noinspection HighAppVersionCode
         versionCode 2025010100
         versionName "2025.1"
@@ -70,7 +70,6 @@ android {
             minifyEnabled false
             buildConfigField "java.util.Date", "BUILD_TIME", "new java.util.Date(" + System.currentTimeMillis() + "L)"
             buildConfigField "String", "BUILD_NAME", "\"" + System.getenv("USER") + "\""
-            return true
         }
 
         release {
@@ -82,7 +81,6 @@ android {
             jniDebuggable false
             buildConfigField "java.util.Date", "BUILD_TIME", "new java.util.Date(" + System.currentTimeMillis() + "L)"
             buildConfigField "String", "BUILD_NAME", "\"" + System.getenv("USER") + "\""
-            return true
         }
     }
 }
