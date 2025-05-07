@@ -635,7 +635,7 @@ public class BTFragment extends Fragment {
 
             StartL2ping.setOnClickListener( v -> {
                 String l2ping_target = sdp_address.getText().toString();
-                if (!l2ping_target.equals("")) {
+                if (!l2ping_target.isEmpty()) {
                     String l2ping_size = l2ping_Size.getText().toString();
                     String l2ping_count = l2ping_Count.getText().toString();
                     String l2ping_interface = hci_interface.getText().toString();
@@ -879,7 +879,7 @@ public class BTFragment extends Fragment {
             StartCWButton.setOnClickListener( v -> {
                 String cw_iface = cw_interface.getText().toString();
                 String cw_target = cw_address.getText().toString();
-                if (!cw_target.equals("")) {
+                if (!cw_target.isEmpty()) {
                     String cw_channel = hci_channel.getText().toString();
                     String cw_listenfile = listenfilename.getText().toString();
                     String cw_injectfile = injectfilename.getText().toString();

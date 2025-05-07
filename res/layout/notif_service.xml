@@ -34,5 +34,4 @@
         android:layout_height="match_parent"
         android:minWidth="100dp"
         android:text="@string/btn_play" />
-
 </LinearLayout>

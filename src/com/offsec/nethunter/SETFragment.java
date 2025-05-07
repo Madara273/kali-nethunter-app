@@ -75,7 +75,6 @@ public class SETFragment extends Fragment {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         setHasOptionsMenu(true);
         return rootView;
-
     }
 
     @Override

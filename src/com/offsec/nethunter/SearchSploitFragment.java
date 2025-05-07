@@ -33,12 +33,12 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.channels.FileChannel;
 import java.util.List;
+import java.util.Objects;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
-
 
 public class SearchSploitFragment extends Fragment {
     public static final String TAG = "SearchSploitFragment";
@@ -169,7 +169,8 @@ public class SearchSploitFragment extends Fragment {
         if (item.getItemId() == R.id.rawSearch_ON) {
             if (getView() == null) return true;
             if (!withFilters) {
-                getView().findViewById(R.id.search_filters).setVisibility(View.VISIBLE);
+                assert getView() != null;
+                requireView().findViewById(R.id.search_filters).setVisibility(View.VISIBLE);
                 withFilters = true;
                 item.setTitle("Enable Raw search");
                 loadExploits();
@@ -344,7 +345,7 @@ class ExploitLoader extends BaseAdapter {
             vH.description = convertView.findViewById(R.id.description);
             // vH.cwSwich = (Switch) convertView.findViewById(R.id.switch1);
             vH.type = convertView.findViewById(R.id.type);
-	        vH.platform = convertView.findViewById(R.id.platform);
+            vH.platform = convertView.findViewById(R.id.platform);
             vH.author = convertView.findViewById(R.id.author);
             vH.date = convertView.findViewById(R.id.exploit_date);
             vH.viewSource = convertView.findViewById(R.id.viewSource);

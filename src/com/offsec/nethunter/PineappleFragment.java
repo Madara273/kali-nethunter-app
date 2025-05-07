@@ -16,7 +16,6 @@ import com.offsec.nethunter.utils.ShellExecuter;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-
 public class PineappleFragment extends Fragment {
     private static final String TAG = "PineappleFragment";
     private String start_type = "start ";
