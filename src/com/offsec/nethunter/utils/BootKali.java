@@ -11,7 +11,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 
-
 /**
  * Created by jmingov on 11/15/15.
  *
@@ -67,7 +66,7 @@ public class BootKali {
         this.FULL_CMD = this.BOOTKALI + KALI_COMMAND;
         // Log all cmd if needed
         //Log.d("BOOTKALI", this.BOOTKALI);
-        //Log.d("KCOMMAND", this.KALI_COMMAND);
+        //Log.d("COMMAND", this.KALI_COMMAND);
         //GET_KALI_DNS();
     }
 

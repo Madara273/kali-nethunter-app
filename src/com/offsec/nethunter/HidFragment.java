@@ -282,7 +282,7 @@ public class HidFragment extends Fragment {
     }
 
     public static class TabsPagerAdapter extends FragmentPagerAdapter {
-        TabsPagerAdapter(FragmentManager fm) {
+        public TabsPagerAdapter(FragmentManager fm) {
             super(fm);
         }
 
@@ -418,7 +418,9 @@ public class HidFragment extends Fragment {
 
                     if (matcherPayload.find()) {
                         String payloadValue = matcherPayload.group(1);
-                        ArrayAdapter myAdap = (ArrayAdapter) payload.getAdapter();
+                        @SuppressWarnings("unchecked")
+                        ArrayAdapter<String> myAdap = (ArrayAdapter<String>) payload.getAdapter();
+                        myAdap.getPosition(payloadValue);
                         int spinnerPosition;
                         spinnerPosition = myAdap.getPosition(payloadValue);
                         payload.setSelection(spinnerPosition);

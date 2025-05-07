@@ -352,7 +352,7 @@ public class CopyBootFilesExecutor {
     // This rename the filename which suffix is either [name]-arm64 or [name]-armhf to [name] according to the user's CPU ABI.
     private String renameAssetIfneeded(String asset) {
         String cpuAbi;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
             cpuAbi = Build.SUPPORTED_ABIS[0];
         } else {
             cpuAbi = Build.CPU_ABI;
