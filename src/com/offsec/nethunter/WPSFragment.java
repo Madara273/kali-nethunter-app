@@ -26,15 +26,16 @@ import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
+import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.ArrayList;
+import android.util.Log;
 
 public class WPSFragment extends Fragment {
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
     public static final String TAG = "WPSFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
-    private TextView SelectedIface;
+    private Spinner ifaceSpinner;
+    private String selectedInterface = "wlan0"; // default
     private TextView CustomPIN;
     private TextView DelayTime;
     private Spinner WPSList;
@@ -47,9 +48,7 @@ public class WPSFragment extends Fragment {
     private final ArrayList<String> arrayList = new ArrayList<>();
     private LinearLayout WPSPinLayout;
     private LinearLayout DelayLayout;
-    private Context context;
-    private static Activity activity;
-    private NhPaths nh;
+    private Activity activity;
     private final ShellExecuter exe = new ShellExecuter();
     private String selected_network;
     private String pixieCMD = "";
@@ -73,7 +72,7 @@ public class WPSFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        context = getContext();
+        Context context = getContext();
         activity = getActivity();
     }
 
@@ -81,39 +80,78 @@ public class WPSFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.wps, container, false);
 
-        //Detecting watch
+        // Detecting watch
         SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
 
-        //Enabling wifi in case it's down
+        // Enabling wifi in case it's down
         if (iswatch) {
-            exe.RunAsRoot(new String[]{"ifconfig wlan0 up"});
+            exe.RunAsRoot(new String[]{"ip link set wlan0 up"});
         }
         else exe.RunAsRoot(new String[]{"svc wifi enable"});
 
-        //WIFI Scanner
+        // Interface spinner setup
+        ifaceSpinner = rootView.findViewById(R.id.wps_iface_spinner);
+        ExecutorService ifaceExecutor = Executors.newSingleThreadExecutor();
+        ifaceExecutor.execute(() -> {
+            String iwPath;
+            String abi = android.os.Build.SUPPORTED_ABIS[0];
+            if (abi.contains("arm64")) {
+                iwPath = NhPaths.APP_SCRIPTS_BIN_PATH + "/iw";
+            } else {
+                iwPath = NhPaths.APP_SCRIPTS_BIN_PATH + "/iw-armeabi";
+            }
+            Log.d(TAG, "Using iw binary: " + iwPath);
+
+            // Log iw --version output
+            String iwVersion = exe.RunAsRootOutput(iwPath + " --version");
+            Log.d(TAG, "iw version output: " + iwVersion);
+
+            String output = exe.RunAsRootOutput(iwPath + " dev | awk '/Interface/ {print $2}' | grep '^wlan'");
+            String[] interfaces = output.trim().isEmpty() ? new String[]{"wlan0"} : output.split("\n");
+            if (interfaces.length == 0) interfaces = new String[]{"wlan0"};
+            if (isAdded()) {
+                String[] finalInterfaces = interfaces;
+                requireActivity().runOnUiThread(() -> {
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, finalInterfaces);
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                    ifaceSpinner.setAdapter(adapter);
+                    selectedInterface = finalInterfaces[0];
+                    ifaceSpinner.setSelection(0);
+                    ifaceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                            selectedInterface = finalInterfaces[position];
+                        }
+                        @Override
+                        public void onNothingSelected(AdapterView<?> parent) {}
+                    });
+                });
+            }
+        });
+
+        // WIFI Scanner
         Button scanButton = rootView.findViewById(R.id.scanwps);
         scanButton.setOnClickListener(view -> scanWifi());
 
         WPSList = rootView.findViewById(R.id.wpslist);
-        ArrayAdapter WPSadapter = new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, arrayList);
-        WPSList.setAdapter(WPSadapter);
+        if (getContext() != null) {
+            ArrayAdapter<String> WPSadapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, arrayList);
+            WPSList.setAdapter(WPSadapter);
+        }
 
-        //Reset interface
+        // Reset interface
         Button resetifaceButton = rootView.findViewById(R.id.resetinterface);
         resetifaceButton.setOnClickListener(view -> {
-            executor.execute(() -> {
-                activity.runOnUiThread(() -> {
-                    if (iswatch)
-                        exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting off; sleep 1 && settings put system clockwork_wifi_setting on && ifconfig wlan0 up"});
-                    else
-                        exe.RunAsRoot(new String[]{"svc wifi disable; sleep 1 && svc wifi enable"});
-                    Toast.makeText(activity.getApplicationContext(), "Done", Toast.LENGTH_SHORT).show();
-                });
-            });
+            ExecutorService executor = Executors.newSingleThreadExecutor();
+            executor.execute(() -> requireActivity().runOnUiThread(() -> {
+                if (iswatch) exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting off; sleep 1 && settings put system clockwork_wifi_setting on && ip link set wlan0 up"});
+                else exe.RunAsRoot(new String[]{"svc wifi disable; sleep 1 && svc wifi enable"});
+                Toast.makeText(requireActivity().getApplicationContext(), "Done", Toast.LENGTH_SHORT).show();
+            }));
         });
 
-        //Select target network
+        // Select target network
         WPSList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()  {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
@@ -128,7 +166,7 @@ public class WPSFragment extends Fragment {
             }
         });
 
-        //Checkboxes
+        // Checkboxes
         PixieCheckbox = rootView.findViewById(R.id.pixie);
         PixieForceCheckbox = rootView.findViewById(R.id.pixieforce);
         BruteCheckbox = rootView.findViewById(R.id.brute);
@@ -188,20 +226,18 @@ public class WPSFragment extends Fragment {
                 pbcCMD = "";
         });
 
-        //Start attack
+        // Start attack
         Button startButton = rootView.findViewById(R.id.start_oneshot);
-        SelectedIface = rootView.findViewById(R.id.wps_iface);
         DelayTime = rootView.findViewById(R.id.delaytime);
 
         startButton.setOnClickListener(v ->  {
-            String selected_interface = SelectedIface.getText().toString();
             customPIN = CustomPIN.getText().toString();
             delayTIME = DelayTime.getText().toString();
-            if (!selected_network.equals("")) {
+            if (!selected_network.isEmpty()) {
                 run_cmd("python3 /sdcard/nh_files/modules/oneshot.py -b " + selected_network +
-                        " -i " + selected_interface + pixieCMD + pixieforceCMD + bruteCMD + customPINCMD + customPIN + delayCMD + delayTIME + pbcCMD);
+                        " -i " + selectedInterface + pixieCMD + pixieforceCMD + bruteCMD + customPINCMD + customPIN + delayCMD + delayTIME + pbcCMD);
             }
-            else Toast.makeText(getActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
+            else Toast.makeText(requireActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
         });
 
         return rootView;
@@ -212,46 +248,35 @@ public class WPSFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-    }
-
-    @Override
-    public void onDestroyView() {
-        super.onDestroyView();
-        executor.shutdown();
-    }
-
     private void scanWifi() {
         arrayList.clear();
         arrayList.add("Scanning..");
-        WPSList.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, arrayList));
+        WPSList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, arrayList));
         WPSList.setVisibility(View.VISIBLE);
         Handler handler = new Handler();
         arrayList.clear();
         arrayList.add("Scanning..");
-        WPSList.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, arrayList));
+        WPSList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, arrayList));
         handler.postDelayed(() -> {
             arrayList.clear();
             arrayList.add("Scanning...");
-            WPSList.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, arrayList));
+            WPSList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, arrayList));
         }, 1500);
 
+        ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
-            String selected_interface = SelectedIface.getText().toString();
-            String outputScanLog = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd python3 /sdcard/nh_files/modules/oneshot.py -i " + selected_interface + " -s | grep -E '[0-9])' | tr -s ' ' | cut -d ' ' -f 2-3");
-            activity.runOnUiThread(() -> {
+            String outputScanLog = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd python3 /sdcard/nh_files/modules/oneshot.py -i " + selectedInterface + " -s | grep -E '[0-9])' | tr -s ' ' | cut -d ' ' -f 2-3");
+            requireActivity().runOnUiThread(() -> {
                 final String[] arrayList = outputScanLog.split("\n");
-                ArrayAdapter targetsadapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1, arrayList);
-                if (outputScanLog.equals("")) {
+                ArrayAdapter<String> targetsadapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, arrayList);
+                if (outputScanLog.isEmpty()) {
                     final ArrayList<String> notargets = new ArrayList<>();
                     notargets.add("No nearby WPS networks");
-                    WPSList.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, notargets));
+                    WPSList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, notargets));
                 } else if (outputScanLog.equals("Error:;command")) {
                     final ArrayList<String> notargets = new ArrayList<>();
                     notargets.add("Please reset the interface!");
-                    WPSList.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, notargets));
+                    WPSList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, notargets));
                 } else {
                     WPSList.setAdapter(targetsadapter);
                 }
@@ -263,7 +288,7 @@ public class WPSFragment extends Fragment {
     // Bridge side functions
     ////
 
-    public static void run_cmd(String cmd) {
+    public void run_cmd(String cmd) {
         Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
         activity.startActivity(intent);
     }

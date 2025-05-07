@@ -556,6 +556,23 @@
 
     <string name="duckhunter_conversion_failed">Conversion failed.</string>
 
+    <!-- WPS -->
+    <string name="wps_wireless_interface">Wireless interface:</string>
+    <string name="wps_scan">Scan</string>
+    <string name="wps_reset_interface">Reset interface</string>
+    <string name="wps_pixie_dust">Pixie Dust</string>
+    <string name="wps_pixie_force">Pixie Force</string>
+    <string name="wps_online_bruteforce">Online Bruteforce</string>
+    <string name="wps_custom_pin">Custom PIN</string>
+    <string name="wps_delay">Delay</string>
+    <string name="wps_wps_button">WPS Button</string>
+    <string name="wps_pin">PIN:</string>
+    <string name="wps_wpspin_hint">12345678</string>
+    <string name="wps_delay2">Delay:</string>
+    <string name="wps_delaytime_hint">1</string>
+    <string name="wps_seconds">seconds</string>
+    <string name="wps_launch_attack">Launch attack</string>
+
     <!-- CAN -->
     <string name="can_description">This module allow you to use CAN Bus with various tools. Kernel device should have CAN support enabled, for more information look at the documentation in the menu.</string>
     <string name="can_tools_desc">Unleash the power of can-utils suite by managing logs and Generate, Dump, Sniff or Replay signals! You may also run car diagnosis using Freediag and transfert CAN frames between two machines using Cannelloni tool!</string>
