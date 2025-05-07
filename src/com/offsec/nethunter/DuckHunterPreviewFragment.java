@@ -26,7 +26,6 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-
 public class DuckHunterPreviewFragment extends Fragment {
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -43,7 +42,7 @@ public class DuckHunterPreviewFragment extends Fragment {
                 activity.sendBroadcast(new Intent()
                         .putExtra("ACTION", "SHOULDCONVERT")
                         .putExtra("SHOULDCONVERT", false)
-                        .setAction(BuildConfig.APPLICATION_ID + ".SHOULDCONVERT"));
+                        .setAction(BuildConfig.APPLICATION_ID + ".SHOULDCONVERT").setPackage(activity.getPackageName()));
 
                 executorService.execute(() -> {
                     boolean convertResult = exe.RunAsRootReturnValue(
