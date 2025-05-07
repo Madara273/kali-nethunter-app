@@ -18,7 +18,6 @@ import java.io.FileOutputStream;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 
-
 public class USBArsenalSQL extends SQLiteOpenHelper {
     private static USBArsenalSQL instance;
     private static final String DATABASE_NAME = "USBArsenalFragment";
@@ -142,7 +141,14 @@ public class USBArsenalSQL extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
-        // TODO document why this method is empty
+        db.execSQL("DROP TABLE IF EXISTS " + USBSWITCH_TABLE_NAME);
+        db.execSQL("DROP TABLE IF EXISTS " + USBNETWORK_TABLE_NAME);
+        onCreate(db);
+    }
+
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        onUpgrade(db, oldVersion, newVersion);
     }
 
     public USBArsenalUSBSwitchModel getUSBSwitchColumnData(String targetOSName, String functionName){
