@@ -51,18 +51,18 @@ public class PermissionCheck {
         for (String permissions:PERMISSIONS){
             if (ContextCompat.checkSelfPermission(context, permissions) != PackageManager.PERMISSION_GRANTED){
                 Log.e(TAG, "Permissions are NOT all granted.");
-                return false;
+                return true;
             }
         }
         Log.d(TAG, "All permissions are granted.");
-        return true;
+        return false;
     }
 
     public void requestPermissions() {
-        if (!isAllPermitted(DEFAULT_PERMISSIONS)) {
+        if (isAllPermitted(DEFAULT_PERMISSIONS)) {
             checkPermissions(DEFAULT_PERMISSIONS, DEFAULT_PERMISSION_RQCODE);
         }
-        if (!isAllPermitted(NH_TERM_PERMISSIONS)) {
+        if (isAllPermitted(NH_TERM_PERMISSIONS)) {
             checkPermissions(NH_TERM_PERMISSIONS, NH_TERM_PERMISSIONS_RQCODE);
         }
     }

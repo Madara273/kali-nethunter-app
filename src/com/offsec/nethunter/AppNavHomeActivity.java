@@ -692,10 +692,10 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
     }
 
     private boolean isAllRequiredPermissionsGranted(){
-        if (!permissionCheck.isAllPermitted(PermissionCheck.DEFAULT_PERMISSIONS)) {
+        if (permissionCheck.isAllPermitted(PermissionCheck.DEFAULT_PERMISSIONS)) {
             permissionCheck.checkPermissions(PermissionCheck.DEFAULT_PERMISSIONS, PermissionCheck.DEFAULT_PERMISSION_RQCODE);
             return false;
-        } else if (!permissionCheck.isAllPermitted(PermissionCheck.NH_TERM_PERMISSIONS)) {
+        } else if (permissionCheck.isAllPermitted(PermissionCheck.NH_TERM_PERMISSIONS)) {
             permissionCheck.checkPermissions(PermissionCheck.NH_TERM_PERMISSIONS, PermissionCheck.NH_TERM_PERMISSIONS_RQCODE);
             return false;
         }
