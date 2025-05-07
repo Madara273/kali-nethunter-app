@@ -27,7 +27,7 @@
     <string name="kaliservices_howto_runServiceOnBoot">To automatically start the service after Kali Chroot is up, check this option.</string>
 
     <!-- Modules -->
-    <string name="modules_description">Load drivers, if you have any enabled as modules. Most devices use all drivers as inbuilt. Alpha version.</string>
+    <string name="modules_description">Manage kernel modules, if your kernel has any supported. Most devices use all drivers as inbuilt. For information (modinfo) click and hold selected module for menu.</string>
 
     <!-- CustomCommands -->
     <string name="custom_commands_description">You can ADD, DELETE, MOVE, SEARCH, BACKUP, RESTORE and RESET your custom command item. You can also long click on the item label to EDIT the item.</string>
@@ -556,11 +556,39 @@
 
     <string name="duckhunter_conversion_failed">Conversion failed.</string>
 
+    <!-- AUDIO -->
+    <string name="audio_service_not_connected">Service not connected yet. Please wait.</string>
+    <string name="audio_serverinput">127.0.0.1</string>
+    <string name="audio_portinput">8000</string>
+    <string name="audio_service_not_bound">Service not bound. Please try again.</string>
+    <string name="error_title_empty">services_error_title_empty</string>
+
+    <!-- VNC -->
+    <string name="vnc_watch_status">Status:</string>
+    <string name="vnc_watch_sessions">Sessions:</string>
+    <string name="vnc_hide_advanced_settings">HIDE ADVANCED SETTINGS</string>
+    <string name="vnc_disable_audio">Disable audio</string>
+    <string name="vnc_enable_audio">Enable audio</string>
+    <string name="vnc_hide_advanced_settings2">HIDE ADVANCED SETTINGS</string>
+    <string name="vnc_show_advanced_settings">SHOW ADVANCED SETTINGS</string>
+    <string name="vnc_stopped">STOPPED</string>
+    <string name="vnc_kexuser_none">None</string>
+    <string name="vnc_running">RUNNING</string>
+    <string name="vnc_enable_audio2">Enable audio</string>
+    <string name="vnc_disable_audio2">Disable audio</string>
+
     <!-- MACCHANGER -->
     <string name="macchanger_generate">GENERATE</string>
     <string name="macchanger_clear">CLEAR</string>
     <string name="macchanger_set_hostname">Set Hostname</string>
     <string name="macchanger_current_hostname">Current Hostname:</string>
+
+    <!-- SERVICES -->
+    <string name="kaliservices_full_path_save_db">Full path to where you want to save the database:</string>
+    <string name="kaliservices_full_path_restore_db">Full path of the db file from where you want to restore:</string>
+    <string name="service_servicename_start"><![CDATA[service <servicename> start]]></string>
+    <string name="service_servicename_stop"><![CDATA[service <servicename> stop]]></string>
+    <string name="service_servicename"><![CDATA[<servicename>]]></string>
 
     <!-- WPS -->
     <string name="wps_wireless_interface">Wireless interface:</string>
@@ -578,6 +606,12 @@
     <string name="wps_delaytime_hint">1</string>
     <string name="wps_seconds">seconds</string>
     <string name="wps_launch_attack">Launch attack</string>
+
+    <!-- MODULES -->
+    <string-array name="sort_options">
+        <item>Alphabetical</item>
+        <item>Reverse Alphabetical</item>
+    </string-array>
 
     <!-- CAN -->
     <string name="can_description">This module allow you to use CAN Bus with various tools. Kernel device should have CAN support enabled, for more information look at the documentation in the menu.</string>
