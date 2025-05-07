@@ -11,4 +11,3 @@
         android:paddingTop="10dp"
         android:textColor="#FFFFFF" />
 </androidx.viewpager.widget.ViewPager>
-        

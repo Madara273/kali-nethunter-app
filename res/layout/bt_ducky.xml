@@ -9,8 +9,7 @@
         android:paddingRight="16dp"
         android:orientation="vertical"
         android:focusable="true"
-        android:focusableInTouchMode="true"
-        >
+        android:focusableInTouchMode="true">
 
         <TextView
             android:id="@+id/reference_text"
@@ -47,6 +46,7 @@
 
         <EditText
             android:id="@+id/editSource"
+            android:autofillHints="none"
             android:minLines="5"
             android:gravity="start|top"
             android:hint="Enter your ducky script here..."
