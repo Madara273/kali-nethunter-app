@@ -34,6 +34,7 @@
             android:id="@+id/ifc"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:autofillHints="none"
             android:ems="10"/>
 
         <com.google.android.material.button.MaterialButton
@@ -42,6 +43,5 @@
             android:layout_height="wrap_content"
             android:onClick="updateOptions"
             android:text="@string/update" />
-
     </LinearLayout>
 </ScrollView>

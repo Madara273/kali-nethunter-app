@@ -73,7 +73,7 @@ function dep_check() {
         if [ "$PKG_OK" = "" ]; then
             bklog "[-] Missing dependency: ${i}"
             bklog "[+] Attempting to install...."
-            chroot $MNT /usr/bin/sudo apt-get -y install ${i}
+            chroot $MNT /usr/bin/sudo apt -y install ${i}
         fi
         ## Let's check if it really has $i installed ##
         PKG_OK=$(chroot $MNT /usr/bin/dpkg-query -W --showformat='${Status}\n' ${i}|grep "install ok installed")

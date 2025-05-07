@@ -31,15 +31,13 @@
                 android:layout_height="wrap_content"
                 android:text="Internal Wifi AP mode:"
                 android:padding="4dp"
-                android:textAppearance="?android:attr/textAppearanceSmall"
-                />
+                android:textAppearance="?android:attr/textAppearanceSmall" />
 
             <TextView
                 android:id="@+id/wlan0ap"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="Loading.." />
-
         </LinearLayout>
 
         <View
@@ -61,7 +59,6 @@
                 android:layout_weight="1"
                 android:text="Virtual wlan1 interface"
                 android:textAppearance="?android:attr/textAppearanceSmall" />
-
         </LinearLayout>
 
         <View
@@ -81,8 +78,7 @@
                 android:layout_height="wrap_content"
                 android:text="Access Point"
                 android:padding="4dp"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <EditText
                 android:id="@+id/ap_interface"
@@ -90,7 +86,6 @@
                 android:layout_height="wrap_content"
                 android:inputType="text"
                 android:hint="wlan1" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -104,8 +99,7 @@
                 android:layout_height="wrap_content"
                 android:text="Upstream"
                 android:padding="4dp"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <EditText
                 android:id="@+id/net_interface"
@@ -113,7 +107,6 @@
                 android:layout_height="wrap_content"
                 android:inputType="text"
                 android:hint="wlan0" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -127,8 +120,7 @@
                 android:layout_height="wrap_content"
                 android:text="SSID"
                 android:padding="4dp"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <EditText
                 android:id="@+id/ssid"
@@ -136,7 +128,6 @@
                 android:layout_height="wrap_content"
                 android:inputType="text"
                 android:hint="Free Wifi" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -150,8 +141,7 @@
                 android:layout_height="wrap_content"
                 android:text="BSSID"
                 android:padding="4dp"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <EditText
                 android:id="@+id/bssid"
@@ -159,7 +149,6 @@
                 android:layout_height="wrap_content"
                 android:inputType="text"
                 android:hint="00:11:22:33:44:55" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -173,8 +162,7 @@
                 android:layout_height="wrap_content"
                 android:text="Channel"
                 android:padding="4dp"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <EditText
                 android:id="@+id/channel"
@@ -182,7 +170,6 @@
                 android:layout_height="wrap_content"
                 android:inputType="number"
                 android:hint="1" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -197,8 +184,7 @@
             android:text="Captive Portal"
             android:padding="4dp"
             android:layout_weight="15"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            />
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <ImageButton
             android:id="@+id/refreshTemplates"
@@ -206,7 +192,6 @@
             android:layout_height="wrap_content"
             app:srcCompat="@drawable/ic_action_refresh"
             android:layout_weight="1"/>
-
         </LinearLayout>
 
         <View
@@ -238,7 +223,6 @@
                 android:visibility="gone"
                 android:text="Preview"
                 android:textAppearance="?android:attr/textAppearanceSmall" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -254,9 +238,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
-                />
-
+                android:layout_marginBottom="10dp" />
         </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
@@ -280,7 +262,5 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_constraintEnd_toEndOf="parent" />
-
     </LinearLayout>
-
 </ScrollView>

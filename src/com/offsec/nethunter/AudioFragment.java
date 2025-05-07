@@ -1,6 +1,5 @@
 package com.offsec.nethunter;
 
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -25,20 +24,18 @@ import android.text.style.ForegroundColorSpan;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Arrays;
 import java.util.List;
 
 public class AudioFragment extends Fragment {
-
     public final static String TAG = "AudioFragment";
     public static final int DEFAULT_INDEX_BUFFER_HEADROOM = 4;
     public static final int DEFAULT_INDEX_TARGET_LATENCY = 6;
-
     private static final List<Long> VALUES_BUFFER_HEADROOM = Arrays.asList(0L, 15625L, 31250L, 62500L, 125000L, 250000L, 500000L, 1000000L, 2000000L);
     private static final List<Long> VALUES_TARGET_LATENCY = Arrays.asList(0L, 15625L, 31250L, 62500L, 125000L, 250000L, 500000L, 1000000L, 2000000L, 5000000L, 10000000L, -1L);
-
     private Button playButton;
     private Spinner bufferHeadroomSpinner;
     private Spinner targetLatencySpinner;
@@ -47,14 +44,12 @@ public class AudioFragment extends Fragment {
     private CheckBox autoStartCheckBox;
     private TextView errorText;
     private ScrollView fullScrollView;
-
     private Throwable error;
-
     private boolean isServiceBound = false;
     private AudioPlaybackService boundService;
-    private int itemId; // Store the itemId passed via newInstance
+    private int itemId;
 
-    private ServiceConnection mConnection = new ServiceConnection() {
+    private final ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             boundService = ((AudioPlaybackService.LocalBinder) service).getService();
             if (boundService != null) {
@@ -118,13 +113,13 @@ public class AudioFragment extends Fragment {
         TextView moduleVerLabel = view.findViewById(R.id.buildVersionLabel);
 
         String builderinfo = getString(R.string.builderinfo);
-        builderinfoLabel.setText("Maintainer: " + builderinfo);
+        builderinfoLabel.setText(MessageFormat.format("Maintainer: {0}", builderinfo));
 
         String moduleInfo = getString(R.string.moduleInfo);
-        moduleInfoLabel.setText("Info: " + moduleInfo);
+        moduleInfoLabel.setText(MessageFormat.format("Info: {0}", moduleInfo));
 
         String BuildVerInfo = getString(R.string.build_version);
-        moduleVerLabel.setText("Version: " + BuildVerInfo);
+        moduleVerLabel.setText(MessageFormat.format("Version: {0}", BuildVerInfo));
 
         playButton.setOnClickListener(v -> {
             if (boundService != null) {
@@ -183,7 +178,6 @@ public class AudioFragment extends Fragment {
     }
 
     private void setupDefaultAudioConfig() {
-
         serverInput.setText("127.0.0.1");
         portInput.setText("8000");
 
@@ -211,7 +205,6 @@ public class AudioFragment extends Fragment {
         }
         return formattedValues;
     }
-
 
     private void updatePrefs(AudioPlaybackService service) {
         String serverPref = service.getServerPref();
@@ -347,5 +340,13 @@ public class AudioFragment extends Fragment {
         if (boundService != null) {
             boundService.stop();
         }
+    }
+
+    public ScrollView getFullScrollView() {
+        return fullScrollView;
+    }
+
+    public void setFullScrollView(ScrollView fullScrollView) {
+        this.fullScrollView = fullScrollView;
     }
 }

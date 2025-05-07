@@ -43,7 +43,7 @@ public class RunAtBootService extends JobIntentService {
         }
         n.setStyle(new NotificationCompat.BigTextStyle().bigText(contents))
                 .setContentTitle(RunAtBootService.TAG)
-                .setSmallIcon(R.drawable.ic_stat_ic_nh_notificaiton)
+                .setSmallIcon(R.drawable.ic_stat_ic_nh_notification)
                 .setAutoCancel(true);
         NotificationManager notificationManager =
                 (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
