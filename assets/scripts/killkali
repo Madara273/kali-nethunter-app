@@ -87,7 +87,6 @@ f_umount_fs() {
             fi
         fi
     fi
-
 }
 
 ########## umount if chroot directory is NOT a mountpoint(directory method) ##########
@@ -109,7 +108,6 @@ f_is_mntpoint() {
         return 1
     fi
 }
-
 
 ###################
 #### MAIN PART ####
@@ -137,4 +135,3 @@ else
 fi
 
 return $isAllunmounted
-
