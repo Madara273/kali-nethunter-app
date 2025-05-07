@@ -6,13 +6,10 @@ public enum AudioPlayState {
     BUFFERING(true),
     STARTED(true),
     STOPPING(false);
-
     private final boolean isActive;
-
     AudioPlayState(boolean active) {
         isActive = active;
     }
-
     public boolean isActive() {
         return isActive;
     }

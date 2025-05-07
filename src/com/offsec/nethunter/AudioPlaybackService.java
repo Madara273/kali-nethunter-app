@@ -34,14 +34,10 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
      * Unique ID for the Notification.
      */
     private static final int NOTIFICATION = R.string.playback_service_status;
-
     private static final String ACTION_TOGGLE = AudioPlaybackService.class.getName() + ".TOGGLE";
-
     public static final String KEY_BUFFER_HEADROOM = "buffer_ms_ahead";
     public static final String KEY_TARGET_LATENCY = "buffer_ms_behind";
-
     private final IBinder binder = new LocalBinder(this);
-
     private Handler handler = new Handler();
     private NotificationManager notifManager;
     private PowerManager.WakeLock wakeLock;
@@ -49,11 +45,11 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
 
     @Nullable
     private AudioPlaybackWorker playWorker = null;
+
     @Nullable
     private Thread playWorkerThread;
     private long headroomUsec = 125000;
     private long latencyUsec = 1000000;
-
     private final MutableLiveData<AudioPlayState> playState = new MutableLiveData<>();
     private SharedPreferences sharedPrefs;
 
@@ -188,9 +184,7 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
         playWorkerThread = new Thread(playWorker);
 
         startForeground(NOTIFICATION, createNotification(STARTING));
-
         notifyState(STARTING);
-
         playWorkerThread.start();
 
         // allow running in the background when service gets unbound
@@ -355,14 +349,11 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
      */
     public static class LocalBinder extends Binder {
         private final AudioPlaybackService service;
-
         public LocalBinder(AudioPlaybackService service) {
             this.service = service;
         }
-
         public AudioPlaybackService getService() {
             return service;
         }
     }
-    
 }
