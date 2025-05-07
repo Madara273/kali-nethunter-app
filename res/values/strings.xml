@@ -556,6 +556,12 @@
 
     <string name="duckhunter_conversion_failed">Conversion failed.</string>
 
+    <!-- MACCHANGER -->
+    <string name="macchanger_generate">GENERATE</string>
+    <string name="macchanger_clear">CLEAR</string>
+    <string name="macchanger_set_hostname">Set Hostname</string>
+    <string name="macchanger_current_hostname">Current Hostname:</string>
+
     <!-- WPS -->
     <string name="wps_wireless_interface">Wireless interface:</string>
     <string name="wps_scan">Scan</string>

@@ -1,11 +1,10 @@
 package com.offsec.nethunter;
 
-
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -19,11 +18,11 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.offsec.nethunter.Executor.MacchangerExecutor;
-import com.offsec.nethunter.utils.NhPaths;
+import com.offsec.nethunter.utils.ShellExecuter;
 
+import java.io.BufferedReader;
 import java.net.NetworkInterface;
 import java.security.SecureRandom;
 import java.text.MessageFormat;
@@ -31,14 +30,12 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
-
-import static com.offsec.nethunter.R.id.f_nethunter_action_search;
-
 
 public class MacchangerFragment extends Fragment {
     private static final String TAG = "MacchangerFragment";
@@ -59,11 +56,12 @@ public class MacchangerFragment extends Fragment {
     private EditText mac5;
     private EditText mac6;
     private TextView currentMacTextView;
-    private TextView currentHostNameTextView;
     private ImageButton reloadImageButton;
     private static final HashMap<String, String> iFaceAndMacHashMap = new HashMap<>();
     private Context context;
     private Activity activity;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
     public static MacchangerFragment newInstance(int sectionNumber) {
         MacchangerFragment fragment = new MacchangerFragment();
@@ -91,7 +89,6 @@ public class MacchangerFragment extends Fragment {
         resetMacButton = rootView.findViewById(R.id.f_macchanger_reset_mac_btn);
         netHostNameEditText = rootView.findViewById(R.id.f_macchanger_phone_name_et);
         currentMacTextView = rootView.findViewById(R.id.f_macchanger_currMac_tv);
-        currentHostNameTextView = rootView.findViewById(R.id.f_macchanger_hostname_tv);
         reloadImageButton = rootView.findViewById(R.id.f_macchanger_reloadMAC_imgbtn);
         regenerateMacButton = rootView.findViewById(R.id.f_macchanger_regenerate_mac_btn);
         clearMacButton = rootView.findViewById(R.id.f_macchanger_clear_mac_btn);
@@ -108,9 +105,9 @@ public class MacchangerFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         getIfaceAndMacAddr();
+        setupInterfaceSpinner();
         setHostNameEditText();
         setSetHostnameButton();
-        setIfaceSpinner();
         setMacModeSpinner();
         setReloadImageButton();
         setChangeMacButton();
@@ -128,6 +125,7 @@ public class MacchangerFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        executorService.shutdown();
         interfaceSpinner = null;
         macModeSpinner = null;
         changeMacButton = null;
@@ -143,7 +141,6 @@ public class MacchangerFragment extends Fragment {
         mac5 = null;
         mac6 = null;
         currentMacTextView = null;
-        currentHostNameTextView = null;
         reloadImageButton = null;
     }
 
@@ -160,70 +157,46 @@ public class MacchangerFragment extends Fragment {
         mac6.setText(String.format("%02x", macAddr[5]));
     }
 
-    private void setHostNameEditText(){
-        MacchangerExecutor macchangerExecutor = new MacchangerExecutor(MacchangerExecutor.GETHOSTNAME);
-        macchangerExecutor.setListener(new MacchangerExecutor.MacchangerExecutorListener() {
-            @Override
-            public void onPrepare() {
-
+    private void setHostNameEditText() {
+        executeTask(() -> {
+            String result = "unknown";
+            try (BufferedReader reader = new BufferedReader(new java.io.FileReader("/proc/sys/kernel/hostname"))) {
+                result = reader.readLine();
+            } catch (java.io.FileNotFoundException e) {
+                Log.e(TAG, "Hostname file not found: " + e.getMessage());
+            } catch (java.io.IOException e) {
+                Log.e(TAG, "Error reading hostname: " + e.getMessage());
             }
-
-            @Override
-            public void onFinished(Object result) {
-
-            }
-
-            public void onExecutorPrepare() {
-
-            }
-
-            public void onExecutorFinished(Object result) {
-                if (result != null) {
-                    netHostNameEditText.setText(result.toString());
-                    currentHostNameTextView.setText(result.toString());
-                } else {
-                    netHostNameEditText.setText("");
-                    currentHostNameTextView.setText("");
-                }
-            }
-        });
-        macchangerExecutor.execute();
-    }
-
-    private void setSetHostnameButton(){
-        setHostNameButton.setOnClickListener(v -> {
-            MacchangerExecutor macchangerExecutor = new MacchangerExecutor(MacchangerExecutor.SETHOSTNAME);
-            macchangerExecutor.setListener(new MacchangerExecutor.MacchangerExecutorListener() {
-                @Override
-                public void onPrepare() {
-
-                }
-
-                @Override
-                public void onFinished(Object result) {
-
-                }
-
-                public void onExecutorPrepare() {
-
-                }
-
-                public void onExecutorFinished(Object result) {
-                    NhPaths.showMessage(context, "net.hostname is set to " + netHostNameEditText.getText().toString());
-                    setHostNameEditText();
+            final String hostname = result;
+            mainHandler.post(() -> {
+                if (netHostNameEditText != null) {
+                    netHostNameEditText.setText(hostname);
                 }
             });
-            macchangerExecutor.execute(netHostNameEditText.getText().toString());
         });
     }
 
-    private void setIfaceSpinner() {
+    private void setSetHostnameButton() {
+        setHostNameButton.setOnClickListener(v -> {
+            String newHostName = netHostNameEditText.getText().toString();
+            executeTask(() -> {
+                new ShellExecuter().RunAsRootOutput("setprop net.hostname " + newHostName);
+                mainHandler.post(() -> {
+                    showToast("net.hostname is set to " + newHostName);
+                    setHostNameEditText();
+                });
+            });
+        });
+    }
+
+    private void setupInterfaceSpinner() {
         List<String> keys = new ArrayList<>(iFaceAndMacHashMap.keySet());
         Collections.sort(keys, Collections.reverseOrder());
         String[] iFaceStrings = keys.toArray(new String[0]);
         ArrayAdapter<String> iFaceArrayAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_item, iFaceStrings);
         iFaceArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         interfaceSpinner.setAdapter(iFaceArrayAdapter);
+        interfaceSpinner.setSelection(lastSelectedIfacePosition);
         interfaceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -232,16 +205,13 @@ public class MacchangerFragment extends Fragment {
                 changeMacButton.setText(MessageFormat.format("{0} {1}", getString(R.string.changeMAC), interfaceSpinner.getSelectedItem().toString().toUpperCase()));
                 resetMacButton.setText(MessageFormat.format("{0} {1}", getString(R.string.resetMAC), interfaceSpinner.getSelectedItem().toString().toUpperCase()));
             }
-
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
+            public void onNothingSelected(AdapterView<?> parent) {}
         });
     }
 
     private void setMacModeSpinner() {
-        if (macModeSpinner.getSelectedItemPosition() == 0){
+        if (macModeSpinner.getSelectedItemPosition() == 0) {
             regenerateMacButton.setVisibility(View.VISIBLE);
             clearMacButton.setVisibility(View.GONE);
         } else {
@@ -251,20 +221,17 @@ public class MacchangerFragment extends Fragment {
         macModeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position == 0){
+                if (position == 0) {
                     regenerateMacButton.setVisibility(View.VISIBLE);
                     clearMacButton.setVisibility(View.GONE);
                     genRandomMACAddress();
-                } else if (position == 1){
+                } else if (position == 1) {
                     regenerateMacButton.setVisibility(View.GONE);
                     clearMacButton.setVisibility(View.VISIBLE);
                 }
             }
-
             @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
+            public void onNothingSelected(AdapterView<?> parent) {}
         });
     }
 
@@ -272,7 +239,7 @@ public class MacchangerFragment extends Fragment {
         regenerateMacButton.setOnClickListener(v -> genRandomMACAddress());
     }
 
-    private void setClearMacButton(){
+    private void setClearMacButton() {
         clearMacButton.setOnClickListener(v -> {
             mac1.setText("");
             mac2.setText("");
@@ -286,13 +253,7 @@ public class MacchangerFragment extends Fragment {
     private void setReloadImageButton() {
         reloadImageButton.setOnClickListener(v -> {
             getIfaceAndMacAddr();
-            List<String> keys  = new ArrayList<>(iFaceAndMacHashMap.keySet());
-            Collections.sort(keys, Collections.reverseOrder());
-            String[] iFaceStrings = keys.toArray(new String[0]);
-            ArrayAdapter<String> iFaceArrayAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_item, iFaceStrings);
-            iFaceArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            interfaceSpinner.setAdapter(iFaceArrayAdapter);
-            interfaceSpinner.setSelection(lastSelectedIfacePosition);
+            setupInterfaceSpinner();
         });
     }
 
@@ -309,7 +270,6 @@ public class MacchangerFragment extends Fragment {
                 for (byte b : macBytes) {
                     macaddrStringBuilder.append(String.format("%02X:", b));
                 }
-
                 if (macaddrStringBuilder.length() > 0) {
                     macaddrStringBuilder.deleteCharAt(macaddrStringBuilder.length() - 1);
                 }
@@ -318,124 +278,77 @@ public class MacchangerFragment extends Fragment {
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
         }
-
         Log.d("DEBUG", iFaceAndMacHashMap.toString());
     }
 
     private void setResetMacButton() {
-        resetMacButton.setOnClickListener(v -> {
-            MacchangerExecutor macchangerExecutor = new MacchangerExecutor(MacchangerExecutor.GETORIGINMAC);
-            macchangerExecutor.setListener(new MacchangerExecutor.MacchangerExecutorListener() {
-                @Override
-                public void onPrepare() {
-
-                }
-
-                @Override
-                public void onFinished(Object result) {
-
-                }
-
-                public void onExecutorPrepare() {
-
-                }
-
-                public void onExecutorFinished(Object result) {
-                    MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(activity, R.style.DialogStyle);
-                    final AlertDialog ad = adb.create();
-                    String originalMac = result.toString();
-                    ad.setTitle("Warning!");
-                    ad.setMessage("Are you sure to change the " + interfaceSpinner.getSelectedItem().toString().toLowerCase() +
-                            "'s MAC address back to the original MAC address: " + originalMac + " ?");
-                    ad.setButton(DialogInterface.BUTTON_POSITIVE, "YES", (dialog, which) -> {
-                        ad.dismiss();
-                        MaterialAlertDialogBuilder adb1 = new MaterialAlertDialogBuilder(activity, R.style.DialogStyle);
-                        final AlertDialog ad1 = adb1.create();
-                        ad1.setCancelable(false);
-                        ad1.setMessage("Changing MAC address on " + interfaceSpinner.getSelectedItem().toString().toLowerCase() + ". Please wait..");
-
-                        MacchangerExecutor macchangerExecutor1 = new MacchangerExecutor(MacchangerExecutor.SETMAC);
-                        macchangerExecutor1.setListener(new MacchangerExecutor.MacchangerExecutorListener() {
-                            @Override
-                            public void onPrepare() {
-
-                            }
-
-                            @Override
-                            public void onFinished(Object result) {
-
-                            }
-
-                            public void onExecutorPrepare() {
-                                ad1.show();
-                            }
-
-                            public void onExecutorFinished(Object result1) {
-                                ad1.dismiss();
-                                if ((int)result1 == 0){
-                                    NhPaths.showMessage(context, "The MAC address of " + interfaceSpinner.getSelectedItem().toString().toLowerCase() +
-                                            " has been successfully changed to " + originalMac);
-                                } else {
-                                    NhPaths.showMessage_long(context, "Failed changing the MAC address on " + interfaceSpinner.getSelectedItem().toString().toLowerCase());
-                                }
-                                reloadImageButton.performClick();
-                            }
-                        });
-                        macchangerExecutor1.execute(interfaceSpinner.getSelectedItem().toString().toLowerCase(), result.toString());
+        resetMacButton.setOnClickListener(v -> executeTask(() -> {
+            String iface = interfaceSpinner.getSelectedItem().toString().toLowerCase();
+            String originalMac = new ShellExecuter().RunAsRootOutput("cat /sys/class/net/" + iface + "/address");
+            if (originalMac == null || originalMac.isEmpty()) {
+                Log.e(TAG, "Failed to retrieve the original MAC address for interface: " + iface);
+                mainHandler.post(() -> showToast("Failed to retrieve the original MAC address for " + iface));
+                return;
+            }
+            mainHandler.post(() -> {
+                showToast("Restoring original MAC for " + iface + ": " + originalMac);
+                executeTask(() -> {
+                    int result = new ShellExecuter().RunAsRootReturnValue(
+                            "ip link set " + iface + " down && " +
+                                    "ip link set " + iface + " address " + originalMac + " && " +
+                                    "ip link set " + iface + " up"
+                    );
+                    mainHandler.post(() -> {
+                        if (result == 0) {
+                            showToast("MAC address of " + iface + " restored to " + originalMac);
+                        } else {
+                            showToast("Failed to restore MAC address on " + iface);
+                        }
+                        reloadImageButton.performClick();
                     });
-                    ad.show();
-                }
+                });
             });
-            macchangerExecutor.execute(interfaceSpinner.getSelectedItem().toString().toLowerCase());
-        });
+        }));
     }
 
     private void setChangeMacButton() {
         changeMacButton.setOnClickListener(v -> {
-            String macAddress = mac1.getText().toString().toLowerCase() + ":" +
-                    mac2.getText().toString().toLowerCase() + ":" +
-                    mac3.getText().toString().toLowerCase() + ":" +
-                    mac4.getText().toString().toLowerCase() + ":" +
-                    mac5.getText().toString().toLowerCase() + ":" +
-                    mac6.getText().toString().toLowerCase();
-
-            MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(activity, R.style.DialogStyle);
-            final AlertDialog ad = adb.create();
-            ad.setCancelable(false);
-            ad.setMessage("Changing MAC address on " + interfaceSpinner.getSelectedItem().toString().toLowerCase() + ". Please wait..");
-
-            MacchangerExecutor macchangerExecutor = new MacchangerExecutor(MacchangerExecutor.SETMAC);
-            macchangerExecutor.setListener(new MacchangerExecutor.MacchangerExecutorListener() {
-                @Override
-                public void onPrepare() {
-
-                }
-
-                @Override
-                public void onFinished(Object result) {
-
-                }
-
-                public void onExecutorPrepare() {
-                    ad.show();
-                }
-
-                public void onExecutorFinished(Object result) {
-                    ad.dismiss();
-                    if ((int)result == 0){
-                        NhPaths.showMessage(context, "The MAC address of " + interfaceSpinner.getSelectedItem().toString().toLowerCase() +
-                                " has been successfully changed to " + macAddress);
+            String macAddress = getMacAddress();
+            showToast("Changing MAC address on " + interfaceSpinner.getSelectedItem().toString().toLowerCase() + "...");
+            executeTask(() -> {
+                String iface = interfaceSpinner.getSelectedItem().toString().toLowerCase();
+                int result = new ShellExecuter().RunAsRootReturnValue(
+                        "ip link set " + iface + " down && " +
+                                "ip link set " + iface + " address " + macAddress + " && " +
+                                "ip link set " + iface + " up"
+                );
+                mainHandler.post(() -> {
+                    if (result == 0) {
+                        showToast("MAC address of " + iface + " changed to " + macAddress);
                     } else {
-                        MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(activity, R.style.DialogStyle);
-                        final AlertDialog ad = adb.create();
-                        ad.setTitle("Failed changing the MAC address on " + interfaceSpinner.getSelectedItem().toString().toLowerCase());
-                        ad.setMessage("Please try to change to other MAC address as not all MAC address is valid to your system.");
-                        ad.show();
+                        showToast("Failed to change MAC address on " + iface + ". Try another MAC.");
                     }
                     reloadImageButton.performClick();
-                }
+                });
             });
-            macchangerExecutor.execute(interfaceSpinner.getSelectedItem().toString().toLowerCase(), macAddress);
         });
+    }
+
+    // --- Helper Methods ---
+    private String getMacAddress() {
+        return mac1.getText().toString().toLowerCase() + ":" +
+                mac2.getText().toString().toLowerCase() + ":" +
+                mac3.getText().toString().toLowerCase() + ":" +
+                mac4.getText().toString().toLowerCase() + ":" +
+                mac5.getText().toString().toLowerCase() + ":" +
+                mac6.getText().toString().toLowerCase();
+    }
+
+    private void showToast(String message) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
+    }
+
+    private void executeTask(Runnable task) {
+        executorService.execute(task);
     }
 }
