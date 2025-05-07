@@ -34,7 +34,7 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="Here you can install some dependencys for most of the stuff that chroot does not come with" />
+        tools:text="Here you can install some dependencies for most of the stuff that chroot does not come with" />
 
     <TextView
         android:id="@+id/textView13"
@@ -44,10 +44,9 @@
         android:layout_marginTop="30dp"
         android:layout_marginEnd="148dp"
         android:layout_marginBottom="1dp"
-        android:text="Setup and install mana dependencys"
+        android:text="Setup and install mana dependencies"
         app:layout_constraintBottom_toTopOf="@+id/button"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView12" />
-
-</androidx.constraintlayout.widget.ConstraintLayout> 
+</androidx.constraintlayout.widget.ConstraintLayout>

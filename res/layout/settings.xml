@@ -130,9 +130,7 @@
                 <VideoView
                     android:id="@+id/videoView"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    />
-
+                    android:layout_height="wrap_content" />
             </LinearLayout>
 
             <LinearLayout
@@ -171,7 +169,6 @@
                     android:inputType="number"
                     android:text="1920"
                     android:textColor="#40FFFFFF" />
-
             </LinearLayout>
 
             <LinearLayout
@@ -188,7 +185,6 @@
                     android:layout_marginEnd="10dp"
                     android:paddingTop="10dp"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
-
 
                 <Button
                     android:id="@+id/imageresminus"
@@ -208,7 +204,6 @@
                     android:layout_marginEnd="5dp"
                     android:text="+"
                     android:textColor="#40FFFFFF" />
-
             </LinearLayout>
 
             <LinearLayout
@@ -245,7 +240,6 @@
                     android:ems="10"
                     android:inputType="number"
                     android:text="1920" />
-
             </LinearLayout>
 
             <LinearLayout
@@ -279,7 +273,6 @@
                     android:layout_weight="1"
                     android:layout_marginEnd="5dp"
                     android:text="+" />
-
             </LinearLayout>
 
             <LinearLayout
@@ -316,7 +309,6 @@
                     android:paddingTop="10dp"
                     android:text="FPS"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
-
             </LinearLayout>
 
             <LinearLayout
@@ -343,7 +335,6 @@
                     android:layout_weight="1"
                     android:ems="80"
                     android:hint="Detecting..." />
-
             </LinearLayout>
 
             <Button
@@ -403,7 +394,6 @@
                   android:layout_weight="5"
                   android:text="..."
                   android:textColor="#ffffffff" />
-
           </LinearLayout>
 
             <Button
@@ -447,7 +437,6 @@
                     android:paddingTop="10dp"
                     android:padding="4dp"
                     android:layout_weight="3"/>
-
             </LinearLayout>
 
             <Button
@@ -485,7 +474,6 @@
                 android:paddingTop="10dp"
                 android:padding="4dp"
                 android:layout_weight="3"/>
-
         </LinearLayout>
 
             <LinearLayout
@@ -516,7 +504,6 @@
                 android:paddingBottom="10dp"
                 android:text="Apply"
                 android:textColor="#ffffffff" />
-
         </LinearLayout>
 
             <Button
@@ -554,7 +541,6 @@
                     android:paddingTop="10dp"
                     android:padding="4dp"
                     android:layout_weight="3"/>
-
             </LinearLayout>
 
             <LinearLayout
@@ -579,7 +565,6 @@
                     android:dropDownWidth="match_parent"
                     android:saveEnabled="false"
                     android:textAppearance="?android:attr/textAppearanceSmall"/>
-
             </LinearLayout>
 
             <Button
@@ -611,9 +596,6 @@
                 android:paddingBottom="10dp"
                 android:text="Uninstall NetHunter App"
                 android:textColor="#ffffffff" />
-
       </LinearLayout>
-
   </ScrollView>
-
 </LinearLayout>
