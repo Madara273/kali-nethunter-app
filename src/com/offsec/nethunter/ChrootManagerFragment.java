@@ -23,7 +23,6 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.ScrollView;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -60,9 +59,7 @@ public class ChrootManagerFragment extends Fragment {
     public static final String SECONDARY_IMAGE_SERVER = "kali.download";
     private static final String IMAGE_DIRECTORY = "/nethunter-images/current/rootfs/";
     private static final String INVALID_PATH_REGEX = "^\\.(.*$)|^\\.\\.(.*$)|^/+(.*$)|^.*/+(.*$)|^$";
-    // Default, can be made dynamic if needed
-    private static String ARCH = "arm64";
-    private static String MINORFULL = "";
+    private static final String MINORFULL = "";
     private final Intent backPressedintent = new Intent();
     private TextView mountStatsTextView;
     private TextView baseChrootPathTextView;
@@ -425,11 +422,17 @@ public class ChrootManagerFragment extends Fragment {
             new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
                     .setTitle("Select Kali Image")
                     .setItems(options, (dialog, which) -> {
-                        String arch = "arm64"; // or detect automatically if needed
+                        String arch = getDeviceArch();
                         String type = (which == 0) ? "minimal" : "full";
                         String fileName = "kalifs-" + arch + "-" + type + ".tar.xz";
                         File downloadDir = context.getFilesDir();
-                        File targetFile = new File(downloadDir, fileName);
+                        File targetFile;
+                        try {
+                            targetFile = new File(downloadDir, fileName);
+                        } catch (Exception e) {
+                            NhPaths.showMessage(context, "Error accessing file: " + e.getMessage());
+                            return;
+                        }
 
                         Runnable startProcess = () -> startDownloadAndRestoreChroot(fileName, downloadDir, type, arch);
 
@@ -456,13 +459,14 @@ public class ChrootManagerFragment extends Fragment {
             public void onExecutorPrepare() {
                 setAllButtonEnable(false);
             }
+
             @Override
             public void onExecutorProgressUpdate(int progress) {}
+
             @Override
             public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
                 setAllButtonEnable(true);
                 if (resultCode == 0) {
-                    // After download, restore (unpack) the image
                     restoreChrootImage(new File(downloadDir, fileName).getAbsolutePath());
                 } else {
                     NhPaths.showMessage(context, "Download failed.");
@@ -472,12 +476,16 @@ public class ChrootManagerFragment extends Fragment {
 
         resultViewerLoggerTextView.setText("");
         String imagePath = "/nethunter-images/current/rootfs/" + fileName;
-        chrootManagerExecutor.execute(
-                resultViewerLoggerTextView,
-                ChrootManagerFragment.PRIMARY_IMAGE_SERVER,
-                imagePath,
-                new File(downloadDir, fileName).getAbsolutePath()
-        );
+        try {
+            chrootManagerExecutor.execute(
+                    resultViewerLoggerTextView,
+                    ChrootManagerFragment.PRIMARY_IMAGE_SERVER,
+                    imagePath,
+                    new File(downloadDir, fileName).getAbsolutePath()
+            );
+        } catch (Exception e) {
+            NhPaths.showMessage(context, "Error during execution: " + e.getMessage());
+        }
     }
 
     @NonNull
@@ -627,6 +635,16 @@ public class ChrootManagerFragment extends Fragment {
                     new File(downloadDir, targetDownloadFileName).getAbsolutePath()
             );
         }
+    }
+
+    private String getDeviceArch() {
+        String abi = Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0
+                ? Build.SUPPORTED_ABIS[0]
+                : Build.CPU_ABI;
+        if (abi.contains("arm64")) return "arm64";
+        if (abi.contains("armeabi")) return "armhf";
+        // Default fallback
+        return "arm64";
     }
 
     private ProgressBar createProgressBar() {
@@ -857,13 +875,27 @@ public class ChrootManagerFragment extends Fragment {
     }
 
     private void setAllButtonEnable(boolean isEnable) {
-        mountChrootButton.setEnabled(isEnable);
-        unmountChrootButton.setEnabled(isEnable);
-        installChrootButton.setEnabled(isEnable);
-        addMetaPkgButton.setEnabled(isEnable);
-        removeChrootButton.setEnabled(isEnable);
-        kaliFolderEditButton.setEnabled(isEnable);
-        backupChrootButton.setEnabled(isEnable);
+        if (mountChrootButton != null) {
+            mountChrootButton.setEnabled(isEnable);
+        }
+        if (unmountChrootButton != null) {
+            unmountChrootButton.setEnabled(isEnable);
+        }
+        if (installChrootButton != null) {
+            installChrootButton.setEnabled(isEnable);
+        }
+        if (addMetaPkgButton != null) {
+            addMetaPkgButton.setEnabled(isEnable);
+        }
+        if (removeChrootButton != null) {
+            removeChrootButton.setEnabled(isEnable);
+        }
+        if (kaliFolderEditButton != null) {
+            kaliFolderEditButton.setEnabled(isEnable);
+        }
+        if (backupChrootButton != null) {
+            backupChrootButton.setEnabled(isEnable);
+        }
     }
 
     private void broadcastBackPressedIntent(Boolean isEnabled){
