@@ -9,13 +9,14 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -39,8 +40,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-// TODO: we should move the search and sort option to upper 'toolbar' to save space.
-// TODO: a find feature on Executors is also possible, just avoid "/proc"
+// TODO: Could add a find feature on Executors is also possible, just avoid "/proc"
 public class ModulesFragment extends Fragment {
     public static final String TAG = "ModulesFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
@@ -117,6 +117,30 @@ public class ModulesFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         activity = getActivity();
+        setHasOptionsMenu(true);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        inflater.inflate(R.menu.modules_menu, menu);
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) searchItem.getActionView();
+
+        ListView modules = requireView().findViewById(R.id.modulesList);
+        assert searchView != null;
+        searchView.setQueryHint("Search modules");
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) { return false; }
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (modules.getAdapter() instanceof ArrayAdapter) {
+                    ((ArrayAdapter<?>) modules.getAdapter()).getFilter().filter(newText);
+                }
+                return true;
+            }
+        });
+        super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
@@ -124,21 +148,6 @@ public class ModulesFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.modules, container, false);
 
         ListView modules = rootView.findViewById(R.id.modulesList);
-        SearchView moduleSearch = rootView.findViewById(R.id.moduleSearch);
-        Spinner sortSpinner = rootView.findViewById(R.id.sortSpinner);
-
-        // Store sort order and refresh on change
-        sortSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (currentSortOrder != position) {
-                    currentSortOrder = position;
-                    refreshModules(rootView);
-                }
-            }
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        });
 
         // lsmod button
         Button lsmodButton = rootView.findViewById(R.id.lsmod);
@@ -146,15 +155,13 @@ public class ModulesFragment extends Fragment {
 
         // Use last path
         modules_path = rootView.findViewById(R.id.modulesPath);
-        if (activity != null) {
-            SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-            String LastModulesPath = sharedpreferences.getString("last_modulespath", "");
-            if (!LastModulesPath.isEmpty()) modules_path.setText(LastModulesPath);
-        }
+        SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        String LastModulesPath = sharedpreferences.getString("last_modulespath", "");
+        if (!LastModulesPath.isEmpty()) modules_path.setText(LastModulesPath);
 
         modules.setOnItemLongClickListener((adapterView, view, position, id) -> {
             String selectedModule = modules.getItemAtPosition(position).toString();
-            PopupMenu popup = new PopupMenu(requireContext(), adapterView);
+            PopupMenu popup = new PopupMenu(requireContext(), view);
             popup.getMenu().add("Show module information");
             popup.setOnMenuItemClickListener(item -> {
                 if (Objects.equals(item.getTitle(), "Show module information")) {
@@ -171,19 +178,6 @@ public class ModulesFragment extends Fragment {
         Button refreshButton = rootView.findViewById(R.id.refresh);
         refreshButton.setOnClickListener(view -> refreshModules(rootView));
         refreshModules(rootView);
-
-        // Search functionality (applies to current adapter)
-        moduleSearch.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) { return false; }
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                if (modules.getAdapter() instanceof ArrayAdapter) {
-                    ((ArrayAdapter<?>) modules.getAdapter()).getFilter().filter(newText);
-                }
-                return true;
-            }
-        });
 
         // Modules toggle
         modules.setOnItemClickListener((adapterView, view, i, l) -> {
@@ -286,6 +280,22 @@ public class ModulesFragment extends Fragment {
                 });
             }
         });
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_sort_alpha:
+                currentSortOrder = 0;
+                refreshModules(requireView());
+                return true;
+            case R.id.action_sort_reverse:
+                currentSortOrder = 1;
+                refreshModules(requireView());
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
     }
 
     static class ModuleListAdapter extends ArrayAdapter<String> {
