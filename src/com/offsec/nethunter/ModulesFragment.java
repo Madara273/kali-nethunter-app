@@ -7,9 +7,11 @@ import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -119,8 +121,25 @@ public class ModulesFragment extends Fragment {
     }
 
     @Override
-    public void onCreateOptionsMenu(@NonNull android.view.Menu menu, @NonNull android.view.MenuInflater inflater) {
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         inflater.inflate(R.menu.modules_menu, menu);
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) searchItem.getActionView();
+
+        ListView modules = requireView().findViewById(R.id.modulesList);
+        assert searchView != null;
+        searchView.setQueryHint("Search modules");
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) { return false; }
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (modules.getAdapter() instanceof ArrayAdapter) {
+                    ((ArrayAdapter<?>) modules.getAdapter()).getFilter().filter(newText);
+                }
+                return true;
+            }
+        });
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -129,7 +148,6 @@ public class ModulesFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.modules, container, false);
 
         ListView modules = rootView.findViewById(R.id.modulesList);
-        SearchView moduleSearch = rootView.findViewById(R.id.moduleSearch);
 
         // lsmod button
         Button lsmodButton = rootView.findViewById(R.id.lsmod);
@@ -160,19 +178,6 @@ public class ModulesFragment extends Fragment {
         Button refreshButton = rootView.findViewById(R.id.refresh);
         refreshButton.setOnClickListener(view -> refreshModules(rootView));
         refreshModules(rootView);
-
-        // Search functionality (applies to current adapter)
-        moduleSearch.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) { return false; }
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                if (modules.getAdapter() instanceof ArrayAdapter) {
-                    ((ArrayAdapter<?>) modules.getAdapter()).getFilter().filter(newText);
-                }
-                return true;
-            }
-        });
 
         // Modules toggle
         modules.setOnItemClickListener((adapterView, view, i, l) -> {
