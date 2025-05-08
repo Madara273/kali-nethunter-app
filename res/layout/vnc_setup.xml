@@ -20,7 +20,6 @@
                 android:id="@+id/kexdesc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal|center"
                 android:gravity="center"
                 android:paddingTop="10dp"
                 android:paddingBottom="10dp"
@@ -47,14 +46,13 @@
                     android:layout_gravity="center_horizontal"
                     android:orientation="horizontal">
 
-                <CheckBox
-                    android:id="@+id/vnc_checkBox"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:checked="false"
-                    android:onClick="vncLocalClick"
-                    android:text="Localhost Only" />
+                    <CheckBox
+                        android:id="@+id/vnc_checkBox"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:checked="false"
+                        android:text="Localhost Only" />
 
                 <CheckBox
                     android:id="@+id/vnc_serviceCheckBox"

@@ -64,7 +64,6 @@ public class DuckHunterConvertFragment extends Fragment implements View.OnClickL
         super.onCreate(savedInstanceState);
         context = getContext();
         activity = getActivity();
-
     }
 
     @Override
@@ -87,7 +86,10 @@ public class DuckHunterConvertFragment extends Fragment implements View.OnClickL
 
             @Override
             public void afterTextChanged(Editable s) {
-                activity.sendBroadcast(new Intent().putExtra("ACTION", "SHOULDCONVERT").putExtra("SHOULDCONVERT", true).setAction(BuildConfig.APPLICATION_ID + ".SHOULDCONVERT"));
+                activity.sendBroadcast(new Intent().putExtra("ACTION", "SHOULDCONVERT")
+                        .putExtra("SHOULDCONVERT", true)
+                        .setAction(BuildConfig.APPLICATION_ID + ".SHOULDCONVERT")
+                        .setPackage(activity.getPackageName()));
             }
         });
 
@@ -294,7 +296,10 @@ public class DuckHunterConvertFragment extends Fragment implements View.OnClickL
         public void onReceive(Context context, Intent intent) {
             if (Objects.equals(intent.getStringExtra("ACTION"), "WRITEDUCKY")) {
                 write_ducky();
-                activity.sendBroadcast(new Intent().putExtra("ACTION", "PREVIEWDUCKY").setAction(BuildConfig.APPLICATION_ID + ".PREVIEWDUCKY"));
+                activity.sendBroadcast(new Intent()
+                        .putExtra("ACTION", "PREVIEWDUCKY")
+                        .setAction(BuildConfig.APPLICATION_ID + ".PREVIEWDUCKY")
+                        .setPackage(context.getPackageName()));
             }
         }
     }

@@ -11,7 +11,6 @@ import com.offsec.nethunter.BuildConfig;
 
 import java.io.File;
 
-
 public class NhPaths implements SharedPreferences.OnSharedPreferenceChangeListener{
     private static final String TAG = "NhPaths";
     private static NhPaths instance;
@@ -89,7 +88,7 @@ public class NhPaths implements SharedPreferences.OnSharedPreferenceChangeListen
         return Environment.getExternalStorageDirectory().toString();
     }
 
-    public static String getBusyboxPath(){
+    public static String getBusyboxPath() {
         String[] BB_PATHS = {
                 "/system/xbin/busybox_nh",
                 "/system/bin/busybox_nh",

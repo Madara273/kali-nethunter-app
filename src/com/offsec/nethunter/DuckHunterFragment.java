@@ -40,7 +40,6 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
-
 public class DuckHunterFragment extends Fragment {
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
@@ -110,11 +109,11 @@ public class DuckHunterFragment extends Fragment {
         mViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
-                if (position == 1){
+                if (position == 1) {
                     menu.findItem(R.id.duckConvertAttack).setVisible(true);
                     setLang();
                     if (shouldconvert)
-                        activity.sendBroadcast(new Intent().putExtra("ACTION", "WRITEDUCKY").setAction(BuildConfig.APPLICATION_ID + ".WRITEDUCKY"));
+                        activity.sendBroadcast(new Intent().putExtra("ACTION", "WRITEDUCKY").setAction(BuildConfig.APPLICATION_ID + ".WRITEDUCKY").setPackage(activity.getPackageName()));
                 } else
                     menu.findItem(R.id.duckConvertAttack).setVisible(false);
             }
@@ -122,8 +121,8 @@ public class DuckHunterFragment extends Fragment {
 
         sharedpreferences = activity.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
 
-        if (!sharedpreferences.contains("DuckHunterLanguageIndex")){
-            for (int i = 0; i < keyboardLayoutString.length; i++){
+        if (!sharedpreferences.contains("DuckHunterLanguageIndex")) {
+            for (int i = 0; i < keyboardLayoutString.length; i++) {
                 if ("us".equals(map.get(keyboardLayoutString[i]))) {
                     sharedpreferences.edit().putInt("DuckHunterLanguageIndex", i).apply();
                     break;
@@ -217,7 +216,9 @@ public class DuckHunterFragment extends Fragment {
                     return;
                 }
                 setLang();
-                activity.sendBroadcast(new Intent().putExtra("ACTION", "WRITEDUCKY").setAction(BuildConfig.APPLICATION_ID + ".WRITEDUCKY"));
+                activity.sendBroadcast(new Intent().putExtra("ACTION", "WRITEDUCKY")
+                        .setAction(BuildConfig.APPLICATION_ID + ".WRITEDUCKY")
+                        .setPackage(activity.getPackageName()));
             }
         });
         builder.setSingleChoiceItems(keyboardLayoutString, keyboardLayoutIndex, (dialog, which) -> {

@@ -10,7 +10,6 @@ import java.util.LinkedList;
 import java.util.List;
 
 class SQLPersistence extends SQLiteOpenHelper {
-
     private final static int DATABASE_VERSION = 1;
     private final static String DATABASE_NAME = "KaliLaunchers";
 
@@ -57,17 +56,17 @@ class SQLPersistence extends SQLiteOpenHelper {
         String query = "SELECT  * FROM " + LauncherApp.TABLE;
 
         SQLiteDatabase db = this.getWritableDatabase();
-        Cursor cursor = db.rawQuery(query, null);
-
-        LauncherApp app;
-        if (cursor.moveToFirst()) {
-            do {
-                app = new LauncherApp();
-                app.setId(Long.parseLong(cursor.getString(0)));
-                app.setBtn_label(cursor.getString(1));
-                app.setCommand(cursor.getString(2));
-                apps.add(app);
-            } while (cursor.moveToNext());
+        try (Cursor cursor = db.rawQuery(query, null)) {
+            LauncherApp app;
+            if (cursor.moveToFirst()) {
+                do {
+                    app = new LauncherApp();
+                    app.setId(Long.parseLong(cursor.getString(0)));
+                    app.setBtn_label(cursor.getString(1));
+                    app.setCommand(cursor.getString(2));
+                    apps.add(app);
+                } while (cursor.moveToNext());
+            }
         }
         return apps;
     }
@@ -77,24 +76,21 @@ class SQLPersistence extends SQLiteOpenHelper {
         if (id != 0) {
             SQLiteDatabase db = this.getReadableDatabase();
 
-            Cursor cursor =
-                    db.query(LauncherApp.TABLE,
-                            LauncherApp.COLUMNS,
-                            " id = ?",
-                            new String[]{String.valueOf(id)},
-                            null,
-                            null,
-                            null,
-                            null);
-
-            if (cursor != null)
-                cursor.moveToFirst();
-
-            app = new LauncherApp();
-            assert cursor != null;
-            app.setId(Long.parseLong(cursor.getString(0)));
-            app.setBtn_label(cursor.getString(1));
-            app.setCommand(cursor.getString(2));
+            try (Cursor cursor = db.query(LauncherApp.TABLE,
+                    LauncherApp.COLUMNS,
+                    " id = ?",
+                    new String[]{String.valueOf(id)},
+                    null,
+                    null,
+                    null,
+                    null)) {
+                if (cursor != null && cursor.moveToFirst()) {
+                    app = new LauncherApp();
+                    app.setId(Long.parseLong(cursor.getString(0)));
+                    app.setBtn_label(cursor.getString(1));
+                    app.setCommand(cursor.getString(2));
+                }
+            }
         }
         return app;
     }

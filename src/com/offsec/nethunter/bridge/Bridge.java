@@ -6,7 +6,6 @@ import android.content.Intent;
 
 import java.util.Objects;
 
-
 public class Bridge {
   public static final String ACTION_EXECUTE = "neoterm.action.remote.execute";
   public static final String ACTION_SILENT_RUN = "neoterm.action.remote.silent-run";

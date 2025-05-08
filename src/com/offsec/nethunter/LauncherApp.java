@@ -1,6 +1,5 @@
 package com.offsec.nethunter;
 
-
 public class LauncherApp {
     private long id;
     private String btn_label;

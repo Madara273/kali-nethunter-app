@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 
 import java.util.Objects;
 
-
 public class SessionId {
   /**
    * Created a new session.

@@ -18,13 +18,14 @@ import android.widget.EditText;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-
 
 public class BadusbFragment extends Fragment {
     private String sourcePath;
@@ -46,10 +47,7 @@ public class BadusbFragment extends Fragment {
         super.onCreate(savedInstanceState);
         context = getContext();
         activity = getActivity();
-        // kimocoder: removed check for API 19, as minimum supported API is 21.
-        // then, we need to check badusb support in that startbadusb-lollipop.sh and how it's working today
-        // to possibly remove the check for API 21 and use the same script for all versions.
-        if (Build.VERSION.SDK_INT >= 21) {
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
             sourcePath = NhPaths.APP_SD_FILES_PATH + "/configs/startbadusb-lollipop.sh";
         }
     }
@@ -74,7 +72,8 @@ public class BadusbFragment extends Fragment {
 
     private void loadOptions(View rootView) {
         final EditText ifc = rootView.findViewById(R.id.ifc);
-        new Thread(() -> {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
             final String text = exe.ReadFile_SYNC(sourcePath);
             ifc.post(() -> {
                 String regExpatInterface = "^INTERFACE=(.*)$";
@@ -85,13 +84,14 @@ public class BadusbFragment extends Fragment {
                     ifc.setText(ifcValue);
                 }
             });
-        }).start();
+        });
+        executor.shutdown();
     }
 
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.badusb, menu);
-        //WearOS optimisation
+        // WearOS optimisation
         final MenuItem sourceItem = menu.findItem(R.id.source_button);
         boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
         if (iswatch) {
@@ -131,9 +131,8 @@ public class BadusbFragment extends Fragment {
     }
 
     private void start() {
-        ShellExecuter exe = new ShellExecuter();
         String[] command = new String[1];
-        if (Build.VERSION.SDK_INT >= 21) {
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
             command[0] = NhPaths.APP_SCRIPTS_PATH + "/start-badusb-lollipop &> " + NhPaths.APP_SD_FILES_PATH + "/badusb.log &";
         }
         exe.RunAsRoot(command);
@@ -141,9 +140,8 @@ public class BadusbFragment extends Fragment {
     }
 
     private void stop() {
-        ShellExecuter exe = new ShellExecuter();
         String[] command = new String[1];
-        if (Build.VERSION.SDK_INT >= 21) {
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
             command[0] = NhPaths.APP_SCRIPTS_PATH + "/stop-badusb-lollipop";
         }
         exe.RunAsRoot(command);

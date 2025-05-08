@@ -30,22 +30,21 @@
             android:layout_height="wrap_content"
             android:text="Bluetooth interface"
             android:padding="4dp"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            />
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <EditText
             android:id="@+id/hci_interface"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:autofillHints="none"
             android:inputType="text"
             android:text="hci0" />
-
     </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/set_target"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:text="Use selected target"
             android:textColor="#ffffffff" />
@@ -61,15 +60,13 @@
             android:layout_height="wrap_content"
             android:text="Address"
             android:padding="4dp"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            />
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <EditText
             android:id="@+id/hci_address"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="00:11:22:33:44:55" />
-
     </LinearLayout>
 
         <LinearLayout
@@ -83,18 +80,16 @@
                 android:layout_height="wrap_content"
                 android:text="Channel"
                 android:padding="4dp"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <EditText
                 android:id="@+id/hci_channel"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:gravity="left"
-                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
                 android:text="2"
                 android:inputType="number" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -108,15 +103,13 @@
             android:layout_height="wrap_content"
             android:text="Mode"
             android:padding="4dp"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            />
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <Spinner
             android:id="@+id/cwmode"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:prompt="@string/payload_select" />
-
     </LinearLayout>
 
         <TextView
@@ -129,6 +122,7 @@
             android:id="@+id/listenfilename"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:autofillHints="none"
             android:ems="10"
             android:inputType="text"
             android:text="record.wav" />
@@ -150,6 +144,7 @@
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:autofillHints="none"
                 android:inputType="text"
                 android:text="/root/carwhisperer/message.wav" />
 
@@ -160,7 +155,6 @@
                 android:layout_weight="5"
                 android:text="..."
                 android:textColor="#ffffffff" />
-
         </LinearLayout>
 
     <LinearLayout
@@ -190,6 +184,7 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_weight="4"
+            android:contentDescription="none"
             android:src="@drawable/ic_action_play" />
 
         <ImageButton
@@ -197,10 +192,8 @@
             android:layout_width="fill_parent"
             android:layout_height="fill_parent"
             android:layout_weight="4"
+            android:contentDescription="none"
             android:src="@drawable/ic_action_stop" />
-
     </LinearLayout>
-
     </LinearLayout>
-
 </ScrollView>

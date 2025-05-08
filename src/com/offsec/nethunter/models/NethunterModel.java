@@ -23,22 +23,13 @@ public class NethunterModel {
     }
 
     public String getTitle() { return title; }
-
     public String getCommand() { return command; }
-
     public String getDelimiter() { return delimiter; }
-
     public String getRunOnCreate() { return runOnCreate; }
-
     public String[] getResult() { return result; }
-
     public void setTitle(String title) {this.title = title; }
-
     public void setCommand(String command) {this.command = command; }
-
     public void setDelimiter(String delimiter) {this.delimiter = delimiter; }
-
     public void setRunOnCreate(String runOnCreate) { this.runOnCreate = runOnCreate; }
-
     public void setResult(String[] result) { this.result = result; }
 }

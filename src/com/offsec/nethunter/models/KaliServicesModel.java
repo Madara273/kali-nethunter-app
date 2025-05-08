@@ -25,26 +25,15 @@ public class KaliServicesModel {
     }
 
     public String getServiceName() { return ServiceName; }
-
     public String getCommandforStartService() { return CommandforStartService; }
-
     public String getCommandforStopService() { return CommandforStopService; }
-
     public String getCommandforCheckServiceStatus() { return CommandforCheckServiceStatus; }
-
     public String getRunOnChrootStart() { return RunOnChrootStart; }
-
     public String getStatus() { return Status; }
-
     public void setServiceName(String ServiceName) {this.ServiceName = ServiceName; }
-
     public void setCommandforStartService(String CommandforStartService) {this.CommandforStartService = CommandforStartService; }
-
     public void setCommandforStopService(String CommandforStopService) { this.CommandforStopService = CommandforStopService; }
-
     public void setCommandforCheckServiceStatus(String CommandforCheckServiceStatus) { this.CommandforCheckServiceStatus = CommandforCheckServiceStatus; }
-
     public void setRunOnChrootStart(String RunOnChrootStart) { this.RunOnChrootStart = RunOnChrootStart; }
-
     public void setStatus(String Status) { this.Status = Status; }
 }

@@ -21,7 +21,6 @@ import androidx.core.app.NotificationCompat;
 import java.util.HashMap;
 import java.util.Map;
 
-
 public class RunAtBootService extends JobIntentService {
     private static final String TAG = "Nethunter: Startup";
     static final int SERVICE_JOB_ID = 1;

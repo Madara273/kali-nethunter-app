@@ -357,9 +357,7 @@ public class SettingsFragment extends Fragment {
         CheckBox SELinuxOnBoot = rootView.findViewById(R.id.selinuxonboot);
         final boolean set_selinux_permissive_on_boot = sharedpreferences.getBoolean("SELinuxOnBoot", true);
         SELinuxOnBoot.setChecked(set_selinux_permissive_on_boot);
-        SELinuxOnBoot.setOnCheckedChangeListener((btn, value) -> {
-            sharedpreferences.edit().putBoolean("SELinuxOnBoot", value).apply();
-        });
+        SELinuxOnBoot.setOnCheckedChangeListener((btn, value) -> sharedpreferences.edit().putBoolean("SELinuxOnBoot", value).apply());
 
         TextView SELinux = rootView.findViewById(R.id.selinux);
         final String selinux_status = exe.RunAsRootOutput("getenforce");

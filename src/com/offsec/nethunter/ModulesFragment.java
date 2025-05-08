@@ -4,38 +4,50 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.widget.PopupMenu;
+import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
 
 import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.ShellExecuter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+// TODO: we should move the search and sort option to upper 'toolbar' to save space.
+// TODO: a find feature on Executors is also possible, just avoid "/proc"
 public class ModulesFragment extends Fragment {
     public static final String TAG = "ModulesFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
     private Activity activity;
     private final ShellExecuter exe = new ShellExecuter();
+    // 0: Alphabetical, 1: Reverse
+    private int currentSortOrder = 0;
     public EditText modules_path;
 
     public static ModulesFragment newInstance(int sectionNumber) {
@@ -44,6 +56,61 @@ public class ModulesFragment extends Fragment {
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         fragment.setArguments(args);
         return fragment;
+    }
+
+    private void showModuleInfo(String moduleName) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            String info = exe.RunAsRootOutput("modinfo " + moduleName);
+            if (info.trim().isEmpty()) {
+                info = exe.RunAsRootOutput("modinfo " + moduleName + ".ko");
+            }
+            String finalInfo = info.trim().isEmpty() ? "No information available for " + moduleName : info;
+            Activity currentActivity = getActivity();
+            if (currentActivity != null) {
+                currentActivity.runOnUiThread(() -> new AlertDialog.Builder(currentActivity)
+                        .setTitle("Module Info: " + moduleName)
+                        .setMessage(finalInfo)
+                        .setPositiveButton("OK", null)
+                        .show());
+            }
+        });
+    }
+
+    private void showLoadedModules(View rootView) {
+        final ListView modules = rootView.findViewById(R.id.modulesList);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            String loadedModulesRaw = exe.RunAsRootOutput("lsmod | cut -d' ' -f1");
+            String[] loadedModules = loadedModulesRaw.split("\n");
+            // Remove header if present
+            if (loadedModules.length > 0 && loadedModules[0].trim().equals("Module")) {
+                loadedModules = Arrays.copyOfRange(loadedModules, 1, loadedModules.length);
+            }
+            // Build moduleStates: all loaded modules are true
+            Map<String, Boolean> moduleStates = new HashMap<>();
+            for (String module : loadedModules) {
+                if (!module.trim().isEmpty()) {
+                    moduleStates.put(module, true);
+                }
+            }
+            List<String> moduleList = new ArrayList<>(Arrays.asList(loadedModules));
+            // Remove empty entries
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                moduleList.removeIf(String::isEmpty);
+            }
+
+            Activity currentActivity = getActivity();
+            if (currentActivity != null) {
+                currentActivity.runOnUiThread(() -> {
+                    if (moduleList.isEmpty()) {
+                        modules.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, Collections.singletonList("No modules loaded")));
+                    } else {
+                        modules.setAdapter(new ModuleListAdapter(requireContext(), moduleList, moduleStates));
+                    }
+                });
+            }
+        });
     }
 
     @Override
@@ -56,6 +123,27 @@ public class ModulesFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.modules, container, false);
 
+        ListView modules = rootView.findViewById(R.id.modulesList);
+        SearchView moduleSearch = rootView.findViewById(R.id.moduleSearch);
+        Spinner sortSpinner = rootView.findViewById(R.id.sortSpinner);
+
+        // Store sort order and refresh on change
+        sortSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (currentSortOrder != position) {
+                    currentSortOrder = position;
+                    refreshModules(rootView);
+                }
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        // lsmod button
+        Button lsmodButton = rootView.findViewById(R.id.lsmod);
+        lsmodButton.setOnClickListener(view -> showLoadedModules(rootView));
+
         // Use last path
         modules_path = rootView.findViewById(R.id.modulesPath);
         if (activity != null) {
@@ -64,17 +152,43 @@ public class ModulesFragment extends Fragment {
             if (!LastModulesPath.isEmpty()) modules_path.setText(LastModulesPath);
         }
 
+        modules.setOnItemLongClickListener((adapterView, view, position, id) -> {
+            String selectedModule = modules.getItemAtPosition(position).toString();
+            PopupMenu popup = new PopupMenu(requireContext(), adapterView);
+            popup.getMenu().add("Show module information");
+            popup.setOnMenuItemClickListener(item -> {
+                if (Objects.equals(item.getTitle(), "Show module information")) {
+                    showModuleInfo(selectedModule);
+                    return true;
+                }
+                return false;
+            });
+            popup.show();
+            return true;
+        });
+
         // Refresh Modules
         Button refreshButton = rootView.findViewById(R.id.refresh);
         refreshButton.setOnClickListener(view -> refreshModules(rootView));
         refreshModules(rootView);
 
+        // Search functionality (applies to current adapter)
+        moduleSearch.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) { return false; }
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                if (modules.getAdapter() instanceof ArrayAdapter) {
+                    ((ArrayAdapter<?>) modules.getAdapter()).getFilter().filter(newText);
+                }
+                return true;
+            }
+        });
+
         // Modules toggle
-        ListView modules = rootView.findViewById(R.id.modulesList);
         modules.setOnItemClickListener((adapterView, view, i, l) -> {
             String modulesPath = modules_path.getText().toString();
-            String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
-            String ModulesPathFull = sanitizedModulesPath; // Do not append kernel version
+            String ModulesPathFull = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
             String selected_module = modules.getItemAtPosition(i).toString();
             String is_it_loaded = exe.RunAsRootOutput("lsmod | cut -d' ' -f1 | grep " + selected_module);
             ImageView statusIcon = view.findViewById(R.id.moduleStatusIcon);
@@ -152,11 +266,19 @@ public class ModulesFragment extends Fragment {
                 moduleStates.put(module, loadedModules.contains(module));
             }
 
+            // Sort module list according to currentSortOrder
+            List<String> moduleList = new ArrayList<>(Arrays.asList(modulesArray));
+            if (currentSortOrder == 0) {
+                Collections.sort(moduleList);
+            } else if (currentSortOrder == 1) {
+                Collections.sort(moduleList, Collections.reverseOrder());
+            }
+
             Activity currentActivity = getActivity();
             if (currentActivity != null) {
                 currentActivity.runOnUiThread(() -> {
                     if (!modulesRaw.isEmpty()) {
-                        ModuleListAdapter adapter = new ModuleListAdapter(requireContext(), Arrays.asList(modulesArray), moduleStates);
+                        ModuleListAdapter adapter = new ModuleListAdapter(requireContext(), moduleList, moduleStates);
                         modules.setAdapter(adapter);
                     } else {
                         modules.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, Collections.singletonList("No modules found")));

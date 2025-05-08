@@ -35,9 +35,9 @@
             android:id="@+id/hci_interface"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:autofillHints="none"
             android:inputType="text"
             android:text="hci0" />
-
     </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
@@ -64,9 +64,9 @@
             android:id="@+id/sdp_address"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:autofillHints="none"
             android:ems="10"
             android:hint="00:11:22:33:44:55" />
-
         </LinearLayout>
 
         <View
@@ -81,8 +81,7 @@
             android:layout_weight="1"
             android:text="L2ping"
             android:padding="4dp"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            />
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -97,13 +96,13 @@
                 android:layout_weight="1"
                 android:text="Size"
                 android:padding="4dp"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <EditText
                 android:id="@+id/l2ping_size"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:autofillHints="none"
                 android:gravity="center"
                 android:layout_weight="1"
                 android:text="44"
@@ -116,18 +115,17 @@
                 android:gravity="center"
                 android:text="Count"
                 android:padding="4dp"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <EditText
                 android:id="@+id/l2ping_count"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:autofillHints="none"
                 android:gravity="center"
                 android:layout_weight="1"
                 android:text="5"
                 android:inputType="number" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -151,7 +149,6 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="Reverse ping" />
-
         </LinearLayout>
 
     <LinearLayout
@@ -175,7 +172,6 @@
             android:layout_weight="1"
             android:text="rfcomm scan"
             android:textColor="#ffffffff" />
-
     </LinearLayout>
 
         <View
@@ -207,8 +203,8 @@
                 android:id="@+id/redfang_range"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:autofillHints="none"
                 android:hint="00803789EE76-00803789EEff" />
-
         </LinearLayout>
 
     <LinearLayout
@@ -227,9 +223,9 @@
             android:id="@+id/redfang_log"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:autofillHints="none"
             android:inputType="text"
             android:text="/root/redfang.log" />
-
     </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
@@ -287,7 +283,5 @@
             android:id="@+id/SDPoutput"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"/>
-
     </LinearLayout>
-
 </ScrollView>

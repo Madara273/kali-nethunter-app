@@ -27,7 +27,7 @@
     <string name="kaliservices_howto_runServiceOnBoot">To automatically start the service after Kali Chroot is up, check this option.</string>
 
     <!-- Modules -->
-    <string name="modules_description">Load drivers, if you have any enabled as modules. Most devices use all drivers as inbuilt. Alpha version.</string>
+    <string name="modules_description">Manage kernel modules, if your kernel has any supported. Most devices use all drivers as inbuilt. For information (modinfo) click and hold selected module for menu.</string>
 
     <!-- CustomCommands -->
     <string name="custom_commands_description">You can ADD, DELETE, MOVE, SEARCH, BACKUP, RESTORE and RESET your custom command item. You can also long click on the item label to EDIT the item.</string>
@@ -556,11 +556,54 @@
 
     <string name="duckhunter_conversion_failed">Conversion failed.</string>
 
+    <!-- AUDIO -->
+    <string name="audio_service_not_connected">Service not connected yet. Please wait.</string>
+    <string name="audio_serverinput">127.0.0.1</string>
+    <string name="audio_portinput">8000</string>
+    <string name="audio_service_not_bound">Service not bound. Please try again.</string>
+    <string name="error_title_empty">services_error_title_empty</string>
+
+    <!-- VNC -->
+    <string name="vnc_watch_status">Status:</string>
+    <string name="vnc_watch_sessions">Sessions:</string>
+    <string name="vnc_hide_advanced_settings">HIDE ADVANCED SETTINGS</string>
+    <string name="vnc_disable_audio">Disable audio</string>
+    <string name="vnc_enable_audio">Enable audio</string>
+    <string name="vnc_hide_advanced_settings2">HIDE ADVANCED SETTINGS</string>
+    <string name="vnc_show_advanced_settings">SHOW ADVANCED SETTINGS</string>
+    <string name="vnc_stopped">STOPPED</string>
+    <string name="vnc_kexuser_none">None</string>
+    <string name="vnc_running">RUNNING</string>
+    <string name="vnc_enable_audio2">Enable audio</string>
+    <string name="vnc_disable_audio2">Disable audio</string>
+
     <!-- MACCHANGER -->
     <string name="macchanger_generate">GENERATE</string>
     <string name="macchanger_clear">CLEAR</string>
     <string name="macchanger_set_hostname">Set Hostname</string>
     <string name="macchanger_current_hostname">Current Hostname:</string>
+
+    <!-- SERVICES -->
+    <string name="kaliservices_full_path_save_db">Full path to where you want to save the database:</string>
+    <string name="kaliservices_full_path_restore_db">Full path of the db file from where you want to restore:</string>
+    <string name="service_servicename_start"><![CDATA[service <servicename> start]]></string>
+    <string name="service_servicename_stop"><![CDATA[service <servicename> stop]]></string>
+    <string name="service_servicename"><![CDATA[<servicename>]]></string>
+
+    <!-- BLUETOOTH (BT) -->
+    <string name="bt_interface">Interface</string>
+    <string name="bt_service">BT Service</string>
+    <string name="bt_smd">Bluetooth SMD</string>
+    <string name="bt_stopped">Stopped</string>
+    <string name="bt_start">Start</string>
+    <string name="bt_running">Running</string>
+    <string name="bt_stop">Stop</string>
+    <string name="bt_enabled">Enabled</string>
+    <string name="bt_disabled">Disabled</string>
+    <string name="bt_up">Up</string>
+    <string name="bt_down">Down</string>
+    <string name="bt_badbt_string_rickroll">https://www.youtube.com/watch?v=dQw4w9WgXcQ</string>
+    <string name="bt_badbt_string_fakeupdate">iexplore -k http://fakeupdate.net/win10ue</string>
 
     <!-- WPS -->
     <string name="wps_wireless_interface">Wireless interface:</string>
@@ -578,6 +621,30 @@
     <string name="wps_delaytime_hint">1</string>
     <string name="wps_seconds">seconds</string>
     <string name="wps_launch_attack">Launch attack</string>
+
+    <!-- KERNEL -->
+    <string name="kernel_device_details">Device details</string>
+    <string name="kernel_device">Device:</string>
+    <string name="kernel_loading">Loading ..</string>
+    <string name="kernel_codename">Codename:</string>
+    <string name="kernel_android">Android:</string>
+    <string name="kernel_custom_codename">Custom codename</string>
+    <string name="kernel_device_codename">device_codename</string>
+    <string name="kernel_check">Check</string>
+    <string name="kernel_select_kernel_to_flash">Select kernel to flash</string>
+    <string name="kernel_kernel_nethunter_zip">/sdcard/kernel_nethunter.zip</string>
+    <string name="kernel_dots">...</string>
+    <string name="kernel_flash_kernel">Flash kernel</string>
+
+    <!-- CHROOTMGR -->
+    <string name="chrootmgr_download_latest">DOWNLOAD LATEST KALI CHROOT</string>
+    <string name="chrootmgr_install_from_local_storage">INSTALL FROM LOCAL STORAGE</string>
+
+    <!-- MODULES -->
+    <string-array name="sort_options">
+        <item>Alphabetical</item>
+        <item>Reverse Alphabetical</item>
+    </string-array>
 
     <!-- CAN -->
     <string name="can_description">This module allow you to use CAN Bus with various tools. Kernel device should have CAN support enabled, for more information look at the documentation in the menu.</string>

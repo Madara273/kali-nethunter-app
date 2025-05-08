@@ -130,7 +130,7 @@ public class AudioFragment extends Fragment {
                 }
             } else {
                 // Optionally, show a message or handle the case where the service is not connected yet
-                errorText.setText("Service not connected yet. Please wait.");
+                errorText.setText(R.string.audio_service_not_connected);
             }
         });
 
@@ -178,8 +178,9 @@ public class AudioFragment extends Fragment {
     }
 
     private void setupDefaultAudioConfig() {
-        serverInput.setText("127.0.0.1");
-        portInput.setText("8000");
+
+        serverInput.setText(R.string.audio_serverinput);
+        portInput.setText(R.string.audio_portinput);
 
         // Format values for buffer headroom and target latency as seconds
         List<String> formattedBufferHeadroom = formatValuesAsSeconds(VALUES_BUFFER_HEADROOM);
@@ -331,7 +332,7 @@ public class AudioFragment extends Fragment {
             boundService.play(server, port);
         } else {
             // Handle case where service is not bound
-            errorText.setText("Service not bound. Please try again.");
+            errorText.setText(R.string.audio_service_not_bound);
             Log.e(TAG, "Service not bound when attempting to play.");
         }
     }

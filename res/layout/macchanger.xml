@@ -141,7 +141,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:baselineAligned="false"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:gravity="center_horizontal"
+                android:layout_gravity="center_horizontal">
 
                 <EditText
                     android:id="@+id/f_macchanger_mac1_et"

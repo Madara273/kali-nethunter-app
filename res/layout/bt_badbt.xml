@@ -31,8 +31,7 @@
             android:layout_height="wrap_content"
             android:text="Bluetooth interface"
             android:padding="4dp"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            />
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <EditText
             android:id="@+id/badbt_interface"
@@ -40,7 +39,6 @@
             android:layout_height="wrap_content"
             android:inputType="text"
             android:text="hci0" />
-
     </LinearLayout>
 
         <LinearLayout
@@ -54,8 +52,7 @@
                 android:layout_height="wrap_content"
                 android:text="Bluetooth address"
                 android:padding="4dp"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <EditText
                 android:id="@+id/badbt_address"
@@ -63,7 +60,6 @@
                 android:layout_height="wrap_content"
                 android:inputType="text"
                 android:text="22:22:EA:CF:3C:1E" />
-
         </LinearLayout>
 
         <TextView
@@ -71,8 +67,7 @@
             android:layout_height="wrap_content"
             android:text="Bluetooth class"
             android:padding="4dp"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            />
+            android:textAppearance="?android:attr/textAppearanceMedium" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -90,10 +85,10 @@
                 android:id="@+id/badbt_class"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:autofillHints="none"
                 android:inputType="text"
                 android:text="0x000540"
                 android:hint="0x000540" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -107,8 +102,7 @@
                 android:layout_height="wrap_content"
                 android:text="Name"
                 android:padding="4dp"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <EditText
                 android:id="@+id/badbt_name"
@@ -123,7 +117,6 @@
                 android:layout_height="wrap_content"
                 app:srcCompat="@drawable/ic_action_refresh"
                 android:layout_weight="1"/>
-
         </LinearLayout>
 
         <View
@@ -173,7 +166,6 @@
                 app:layout_constraintGuide_percent="0.50"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
-
         </androidx.constraintlayout.widget.ConstraintLayout>
 
         <com.google.android.material.button.MaterialButton
@@ -201,15 +193,13 @@
                 android:layout_height="wrap_content"
                 android:text="Mode"
                 android:padding="4dp"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <Spinner
                 android:id="@+id/badbtmode"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:prompt="@string/payload_select" />
-
         </LinearLayout>
 
     <LinearLayout
@@ -230,15 +220,13 @@
                 android:layout_height="wrap_content"
                 android:text="Prefix"
                 android:padding="4dp"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <Spinner
                 android:id="@+id/badbtprefix"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:prompt="@string/payload_select" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -253,15 +241,13 @@
                 android:layout_height="wrap_content"
                 android:text="Preset"
                 android:padding="4dp"
-                android:textAppearance="?android:attr/textAppearanceMedium"
-                />
+                android:textAppearance="?android:attr/textAppearanceMedium" />
 
             <Spinner
                 android:id="@+id/badbtpresets"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:prompt="@string/payload_select" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -284,13 +270,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:visibility="gone"/>
-
         </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/injectstringbrowse"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:text="Load from file"
             android:textColor="#ffffffff" />
@@ -311,20 +296,19 @@
             android:id="@+id/editBadBT"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:autofillHints="none"
             android:includeFontPadding="false"
             android:inputType="textMultiLine"
             android:hint="Hello friend"/>
-
     </LinearLayout>
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/start_badbt"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="0dp"
             android:layout_weight="1"
             android:text="Send"
             android:textColor="#ffffffff" />
 
     </LinearLayout>
-
 </ScrollView>

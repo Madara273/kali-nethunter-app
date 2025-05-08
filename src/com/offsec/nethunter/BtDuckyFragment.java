@@ -24,7 +24,6 @@ import com.offsec.nethunter.utils.ShellExecuter;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -36,7 +35,7 @@ import java.util.List;
 
 public class BtDuckyFragment extends BTFragment {
     private EditText editSource;
-    String tmpfilePath = "/sdcard/nh_files/.tmpbtdfile.txt";
+    final String tmpfilePath = NhPaths.SD_PATH + "/nh_files/.tmpbtdfile.txt";
     private static final int PICK_FILE_REQUEST_CODE = 1;
     private static final int SAVE_FILE_REQUEST_CODE = 2;
     private Context context;
@@ -58,31 +57,19 @@ public class BtDuckyFragment extends BTFragment {
 
         String[] duckyscript_file = getDuckyScriptFiles();
         Spinner duckyscriptSpinner = rootView.findViewById(R.id.duckhunter_preset_spinner);
-        ArrayAdapter<String> duckyscriptAdapter = new ArrayAdapter<>(getActivity(), android.R.layout.simple_spinner_item, duckyscript_file);
+        ArrayAdapter<String> duckyscriptAdapter = new ArrayAdapter<>(requireActivity(), android.R.layout.simple_spinner_item, duckyscript_file);
         duckyscriptAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         duckyscriptSpinner.setAdapter(duckyscriptAdapter);
 
-        loadButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                openFile();
-            }
-        });
-        saveButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                saveFile(false);
-            }
-        });
-        injectButton.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                String statusCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd bluetoothctl info | grep 'Connected: yes'");
-                if (!statusCMD.contains("Connected: yes")) {
-                    Toast.makeText(requireContext(), "Start the server first", Toast.LENGTH_SHORT).show();
-                } else {
-                    saveFile(true);
-                    run_cmd("python3 /root/badbt/ducky.py -d " + tmpfilePath + "; exit");
-                }
+        loadButton.setOnClickListener(v -> openFile());
+        saveButton.setOnClickListener(v -> saveFile(false));
+        injectButton.setOnClickListener(v -> {
+            String statusCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd bluetoothctl info | grep 'Connected: yes'");
+            if (!statusCMD.contains("Connected: yes")) {
+                Toast.makeText(requireContext(), "Start the server first", Toast.LENGTH_SHORT).show();
+            } else {
+                saveFile(true);
+                run_cmd("python3 /root/badbt/ducky.py -d " + tmpfilePath + "; exit");
             }
         });
         duckyscriptSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -96,7 +83,7 @@ public class BtDuckyFragment extends BTFragment {
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                //Another interface callback
+                // Do nothing
             }
         });
         return rootView;
@@ -106,6 +93,7 @@ public class BtDuckyFragment extends BTFragment {
         List<String> result = new ArrayList<>();
         File script_folder = new File(NhPaths.APP_SD_FILES_PATH + "/duckyscripts");
         File[] filesInFolder = script_folder.listFiles();
+        assert filesInFolder != null;
         for (File file : filesInFolder) {
             if (!file.isDirectory()) {
                 result.add(file.getName());
@@ -131,7 +119,7 @@ public class BtDuckyFragment extends BTFragment {
         } catch (Exception e) {
             NhPaths.showMessage(getContext(), e.getMessage());
         }
-        MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(getActivity(), R.style.DialogStyleCompat);
+        MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
 
         alert.setTitle("Name");
         alert.setMessage("Please enter a name for your script.");
@@ -142,8 +130,8 @@ public class BtDuckyFragment extends BTFragment {
 
         alert.setPositiveButton("Ok", (dialog, whichButton) -> {
             String value = input.getText().toString();
-            if (value.length() > 0) {
-                //Save file (ask name)
+            if (!value.isEmpty()) {
+                // Save file (ask name)
                 File scriptFile = new File(NhPaths.APP_SD_FILES_PATH + loadFilePath + File.separator + value + ".conf");
                 System.out.println(scriptFile.getAbsolutePath());
                 if (!scriptFile.exists()) {
@@ -206,6 +194,7 @@ public class BtDuckyFragment extends BTFragment {
             }
 
             reader.close();
+            assert inputStream != null;
             inputStream.close();
         } catch (IOException e) {
             e.printStackTrace();
@@ -214,12 +203,14 @@ public class BtDuckyFragment extends BTFragment {
 
         return content.toString();
     }
+
     private void saveContentToFile(Uri uri) {
         try {
             OutputStream outputStream = requireActivity().getContentResolver().openOutputStream(uri);
             BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(outputStream));
             writer.write(editSource.getText().toString());
             writer.close();
+            assert outputStream != null;
             outputStream.close();
             Toast.makeText(requireContext(), "File saved", Toast.LENGTH_SHORT).show();
 
