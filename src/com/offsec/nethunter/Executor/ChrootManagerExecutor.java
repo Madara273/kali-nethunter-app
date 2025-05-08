@@ -10,8 +10,10 @@ import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -89,9 +91,12 @@ public class ChrootManagerExecutor {
                     String[] servers = {ChrootManagerFragment.PRIMARY_IMAGE_SERVER, ChrootManagerFragment.SECONDARY_IMAGE_SERVER};
                     boolean success = false;
                     Exception lastException = null;
-                    for (int i = 0; i < servers.length; i++) {
-                        String server = servers[i];
+
+                    for (String server : servers) {
                         exe.RunAsRootOutput("echo \"[!] Trying to download from: " + server + "\"", ((TextView) objects[0]));
+                        BufferedInputStream reader = null;
+                        BufferedOutputStream writer = null;
+
                         try {
                             String imagePath = objects[2].toString();
                             if (imagePath.contains("minimal") && imagePath.contains("arm64")) {
@@ -102,42 +107,52 @@ public class ChrootManagerExecutor {
                             int lengthOfFile = connection.getContentLength();
 
                             InputStream input = connection.getInputStream();
-                            BufferedInputStream reader = new BufferedInputStream(input);
-                            BufferedOutputStream writer = null;
+                            reader = new BufferedInputStream(input);
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                                 writer = new BufferedOutputStream(Files.newOutputStream(Paths.get(objects[3].toString())));
                             }
 
                             byte[] data = new byte[1024];
-                            long bytes = -1;
+                            long bytes = 0;
 
                             while ((count = reader.read(data)) != -1) {
                                 bytes += count;
                                 int progress = (int) ((bytes / (float) lengthOfFile) * 100);
                                 publishProgress(progress);
-                                assert writer != null;
-                                writer.write(data, 0, count);
+                                if (writer != null) {
+                                    writer.write(data, 0, count);
+                                }
                             }
-                            assert writer != null;
-                            writer.close();
-                            reader.close();
+
                             exe.RunAsRootOutput("echo \"[+] Download completed. It's time to install from storage.\"", ((TextView) objects[0]));
                             success = true;
                             break;
-                        } catch (Exception e) {
+
+                        } catch (MalformedURLException e) {
+                            exe.RunAsRootOutput("echo \"[-] Invalid URL: " + e.getMessage() + "\"", ((TextView) objects[0]));
                             lastException = e;
-                            exe.RunAsRootOutput("echo \"[-] Failed to download from: " + server + " (" + e.getMessage() + ")\"", ((TextView) objects[0]));
-                            if (i == 0) {
-                                exe.RunAsRootOutput("echo \"[!] Trying secondary server...\"", ((TextView) objects[0]));
+                        } catch (IOException e) {
+                            exe.RunAsRootOutput("echo \"[-] I/O Error: " + e.getMessage() + "\"", ((TextView) objects[0]));
+                            lastException = e;
+                        } catch (SecurityException e) {
+                            exe.RunAsRootOutput("echo \"[-] Security Error: " + e.getMessage() + "\"", ((TextView) objects[0]));
+                            lastException = e;
+                        } finally {
+                            try {
+                                if (reader != null) reader.close();
+                                if (writer != null) writer.close();
+                            } catch (IOException e) {
+                                exe.RunAsRootOutput("echo \"[-] Error closing streams: " + e.getMessage() + "\"", ((TextView) objects[0]));
                             }
                         }
                     }
+
                     if (!success) {
-                        exe.RunAsRootOutput("echo \"[-] " + lastException.getMessage() + "\"", ((TextView) objects[0]));
+                        exe.RunAsRootOutput("echo \"[-] Download failed: " + lastException.getMessage() + "\"", ((TextView) objects[0]));
                         resultCode = 1;
                     }
                 } catch (Exception e) {
-                    exe.RunAsRootOutput("echo \"[-] " + e.getMessage() + "\"", ((TextView) objects[0]));
+                    exe.RunAsRootOutput("echo \"[-] Unexpected error: " + e.getMessage() + "\"", ((TextView) objects[0]));
                     resultCode = 1;
                 }
                 break;
