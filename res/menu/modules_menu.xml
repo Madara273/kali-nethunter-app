@@ -1,0 +1,8 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_sort_alpha"
+        android:title="Sort Alphabetically"/>
+    <item
+        android:id="@+id/action_sort_reverse"
+        android:title="Sort Reverse"/>
+</menu>

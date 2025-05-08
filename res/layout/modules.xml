@@ -83,14 +83,6 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:queryHint="Search modules" />
-
-        <Spinner
-            android:id="@+id/sortSpinner"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:entries="@array/sort_options"
-            android:layout_marginStart="8dp"/>
     </LinearLayout>
 
     <LinearLayout
@@ -106,6 +98,5 @@
             android:layout_marginLeft="15dp"
             android:layout_marginRight="15dp"
             android:layout_weight="3" />
-
     </LinearLayout>
 </LinearLayout>
