@@ -93,7 +93,11 @@ public class ChrootManagerExecutor {
                         String server = servers[i];
                         exe.RunAsRootOutput("echo \"[!] Trying to download from: " + server + "\"", ((TextView) objects[0]));
                         try {
-                            URL url = new URL("https://" + server + objects[2].toString());
+                            String imagePath = objects[2].toString();
+                            if (imagePath.contains("minimal") && imagePath.contains("arm64")) {
+                                imagePath = "/nethunter-images/current/rootfs/kali-nethunter-rootfs-minimal-arm64.tar.xz";
+                            }
+                            URL url = new URL("https://" + server + imagePath);
                             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                             int lengthOfFile = connection.getContentLength();
 
