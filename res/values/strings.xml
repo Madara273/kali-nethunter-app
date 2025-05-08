@@ -590,6 +590,21 @@
     <string name="service_servicename_stop"><![CDATA[service <servicename> stop]]></string>
     <string name="service_servicename"><![CDATA[<servicename>]]></string>
 
+    <!-- BLUETOOTH (BT) -->
+    <string name="bt_interface">Interface</string>
+    <string name="bt_service">BT Service</string>
+    <string name="bt_smd">Bluetooth SMD</string>
+    <string name="bt_stopped">Stopped</string>
+    <string name="bt_start">Start</string>
+    <string name="bt_running">Running</string>
+    <string name="bt_stop">Stop</string>
+    <string name="bt_enabled">Enabled</string>
+    <string name="bt_disabled">Disabled</string>
+    <string name="bt_up">Up</string>
+    <string name="bt_down">Down</string>
+    <string name="bt_badbt_string_rickroll">https://www.youtube.com/watch?v=dQw4w9WgXcQ</string>
+    <string name="bt_badbt_string_fakeupdate">iexplore -k http://fakeupdate.net/win10ue</string>
+
     <!-- WPS -->
     <string name="wps_wireless_interface">Wireless interface:</string>
     <string name="wps_scan">Scan</string>
@@ -621,4 +636,5 @@
     <string name="can_icsim_desc">Instrument Cluster Simulator for SocketCAN</string>
     <!-- CAN About menu -->
     <string name="about_author">ABOUT:\n\nFound a bug? A suggestion? Follow me on my networks and let me know!\n\nhttps://linktr.ee/v0lk3n\n\nCREDITS:\n\nMade with ♥ by V0lk3n\n\n- Fenugrec! For freediag tool.\nhttps://github.com/fenugrec\n\n- Kobolt! For can-usb.\nhttps://github.com/kobolt\n\n- Alexmohr! For can-usb fork.\nhttps://github.com/alexmohr\n\n- Linux-Can! For can-utils and socketcand.\nhttps://github.com/linux-can\n\n- Mguentner! For cannelloni.\nhttps://github.com/mguentner\n\n- CaringCaribou!\nhttps://github.com/CaringCaribou\n\n- zombieCraig! For ICSim tool.\nhttps://github.com/zombieCraig\n\n</string>
+
 </resources>
