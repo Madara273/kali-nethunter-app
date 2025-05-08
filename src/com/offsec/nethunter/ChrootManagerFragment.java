@@ -58,10 +58,9 @@ public class ChrootManagerFragment extends Fragment {
     public static final String TAG = "ChrootManager";
     private ActivityResultLauncher<Intent> filePickerLauncher;
     private static final String ARG_SECTION_NUMBER = "section_number";
-    private static final String IMAGE_SERVER = "image-nethunter.kali.org";
-    private static final String IMAGE_DIRECTORY = "/nethunter-fs/kali-daily/";
-    //private static final String IMAGE_SERVER = "kali.download";
-    //private static final String IMAGE_DIRECTORY = "/nethunter-images/current/rootfs/";
+    public static final String PRIMARY_IMAGE_SERVER = "image-nethunter.kali.org";
+    public static final String SECONDARY_IMAGE_SERVER = "kali.download";
+    private static final String IMAGE_DIRECTORY = "/nethunter-images/current/rootfs/";
     private static String ARCH = "";
     private static String MINORFULL = "";
     private TextView mountStatsTextView;
@@ -104,7 +103,9 @@ public class ChrootManagerFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.chroot_manager, container, false);
-        sharedPreferences = activity.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
+        if (activity != null) {
+            sharedPreferences = activity.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
+        }
         baseChrootPathTextView = rootView.findViewById(R.id.f_chrootmanager_base_path_tv);
         mountStatsTextView = rootView.findViewById(R.id.f_chrootmanager_mountresult_tv);
         resultViewerLoggerTextView = rootView.findViewById(R.id.f_chrootmanager_viewlogger);
@@ -124,7 +125,9 @@ public class ChrootManagerFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         resultViewerLoggerTextView.setMovementMethod(new ScrollingMovementMethod());
         kaliFolderTextView.setClickable(true);
-        kaliFolderTextView.setText(sharedPreferences.getString(SharePrefTag.CHROOT_ARCH_SHAREPREF_TAG, NhPaths.ARCH_FOLDER));
+        if (sharedPreferences != null) {
+            kaliFolderTextView.setText(sharedPreferences.getString(SharePrefTag.CHROOT_ARCH_SHAREPREF_TAG, NhPaths.ARCH_FOLDER));
+        }
         final LinearLayoutCompat kaliViewFolderlinearLayout = view.findViewById(R.id.f_chrootmanager_viewholder);
         kaliViewFolderlinearLayout.setOnClickListener(view1 -> new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
                 .setMessage(baseChrootPathTextView.getText().toString() +
@@ -139,10 +142,12 @@ public class ChrootManagerFragment extends Fragment {
         setBackupChrootButton();
 
         // WearOS optimisation
-        SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
-        if (iswatch) {
-            kaliViewFolderlinearLayout.setVisibility(View.GONE);
+        if (activity != null) {
+            SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+            Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
+            if (iswatch) {
+                kaliViewFolderlinearLayout.setVisibility(View.GONE);
+            }
         }
 
         // Register ActivityResultLauncher for file picking
@@ -151,7 +156,7 @@ public class ChrootManagerFragment extends Fragment {
                 result -> {
                     if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
                         Uri fileUri = result.getData().getData();
-                        if (fileUri != null) {
+                        if (context != null && fileUri != null) {
                             File outFile = new File(context.getFilesDir(), "restore.tar.xz");
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                                 try (InputStream in = context.getContentResolver().openInputStream(fileUri);
@@ -179,17 +184,25 @@ public class ChrootManagerFragment extends Fragment {
                                             }
                                         }
                                     }
-                                    sharedPreferences.edit().putString(SharePrefTag.CHROOT_DEFAULT_BACKUP_SHAREPREF_TAG, outFile.getAbsolutePath()).apply();
+                                    if (sharedPreferences != null) {
+                                        sharedPreferences.edit().putString(SharePrefTag.CHROOT_DEFAULT_BACKUP_SHAREPREF_TAG, outFile.getAbsolutePath()).apply();
+                                    }
                                     chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.INSTALL_CHROOT);
                                     chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
                                         @Override
                                         public void onExecutorPrepare() {
-                                            context.startService(new Intent(context, NotificationChannelService.class).setAction(NotificationChannelService.INSTALLING));
+                                            if (context != null) {
+                                                context.startService(new Intent(context, NotificationChannelService.class).setAction(NotificationChannelService.INSTALLING));
+                                            }
                                             broadcastBackPressedIntent(false);
                                             setAllButtonEnable(false);
                                         }
-                                        @Override public void onExecutorProgressUpdate(int progress) {}
-                                        @Override public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
+
+                                        @Override
+                                        public void onExecutorProgressUpdate(int progress) {}
+
+                                        @Override
+                                        public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
                                             broadcastBackPressedIntent(true);
                                             setAllButtonEnable(true);
                                             compatCheck();
@@ -349,8 +362,8 @@ public class ChrootManagerFragment extends Fragment {
 
             Button downloadButton = new Button(activity);
             Button restoreButton = new Button(activity);
-            downloadButton.setText("DOWNLOAD LATEST KALI CHROOT");
-            restoreButton.setText("INSTALL FROM LOCAL STORAGE");
+            downloadButton.setText(R.string.chrootmgr_download_latest);
+            restoreButton.setText(R.string.chrootmgr_install_from_local_storage);
             downloadButton.setLayoutParams(new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT, 1f));
             restoreButton.setLayoutParams(new LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT, 1f));
 
@@ -379,8 +392,8 @@ public class ChrootManagerFragment extends Fragment {
                                 ARCH = archSpinner.getSelectedItemPosition() == 0 ? "arm64" : "armhf";
                                 assert minorfullSpinner != null;
                                 MINORFULL = minorfullSpinner.getSelectedItemPosition() == 0 ? "full" : "minimal";
-                                String targetDownloadFileName = "kali-nethunter-daily-dev-rootfs-" + MINORFULL + "-" + ARCH + ".tar.xz";
-                                //String targetDownloadFileName = "kali-nethunter-rootfs-" + MINORFULL + "-" + ARCH + ".tar.xz";
+                                //String targetDownloadFileName = "kali-nethunter-daily-dev-rootfs-" + MINORFULL + "-" + ARCH + ".tar.xz";
+                                String targetDownloadFileName = "kali-nethunter-rootfs-" + MINORFULL + "-" + ARCH + ".tar.xz";
 
                                 if (new File(downloadDir, targetDownloadFileName).exists()) {
                                     new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
@@ -446,7 +459,7 @@ public class ChrootManagerFragment extends Fragment {
 
                                     @Override
                                     public void onExecutorProgressUpdate(int progress) {
-
+                                        // Do nothing
                                     }
 
                                     @Override
@@ -522,12 +535,15 @@ public class ChrootManagerFragment extends Fragment {
         });
 
         resultViewerLoggerTextView.setText("");
-        chrootManagerExecutor.execute(
-                resultViewerLoggerTextView,
-                IMAGE_SERVER,
-                IMAGE_DIRECTORY + targetDownloadFileName,
-                new File(downloadDir, targetDownloadFileName).getAbsolutePath()
-        );
+        String[] servers = {PRIMARY_IMAGE_SERVER, SECONDARY_IMAGE_SERVER};
+        for (String server : servers) {
+            chrootManagerExecutor.execute(
+                    resultViewerLoggerTextView,
+                    server,
+                    IMAGE_DIRECTORY + targetDownloadFileName,
+                    new File(downloadDir, targetDownloadFileName).getAbsolutePath()
+            );
+        }
     }
 
     private ProgressBar createProgressBar() {
@@ -625,7 +641,7 @@ public class ChrootManagerFragment extends Fragment {
 
                             @Override
                             public void onExecutorProgressUpdate(int progress) {
-
+                                // Do nothing
                             }
 
                             @Override
@@ -650,7 +666,7 @@ public class ChrootManagerFragment extends Fragment {
 
                         @Override
                         public void onExecutorProgressUpdate(int progress) {
-
+                            // Do nothing
                         }
 
                         @Override

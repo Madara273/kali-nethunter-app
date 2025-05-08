@@ -636,6 +636,10 @@
     <string name="kernel_dots">...</string>
     <string name="kernel_flash_kernel">Flash kernel</string>
 
+    <!-- CHROOTMGR -->
+    <string name="chrootmgr_download_latest">DOWNLOAD LATEST KALI CHROOT</string>
+    <string name="chrootmgr_install_from_local_storage">INSTALL FROM LOCAL STORAGE</string>
+
     <!-- MODULES -->
     <string-array name="sort_options">
         <item>Alphabetical</item>

@@ -37,11 +37,9 @@ public class ChrootManagerExecutor {
     public static final int DOWNLOAD_CHROOT = 6;
     public static final int FIND_CHROOT = 7;
     public static final int ISSUE_BANNER = 8;
-
     public ChrootManagerExecutor(Integer ACTIONCODE){
         this.ACTIONCODE = ACTIONCODE;
     }
-
     public void execute(Object... objects) {
         mainHandler.post(this::onPreExecute);
         executorService.submit(() -> {
@@ -60,63 +58,82 @@ public class ChrootManagerExecutor {
     protected void doInBackground(Object... objects) {
         switch (ACTIONCODE) {
             case ISSUE_BANNER:
-                exe.RunAsRootOutput("echo \"" + objects[1].toString() + "\"", ((TextView)objects[0]));
+                exe.RunAsRootOutput("echo \"" + objects[1].toString() + "\"", ((TextView) objects[0]));
                 break;
             case CHECK_CHROOT:
-                resultCode = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"status\" -p " + objects[1].toString(), ((TextView)objects[0]));
+                resultCode = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"status\" -p " + objects[1].toString(), ((TextView) objects[0]));
                 break;
             case MOUNT_CHROOT:
-                resultCode = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali_init", ((TextView)objects[0]));
-                exe.RunAsRootOutput("sleep 1 && " + NhPaths.CHROOT_INITD_SCRIPT_PATH, ((TextView)objects[0]));
+                resultCode = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali_init", ((TextView) objects[0]));
+                exe.RunAsRootOutput("sleep 1 && " + NhPaths.CHROOT_INITD_SCRIPT_PATH, ((TextView) objects[0]));
                 break;
             case UNMOUNT_CHROOT:
-                resultCode = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/killkali", ((TextView)objects[0]));
+                resultCode = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/killkali", ((TextView) objects[0]));
                 break;
             case INSTALL_CHROOT:
-                resultCode = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"restore " + objects[1] + " " + objects[2] + "\"", ((TextView)objects[0]));
+                resultCode = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"restore " + objects[1] + " " + objects[2] + "\"", ((TextView) objects[0]));
                 break;
             case REMOVE_CHROOT:
-                resultCode = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"remove " + NhPaths.CHROOT_PATH() + "\"", ((TextView)objects[0]));
+                resultCode = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"remove " + NhPaths.CHROOT_PATH() + "\"", ((TextView) objects[0]));
                 break;
             case BACKUP_CHROOT:
-                resultCode = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"backup " + objects[1].toString() + " " + objects[2].toString() + "\"", ((TextView)objects[0]));
+                resultCode = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"backup " + objects[1].toString() + " " + objects[2].toString() + "\"", ((TextView) objects[0]));
                 break;
             case FIND_CHROOT:
                 resultString.addAll(Arrays.asList(new ShellExecuter().RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"findchroot\"").split("\\n")));
                 break;
             case DOWNLOAD_CHROOT:
                 try {
-                    exe.RunAsRootOutput("echo \"[!] The Download has been started...Please wait.\"", ((TextView)objects[0]));
+                    exe.RunAsRootOutput("echo \"[!] The Download has been started...Please wait.\"", ((TextView) objects[0]));
                     int count;
-                    URL url = new URL("https://" + objects[1].toString() + objects[2].toString());
-                    HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-                    int lengthOfFile = connection.getContentLength();
+                    String[] servers = {ChrootManagerFragment.PRIMARY_IMAGE_SERVER, ChrootManagerFragment.SECONDARY_IMAGE_SERVER};
+                    boolean success = false;
+                    Exception lastException = null;
+                    for (int i = 0; i < servers.length; i++) {
+                        String server = servers[i];
+                        exe.RunAsRootOutput("echo \"[!] Trying to download from: " + server + "\"", ((TextView) objects[0]));
+                        try {
+                            URL url = new URL("https://" + server + objects[2].toString());
+                            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+                            int lengthOfFile = connection.getContentLength();
 
-                    InputStream input = connection.getInputStream();
-                    BufferedInputStream reader = new BufferedInputStream(input);
-                    BufferedOutputStream writer = null;
-                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                        writer = new BufferedOutputStream(Files.newOutputStream(Paths.get(objects[3].toString())));
+                            InputStream input = connection.getInputStream();
+                            BufferedInputStream reader = new BufferedInputStream(input);
+                            BufferedOutputStream writer = null;
+                            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                                writer = new BufferedOutputStream(Files.newOutputStream(Paths.get(objects[3].toString())));
+                            }
+
+                            byte[] data = new byte[1024];
+                            long bytes = -1;
+
+                            while ((count = reader.read(data)) != -1) {
+                                bytes += count;
+                                int progress = (int) ((bytes / (float) lengthOfFile) * 100);
+                                publishProgress(progress);
+                                assert writer != null;
+                                writer.write(data, 0, count);
+                            }
+                            assert writer != null;
+                            writer.close();
+                            reader.close();
+                            exe.RunAsRootOutput("echo \"[+] Download completed. It's time to install from storage.\"", ((TextView) objects[0]));
+                            success = true;
+                            break;
+                        } catch (Exception e) {
+                            lastException = e;
+                            exe.RunAsRootOutput("echo \"[-] Failed to download from: " + server + " (" + e.getMessage() + ")\"", ((TextView) objects[0]));
+                            if (i == 0) {
+                                exe.RunAsRootOutput("echo \"[!] Trying secondary server...\"", ((TextView) objects[0]));
+                            }
+                        }
                     }
-
-                    byte[] data = new byte[1024];
-                    long bytes = -1;
-
-                    while ((count = reader.read(data)) != -1) {
-                        bytes += count;
-                        int progress = (int) ((bytes / (float) lengthOfFile) * 100);
-                        publishProgress(progress);
-                        assert writer != null;
-                        writer.write(data, 0, count);
+                    if (!success) {
+                        exe.RunAsRootOutput("echo \"[-] " + lastException.getMessage() + "\"", ((TextView) objects[0]));
+                        resultCode = 1;
                     }
-                    assert writer != null;
-                    writer.close();
-                    reader.close();
-                    exe.RunAsRootOutput("echo \"[+] Download completed. It's time to install from storage.\"", ((TextView)objects[0]));
-                    // Skip sha512 check until it's added to daily builds
-                    //resultCode = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"checksha512 " + objects[1].toString() + objects[2].toString().replace(".tar.xz","") + ".sha512sum " + objects[3].toString() + "\"", ((TextView)objects[0]));
                 } catch (Exception e) {
-                    exe.RunAsRootOutput("echo \"[-] " + e.getMessage() + "\"", ((TextView)objects[0]));
+                    exe.RunAsRootOutput("echo \"[-] " + e.getMessage() + "\"", ((TextView) objects[0]));
                     resultCode = 1;
                 }
                 break;
