@@ -622,6 +622,20 @@
     <string name="wps_seconds">seconds</string>
     <string name="wps_launch_attack">Launch attack</string>
 
+    <!-- KERNEL -->
+    <string name="kernel_device_details">Device details</string>
+    <string name="kernel_device">Device:</string>
+    <string name="kernel_loading">Loading ..</string>
+    <string name="kernel_codename">Codename:</string>
+    <string name="kernel_android">Android:</string>
+    <string name="kernel_custom_codename">Custom codename</string>
+    <string name="kernel_device_codename">device_codename</string>
+    <string name="kernel_check">Check</string>
+    <string name="kernel_select_kernel_to_flash">Select kernel to flash</string>
+    <string name="kernel_kernel_nethunter_zip">/sdcard/kernel_nethunter.zip</string>
+    <string name="kernel_dots">...</string>
+    <string name="kernel_flash_kernel">Flash kernel</string>
+
     <!-- MODULES -->
     <string-array name="sort_options">
         <item>Alphabetical</item>
@@ -636,5 +650,4 @@
     <string name="can_icsim_desc">Instrument Cluster Simulator for SocketCAN</string>
     <!-- CAN About menu -->
     <string name="about_author">ABOUT:\n\nFound a bug? A suggestion? Follow me on my networks and let me know!\n\nhttps://linktr.ee/v0lk3n\n\nCREDITS:\n\nMade with ♥ by V0lk3n\n\n- Fenugrec! For freediag tool.\nhttps://github.com/fenugrec\n\n- Kobolt! For can-usb.\nhttps://github.com/kobolt\n\n- Alexmohr! For can-usb fork.\nhttps://github.com/alexmohr\n\n- Linux-Can! For can-utils and socketcand.\nhttps://github.com/linux-can\n\n- Mguentner! For cannelloni.\nhttps://github.com/mguentner\n\n- CaringCaribou!\nhttps://github.com/CaringCaribou\n\n- zombieCraig! For ICSim tool.\nhttps://github.com/zombieCraig\n\n</string>
-
 </resources>
