@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -39,8 +41,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 
-// TODO: Could add a find feature on Executors is also possible, just avoid "/proc"
 public class ModulesFragment extends Fragment {
     public static final String TAG = "ModulesFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
@@ -61,16 +63,65 @@ public class ModulesFragment extends Fragment {
     private void showModuleInfo(String moduleName) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
-            String info = exe.RunAsRootOutput("modinfo " + moduleName);
-            if (info.trim().isEmpty()) {
-                info = exe.RunAsRootOutput("modinfo " + moduleName + ".ko");
+            String modulesPath = modules_path != null ? modules_path.getText().toString() : "";
+            String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
+            String kernelVersion = System.getProperty("os.version");
+            String pathWithKernelVersion = sanitizedModulesPath + "/" + kernelVersion;
+
+            // Find the full path of the module
+            String findCommand = "find " + sanitizedModulesPath + " " + pathWithKernelVersion + " -name " + moduleName + ".ko -print -quit";
+            String moduleFilePath = exe.RunAsRootOutput(findCommand).trim();
+
+            String info;
+            if (moduleFilePath.isEmpty()) {
+                info = "Module not found: " + moduleName;
+            } else {
+                info = exe.RunAsRootOutput("modinfo " + moduleFilePath);
+                if (info == null || info.trim().isEmpty()) {
+                    info = "No information available for " + moduleName;
+                }
             }
-            String finalInfo = info.trim().isEmpty() ? "No information available for " + moduleName : info;
+
             Activity currentActivity = getActivity();
             if (currentActivity != null) {
+                String finalInfo = info;
                 currentActivity.runOnUiThread(() -> new AlertDialog.Builder(currentActivity)
                         .setTitle("Module Info: " + moduleName)
                         .setMessage(finalInfo)
+                        .setPositiveButton("OK", null)
+                        .show());
+            }
+        });
+    }
+
+    private void showModuleDependencies(String moduleName) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            String modulesPath = modules_path != null ? modules_path.getText().toString() : "";
+            String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
+            String kernelVersion = System.getProperty("os.version");
+            String pathWithKernelVersion = sanitizedModulesPath + "/" + kernelVersion;
+
+            // Find the full path of the module
+            String findCommand = "find " + sanitizedModulesPath + " " + pathWithKernelVersion + " -name " + moduleName + ".ko -print -quit";
+            String moduleFilePath = exe.RunAsRootOutput(findCommand).trim();
+
+            String dependencies;
+            if (moduleFilePath.isEmpty()) {
+                dependencies = "Module not found: " + moduleName;
+            } else {
+                dependencies = exe.RunAsRootOutput("modinfo " + moduleFilePath + " | grep depends");
+                if (dependencies == null || dependencies.trim().isEmpty()) {
+                    dependencies = "No dependencies found for " + moduleName;
+                }
+            }
+
+            Activity currentActivity = getActivity();
+            if (currentActivity != null) {
+                String finalDependencies = dependencies;
+                currentActivity.runOnUiThread(() -> new AlertDialog.Builder(currentActivity)
+                        .setTitle("Module Dependencies: " + moduleName)
+                        .setMessage(finalDependencies)
                         .setPositiveButton("OK", null)
                         .show());
             }
@@ -155,17 +206,21 @@ public class ModulesFragment extends Fragment {
 
         // Use last path
         modules_path = rootView.findViewById(R.id.modulesPath);
-        SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        String LastModulesPath = sharedpreferences.getString("last_modulespath", "");
+        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        String LastModulesPath = sharedPreferences.getString("last_modulespath", "");
         if (!LastModulesPath.isEmpty()) modules_path.setText(LastModulesPath);
 
         modules.setOnItemLongClickListener((adapterView, view, position, id) -> {
             String selectedModule = modules.getItemAtPosition(position).toString();
             PopupMenu popup = new PopupMenu(requireContext(), view);
             popup.getMenu().add("Show module information");
+            popup.getMenu().add("View Dependencies");
             popup.setOnMenuItemClickListener(item -> {
                 if (Objects.equals(item.getTitle(), "Show module information")) {
                     showModuleInfo(selectedModule);
+                    return true;
+                } else if (Objects.equals(item.getTitle(), "View Dependencies")) {
+                    showModuleDependencies(selectedModule);
                     return true;
                 }
                 return false;
@@ -181,32 +236,56 @@ public class ModulesFragment extends Fragment {
 
         // Modules toggle
         modules.setOnItemClickListener((adapterView, view, i, l) -> {
-            String modulesPath = modules_path.getText().toString();
-            String ModulesPathFull = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
-            String selected_module = modules.getItemAtPosition(i).toString();
-            String is_it_loaded = exe.RunAsRootOutput("lsmod | cut -d' ' -f1 | grep " + selected_module);
+            String modulesPath = modules_path != null ? modules_path.getText().toString() : "";
+            String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
+            String kernelVersion = System.getProperty("os.version");
+            String pathWithKernelVersion = sanitizedModulesPath + "/" + kernelVersion;
+
+            String selectedModule = modules.getItemAtPosition(i).toString();
+            String isModuleLoaded = exe.RunAsRootOutput("lsmod | cut -d' ' -f1 | grep " + selectedModule);
             ImageView statusIcon = view.findViewById(R.id.moduleStatusIcon);
 
-            if (is_it_loaded.equals(selected_module)) {
-                String disable_module = exe.RunAsRootOutput("rmmod " + selected_module + " && echo Success || echo Failed");
-                if (disable_module.contains("Success")) {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Module Disabled", Toast.LENGTH_LONG).show();
-                    if (statusIcon != null) statusIcon.setImageResource(R.drawable.ic_module_not_loaded);
+            if (isModuleLoaded != null && isModuleLoaded.trim().equals(selectedModule)) {
+                String disableModule = exe.RunAsRootOutput("rmmod " + selectedModule + " && echo Success || echo Failed");
+                if (disableModule.contains("Success")) {
+                    Log.d(TAG, "Module disabled: " + selectedModule);
+                    Toast.makeText(requireActivity().getApplicationContext(), "Module Disabled: " + selectedModule, Toast.LENGTH_LONG).show();
+                    if (statusIcon != null) {
+                        statusIcon.setImageResource(R.drawable.ic_module_not_loaded);
+                    }
                 } else {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Failed - rmmod " + selected_module, Toast.LENGTH_LONG).show();
+                    Toast.makeText(requireActivity().getApplicationContext(), "Failed - rmmod " + selectedModule, Toast.LENGTH_LONG).show();
                 }
             } else {
-                String toggle_module = exe.RunAsRootOutput("insmod " + ModulesPathFull + "/" + selected_module + ".ko && echo Success || echo Failed");
-                if (toggle_module.contains("Success")) {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Module enabled with insmod", Toast.LENGTH_LONG).show();
-                    if (statusIcon != null) statusIcon.setImageResource(R.drawable.ic_module_loaded);
+                String findCommand = "find " + sanitizedModulesPath + " " + pathWithKernelVersion + " -name " + selectedModule + ".ko -print -quit";
+                String foundModulePath = exe.RunAsRootOutput(findCommand);
+
+                if (foundModulePath == null || foundModulePath.trim().isEmpty()) {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Module not found in the directory structure", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                String modulePath = foundModulePath.trim();
+
+                String toggleModule = exe.RunAsRootOutput("insmod " + modulePath + " && echo Success || echo Failed");
+                if (toggleModule.contains("Success")) {
+                    Log.d(TAG, "Module enabled: " + selectedModule + " from path: " + modulePath);
+                    Toast.makeText(requireActivity().getApplicationContext(), "Module Enabled: " + selectedModule + " from path: " + modulePath, Toast.LENGTH_LONG).show();
+                    if (statusIcon != null) {
+                        statusIcon.setImageResource(R.drawable.ic_module_loaded);
+                    }
                 } else {
-                    toggle_module = exe.RunAsRootOutput("modprobe -d " + ModulesPathFull + " " + selected_module + " && echo Success || echo Failed");
-                    if (toggle_module.contains("Success")) {
-                        Toast.makeText(requireActivity().getApplicationContext(), "Module enabled with modprobe", Toast.LENGTH_LONG).show();
-                        if (statusIcon != null) statusIcon.setImageResource(R.drawable.ic_module_loaded);
+                    toggleModule = exe.RunAsRootOutput("modprobe -d " + sanitizedModulesPath + " " + selectedModule + " && echo Success || echo Failed");
+                    if (toggleModule.contains("Success")) {
+                        Log.d(TAG, "Module enabled: " + selectedModule + " from path: " + sanitizedModulesPath);
+                        Toast.makeText(requireActivity().getApplicationContext(), "Module Enabled: " + selectedModule + " from path: " + sanitizedModulesPath, Toast.LENGTH_LONG).show();
+                        if (statusIcon != null) {
+                            statusIcon.setImageResource(R.drawable.ic_module_loaded);
+                        }
                     } else {
-                        Toast.makeText(requireActivity().getApplicationContext(), "Failed - modprobe -d " + ModulesPathFull + " " + selected_module, Toast.LENGTH_LONG).show();
+                        Toast.makeText(requireActivity().getApplicationContext(), "Failed - modprobe -d " + sanitizedModulesPath + " " + selectedModule, Toast.LENGTH_LONG).show();
+                        if (sharedPreferences.getBoolean("enable_faulty_check", true)) {
+                            checkFaultyModule(sanitizedModulesPath, selectedModule);
+                        }
                     }
                 }
             }
@@ -228,26 +307,51 @@ public class ModulesFragment extends Fragment {
         final ListView modules = rootView.findViewById(R.id.modulesList);
 
         modules_path = rootView.findViewById(R.id.modulesPath);
-        String modulesPath = modules_path.getText().toString();
-        String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
+        String modulesPath = "";
+        if (modules_path != null) {
+            modulesPath = modules_path.getText().toString();
+        }
+        AtomicReference<String> sanitizedModulesPath = new AtomicReference<>(modulesPath.replaceAll("[^a-zA-Z0-9/_-]", ""));
         if (sharedpreferences != null) {
             sharedpreferences.edit().putString("last_modulespath", modulesPath).apply();
         }
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
-            if (sanitizedModulesPath.isEmpty()) {
+            // Check if the directory exists
+            String kernelVersion = System.getProperty("os.version");
+            String pathWithKernelVersion = sanitizedModulesPath + "/" + kernelVersion;
+
+            String pathCheck = exe.RunAsRootOutput("test -d " + pathWithKernelVersion + " && echo exists || echo not_exists");
+            final String finalSanitizedModulesPath;
+            if ("not_exists".equals(pathCheck.trim())) {
+                pathCheck = exe.RunAsRootOutput("test -d " + sanitizedModulesPath + " && echo exists || echo not_exists");
+                if ("not_exists".equals(pathCheck.trim())) {
+                    Activity currentActivity = getActivity();
+                    if (currentActivity != null) {
+                        finalSanitizedModulesPath = sanitizedModulesPath.get();
+                        currentActivity.runOnUiThread(() ->
+                                Toast.makeText(currentActivity.getApplicationContext(), finalSanitizedModulesPath + " does not exist", Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                    return;
+                }
+            } else {
+                sanitizedModulesPath.set(pathWithKernelVersion);
+            }
+            finalSanitizedModulesPath = sanitizedModulesPath.get();
+
+            // Execute `find` command once
+            String modulesRaw = exe.RunAsRootOutput("find " + finalSanitizedModulesPath + " -name *.ko -printf \"%f\\n\" | sed 's/\\.ko$//1'");
+            if (modulesRaw.isEmpty()) {
                 Activity currentActivity = getActivity();
                 if (currentActivity != null) {
                     currentActivity.runOnUiThread(() ->
-                            Toast.makeText(currentActivity.getApplicationContext(), "Please enter path", Toast.LENGTH_SHORT).show()
+                            modules.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, Collections.singletonList("No modules found")))
                     );
                 }
                 return;
             }
-
-            // Execute `find` command once
-            String modulesRaw = exe.RunAsRootOutput("find " + sanitizedModulesPath + " -name *.ko -printf \"%f\\n\" | sed 's/\\.ko$//1'");
             final String[] modulesArray = modulesRaw.split("\n");
 
             // Execute `lsmod` once and cache results
@@ -271,12 +375,8 @@ public class ModulesFragment extends Fragment {
             Activity currentActivity = getActivity();
             if (currentActivity != null) {
                 currentActivity.runOnUiThread(() -> {
-                    if (!modulesRaw.isEmpty()) {
-                        ModuleListAdapter adapter = new ModuleListAdapter(requireContext(), moduleList, moduleStates);
-                        modules.setAdapter(adapter);
-                    } else {
-                        modules.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, Collections.singletonList("No modules found")));
-                    }
+                    ModuleListAdapter adapter = new ModuleListAdapter(requireContext(), moduleList, moduleStates);
+                    modules.setAdapter(adapter);
                 });
             }
         });
@@ -284,18 +384,48 @@ public class ModulesFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         switch (item.getItemId()) {
-            case R.id.action_sort_alpha:
-                currentSortOrder = 0;
-                refreshModules(requireView());
+            case R.id.action_sort:
+                AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                builder.setTitle("Sort Modules")
+                        .setItems(new String[]{"Alphabetical", "Reverse"}, (dialog, which) -> {
+                            currentSortOrder = which;
+                            refreshModules(requireView());
+                        })
+                        .show();
                 return true;
-            case R.id.action_sort_reverse:
-                currentSortOrder = 1;
-                refreshModules(requireView());
+            case R.id.action_enable_faulty_check:
+                boolean isChecked = !item.isChecked();
+                item.setChecked(isChecked);
+                sharedPreferences.edit().putBoolean("enable_faulty_check", isChecked).apply();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void checkFaultyModule(String modulePath, String moduleName) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            // Retrieve kernel logs
+            String kernelLogs = exe.RunAsRootOutput("dmesg | tail -n 20");
+            Activity currentActivity = getActivity();
+            if (currentActivity != null) {
+                String finalKernelLogs = kernelLogs.trim().isEmpty() ? "No kernel logs available" : kernelLogs;
+                currentActivity.runOnUiThread(() -> {
+                    // Show a Toast with the error
+                    Toast.makeText(currentActivity.getApplicationContext(), "Error loading module: " + moduleName, Toast.LENGTH_LONG).show();
+
+                    // Show an AlertDialog with detailed logs
+                    new AlertDialog.Builder(currentActivity)
+                            .setTitle("Module Load Failed: " + moduleName)
+                            .setMessage("Kernel Logs:\n" + finalKernelLogs)
+                            .setPositiveButton("OK", null)
+                            .show();
+                });
+            }
+        });
     }
 
     static class ModuleListAdapter extends ArrayAdapter<String> {
@@ -313,6 +443,7 @@ public class ModulesFragment extends Fragment {
         private static class ViewHolder {
             TextView textView;
             ImageView statusIcon;
+            CheckBox autoLoadCheckBox;
         }
 
         @NonNull
@@ -325,6 +456,7 @@ public class ModulesFragment extends Fragment {
                 holder = new ViewHolder();
                 holder.textView = convertView.findViewById(R.id.moduleName);
                 holder.statusIcon = convertView.findViewById(R.id.moduleStatusIcon);
+                holder.autoLoadCheckBox = convertView.findViewById(R.id.moduleAutoLoad);
                 convertView.setTag(holder);
             } else {
                 holder = (ViewHolder) convertView.getTag();
@@ -341,7 +473,31 @@ public class ModulesFragment extends Fragment {
                 holder.statusIcon.setImageResource(R.drawable.ic_module_not_loaded);
             }
 
+            // Handle auto-load checkbox
+            SharedPreferences preferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+            holder.autoLoadCheckBox.setChecked(preferences.getBoolean("autoload_" + moduleName, false));
+            holder.autoLoadCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                preferences.edit().putBoolean("autoload_" + moduleName, isChecked).apply();
+            });
+
             return convertView;
+        }
+    }
+
+    public void onReceive(Context context, Intent intent) {
+        if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
+            SharedPreferences preferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+            String defaultPath = "/system/lib/modules";
+            String modulesPath = preferences.getString("last_modulespath", defaultPath);
+            Map<String, ?> allEntries = preferences.getAll();
+            for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+                if (entry.getKey().startsWith("autoload_") && Boolean.TRUE.equals(entry.getValue())) {
+                    String moduleName = entry.getKey().replace("autoload_", "");
+                    String modulePath = modulesPath + "/" + moduleName + ".ko";
+                    ShellExecuter exe = new ShellExecuter();
+                    exe.RunAsRootOutput("insmod " + modulePath);
+                }
+            }
         }
     }
 
