@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicReference;
 
 // TODO: Could add a find feature on Executors is also possible, just avoid "/proc"
 public class ModulesFragment extends Fragment {
@@ -239,7 +240,7 @@ public class ModulesFragment extends Fragment {
         if (modules_path != null) {
             modulesPath = modules_path.getText().toString();
         }
-        String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
+        AtomicReference<String> sanitizedModulesPath = new AtomicReference<>(modulesPath.replaceAll("[^a-zA-Z0-9/_-]", ""));
         if (sharedpreferences != null) {
             sharedpreferences.edit().putString("last_modulespath", modulesPath).apply();
         }
@@ -247,19 +248,30 @@ public class ModulesFragment extends Fragment {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
             // Check if the directory exists
-            String pathCheck = exe.RunAsRootOutput("test -d " + sanitizedModulesPath + " && echo exists || echo not_exists");
+            String kernelVersion = System.getProperty("os.version");
+            String pathWithKernelVersion = sanitizedModulesPath + "/" + kernelVersion;
+
+            String pathCheck = exe.RunAsRootOutput("test -d " + pathWithKernelVersion + " && echo exists || echo not_exists");
+            final String finalSanitizedModulesPath;
             if ("not_exists".equals(pathCheck.trim())) {
-                Activity currentActivity = getActivity();
-                if (currentActivity != null) {
-                    currentActivity.runOnUiThread(() ->
-                            Toast.makeText(currentActivity.getApplicationContext(), sanitizedModulesPath + " does not exist", Toast.LENGTH_SHORT).show()
-                    );
+                pathCheck = exe.RunAsRootOutput("test -d " + sanitizedModulesPath + " && echo exists || echo not_exists");
+                if ("not_exists".equals(pathCheck.trim())) {
+                    Activity currentActivity = getActivity();
+                    if (currentActivity != null) {
+                        finalSanitizedModulesPath = sanitizedModulesPath.get();
+                        currentActivity.runOnUiThread(() ->
+                                Toast.makeText(currentActivity.getApplicationContext(), finalSanitizedModulesPath + " does not exist", Toast.LENGTH_SHORT).show()
+                        );
+                    }
+                    return;
                 }
-                return;
+            } else {
+                sanitizedModulesPath.set(pathWithKernelVersion);
             }
+            finalSanitizedModulesPath = sanitizedModulesPath.get();
 
             // Execute `find` command once
-            String modulesRaw = exe.RunAsRootOutput("find " + sanitizedModulesPath + " -name *.ko -printf \"%f\\n\" | sed 's/\\.ko$//1'");
+            String modulesRaw = exe.RunAsRootOutput("find " + finalSanitizedModulesPath + " -name *.ko -printf \"%f\\n\" | sed 's/\\.ko$//1'");
             if (modulesRaw.isEmpty()) {
                 Activity currentActivity = getActivity();
                 if (currentActivity != null) {
