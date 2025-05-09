@@ -41,6 +41,8 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.offsec.nethunter.bridge.Bridge;
+import com.offsec.nethunter.utils.BootKali;
+import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.util.ArrayList;
@@ -162,6 +164,7 @@ public class CANFragment extends Fragment {
                 "if [[ -f /opt/car_hacking/ICSim/builddir/ICSIM ]]; then echo 'ICSIM is Installed!'; else echo '\\nInstalling ICSIM\\n'; cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/ICSim.git; cd /opt/car_hacking/ICSim;sudo cp /opt/car_hacking/can-utils/lib.o .;sudo meson setup builddir && cd builddir && sudo meson compile;sudo cp -f /sdcard/nh_files/can_arsenal/icsim_start.sh /opt/car_hacking/icsim_start.sh; sudo chmod +x /opt/car_hacking/icsim_start.sh;fi; " +
                 "if [[ -f /opt/car_hacking/can_reset.sh ]]; then echo 'can_reset.sh is Installed!'; else echo '\\nInstalling can_reset.sh\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/can_reset.sh /opt/car_hacking/can_reset.sh; sudo chmod +x /opt/car_hacking/can_reset.sh;fi; " +
                 "if [[ -f /opt/car_hacking/sequence_finder.sh ]]; then echo 'sequence_finder.sh is Installed!'; else echo '\\nInstalling sequence_finder.sh\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh; sudo chmod +x /opt/car_hacking/sequence_finder.sh;fi; " +
+                "if [[ -f /opt/car_hacking/car_venv/bin/vininfo ]]; then echo 'VinInfo is Installed!'; else echo '\\nInstalling VinInfo\\n'; sudo python3 -m venv /opt/car_hacking/car_venv;/opt/car_hacking/car_venv/bin/pip install vininfo[cli];fi; " +
                 "echo '\\nSetup done!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit");
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }
@@ -181,6 +184,7 @@ public class CANFragment extends Fragment {
                 "if [[ -f /opt/car_hacking/ICSim/builddir/ICSIM ]]; then echo 'ICSIM detected! Updating...\\n'; else echo '\\nInstalling ICSIM\\n'; cd /opt/car_hacking/ICSim; sudo git pull; sudo meson setup builddir && sudo cp /opt/car_hacking/can-utils/lib.o . && cd builddir && sudo meson compile; sudo cp -f /sdcard/nh_files/can_arsenal/icsim_start.sh /opt/car_hacking/icsim_start.sh; sudo chmod +x /opt/car_hacking/icsim_start.sh; else echo '\\ICSIM not detected! Please run Setup first.'fi; " +
                 "if [[ -f /opt/car_hacking/can_reset.sh ]]; then echo 'can_reset.sh detected! Updating...\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/can_reset.sh /opt/car_hacking/can_reset.sh; sudo chmod +x /opt/car_hacking/can_reset.sh; else echo '\\ncan_reset.sh script not detected! Please run Setup first.';fi; " +
                 "if [[ -f /opt/car_hacking/sequence_finder.sh ]]; then echo 'can_reset.sh detected! Updating...\\n'; sudo cp -f /sdcard/nh_files/can_arsenal/sequence_finder.sh /opt/car_hacking/sequence_finder.sh; sudo chmod +x /opt/car_hacking/sequence_finder.sh; else echo '\\nsequence_finder.sh script not detected! Please run Setup first.';fi; " +
+                "if [[ -f /opt/car_hacking/car_venv/bin/vininfo ]]; then echo 'VinInfo detected! Updating...\\n'; sudo python3 -m venv /opt/car_hacking/car_venv;/opt/car_hacking/car_venv/bin/pip install vininfo[cli]; else echo '\\nVinInfo not detected! Please run Setup first.'fi; " +
                 "echo '\\nEverything is updated! Closing in 3secs..'; sleep 3 && exit");
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
     }
@@ -287,6 +291,7 @@ public class CANFragment extends Fragment {
             SelectedTxqueuelen = rootView.findViewById(R.id.can_iface_txqueuelen_value);
 
             final EditText bt_target_mac = rootView.findViewById(R.id.bttarget);
+            final EditText selected_vin = rootView.findViewById(R.id.vin_number);
 
             // First run
             Boolean setupdone = sharedpreferences.getBoolean("setup_done", false);
@@ -648,6 +653,43 @@ public class CANFragment extends Fragment {
                     Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your CAN Interface field is set!", Toast.LENGTH_LONG).show();
                 }
             });
+
+            // VIN Info
+            final EditText term = rootView.findViewById(R.id.TerminalOutputVINInfo);
+            // Show
+            Button VINShowButton = rootView.findViewById(R.id.vin_show);
+
+            VINShowButton.setOnClickListener(v -> {
+                String vinNumber = selected_vin.getText().toString();
+                String cmd_show = "/opt/car_hacking/car_venv/bin/vininfo show " + vinNumber + " | tr -s [:space:] > /sdcard/nh_files/can_arsenal/output.txt";
+                new BootKali(cmd_show).run_bg();
+                try {
+                    Thread.sleep(5000);
+                    String output = exe.RunAsRootOutput("cat " + NhPaths.APP_SD_FILES_PATH + "/can_arsenal/output.txt");
+                    term.setText(output);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    term.setText(e.toString());
+                }
+            });
+
+            // Check
+            Button VINCheckButton = rootView.findViewById(R.id.vin_check);
+
+            VINCheckButton.setOnClickListener(v -> {
+                String vinNumber = selected_vin.getText().toString();
+                String cmd_check = "/opt/car_hacking/car_venv/bin/vininfo check " + vinNumber + " | tr -s [:space:] > /sdcard/nh_files/can_arsenal/output.txt";
+                new BootKali(cmd_check).run_bg();
+                try {
+                    Thread.sleep(5000);
+                    String output = exe.RunAsRootOutput("cat " + NhPaths.APP_SD_FILES_PATH + "/can_arsenal/output.txt");
+                    term.setText(output);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    term.setText(e.toString());
+                }
+            });
+
             return rootView;
         }
     }
