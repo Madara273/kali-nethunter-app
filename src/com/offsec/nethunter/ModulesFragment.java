@@ -79,6 +79,23 @@ public class ModulesFragment extends Fragment {
         });
     }
 
+    private void showModuleDependencies(String moduleName) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            String dependencies = exe.RunAsRootOutput("modinfo " + moduleName + " | grep depends");
+            String finalDependencies = dependencies.trim().isEmpty() ? "No dependencies found for " + moduleName : dependencies;
+
+            Activity currentActivity = getActivity();
+            if (currentActivity != null) {
+                currentActivity.runOnUiThread(() -> new AlertDialog.Builder(currentActivity)
+                        .setTitle("Module Dependencies: " + moduleName)
+                        .setMessage(finalDependencies)
+                        .setPositiveButton("OK", null)
+                        .show());
+            }
+        });
+    }
+
     private void showLoadedModules(View rootView) {
         final ListView modules = rootView.findViewById(R.id.modulesList);
         ExecutorService executor = Executors.newSingleThreadExecutor();
@@ -165,9 +182,13 @@ public class ModulesFragment extends Fragment {
             String selectedModule = modules.getItemAtPosition(position).toString();
             PopupMenu popup = new PopupMenu(requireContext(), view);
             popup.getMenu().add("Show module information");
+            popup.getMenu().add("View Dependencies");
             popup.setOnMenuItemClickListener(item -> {
                 if (Objects.equals(item.getTitle(), "Show module information")) {
                     showModuleInfo(selectedModule);
+                    return true;
+                } else if (Objects.equals(item.getTitle(), "View Dependencies")) {
+                    showModuleDependencies(selectedModule);
                     return true;
                 }
                 return false;
