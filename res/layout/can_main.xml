@@ -341,30 +341,18 @@
                 android:layout_height="wrap_content"
                 android:padding="10dp">
 
-                <TextView
-                    android:id="@+id/textViewVINNumber"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:text="VIN Number :"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent" />
-
                 <EditText
                     android:id="@+id/vin_number"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
+                    android:autofillHints="None"
+                    android:ems="10"
+                    android:hint="VIN identifier (ex: 4F2CU08102KM50866)"
                     android:inputType="text"
-                    android:text="WAUDGAFL6DA095049"
-                    android:gravity="end"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TextFields,TouchTargetSizeCheck,VisualLintTextFieldSize"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent" />
+                    tools:ignore="MissingConstraints" />
+
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
