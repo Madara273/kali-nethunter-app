@@ -15,6 +15,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -213,22 +214,11 @@ public class ModulesFragment extends Fragment {
             String isModuleLoaded = exe.RunAsRootOutput("lsmod | cut -d' ' -f1 | grep " + selectedModule);
             ImageView statusIcon = view.findViewById(R.id.moduleStatusIcon);
 
-            // Use `find` to locate the module in the directory structure
-            String foundModulePath = exe.RunAsRootOutput("find " + sanitizedModulesPath + " -name " + selectedModule + ".ko -print -quit");
-            if (foundModulePath == null || foundModulePath.trim().isEmpty()) {
-                foundModulePath = exe.RunAsRootOutput("find " + pathWithKernelVersion + " -name " + selectedModule + ".ko -print -quit");
-            }
-            if (foundModulePath == null || foundModulePath.trim().isEmpty()) {
-                Toast.makeText(requireActivity().getApplicationContext(), "Module not found in the directory structure", Toast.LENGTH_LONG).show();
-                return;
-            }
-            String modulePath = foundModulePath.trim();
-
-            if (isModuleLoaded.equals(selectedModule)) {
+            if (isModuleLoaded != null && isModuleLoaded.trim().equals(selectedModule)) {
                 String disableModule = exe.RunAsRootOutput("rmmod " + selectedModule + " && echo Success || echo Failed");
                 if (disableModule.contains("Success")) {
-                    Log.d(TAG, "Module disabled: " + selectedModule + " from path: " + modulePath);
-                    Toast.makeText(requireActivity().getApplicationContext(), "Module Disabled: " + selectedModule + " from path: " + modulePath, Toast.LENGTH_LONG).show();
+                    Log.d(TAG, "Module disabled: " + selectedModule);
+                    Toast.makeText(requireActivity().getApplicationContext(), "Module Disabled: " + selectedModule, Toast.LENGTH_LONG).show();
                     if (statusIcon != null) {
                         statusIcon.setImageResource(R.drawable.ic_module_not_loaded);
                     }
@@ -236,6 +226,15 @@ public class ModulesFragment extends Fragment {
                     Toast.makeText(requireActivity().getApplicationContext(), "Failed - rmmod " + selectedModule, Toast.LENGTH_LONG).show();
                 }
             } else {
+                String findCommand = "find " + sanitizedModulesPath + " " + pathWithKernelVersion + " -name " + selectedModule + ".ko -print -quit";
+                String foundModulePath = exe.RunAsRootOutput(findCommand);
+
+                if (foundModulePath == null || foundModulePath.trim().isEmpty()) {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Module not found in the directory structure", Toast.LENGTH_LONG).show();
+                    return;
+                }
+                String modulePath = foundModulePath.trim();
+
                 String toggleModule = exe.RunAsRootOutput("insmod " + modulePath + " && echo Success || echo Failed");
                 if (toggleModule.contains("Success")) {
                     Log.d(TAG, "Module enabled: " + selectedModule + " from path: " + modulePath);
@@ -413,6 +412,7 @@ public class ModulesFragment extends Fragment {
         private static class ViewHolder {
             TextView textView;
             ImageView statusIcon;
+            CheckBox autoLoadCheckBox;
         }
 
         @NonNull
@@ -425,6 +425,7 @@ public class ModulesFragment extends Fragment {
                 holder = new ViewHolder();
                 holder.textView = convertView.findViewById(R.id.moduleName);
                 holder.statusIcon = convertView.findViewById(R.id.moduleStatusIcon);
+                holder.autoLoadCheckBox = convertView.findViewById(R.id.moduleAutoLoad);
                 convertView.setTag(holder);
             } else {
                 holder = (ViewHolder) convertView.getTag();
@@ -441,7 +442,31 @@ public class ModulesFragment extends Fragment {
                 holder.statusIcon.setImageResource(R.drawable.ic_module_not_loaded);
             }
 
+            // Handle auto-load checkbox
+            SharedPreferences preferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+            holder.autoLoadCheckBox.setChecked(preferences.getBoolean("autoload_" + moduleName, false));
+            holder.autoLoadCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                preferences.edit().putBoolean("autoload_" + moduleName, isChecked).apply();
+            });
+
             return convertView;
+        }
+    }
+
+    public void onReceive(Context context, Intent intent) {
+        if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
+            SharedPreferences preferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+            String defaultPath = "/system/lib/modules";
+            String modulesPath = preferences.getString("last_modulespath", defaultPath);
+            Map<String, ?> allEntries = preferences.getAll();
+            for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
+                if (entry.getKey().startsWith("autoload_") && Boolean.TRUE.equals(entry.getValue())) {
+                    String moduleName = entry.getKey().replace("autoload_", "");
+                    String modulePath = modulesPath + "/" + moduleName + ".ko";
+                    ShellExecuter exe = new ShellExecuter();
+                    exe.RunAsRootOutput("insmod " + modulePath);
+                }
+            }
         }
     }
 
