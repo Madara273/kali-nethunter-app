@@ -43,7 +43,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
-// TODO: Could add a find feature on Executors is also possible, just avoid "/proc"
 public class ModulesFragment extends Fragment {
     public static final String TAG = "ModulesFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
@@ -64,13 +63,28 @@ public class ModulesFragment extends Fragment {
     private void showModuleInfo(String moduleName) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
-            String info = exe.RunAsRootOutput("modinfo " + moduleName);
-            if (info.trim().isEmpty()) {
-                info = exe.RunAsRootOutput("modinfo " + moduleName + ".ko");
+            String modulesPath = modules_path != null ? modules_path.getText().toString() : "";
+            String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
+            String kernelVersion = System.getProperty("os.version");
+            String pathWithKernelVersion = sanitizedModulesPath + "/" + kernelVersion;
+
+            // Find the full path of the module
+            String findCommand = "find " + sanitizedModulesPath + " " + pathWithKernelVersion + " -name " + moduleName + ".ko -print -quit";
+            String moduleFilePath = exe.RunAsRootOutput(findCommand).trim();
+
+            String info;
+            if (moduleFilePath.isEmpty()) {
+                info = "Module not found: " + moduleName;
+            } else {
+                info = exe.RunAsRootOutput("modinfo " + moduleFilePath);
+                if (info == null || info.trim().isEmpty()) {
+                    info = "No information available for " + moduleName;
+                }
             }
-            String finalInfo = info.trim().isEmpty() ? "No information available for " + moduleName : info;
+
             Activity currentActivity = getActivity();
             if (currentActivity != null) {
+                String finalInfo = info;
                 currentActivity.runOnUiThread(() -> new AlertDialog.Builder(currentActivity)
                         .setTitle("Module Info: " + moduleName)
                         .setMessage(finalInfo)
@@ -83,11 +97,28 @@ public class ModulesFragment extends Fragment {
     private void showModuleDependencies(String moduleName) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
-            String dependencies = exe.RunAsRootOutput("modinfo " + moduleName + " | grep depends");
-            String finalDependencies = dependencies.trim().isEmpty() ? "No dependencies found for " + moduleName : dependencies;
+            String modulesPath = modules_path != null ? modules_path.getText().toString() : "";
+            String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
+            String kernelVersion = System.getProperty("os.version");
+            String pathWithKernelVersion = sanitizedModulesPath + "/" + kernelVersion;
+
+            // Find the full path of the module
+            String findCommand = "find " + sanitizedModulesPath + " " + pathWithKernelVersion + " -name " + moduleName + ".ko -print -quit";
+            String moduleFilePath = exe.RunAsRootOutput(findCommand).trim();
+
+            String dependencies;
+            if (moduleFilePath.isEmpty()) {
+                dependencies = "Module not found: " + moduleName;
+            } else {
+                dependencies = exe.RunAsRootOutput("modinfo " + moduleFilePath + " | grep depends");
+                if (dependencies == null || dependencies.trim().isEmpty()) {
+                    dependencies = "No dependencies found for " + moduleName;
+                }
+            }
 
             Activity currentActivity = getActivity();
             if (currentActivity != null) {
+                String finalDependencies = dependencies;
                 currentActivity.runOnUiThread(() -> new AlertDialog.Builder(currentActivity)
                         .setTitle("Module Dependencies: " + moduleName)
                         .setMessage(finalDependencies)
