@@ -32,7 +32,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="20dp"
             android:layout_weight="3"
-            android:text="Modules path"
+            android:text="@string/modules_path"
             android:textAppearance="?android:attr/textAppearanceSmall" />
 
         <EditText
@@ -42,8 +42,8 @@
             android:layout_marginStart="20dp"
             android:layout_weight="3"
             android:autofillHints="none"
-            android:text="/system/lib/modules"
-            android:hint="/system/lib/modules"
+            android:text="@string/modules_system_lib_path"
+            android:hint="@string/modules_system_lib_path"
             android:textAppearance="?android:attr/textAppearanceSmall" />
     </LinearLayout>
 
@@ -58,14 +58,14 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="lsmod" />
+            android:text="@string/modules_lsmod" />
 
         <Button
             android:id="@+id/refresh"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="Refresh" />
+            android:text="@string/modules_refresh" />
     </LinearLayout>
 
     <TextView
@@ -73,7 +73,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="20dp"
-        android:text="Available modules"
+        android:text="@string/modules_available_modules"
         android:textAppearance="?android:attr/textAppearanceSmall" />
 
     <com.google.android.material.divider.MaterialDivider
