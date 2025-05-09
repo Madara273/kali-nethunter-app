@@ -191,7 +191,9 @@ public class ModulesFragment extends Fragment {
                 String disable_module = exe.RunAsRootOutput("rmmod " + selected_module + " && echo Success || echo Failed");
                 if (disable_module.contains("Success")) {
                     Toast.makeText(requireActivity().getApplicationContext(), "Module Disabled", Toast.LENGTH_LONG).show();
-                    if (statusIcon != null) statusIcon.setImageResource(R.drawable.ic_module_not_loaded);
+                    if (statusIcon != null) {
+                        statusIcon.setImageResource(R.drawable.ic_module_not_loaded);
+                    }
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Failed - rmmod " + selected_module, Toast.LENGTH_LONG).show();
                 }
@@ -199,14 +201,19 @@ public class ModulesFragment extends Fragment {
                 String toggle_module = exe.RunAsRootOutput("insmod " + ModulesPathFull + "/" + selected_module + ".ko && echo Success || echo Failed");
                 if (toggle_module.contains("Success")) {
                     Toast.makeText(requireActivity().getApplicationContext(), "Module enabled with insmod", Toast.LENGTH_LONG).show();
-                    if (statusIcon != null) statusIcon.setImageResource(R.drawable.ic_module_loaded);
+                    if (statusIcon != null) {
+                        statusIcon.setImageResource(R.drawable.ic_module_loaded);
+                    }
                 } else {
                     toggle_module = exe.RunAsRootOutput("modprobe -d " + ModulesPathFull + " " + selected_module + " && echo Success || echo Failed");
                     if (toggle_module.contains("Success")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Module enabled with modprobe", Toast.LENGTH_LONG).show();
-                        if (statusIcon != null) statusIcon.setImageResource(R.drawable.ic_module_loaded);
+                        if (statusIcon != null) {
+                            statusIcon.setImageResource(R.drawable.ic_module_loaded);
+                        }
                     } else {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed - modprobe -d " + ModulesPathFull + " " + selected_module, Toast.LENGTH_LONG).show();
+                        checkFaultyModule(ModulesPathFull, selected_module);
                     }
                 }
             }
@@ -306,6 +313,29 @@ public class ModulesFragment extends Fragment {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    private void checkFaultyModule(String modulePath, String moduleName) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        executor.execute(() -> {
+            // Retrieve kernel logs
+            String kernelLogs = exe.RunAsRootOutput("dmesg | tail -n 20");
+            Activity currentActivity = getActivity();
+            if (currentActivity != null) {
+                String finalKernelLogs = kernelLogs.trim().isEmpty() ? "No kernel logs available" : kernelLogs;
+                currentActivity.runOnUiThread(() -> {
+                    // Show a Toast with the error
+                    Toast.makeText(currentActivity.getApplicationContext(), "Error loading module: " + moduleName, Toast.LENGTH_LONG).show();
+
+                    // Show an AlertDialog with detailed logs
+                    new AlertDialog.Builder(currentActivity)
+                            .setTitle("Module Load Failed: " + moduleName)
+                            .setMessage("Kernel Logs:\n" + finalKernelLogs)
+                            .setPositiveButton("OK", null)
+                            .show();
+                });
+            }
+        });
     }
 
     static class ModuleListAdapter extends ArrayAdapter<String> {
