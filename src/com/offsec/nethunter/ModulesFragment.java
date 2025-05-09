@@ -228,7 +228,10 @@ public class ModulesFragment extends Fragment {
         final ListView modules = rootView.findViewById(R.id.modulesList);
 
         modules_path = rootView.findViewById(R.id.modulesPath);
-        String modulesPath = modules_path.getText().toString();
+        String modulesPath = "";
+        if (modules_path != null) {
+            modulesPath = modules_path.getText().toString();
+        }
         String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
         if (sharedpreferences != null) {
             sharedpreferences.edit().putString("last_modulespath", modulesPath).apply();
@@ -236,11 +239,13 @@ public class ModulesFragment extends Fragment {
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
-            if (sanitizedModulesPath.isEmpty()) {
+            // Check if the directory exists
+            String pathCheck = exe.RunAsRootOutput("test -d " + sanitizedModulesPath + " && echo exists || echo not_exists");
+            if ("not_exists".equals(pathCheck.trim())) {
                 Activity currentActivity = getActivity();
                 if (currentActivity != null) {
                     currentActivity.runOnUiThread(() ->
-                            Toast.makeText(currentActivity.getApplicationContext(), "Please enter path", Toast.LENGTH_SHORT).show()
+                            Toast.makeText(currentActivity.getApplicationContext(), sanitizedModulesPath + " does not exist", Toast.LENGTH_SHORT).show()
                     );
                 }
                 return;
@@ -248,6 +253,15 @@ public class ModulesFragment extends Fragment {
 
             // Execute `find` command once
             String modulesRaw = exe.RunAsRootOutput("find " + sanitizedModulesPath + " -name *.ko -printf \"%f\\n\" | sed 's/\\.ko$//1'");
+            if (modulesRaw.isEmpty()) {
+                Activity currentActivity = getActivity();
+                if (currentActivity != null) {
+                    currentActivity.runOnUiThread(() ->
+                            modules.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, Collections.singletonList("No modules found")))
+                    );
+                }
+                return;
+            }
             final String[] modulesArray = modulesRaw.split("\n");
 
             // Execute `lsmod` once and cache results
@@ -271,12 +285,8 @@ public class ModulesFragment extends Fragment {
             Activity currentActivity = getActivity();
             if (currentActivity != null) {
                 currentActivity.runOnUiThread(() -> {
-                    if (!modulesRaw.isEmpty()) {
-                        ModuleListAdapter adapter = new ModuleListAdapter(requireContext(), moduleList, moduleStates);
-                        modules.setAdapter(adapter);
-                    } else {
-                        modules.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, Collections.singletonList("No modules found")));
-                    }
+                    ModuleListAdapter adapter = new ModuleListAdapter(requireContext(), moduleList, moduleStates);
+                    modules.setAdapter(adapter);
                 });
             }
         });
