@@ -664,7 +664,7 @@ public class CANFragment extends Fragment {
                 String cmd_show = "/opt/car_hacking/car_venv/bin/vininfo show " + vinNumber + " | tr -s [:space:] > /sdcard/nh_files/can_arsenal/output.txt";
                 new BootKali(cmd_show).run_bg();
                 try {
-                    Thread.sleep(5000);
+                    Thread.sleep(500);
                     String output = exe.RunAsRootOutput("cat " + NhPaths.APP_SD_FILES_PATH + "/can_arsenal/output.txt");
                     term.setText(output);
                 } catch (Exception e) {
@@ -681,7 +681,7 @@ public class CANFragment extends Fragment {
                 String cmd_check = "/opt/car_hacking/car_venv/bin/vininfo check " + vinNumber + " | tr -s [:space:] > /sdcard/nh_files/can_arsenal/output.txt";
                 new BootKali(cmd_check).run_bg();
                 try {
-                    Thread.sleep(5000);
+                    Thread.sleep(500);
                     String output = exe.RunAsRootOutput("cat " + NhPaths.APP_SD_FILES_PATH + "/can_arsenal/output.txt");
                     term.setText(output);
                 } catch (Exception e) {
