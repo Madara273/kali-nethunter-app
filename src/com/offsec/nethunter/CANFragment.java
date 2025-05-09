@@ -41,6 +41,8 @@ import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.offsec.nethunter.bridge.Bridge;
+import com.offsec.nethunter.utils.BootKali;
+import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.util.ArrayList;
@@ -653,16 +655,21 @@ public class CANFragment extends Fragment {
             });
 
             // VIN Info
+            final EditText term = rootView.findViewById(R.id.TerminalOutputVINInfo);
             // Show
             Button VINShowButton = rootView.findViewById(R.id.vin_show);
 
             VINShowButton.setOnClickListener(v -> {
                 String vinNumber = selected_vin.getText().toString();
-
-                if (!vinNumber.isEmpty()) {
-                    run_cmd("/opt/car_hacking/car_venv/bin/vininfo show " + vinNumber);
-                } else {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your VIN Number field is set!", Toast.LENGTH_LONG).show();
+                String cmd_show = "/opt/car_hacking/car_venv/bin/vininfo show " + vinNumber + " | tr -s [:space:] > /sdcard/nh_files/can_arsenal/output.txt";
+                new BootKali(cmd_show).run_bg();
+                try {
+                    Thread.sleep(5000);
+                    String output = exe.RunAsRootOutput("cat " + NhPaths.APP_SD_FILES_PATH + "/can_arsenal/output.txt");
+                    term.setText(output);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    term.setText(e.toString());
                 }
             });
 
@@ -671,11 +678,15 @@ public class CANFragment extends Fragment {
 
             VINCheckButton.setOnClickListener(v -> {
                 String vinNumber = selected_vin.getText().toString();
-
-                if (!vinNumber.isEmpty()) {
-                    run_cmd("/opt/car_hacking/car_venv/bin/vininfo check " + vinNumber);
-                } else {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Please ensure your VIN Number field is set!", Toast.LENGTH_LONG).show();
+                String cmd_check = "/opt/car_hacking/car_venv/bin/vininfo check " + vinNumber + " | tr -s [:space:] > /sdcard/nh_files/can_arsenal/output.txt";
+                new BootKali(cmd_check).run_bg();
+                try {
+                    Thread.sleep(5000);
+                    String output = exe.RunAsRootOutput("cat " + NhPaths.APP_SD_FILES_PATH + "/can_arsenal/output.txt");
+                    term.setText(output);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    term.setText(e.toString());
                 }
             });
 
