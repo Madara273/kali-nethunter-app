@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -182,7 +183,7 @@ public class ModulesFragment extends Fragment {
 
         // Modules toggle
         modules.setOnItemClickListener((adapterView, view, i, l) -> {
-            String modulesPath = modules_path.getText().toString();
+            String modulesPath = modules_path != null ? modules_path.getText().toString() : "";
             String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
             String kernelVersion = System.getProperty("os.version");
             String pathWithKernelVersion = sanitizedModulesPath + "/" + kernelVersion;
@@ -191,23 +192,22 @@ public class ModulesFragment extends Fragment {
             String isModuleLoaded = exe.RunAsRootOutput("lsmod | cut -d' ' -f1 | grep " + selectedModule);
             ImageView statusIcon = view.findViewById(R.id.moduleStatusIcon);
 
-            // Check if the module exists in either path
-            String modulePath = sanitizedModulesPath + "/" + selectedModule + ".ko";
-            String modulePathWithKernel = pathWithKernelVersion + "/" + selectedModule + ".ko";
-            String moduleCheck = exe.RunAsRootOutput("test -f " + modulePath + " && echo exists || echo not_exists");
-            if ("not_exists".equals(moduleCheck.trim())) {
-                moduleCheck = exe.RunAsRootOutput("test -f " + modulePathWithKernel + " && echo exists || echo not_exists");
-                if ("not_exists".equals(moduleCheck.trim())) {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Module not found in either path", Toast.LENGTH_LONG).show();
-                    return;
-                }
-                modulePath = modulePathWithKernel;
+            // Use `find` to locate the module in the directory structure
+            String foundModulePath = exe.RunAsRootOutput("find " + sanitizedModulesPath + " -name " + selectedModule + ".ko -print -quit");
+            if (foundModulePath == null || foundModulePath.trim().isEmpty()) {
+                foundModulePath = exe.RunAsRootOutput("find " + pathWithKernelVersion + " -name " + selectedModule + ".ko -print -quit");
             }
+            if (foundModulePath == null || foundModulePath.trim().isEmpty()) {
+                Toast.makeText(requireActivity().getApplicationContext(), "Module not found in the directory structure", Toast.LENGTH_LONG).show();
+                return;
+            }
+            String modulePath = foundModulePath.trim();
 
             if (isModuleLoaded.equals(selectedModule)) {
                 String disableModule = exe.RunAsRootOutput("rmmod " + selectedModule + " && echo Success || echo Failed");
                 if (disableModule.contains("Success")) {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Module Disabled", Toast.LENGTH_LONG).show();
+                    Log.d(TAG, "Module disabled: " + selectedModule + " from path: " + modulePath);
+                    Toast.makeText(requireActivity().getApplicationContext(), "Module Disabled: " + selectedModule + " from path: " + modulePath, Toast.LENGTH_LONG).show();
                     if (statusIcon != null) {
                         statusIcon.setImageResource(R.drawable.ic_module_not_loaded);
                     }
@@ -217,14 +217,16 @@ public class ModulesFragment extends Fragment {
             } else {
                 String toggleModule = exe.RunAsRootOutput("insmod " + modulePath + " && echo Success || echo Failed");
                 if (toggleModule.contains("Success")) {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Module enabled with insmod", Toast.LENGTH_LONG).show();
+                    Log.d(TAG, "Module enabled: " + selectedModule + " from path: " + modulePath);
+                    Toast.makeText(requireActivity().getApplicationContext(), "Module Enabled: " + selectedModule + " from path: " + modulePath, Toast.LENGTH_LONG).show();
                     if (statusIcon != null) {
                         statusIcon.setImageResource(R.drawable.ic_module_loaded);
                     }
                 } else {
                     toggleModule = exe.RunAsRootOutput("modprobe -d " + sanitizedModulesPath + " " + selectedModule + " && echo Success || echo Failed");
                     if (toggleModule.contains("Success")) {
-                        Toast.makeText(requireActivity().getApplicationContext(), "Module enabled with modprobe", Toast.LENGTH_LONG).show();
+                        Log.d(TAG, "Module enabled: " + selectedModule + " from path: " + sanitizedModulesPath);
+                        Toast.makeText(requireActivity().getApplicationContext(), "Module Enabled: " + selectedModule + " from path: " + sanitizedModulesPath, Toast.LENGTH_LONG).show();
                         if (statusIcon != null) {
                             statusIcon.setImageResource(R.drawable.ic_module_loaded);
                         }
