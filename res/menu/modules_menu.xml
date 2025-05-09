@@ -7,9 +7,13 @@
         app:showAsAction="ifRoom|collapseActionView"
         app:actionViewClass="androidx.appcompat.widget.SearchView" />
     <item
-        android:id="@+id/action_sort_alpha"
-        android:title="Sort Alphabetically" />
+        android:id="@+id/action_sort"
+        android:title="Sort"
+        android:icon="@android:drawable/ic_menu_sort_by_size"
+        app:showAsAction="ifRoom" />
     <item
-        android:id="@+id/action_sort_reverse"
-        android:title="Sort Reverse" />
+        android:id="@+id/action_enable_faulty_check"
+        android:title="Enable Faulty Module Check"
+        android:checkable="true"
+        android:checked="true" />
 </menu>

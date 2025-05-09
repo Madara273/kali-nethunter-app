@@ -157,8 +157,8 @@ public class ModulesFragment extends Fragment {
 
         // Use last path
         modules_path = rootView.findViewById(R.id.modulesPath);
-        SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        String LastModulesPath = sharedpreferences.getString("last_modulespath", "");
+        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        String LastModulesPath = sharedPreferences.getString("last_modulespath", "");
         if (!LastModulesPath.isEmpty()) modules_path.setText(LastModulesPath);
 
         modules.setOnItemLongClickListener((adapterView, view, position, id) -> {
@@ -232,7 +232,9 @@ public class ModulesFragment extends Fragment {
                         }
                     } else {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed - modprobe -d " + sanitizedModulesPath + " " + selectedModule, Toast.LENGTH_LONG).show();
-                        checkFaultyModule(sanitizedModulesPath, selectedModule);
+                        if (sharedPreferences.getBoolean("enable_faulty_check", true)) {
+                            checkFaultyModule(sanitizedModulesPath, selectedModule);
+                        }
                     }
                 }
             }
@@ -331,14 +333,21 @@ public class ModulesFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         switch (item.getItemId()) {
-            case R.id.action_sort_alpha:
-                currentSortOrder = 0;
-                refreshModules(requireView());
+            case R.id.action_sort:
+                AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                builder.setTitle("Sort Modules")
+                        .setItems(new String[]{"Alphabetical", "Reverse"}, (dialog, which) -> {
+                            currentSortOrder = which;
+                            refreshModules(requireView());
+                        })
+                        .show();
                 return true;
-            case R.id.action_sort_reverse:
-                currentSortOrder = 1;
-                refreshModules(requireView());
+            case R.id.action_enable_faulty_check:
+                boolean isChecked = !item.isChecked();
+                item.setChecked(isChecked);
+                sharedPreferences.edit().putBoolean("enable_faulty_check", isChecked).apply();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
