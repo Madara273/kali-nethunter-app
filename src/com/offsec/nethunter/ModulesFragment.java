@@ -180,28 +180,37 @@ public class ModulesFragment extends Fragment {
         refreshModules(rootView);
 
         // Modules toggle
-        String ModulesPath = (modules_path != null) ? modules_path.getText().toString() : "";
         modules.setOnItemClickListener((adapterView, view, i, l) -> {
-            String ModulesPathFull = ModulesPath + "/" + System.getProperty("os.version");
+            String modulesPath = modules_path.getText().toString();
+            String ModulesPathFull = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
             String selected_module = modules.getItemAtPosition(i).toString();
             String is_it_loaded = exe.RunAsRootOutput("lsmod | cut -d' ' -f1 | grep " + selected_module);
+            ImageView statusIcon = view.findViewById(R.id.moduleStatusIcon);
 
             if (is_it_loaded.equals(selected_module)) {
                 String disable_module = exe.RunAsRootOutput("rmmod " + selected_module + " && echo Success || echo Failed");
                 if (disable_module.contains("Success")) {
                     Toast.makeText(requireActivity().getApplicationContext(), "Module Disabled", Toast.LENGTH_LONG).show();
+                    if (statusIcon != null) {
+                        statusIcon.setImageResource(R.drawable.ic_module_not_loaded);
+                    }
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "Failed - rmmod " + selected_module, Toast.LENGTH_LONG).show();
                 }
             } else {
                 String toggle_module = exe.RunAsRootOutput("insmod " + ModulesPathFull + "/" + selected_module + ".ko && echo Success || echo Failed");
                 if (toggle_module.contains("Success")) {
-                    refreshModules(rootView);
                     Toast.makeText(requireActivity().getApplicationContext(), "Module enabled with insmod", Toast.LENGTH_LONG).show();
+                    if (statusIcon != null) {
+                        statusIcon.setImageResource(R.drawable.ic_module_loaded);
+                    }
                 } else {
                     toggle_module = exe.RunAsRootOutput("modprobe -d " + ModulesPathFull + " " + selected_module + " && echo Success || echo Failed");
                     if (toggle_module.contains("Success")) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Module enabled with modprobe", Toast.LENGTH_LONG).show();
+                        if (statusIcon != null) {
+                            statusIcon.setImageResource(R.drawable.ic_module_loaded);
+                        }
                     } else {
                         Toast.makeText(requireActivity().getApplicationContext(), "Failed - modprobe -d " + ModulesPathFull + " " + selected_module, Toast.LENGTH_LONG).show();
                         checkFaultyModule(ModulesPathFull, selected_module);
