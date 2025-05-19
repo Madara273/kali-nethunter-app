@@ -109,9 +109,9 @@
                     android:inputType="number"
                     android:saveEnabled="true"
                     android:gravity="right|bottom"
-                    android:text="200000"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    android:hint="200000"
+                    tools:ignore="TouchTargetSizeCheck"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <TextView
                     android:id="@+id/textView15"
@@ -129,124 +129,141 @@
                     android:inputType="number"
                     android:saveEnabled="true"
                     android:gravity="right|bottom"
-                    android:text="500000"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
-
+                    android:hint="500000"
+                    tools:ignore="TouchTargetSizeCheck"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
             </LinearLayout>
 
-            <GridLayout
+            <LinearLayout
+                android:id="@+id/usb_advanced_options"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:columnCount="4"
-                android:rowCount="3"
                 android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp">
+                android:layout_marginEnd="20dp"
+                android:orientation="vertical">
 
-                <CheckBox
-                    android:id="@+id/id_canusb"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:id="@+id/button_row"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="ID :"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center">
+
+                    <Button
+                        android:id="@+id/btn_toggle_usb_id"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="ID"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textColor="@android:color/holo_red_light"
+                        tools:ignore="TextContrastCheck" />
+
+                    <Button
+                        android:id="@+id/btn_toggle_usb_counter"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Counter"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textColor="@android:color/holo_red_light"
+                        tools:ignore="TextContrastCheck" />
+
+                    <Button
+                        android:id="@+id/btn_toggle_usb_sleep"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Sleep"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textColor="@android:color/holo_red_light"
+                        tools:ignore="TextContrastCheck" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/button_row2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center">
+
+                    <Button
+                        android:id="@+id/btn_toggle_usb_data"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Data"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textColor="@android:color/holo_red_light"
+                        tools:ignore="TextContrastCheck" />
+
+                    <Button
+                        android:id="@+id/btn_toggle_usb_ttyOutput"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="TTY Output"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textColor="@android:color/holo_red_light"
+                        tools:ignore="TextContrastCheck" />
+
+                    <Button
+                        android:id="@+id/btn_toggle_usb_mode"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Mode"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textColor="@android:color/holo_red_light"
+                        tools:ignore="TextContrastCheck" />
+
+                </LinearLayout>
+
+                <EditText
+                    android:id="@+id/usb_id_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="ID Value (e.g., 2)"
+                    android:visibility="gone"
+                    android:inputType="text"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <EditText
-                    android:id="@+id/id_value_canusb"
-                    android:layout_width="80dp"
+                    android:id="@+id/usb_counter_value"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:hint="Counter Value (e.g., infinite)"
+                    android:visibility="gone"
                     android:inputType="text"
-                    android:text="2"
-                    android:maxLines="1"
-                    android:singleLine="true"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <CheckBox
-                    android:id="@+id/count_canusb"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Counter :"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <EditText
-                    android:id="@+id/count_value_canusb"
-                    android:layout_width="80dp"
+                    android:id="@+id/usb_sleep_value"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:hint="Sleep Value (ms) (e.g., 200)"
+                    android:visibility="gone"
                     android:inputType="text"
-                    android:text="infinite"
-                    android:maxLines="1"
-                    android:singleLine="true"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
-                <CheckBox
-                    android:id="@+id/mode_canusb"
-                    android:layout_width="wrap_content"
+                <EditText
+                    android:id="@+id/usb_data_value"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Mode :"
+                    android:hint="Data (e.g., 0C1A2F3E0C1A2F3)"
+                    android:visibility="gone"
+                    android:inputType="text"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <Spinner
-                    android:id="@+id/canusb_mode_spinner"
-                    android:layout_width="120dp"
-                    android:layout_height="wrap_content"
-                    android:dropDownWidth="wrap_content"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <CheckBox
-                    android:id="@+id/sleep_canusb"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Sleep (ms) :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <EditText
-                    android:id="@+id/sleep_value_canusb"
-                    android:layout_width="80dp"
-                    android:layout_height="wrap_content"
-                    android:inputType="number"
-                    android:text="200"
-                    android:maxLines="1"
-                    android:singleLine="true"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <CheckBox
-                    android:id="@+id/debug_canusb"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="TTY Output"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_columnSpan="4" />
-            </GridLayout>
-
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:orientation="horizontal">
-
-                <CheckBox
-                    android:id="@+id/data_canusb"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:text="Data : "
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <EditText
-                    android:id="@+id/data_value_canusb"
+                    android:id="@+id/usb_mode_spinner"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="2dp"
-                    android:layout_marginEnd="20dp"
-                    android:gravity="right|bottom"
-                    android:inputType="text"
-                    android:saveEnabled="true"
-                    android:text="0C1A2F3E0C1A2F3"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-
+                    android:dropDownWidth="wrap_content"
+                    android:visibility="gone"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
             </LinearLayout>
 
             <LinearLayout
