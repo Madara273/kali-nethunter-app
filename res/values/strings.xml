@@ -298,7 +298,7 @@
     <string name="drawertitlepineapple">Pineapple Connector</string>
     <string name="drawertitlegps">Wardriving</string>
     <string name="drawertitledeauth">DeAuth</string>
-    <string name="drawertitlecan">CAN Arsenal</string>
+    <string name="drawertitlecan">Car Arsenal</string>
     <string name="drawertitlesettings">Settings</string>
     <string name="drawertitlekernel">Kernel</string>
     <string name="drawertitlemodules">Modules</string>
@@ -651,12 +651,41 @@
         <item>Reverse Alphabetical</item>
     </string-array>
 
-    <!-- CAN -->
+    <!-- USB ARSENAL -->
+    <string name="usbarsenal_full_db_path_save">Full path to where you want to save the database:</string>
+    <string name="usbarsenal_full_db_path_restore">Full path of the db file from where you want to restore:</string>
+    <string name="usbarsenal_no_usb_function_enabled">No USB function has been enabled</string>
+    <string name="usbarsenal_no_image_mounted">No image is mounted.</string>
+    <string name="usbarsenal_linux_file_cd_store_gadget">Linux File-CD/Stor gadget (kernel default)</string>
+
+    <!-- SETTINGS -->
+    <string name="settings_bootanimation_path">Bootanimation path not found</string>
+    <string name="settings_set_enforcing">Set to Enforcing</string>
+    <string name="settings_selinux_disabled">SELinux is Disabled</string>
+    <string name="settings_selinux_permissive">Set to Permissive</string>
+    <string name="settings_enforcing">Enforcing</string>
+    <string name="settings_permissive">Permissive</string>
+
+    <!-- GPS -->
+    <string name="gps_permissions">gps_permissions</string>
+
+    <!-- WIFI PUMPKIN3 -->
+    <string name="wp3_supported">Supported</string>
+    <string name="wp3_not_supported">Not supported</string>
+
+    <!-- NETHUNTER FRAGMENT / APPNAVHOME -->
+    <string name="nethunter_full_path_save_db">Full path to where you want to save the database:</string>
+    <string name="nethunter_full_path_db_restore">Full path of the db file from where you want to restore:</string>
+
+    <!-- Car Arsenal -->
     <string name="can_description">This module allow you to use CAN Bus with various tools. Kernel device should have CAN support enabled, for more information look at the documentation in the menu.</string>
     <string name="can_tools_desc">Unleash the power of can-utils suite by managing logs and Generate, Dump, Sniff or Replay signals! You may also run car diagnosis using Freediag and transfert CAN frames between two machines using Cannelloni tool!</string>
     <string name="can_canusb_desc">Use your CAN Analyzer USB by Dumping and Sending signals using usb-can tool!</string>
     <string name="can_caribou_desc">A friendly automotive security exploration tool.</string>
     <string name="can_icsim_desc">Instrument Cluster Simulator for SocketCAN</string>
-    <!-- CAN About menu -->
+    <string name="can_app_name">MyApp</string>
+    <string name="can_settings">Settings</string>
+    <string name="can_refresh_button">Refresh</string>
+    <!-- Car Arsenal About menu -->
     <string name="about_author">ABOUT:\n\nFound a bug? A suggestion? Follow me on my networks and let me know!\n\nhttps://linktr.ee/v0lk3n\n\nCREDITS:\n\nMade with ♥ by V0lk3n\n\n- Fenugrec! For freediag tool.\nhttps://github.com/fenugrec\n\n- Kobolt! For can-usb.\nhttps://github.com/kobolt\n\n- Alexmohr! For can-usb fork.\nhttps://github.com/alexmohr\n\n- Linux-Can! For can-utils and socketcand.\nhttps://github.com/linux-can\n\n- Mguentner! For cannelloni.\nhttps://github.com/mguentner\n\n- CaringCaribou!\nhttps://github.com/CaringCaribou\n\n- zombieCraig! For ICSim tool.\nhttps://github.com/zombieCraig\n\n</string>
 </resources>

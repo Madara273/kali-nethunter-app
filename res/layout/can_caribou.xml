@@ -49,39 +49,39 @@
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:textStyle="bold" />
 
+                <ImageButton
+                    android:id="@+id/refreshUSB"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="20dp"
+                    android:ems="10"
+                    app:srcCompat="@drawable/ic_action_refresh"
+                    tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
             </LinearLayout>
 
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:padding="10dp">
 
                 <TextView
-                    android:id="@+id/textView2"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:text="CAN interface :"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent" />
+                    android:layout_weight="3"
+                    android:text="Interface :"
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
 
-                <EditText
-                    android:id="@+id/can_iface"
+                <Spinner
+                    android:id="@+id/device_interface"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="20dp"
-                    android:gravity="end"
-                    android:inputType="text"
-                    android:text="can0"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"/>
+                    android:dropDownWidth="wrap_content"
+                    android:saveEnabled="false"
+                    android:spinnerMode="dropdown"
+                    tools:ignore="TouchTargetSizeCheck" />
 
-            </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -105,14 +105,16 @@
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="20dp"
                     android:layout_marginStart="8dp"
+                    android:autofillHints="/root/caribou/log.txt"
+                    android:hint="0x7a0#c0.ff.ee.00.11.22.33.44"
                     android:inputType="text"
-                    android:text="0x7a0#c0.ff.ee.00.11.22.33.44"
                     android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck"
+                    tools:ignore="MissingConstraints,TouchTargetSizeCheck"
                     app:layout_constraintStart_toEndOf="@id/textView7"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintBottom_toBottomOf="parent" />
+
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -137,10 +139,11 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:layout_marginEnd="8dp"
+                    android:autofillHints="/root/caribou/log.txt"
+                    android:hint="/root/caribou/log.txt"
                     android:inputType="text"
-                    android:text="/root/caribou/log.txt"
                     android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck,DuplicateSpeakableTextCheck"
+                    tools:ignore="MissingConstraints,TouchTargetSizeCheck"
                     app:layout_constraintStart_toEndOf="@id/textView8"
                     app:layout_constraintEnd_toStartOf="@id/cariboufilebrowse"
                     app:layout_constraintTop_toTopOf="parent"
@@ -160,316 +163,294 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <GridLayout
+            <Button
+                android:id="@+id/btn_toggle_advanced"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:columnCount="4"
-                android:rowCount="2"
-                android:orientation="horizontal">
+                android:text="Advanced Options" />
 
-                <CheckBox
-                    android:id="@+id/caribou_start_addr"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Start Addr. :"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="0"
-                    android:layout_column="0"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <EditText
-                    android:id="@+id/caribou_start_addr_value"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0x1fffb000"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="0"
-                    android:layout_column="1"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <CheckBox
-                    android:id="@+id/caribou_length"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Length :"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="0"
-                    android:layout_column="2"
-                    android:layout_marginStart="12dp"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <EditText
-                    android:id="@+id/caribou_length_value"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0x4800"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="0"
-                    android:layout_column="3"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <CheckBox
-                    android:id="@+id/caribou_separate_line"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Separate Line :"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="1"
-                    android:layout_column="0"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <EditText
-                    android:id="@+id/caribou_separate_line_value"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="5"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="1"
-                    android:layout_column="1"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <CheckBox
-                    android:id="@+id/caribou_seed"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Seed :"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="1"
-                    android:layout_column="2"
-                    android:layout_marginStart="12dp"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <EditText
-                    android:id="@+id/caribou_seed_value"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0xabc123"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="1"
-                    android:layout_column="3"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-            </GridLayout>
-
-            <GridLayout
+            <LinearLayout
+                android:id="@+id/caribou_advanced_options"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:columnCount="6"
-                android:rowCount="5"
-                android:orientation="horizontal">
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:orientation="vertical"
+                android:visibility="gone">
 
-                <CheckBox
-                    android:id="@+id/caribou_id"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:id="@+id/button_row"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="ID :"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="0"
-                    android:layout_column="0"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btn_toggle_start_addr"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Start Address"
+                        android:textColor="@android:color/holo_red_light"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <Button
+                        android:id="@+id/btn_toggle_length"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Length"
+                        android:textColor="@android:color/holo_red_light"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <Button
+                        android:id="@+id/btn_toggle_separateLine"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Separate Line"
+                        android:textColor="@android:color/holo_red_light"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/button_row2"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btn_toggle_id"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="ID"
+                        android:textColor="@android:color/holo_red_light"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <Button
+                        android:id="@+id/btn_toggle_src"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Src."
+                        android:textColor="@android:color/holo_red_light"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <Button
+                        android:id="@+id/btn_toggle_dst"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Dst."
+                        android:textColor="@android:color/holo_red_light"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/button_row3"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btn_toggle_seed"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Seed"
+                        android:textColor="@android:color/holo_red_light"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <Button
+                        android:id="@+id/btn_toggle_min"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Min."
+                        android:textColor="@android:color/holo_red_light"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <Button
+                        android:id="@+id/btn_toggle_max"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Max."
+                        android:textColor="@android:color/holo_red_light"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/button_row4"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btn_toggle_delay"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Delay"
+                        android:textColor="@android:color/holo_red_light"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <Button
+                        android:id="@+id/btn_toggle_candump"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Candump"
+                        android:textColor="@android:color/holo_red_light"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <Button
+                        android:id="@+id/btn_toggle_pad"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Enable Pad"
+                        android:textColor="@android:color/holo_red_light"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/button_row5"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/btn_toggle_output"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Enable Output"
+                        android:textColor="@android:color/holo_red_light"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <Button
+                        android:id="@+id/btn_toggle_loop"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Enable Loop"
+                        android:textColor="@android:color/holo_red_light"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                    <Button
+                        android:id="@+id/btn_toggle_reverse"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Enable Reverse"
+                        android:textColor="@android:color/holo_red_light"
+                        android:textAppearance="?android:attr/textAppearanceSmall" />
+
+                </LinearLayout>
 
                 <EditText
-                    android:id="@+id/caribou_id_value"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/start_addr_value"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="0x003"
+                    android:hint="Start Address Value (e.g., 0x1fffb000)"
+                    android:visibility="gone"
                     android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="0"
-                    android:layout_column="1"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <CheckBox
-                    android:id="@+id/caribou_src"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Src. :"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="0"
-                    android:layout_column="2"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <EditText
-                    android:id="@+id/caribou_src_value"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/length_value"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="0x3e8"
+                    android:hint="Length Value (e.g., 0x4800)"
+                    android:visibility="gone"
                     android:inputType="text"
                     android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="0"
-                    android:layout_column="3"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <CheckBox
-                    android:id="@+id/caribou_dst"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Dst. :"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="0"
-                    android:layout_column="4"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    tools:ignore="TextFields" />
 
                 <EditText
-                    android:id="@+id/caribou_dst_value"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/separate_line_value"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="0x3e9"
+                    android:hint="Separate Line Value (e.g., 5)"
+                    android:visibility="gone"
                     android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="0"
-                    android:layout_column="5"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <CheckBox
-                    android:id="@+id/caribou_min"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Min. :"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="1"
-                    android:layout_column="0"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"  />
 
                 <EditText
-                    android:id="@+id/caribou_min_value"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/seed_value"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="2"
+                    android:hint="Seed Value (e.g., 0xabc123)"
+                    android:visibility="gone"
                     android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="1"
-                    android:layout_column="1"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <CheckBox
-                    android:id="@+id/caribou_max"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Max. :"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="1"
-                    android:layout_column="2"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"  />
 
                 <EditText
-                    android:id="@+id/caribou_max_value"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/id_value"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="4"
+                    android:hint="ID Value (e.g., 0x003)"
+                    android:visibility="gone"
                     android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="1"
-                    android:layout_column="3"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <CheckBox
-                    android:id="@+id/caribou_delay"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Delay :"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="1"
-                    android:layout_column="4"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"  />
 
                 <EditText
-                    android:id="@+id/caribou_delay_value"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/src_value"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="1"
+                    android:hint="Source Value (e.g., 0x3e8)"
+                    android:visibility="gone"
                     android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="1"
-                    android:layout_column="5"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    android:textAppearance="?android:attr/textAppearanceSmall"  />
 
-                <CheckBox
-                    android:id="@+id/caribou_pad"
-                    android:layout_width="wrap_content"
+                <EditText
+                    android:id="@+id/dst_value"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Pad"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="2"
-                    android:layout_column="0"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    android:hint="Destination Value (e.g., 0x3e9)"
+                    android:visibility="gone"
+                    android:inputType="text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"  />
 
-                <CheckBox
-                    android:id="@+id/caribou_candump_format"
-                    android:layout_width="wrap_content"
+                <EditText
+                    android:id="@+id/min_value"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Candump"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="2"
-                    android:layout_column="2"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    android:hint="Minimum Value (e.g., 2)"
+                    android:visibility="gone"
+                    android:inputType="text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"  />
 
-                <CheckBox
-                    android:id="@+id/caribou_save_output"
-                    android:layout_width="wrap_content"
+                <EditText
+                    android:id="@+id/max_value"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Output"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="2"
-                    android:layout_column="4"
-                    android:gravity="center_vertical"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    android:hint="Minimum Value (e.g., 5)"
+                    android:visibility="gone"
+                    android:inputType="text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"  />
 
-                <CheckBox
-                    android:id="@+id/caribou_loop"
-                    android:layout_width="wrap_content"
+                <EditText
+                    android:id="@+id/delay_value"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Loop"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="3"
-                    android:layout_column="0"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-                <CheckBox
-                    android:id="@+id/caribou_reverse"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Reverse"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    android:layout_row="3"
-                    android:layout_column="2"
-                    tools:ignore="TouchTargetSizeCheck" />
-
-            </GridLayout>
+                    android:hint="Delay Value (e.g., 1)"
+                    android:visibility="gone"
+                    android:inputType="text"
+                    android:textAppearance="?android:attr/textAppearanceSmall"  />
+            </LinearLayout>
 
             <View
                 android:id="@+id/divider3"
                 android:layout_width="match_parent"
+                android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
                 android:layout_height="1dp"
                 android:background="?android:attr/listDivider" />
@@ -545,20 +526,22 @@
                         android:id="@+id/fuzzer_spinner"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        app:layout_constraintStart_toEndOf="@id/label_fuzz"
-                        app:layout_constraintEnd_toStartOf="@id/start_fuzzer"
-                        app:layout_constraintTop_toTopOf="parent"
+                        android:layout_marginHorizontal="8dp"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        android:layout_marginHorizontal="8dp" />
+                        app:layout_constraintEnd_toStartOf="@id/start_fuzzer"
+                        app:layout_constraintStart_toEndOf="@id/label_fuzz"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:ignore="TouchTargetSizeCheck" />
 
                     <Button
                         android:id="@+id/start_fuzzer"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="RUN"
+                        app:layout_constraintBottom_toBottomOf="parent"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
-                        app:layout_constraintBottom_toBottomOf="parent" />
+                        tools:ignore="DuplicateSpeakableTextCheck" />
                 </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <androidx.constraintlayout.widget.ConstraintLayout
@@ -582,11 +565,12 @@
                         android:id="@+id/send_spinner"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        app:layout_constraintStart_toEndOf="@id/label_send"
-                        app:layout_constraintEnd_toStartOf="@id/start_send"
-                        app:layout_constraintTop_toTopOf="parent"
+                        android:layout_marginHorizontal="8dp"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        android:layout_marginHorizontal="8dp" />
+                        app:layout_constraintEnd_toStartOf="@id/start_send"
+                        app:layout_constraintStart_toEndOf="@id/label_send"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:ignore="TouchTargetSizeCheck" />
 
                     <Button
                         android:id="@+id/start_send"
@@ -619,11 +603,12 @@
                         android:id="@+id/uds_spinner"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        app:layout_constraintStart_toEndOf="@id/label_uds"
-                        app:layout_constraintEnd_toStartOf="@id/start_uds"
-                        app:layout_constraintTop_toTopOf="parent"
+                        android:layout_marginHorizontal="8dp"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        android:layout_marginHorizontal="8dp" />
+                        app:layout_constraintEnd_toStartOf="@id/start_uds"
+                        app:layout_constraintStart_toEndOf="@id/label_uds"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:ignore="TouchTargetSizeCheck" />
 
                     <Button
                         android:id="@+id/start_uds"
@@ -657,11 +642,12 @@
                         android:id="@+id/xcp_spinner"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        app:layout_constraintStart_toEndOf="@id/label_xcp"
-                        app:layout_constraintEnd_toStartOf="@id/start_xcp"
-                        app:layout_constraintTop_toTopOf="parent"
+                        android:layout_marginHorizontal="8dp"
                         app:layout_constraintBottom_toBottomOf="parent"
-                        android:layout_marginHorizontal="8dp" />
+                        app:layout_constraintEnd_toStartOf="@id/start_xcp"
+                        app:layout_constraintStart_toEndOf="@id/label_xcp"
+                        app:layout_constraintTop_toTopOf="parent"
+                        tools:ignore="TouchTargetSizeCheck" />
 
                     <Button
                         android:id="@+id/start_xcp"

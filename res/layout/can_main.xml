@@ -53,113 +53,96 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="10dp">
-
-                <TextView
-                    android:id="@+id/textView2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:text="CAN interface :"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent" />
+                android:layout_height="wrap_content">
 
                 <EditText
                     android:id="@+id/can_iface"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
-                    android:gravity="end"
+                    android:hint="CAN Interface (e.g., can0 or vcan1 or slcan0)"
                     android:inputType="text"
-                    android:text="can0"
                     android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"/>
-
+                    tools:ignore="MissingConstraints,TouchTargetSizeCheck"
+                    tools:layout_editor_absoluteX="30dp"
+                    tools:layout_editor_absoluteY="10dp" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="10dp">
-
-                <TextView
-                    android:id="@+id/textViewTarget"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:text="Target :"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent" />
+                android:layout_height="wrap_content">
 
                 <EditText
                     android:id="@+id/bttarget"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
+                    android:hint="MAC Address (e.g., 0A:1B:2C:3D:4E:5F:6A:7B)"
                     android:inputType="text"
-                    android:text="0A:1B:2C:3D:4E:5F:6A:7B"
-                    android:gravity="end"
                     android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TouchTargetSizeCheck,VisualLintTextFieldSize"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent" />
-
+                    tools:ignore="MissingConstraints,TouchTargetSizeCheck"
+                    tools:layout_editor_absoluteX="30dp"
+                    tools:layout_editor_absoluteY="10dp" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <GridLayout
+            <LinearLayout
+                android:id="@+id/can_advanced_options"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:columnCount="4"
-                android:rowCount="1"
                 android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp">
+                android:layout_marginEnd="20dp"
+                android:orientation="vertical">
 
-                <CheckBox
-                    android:id="@+id/can_mtu"
-                    android:layout_width="wrap_content"
+                <LinearLayout
+                    android:id="@+id/button_row"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="MTU :"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="8dp"
+                    android:gravity="center">
+
+                    <Button
+                        android:id="@+id/btn_toggle_mtu"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="MTU"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textColor="@android:color/holo_red_light"
+                        tools:ignore="TextContrastCheck" />
+
+                    <Button
+                        android:id="@+id/btn_toggle_txqueuelen"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="txqueuelen"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textColor="@android:color/holo_red_light"
+                        tools:ignore="TextContrastCheck" />
+                </LinearLayout>
+
+                <EditText
+                    android:id="@+id/mtu_value"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="MTU Value (e.g., 16)"
+                    android:visibility="gone"
+                    android:inputType="text"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
                 <EditText
-                    android:id="@+id/can_mtu_value"
-                    android:layout_width="80dp"
+                    android:id="@+id/txqueuelen_value"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:hint="txqueuelen Value (e.g., 1000)"
+                    android:visibility="gone"
                     android:inputType="text"
-                    android:text="16"
-                    android:maxLines="1"
-                    android:singleLine="true"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
-
-
-                <CheckBox
-                    android:id="@+id/can_iface_txqueuelen"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="txqueuelen :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-                <EditText
-                    android:id="@+id/can_iface_txqueuelen_value"
-                    android:layout_width="80dp"
-                    android:layout_height="wrap_content"
-                    android:inputType="text"
-                    android:text="1000"
-                    android:maxLines="1"
-                    android:singleLine="true"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
-            </GridLayout>
-
+            </LinearLayout>
 
             <View
                 android:id="@+id/divider3"
@@ -239,7 +222,8 @@
                         android:layout_height="wrap_content"
                         android:text="Reset"
                         android:layout_weight="1"
-                        android:minWidth="100dp" />
+                        android:minWidth="100dp"
+                        tools:ignore="VisualLintButtonSize" />
                 </LinearLayout>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
@@ -261,7 +245,8 @@
                     android:layout_columnWeight="1"
                     android:layout_row="0"
                     android:layout_column="0"
-                    android:text="slcand" />
+                    android:text="slcand"
+                    android:textColor="@android:color/holo_orange_dark" />
 
                 <Button
                     android:id="@+id/start_hlcand"
@@ -270,7 +255,9 @@
                     android:layout_columnWeight="1"
                     android:layout_row="0"
                     android:layout_column="1"
-                    android:text="hlcand" />
+                    android:text="hlcand"
+                    android:textColor="@android:color/holo_orange_dark"
+                    tools:ignore="VisualLintButtonSize" />
 
                 <Button
                     android:id="@+id/start_socketcand"
@@ -288,7 +275,8 @@
                     android:layout_columnWeight="1"
                     android:layout_row="1"
                     android:layout_column="0"
-                    android:text="slcan_attach" />
+                    android:text="slcan_attach"
+                    android:textColor="@android:color/holo_orange_dark" />
 
                 <Button
                     android:id="@+id/start_ldattach"
@@ -297,7 +285,8 @@
                     android:layout_columnWeight="1"
                     android:layout_row="1"
                     android:layout_column="1"
-                    android:text="ldattach" />
+                    android:text="ldattach"
+                    android:textColor="@android:color/holo_orange_dark" />
 
                 <Button
                     android:id="@+id/start_rfcommbinder"
@@ -310,9 +299,19 @@
 
             </GridLayout>
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:gravity="center"
+                android:text="🟧 = Long press to edit command"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
+
             <View
                 android:id="@+id/divider4"
                 android:layout_width="match_parent"
+                android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
                 android:layout_height="1dp"
                 android:background="?android:attr/listDivider" />
@@ -338,8 +337,7 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:padding="10dp">
+                android:layout_height="wrap_content">
 
                 <EditText
                     android:id="@+id/vin_number"
@@ -347,13 +345,12 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
-                    android:autofillHints="None"
-                    android:ems="10"
-                    android:hint="VIN identifier (ex: 4F2CU08102KM50866)"
+                    android:hint="VIN identifier (e.g., 4F2CU08102KM50866)"
                     android:inputType="text"
-                    tools:ignore="MissingConstraints" />
-
-
+                    android:textAppearance="?android:attr/textAppearanceSmall"
+                    tools:ignore="MissingConstraints,TextFields,TouchTargetSizeCheck"
+                    tools:layout_editor_absoluteX="30dp"
+                    tools:layout_editor_absoluteY="10dp" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <GridLayout
@@ -392,15 +389,14 @@
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
                 android:background="@android:color/black"
-                android:textColor="@android:color/holo_green_light"
-                android:fontFamily="monospace"
-                android:padding="16dp"
-                android:textSize="14sp"
-                android:inputType="none"
                 android:enabled="false"
+                android:fontFamily="monospace"
+                android:inputType="none"
+                android:padding="16dp"
                 android:scrollbars="vertical"
-                tools:ignore="LabelFor" />
-
+                android:textColor="@android:color/holo_green_light"
+                android:textSize="14sp"
+                tools:ignore="LabelFor,SpeakableTextPresentCheck" />
         </LinearLayout>
 
     </ScrollView>
