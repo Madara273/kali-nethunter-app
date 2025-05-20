@@ -298,7 +298,7 @@
     <string name="drawertitlepineapple">Pineapple Connector</string>
     <string name="drawertitlegps">Wardriving</string>
     <string name="drawertitledeauth">DeAuth</string>
-    <string name="drawertitlecan">Car Arsenal</string>
+    <string name="drawertitlecan">CARsenal</string>
     <string name="drawertitlesettings">Settings</string>
     <string name="drawertitlekernel">Kernel</string>
     <string name="drawertitlemodules">Modules</string>
@@ -677,7 +677,7 @@
     <string name="nethunter_full_path_save_db">Full path to where you want to save the database:</string>
     <string name="nethunter_full_path_db_restore">Full path of the db file from where you want to restore:</string>
 
-    <!-- Car Arsenal -->
+    <!-- CARsenal -->
     <string name="can_description">This module allow you to use CAN Bus with various tools. Kernel device should have CAN support enabled, for more information look at the documentation in the menu.</string>
     <string name="can_tools_desc">Unleash the power of can-utils suite by managing logs and Generate, Dump, Sniff or Replay signals! You may also run car diagnosis using Freediag and transfert CAN frames between two machines using Cannelloni tool!</string>
     <string name="can_canusb_desc">Use your CAN Analyzer USB by Dumping and Sending signals using usb-can tool!</string>
@@ -686,6 +686,20 @@
     <string name="can_app_name">MyApp</string>
     <string name="can_settings">Settings</string>
     <string name="can_refresh_button">Refresh</string>
-    <!-- Car Arsenal About menu -->
-    <string name="about_author">ABOUT:\n\nFound a bug? A suggestion? Follow me on my networks and let me know!\n\nhttps://linktr.ee/v0lk3n\n\nCREDITS:\n\nMade with ♥ by V0lk3n\n\n- Fenugrec! For freediag tool.\nhttps://github.com/fenugrec\n\n- Kobolt! For can-usb.\nhttps://github.com/kobolt\n\n- Alexmohr! For can-usb fork.\nhttps://github.com/alexmohr\n\n- Linux-Can! For can-utils and socketcand.\nhttps://github.com/linux-can\n\n- Mguentner! For cannelloni.\nhttps://github.com/mguentner\n\n- CaringCaribou!\nhttps://github.com/CaringCaribou\n\n- zombieCraig! For ICSim tool.\nhttps://github.com/zombieCraig\n\n</string>
+    <!-- CARsenal About menu -->
+    <string name="about_author">
+        ABOUT:\n\n
+        Found a bug? A suggestion? Follow me on my networks and let me know!\n\n
+        https://linktr.ee/v0lk3n\n\n
+        CREDITS:\n\n
+        Made with ♥ by V0lk3n\n\n
+        - Fenugrec! For freediag tool.\nhttps://github.com/fenugrec\n\n
+        - Kobolt! For can-usb.\nhttps://github.com/kobolt\n\n
+        - Alexmohr! For can-usb fork.\nhttps://github.com/alexmohr\n\n
+        - Linux-Can! For can-utils and socketcand.\nhttps://github.com/linux-can\n\n
+        - Mguentner! For cannelloni.\nhttps://github.com/mguentner\n\n
+        - CaringCaribou!\nhttps://github.com/CaringCaribou\n\n
+        - zombieCraig! For ICSim tool.\nhttps://github.com/zombieCraig\n\n
+        - idlesign! For VIN Info tool.\nhttps://github.com/idlesign\n\n
+    </string>
 </resources>

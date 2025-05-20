@@ -1221,15 +1221,39 @@ public class CANFragment extends Fragment {
 
             // Can-Usb Mode Spinner
             final Spinner canusbModeList = rootView.findViewById(R.id.usb_mode_spinner);
-            final String[] modeOptions = {"0", "1", "2"};
+            final String[] modeOptions = {"Mode", "0", "1", "2"};
 
-            canusbModeList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, modeOptions));
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, modeOptions) {
+                @Override
+                public boolean isEnabled(int position) {
+                    // Disable "Mode" item
+                    return position != 0;
+                }
+
+                @Override
+                public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                    View view = super.getDropDownView(position, convertView, parent);
+                    TextView tv = (TextView) view;
+                    if (position == 0) {
+                        tv.setTextColor(Color.GRAY);  // Hint text color
+                    } else {
+                        tv.setTextColor(Color.WHITE); // Normal text
+                    }
+                    return view;
+                }
+            };
+
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            canusbModeList.setAdapter(adapter);
+            canusbModeList.setSelection(0);  // Set initial selection to "Mode"
 
             canusbModeList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                    String canusbmode_selected = parentView.getItemAtPosition(pos).toString();
-                    sharedpreferences.edit().putString("canusbmode_selected", canusbmode_selected).apply();
+                    if (pos != 0) { // Ignore "Mode" hint
+                        String canusbmode_selected = parentView.getItemAtPosition(pos).toString();
+                        sharedpreferences.edit().putString("canusbmode_selected", canusbmode_selected).apply();
+                    }
                 }
 
                 @Override
