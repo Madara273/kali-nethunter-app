@@ -39,8 +39,8 @@ android {
         //noinspection ExpiredTargetSdkVersion
         targetSdk 28
         //noinspection HighAppVersionCode
-        versionCode 2025010100
-        versionName "2025.1"
+        versionCode 2025020100
+        versionName "2025.2"
         multiDexEnabled true
         applicationId "com.offsec.nethunter"
     }
