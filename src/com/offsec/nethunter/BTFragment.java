@@ -10,7 +10,6 @@ import android.graphics.Color;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.preference.PreferenceManager;
@@ -48,15 +47,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.concurrent.Executors;
 import java.util.ArrayList;
 import java.util.Objects;
-
 
 public class BTFragment extends Fragment {
     private ViewPager mViewPager;
     private SharedPreferences sharedpreferences;
     private Context context;
     private Activity activity;
+    private final ShellExecuter exe = new ShellExecuter(); // Fixed issue with undefined 'exe'
     private static final String ARG_SECTION_NUMBER = "section_number";
 
     public static BTFragment newInstance(int sectionNumber) {
@@ -88,7 +88,9 @@ public class BTFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             }
         });
-        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        if (activity != null) {
+            sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        }
         setHasOptionsMenu(true);
         return rootView;
     }
@@ -100,18 +102,20 @@ public class BTFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
+        SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
+
         switch (item.getItemId()) {
             case R.id.setup:
-                SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-                Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
                 if (iswatch) RunSetupWatch();
                 else RunSetup();
                 return true;
             case R.id.update:
-                sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-                iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
-                if (iswatch) Toast.makeText(requireActivity().getApplicationContext(), "Updates have to be done manually through adb shell. If anything gone wrong at first run, please run Setup again.", Toast.LENGTH_LONG).show();
-                else RunUpdate();
+                if (iswatch) {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Updates have to be done manually through adb shell. If anything gone wrong at first run, please run Setup again.", Toast.LENGTH_LONG).show();
+                } else {
+                    RunUpdate();
+                }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -119,7 +123,9 @@ public class BTFragment extends Fragment {
     }
 
     public void SetupDialog() {
-        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        if (activity != null) {
+            sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        }
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
         builder.setTitle("Welcome to Bluetooth Arsenal!");
         builder.setMessage("This seems to be the first run. Install the Bluetooth tools?");
@@ -135,7 +141,9 @@ public class BTFragment extends Fragment {
     }
 
     public void SetupDialogWatch() {
-        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        if (activity != null) {
+            sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        }
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
         builder.setMessage("This seems to be the first run. Install the Bluetooth tools?");
         builder.setPositiveButton("Yes", (dialog, which) -> {
@@ -150,7 +158,9 @@ public class BTFragment extends Fragment {
     }
 
     public void RunSetupWatch() {
-        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        if (activity != null) {
+            sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        }
         run_cmd("echo -ne \"\\033]0;BT Arsenal Setup\\007\" && clear;" +
                 "if [[ -f /usr/sbin/bluebinder ]]; then echo 'Bluebinder is installed!'; else wget https://raw.githubusercontent.com/yesimxev/bluebinder/master/prebuilt/armhf/bluebinder -P /usr/sbin/ && chmod +x /usr/sbin/bluebinder;fi;" +
                 "if [[ -f /usr/lib/libgbinder.so.1.1.25 ]]; then echo 'libgbinder.so.1.1.25 is installed!'; else wget https://raw.githubusercontent.com/yesimxev/libgbinder/master/prebuilt/armhf/libgbinder.so.1.1.25 -P /usr/lib/ &&" +
@@ -168,7 +178,9 @@ public class BTFragment extends Fragment {
     }
 
     public void RunSetup() {
-        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        if (activity != null) {
+            sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        }
         run_cmd("echo -ne \"\\033]0;BT Arsenal Setup\\007\" && clear;apt update && apt install screen bluetooth bluez bluez-tools bluez-obexd libbluetooth3 sox spooftooph libglib2.0*-dev " +
                         "libsystemd-dev python3-dbus python3-bluez python3-pyudev python3-evdev libbluetooth-dev redfang bluelog blueranger -y;" +
                         "if [[ -f /usr/bin/carwhisperer && -f /usr/bin/rfcomm_scan ]];then echo 'All scripts are installed!'; else " +
@@ -188,7 +200,9 @@ public class BTFragment extends Fragment {
     }
 
     public void RunUpdate() {
-        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        if (activity != null) {
+            sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        }
         run_cmd("echo -ne \"\\033]0;BT Arsenal Update\\007\" && clear;apt update && apt install screen bluetooth bluez bluez-tools bluez-obexd libbluetooth3 sox spooftooph " +
                 "libbluetooth-dev redfang bluelog blueranger libglib2.0*-dev libsystemd-dev python3-dbus python3-bluez python3-pyudev python3-evdev  -y;if [[ -f /usr/bin/carwhisperer && -f /usr/bin/rfcomm_scan && -f /root/bluebinder && -f /root/libgbinder && -f /root/libglibutil ]];" +
                 "then cd /root/carwhisperer/;git pull && make && make install;cd /root/bluebinder/;git pull && make && make install;cd /root/libgbinder/;git pull && make && " +
@@ -266,7 +280,7 @@ public class BTFragment extends Fragment {
         public void onResume(){
             super.onResume();
             Toast.makeText(requireActivity().getApplicationContext(), "Status updated", Toast.LENGTH_SHORT).show();
-            AsyncTask.execute(() -> refresh(requireView().getRootView()));
+            Executors.newSingleThreadExecutor().execute(() -> refresh(requireView().getRootView()));
         }
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -275,7 +289,7 @@ public class BTFragment extends Fragment {
             View rootView = inflater.inflate(R.layout.bt_main, container, false);
             SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
-            //Detecting watch
+            // Detecting watch
             final TextView BTMainDesc = rootView.findViewById(R.id.bt_maindesc);
             final TextView BTIface = rootView.findViewById(R.id.bt_if);
             final TextView BTService = rootView.findViewById(R.id.bt_service);
@@ -283,11 +297,11 @@ public class BTFragment extends Fragment {
             iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
             if (iswatch) {
                 BTMainDesc.setVisibility(View.GONE);
-                BTIface.setText("Interface");
-                BTService.setText("BT Service");
+                BTIface.setText(R.string.bt_interface);
+                BTService.setText(R.string.bt_service);
             }
 
-            //First run
+            // First run
             Boolean setupdone = sharedpreferences.getBoolean("setup_done", false);
             if (!setupdone.equals(true)) {
                 if (iswatch) SetupDialogWatch();
@@ -296,23 +310,23 @@ public class BTFragment extends Fragment {
 
             final Spinner ifaces = rootView.findViewById(R.id.hci_interface);
 
-            //Bluebinder or bt_smd
+            // Bluebinder or bt_smd
             final TextView Binder = rootView.findViewById(R.id.bluebinder);
             File bt_smd = new File("/sys/module/hci_smd/parameters/hcismd_set");
             if (bt_smd.exists()) {
-                Binder.setText("Bluetooth SMD");
+                Binder.setText(R.string.bt_smd);
             }
 
-            //Bluetooth interfaces
+            // Bluetooth interfaces
             final String[] outputHCI = {""};
-            AsyncTask.execute(() -> outputHCI[0] = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig | grep hci | cut -d: -f1"));
+            Executors.newSingleThreadExecutor().execute(() -> outputHCI[0] = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig | grep hci | cut -d: -f1"));
             final ArrayList<String> hciIfaces = new ArrayList<>();
             if (outputHCI[0].isEmpty()) {
                 hciIfaces.add("None");
-                ifaces.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, hciIfaces));
+                ifaces.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, hciIfaces));
             } else {
                 final String[] ifacesArray = outputHCI[0].split("\n");
-                ifaces.setAdapter(new ArrayAdapter(requireContext(),android.R.layout.simple_list_item_1, ifacesArray));
+                ifaces.setAdapter(new ArrayAdapter<>(requireContext(),android.R.layout.simple_list_item_1, ifacesArray));
             }
 
             ifaces.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -327,12 +341,12 @@ public class BTFragment extends Fragment {
                 }
             });
 
-            //Refresh Status
+            // Refresh Status
             ImageButton RefreshStatus = rootView.findViewById(R.id.refreshStatus);
             RefreshStatus.setOnClickListener(v -> refresh(rootView));
-            AsyncTask.execute(() -> refresh(rootView));
+            Executors.newSingleThreadExecutor().execute(() -> refresh(rootView));
 
-            //Internal bluetooth support
+            // Internal bluetooth support
             final Button bluebinderButton = rootView.findViewById(R.id.bluebinder_button);
             final Button dbusButton = rootView.findViewById(R.id.dbus_button);
             final Button btButton = rootView.findViewById(R.id.bt_button);
@@ -377,15 +391,10 @@ public class BTFragment extends Fragment {
                                 Toast.makeText(requireActivity().getApplicationContext(), "Starting bluebinder...", Toast.LENGTH_SHORT).show();
 
                                 // Delay to disable airplane mode and re-enable Wi-Fi after 9 seconds
-                                new Handler().postDelayed(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        exe.RunAsRoot(new String[]{
-                                            "settings put global airplane_mode_on 0;am broadcast -a android.intent.action.AIRPLANE_MODE --ez state false",
-                                            "svc wifi enable"
-                                        });
-                                    }
-                                }, 9000); // 9000 milliseconds delay
+                                new Handler().postDelayed(() -> exe.RunAsRoot(new String[]{
+                                    "settings put global airplane_mode_on 0;am broadcast -a android.intent.action.AIRPLANE_MODE --ez state false",
+                                    "svc wifi enable"
+                                }), 9000); // 9000 milliseconds delay
                             } else {
                                 Toast.makeText(requireActivity().getApplicationContext(), "Bluebinder is not installed. Launching setup..", Toast.LENGTH_SHORT).show();
                                 RunSetup();
@@ -406,7 +415,7 @@ public class BTFragment extends Fragment {
                 }
             });
 
-            //Services
+            // Services
             dbusButton.setOnClickListener( v -> {
                 if (dbusButton.getText().equals("Start")) {
                     exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd service dbus start"});
@@ -446,7 +455,7 @@ public class BTFragment extends Fragment {
                 }
             });
 
-            //Scanning
+            // Scanning
             Button StartScanButton = rootView.findViewById(R.id.start_scan);
             final TextView BTtime = rootView.findViewById(R.id.bt_time);
             ListView targets = rootView.findViewById(R.id.targets);
@@ -457,24 +466,24 @@ public class BTFragment extends Fragment {
                     String hci_current = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig "+ selected_iface + " | grep 'UP RUNNING' | cut -f2 -d$'\\t'");
                     if (hci_current.equals("UP RUNNING ")) {
                         final String scantime = BTtime.getText().toString();
-                        AsyncTask.execute(() -> {
+                        Executors.newSingleThreadExecutor().execute(() -> {
                             requireActivity().runOnUiThread(() -> {
                                 final ArrayList<String> scanning = new ArrayList<>();
                                 scanning.add("Scanning..");
-                                targets.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, scanning));
+                                targets.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, scanning));
                             });
                             exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd rm /root/blue.log"});
                             exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd timeout " + scantime + " bluelog -i " + selected_iface + " -ncqo /root/blue.log;hciconfig " + selected_iface + " noscan"});
                              requireActivity().runOnUiThread(() -> {
                                  String outputScanLog = exe.RunAsRootOutput("cat " + ScanLog);
                                  final String[] targetsArray = outputScanLog.split("\n");
-                                 ArrayAdapter targetsadapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, targetsArray);
+                                 ArrayAdapter<String> targetsadapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, targetsArray);
                                  if (!outputScanLog.isEmpty()) {
                                      targets.setAdapter(targetsadapter);
                                  } else {
                                      final ArrayList<String> notargets = new ArrayList<>();
                                      notargets.add("No devices found");
-                                     targets.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, notargets));
+                                     targets.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, notargets));
                                  }
                              });
                         });
@@ -486,7 +495,7 @@ public class BTFragment extends Fragment {
                 }
             });
 
-            //Target selection
+            // Target selection
             targets.setOnItemClickListener((adapterView, view, i, l) -> {
                 String selected_target = targets.getItemAtPosition(i).toString();
                 if (selected_target.equals("No devices found"))
@@ -504,7 +513,7 @@ public class BTFragment extends Fragment {
             return rootView;
         }
 
-        //Refresh main
+        // Refresh main
         private void refresh(View BTFragment) {
             final TextView Binderstatus = BTFragment.findViewById(R.id.BinderStatus);
             final TextView DBUSstatus = BTFragment.findViewById(R.id.DBUSstatus);
@@ -522,10 +531,10 @@ public class BTFragment extends Fragment {
                 final ArrayList<String> hciIfaces = new ArrayList<>();
                 if (outputHCI.isEmpty()) {
                     hciIfaces.add("None");
-                    ifaces.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, hciIfaces));
+                    ifaces.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, hciIfaces));
                 } else {
                     final String[] ifacesArray = outputHCI.split("\n");
-                    ifaces.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, ifacesArray));
+                    ifaces.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, ifacesArray));
                     int lastiface = sharedpreferences.getInt("selected_iface", 0);
                     ifaces.setSelection(lastiface);
                 }
@@ -533,48 +542,48 @@ public class BTFragment extends Fragment {
                 File bt_smd = new File("/sys/module/hci_smd/parameters/hcismd_set");
                 if (!bt_smd.exists()) {
                     if (binder_statusCMD.isEmpty()) {
-                        Binderstatus.setText("Stopped");
-                        bluebinderButton.setText("Start");
+                        Binderstatus.setText(R.string.bt_stopped);
+                        bluebinderButton.setText(R.string.bt_start);
                     }
                     else {
-                        Binderstatus.setText("Running");
-                        bluebinderButton.setText("Stop");
+                        Binderstatus.setText(R.string.bt_running);
+                        bluebinderButton.setText(R.string.bt_stop);
                     }
                 } else {
                     if (outputHCI.contains("hci0")) {
-                        Binderstatus.setText("Enabled");
-                        bluebinderButton.setText("Stop");
+                        Binderstatus.setText(R.string.bt_enabled);
+                        bluebinderButton.setText(R.string.bt_stop);
                     } else {
-                        Binderstatus.setText("Disabled");
-                        bluebinderButton.setText("Start");
+                        Binderstatus.setText(R.string.bt_disabled);
+                        bluebinderButton.setText(R.string.bt_start);
                     }
                 }
                 String dbus_statusCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd service dbus status | grep dbus");
                 if (dbus_statusCMD.equals("dbus is running.")) {
-                    DBUSstatus.setText("Running");
-                    dbusButton.setText("Stop");
+                    DBUSstatus.setText(R.string.bt_start);
+                    dbusButton.setText(R.string.bt_stop);
                 }
                 else {
-                    DBUSstatus.setText("Stopped");
-                    dbusButton.setText("Start");
+                    DBUSstatus.setText(R.string.bt_stopped);
+                    dbusButton.setText(R.string.bt_start);
                 }
                 String bt_statusCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd service bluetooth status | grep bluetooth");
                 if (bt_statusCMD.equals("bluetooth is running.")) {
-                    BTstatus.setText("Running");
-                    btButton.setText("Stop");
+                    BTstatus.setText(R.string.bt_running);
+                    btButton.setText(R.string.bt_stop);
                 }
                 else {
-                    BTstatus.setText("Stopped");
-                    btButton.setText("Start");
+                    BTstatus.setText(R.string.bt_stopped);
+                    btButton.setText(R.string.bt_start);
                 }
                 String hci_statusCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig "+ selected_iface + " | grep 'UP RUNNING' | cut -f2 -d$'\\t'");
                 if (hci_statusCMD.equals("UP RUNNING ")) {
-                    HCIstatus.setText("Up");
-                    hciButton.setText("Stop");
+                    HCIstatus.setText(R.string.bt_up);
+                    hciButton.setText(R.string.bt_stop);
                 }
                 else {
-                    HCIstatus.setText("Down");
-                    hciButton.setText("Start");
+                    HCIstatus.setText(R.string.bt_down);
+                    hciButton.setText(R.string.bt_start);
                 }
             });
         }
@@ -582,7 +591,6 @@ public class BTFragment extends Fragment {
 
     public static class ToolsFragment extends BTFragment {
         private Context context;
-        private Activity activity;
         final ShellExecuter exe = new ShellExecuter();
         private String reverse = "";
         private String flood = "";
@@ -591,7 +599,7 @@ public class BTFragment extends Fragment {
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             context = getContext();
-            activity = getActivity();
+            Activity activity = getActivity();
         }
 
         @Override
@@ -602,10 +610,10 @@ public class BTFragment extends Fragment {
             CheckBox floodCheckBox = rootView.findViewById(R.id.l2ping_flood);
             CheckBox reverseCheckBox = rootView.findViewById(R.id.l2ping_reverse);
 
-            //Target address
+            // Target address
             final EditText sdp_address = rootView.findViewById(R.id.sdp_address);
 
-            //Set target
+            // Set target
             Button SetTarget = rootView.findViewById(R.id.set_target);
 
             SetTarget.setOnClickListener( v -> {
@@ -613,7 +621,7 @@ public class BTFragment extends Fragment {
                 sdp_address.setText(selected_addr);
             });
 
-            //L2ping
+            // L2ping
             Button StartL2ping = rootView.findViewById(R.id.start_l2ping);
             final EditText l2ping_Size = rootView.findViewById(R.id.l2ping_size);
             final EditText l2ping_Count = rootView.findViewById(R.id.l2ping_count);
@@ -636,7 +644,7 @@ public class BTFragment extends Fragment {
 
             StartL2ping.setOnClickListener( v -> {
                 String l2ping_target = sdp_address.getText().toString();
-                if (!l2ping_target.equals("")) {
+                if (!l2ping_target.isEmpty()) {
                     String l2ping_size = l2ping_Size.getText().toString();
                     String l2ping_count = l2ping_Count.getText().toString();
                     String l2ping_interface = hci_interface.getText().toString();
@@ -646,7 +654,7 @@ public class BTFragment extends Fragment {
                 }
             });
 
-            //RFComm_scan
+            // RFComm_scan
             Button StartRFCommscan = rootView.findViewById(R.id.start_rfcommscan);
 
             StartRFCommscan.setOnClickListener( v -> {
@@ -657,7 +665,7 @@ public class BTFragment extends Fragment {
                     Toast.makeText(requireActivity().getApplicationContext(), "No target address!", Toast.LENGTH_SHORT).show();
             });
 
-            //Redfang
+            // Redfang
             Button StartRedfang = rootView.findViewById(R.id.start_redfang);
 
             StartRedfang.setOnClickListener( v -> {
@@ -669,7 +677,7 @@ public class BTFragment extends Fragment {
                     Toast.makeText(requireActivity().getApplicationContext(), "No target range!", Toast.LENGTH_SHORT).show();
             });
 
-            //Blueranger
+            // Blueranger
             Button StartBlueranger = rootView.findViewById(R.id.start_blueranger);
             StartBlueranger.setOnClickListener( v -> {
                 String blueranger_target = sdp_address.getText().toString();
@@ -680,11 +688,11 @@ public class BTFragment extends Fragment {
                     Toast.makeText(requireActivity().getApplicationContext(), "No target address!", Toast.LENGTH_SHORT).show();
             });
 
-            //Start SDP Tool
+            // Start SDP Tool
             Button StartSDPButton = rootView.findViewById(R.id.start_sdp);
             StartSDPButton.setOnClickListener( v -> {
                 Toast.makeText(getContext(), "Discovery started..\nCheck the output below", Toast.LENGTH_SHORT).show();
-                AsyncTask.execute(() -> startSDPtool(rootView));
+                Executors.newSingleThreadExecutor().execute(() -> startSDPtool(rootView));
             });
             return rootView;
         }
@@ -721,19 +729,19 @@ public class BTFragment extends Fragment {
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.bt_spoof, container, false);
 
-            //Selected iface
+            // Selected iface
             final EditText spoof_interface = rootView.findViewById(R.id.spoof_interface);
 
-            //Target address
+            // Target address
             final EditText targetAddress = rootView.findViewById(R.id.targetAddress);
 
-            //Target Class
+            // Target Class
             final EditText targetClass = rootView.findViewById(R.id.targetClass);
 
-            //Target Name
+            // Target Name
             final EditText targetName = rootView.findViewById(R.id.targetName);
 
-            //Set target
+            // Set target
             Button SetTarget = rootView.findViewById(R.id.set_target);
 
             SetTarget.setOnClickListener(v -> {
@@ -745,11 +753,11 @@ public class BTFragment extends Fragment {
                 targetName.setText(selected_name);
             });
 
-            //Refresh
+            // Refresh
             Button RefreshStatus = rootView.findViewById(R.id.refreshSpoof);
             RefreshStatus.setOnClickListener(v -> refreshSpoof(rootView));
 
-            //Apply
+            // Apply
             Button ApplySpoof = rootView.findViewById(R.id.apply_spoof);
 
             ApplySpoof.setOnClickListener(v -> {
@@ -794,7 +802,7 @@ public class BTFragment extends Fragment {
                     String currentClassTypeCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig " + selectedIface + " -a | awk '/Device Class:/ { print $3, $4, $5 }'");
                     currentClassType.setText(currentClassTypeCMD);
 
-                    String currentNameCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig " + selectedIface + " -a | grep Name | cut -d\\\' -f2");
+                    String currentNameCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig " + selectedIface + " -a | grep Name | cut -d\\' -f2");
                     currentName.setText(currentNameCMD);
                 } else
                     Toast.makeText(requireActivity().getApplicationContext(), "Interface is down!", Toast.LENGTH_SHORT).show();
@@ -827,13 +835,13 @@ public class BTFragment extends Fragment {
                 CWdesc.setVisibility(View.GONE);
             }
 
-            //Selected iface
+            // Selected iface
             final EditText cw_interface = rootView.findViewById(R.id.hci_interface);
 
-            //Target address
+            // Target address
             final EditText cw_address = rootView.findViewById(R.id.hci_address);
 
-            //Set target
+            // Set target
             Button SetTarget = rootView.findViewById(R.id.set_target);
 
             SetTarget.setOnClickListener( v -> {
@@ -841,15 +849,15 @@ public class BTFragment extends Fragment {
                 cw_address.setText(selected_address);
             });
 
-            //Channel
+            // Channel
             final EditText hci_channel = rootView.findViewById(R.id.hci_channel);
 
-            //CW Mode
+            // CW Mode
             Spinner cwmode = rootView.findViewById(R.id.cwmode);
             final ArrayList<String> modes = new ArrayList<>();
             modes.add("Listen");
             modes.add("Inject");
-            cwmode.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, modes));
+            cwmode.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, modes));
             cwmode.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
@@ -860,10 +868,10 @@ public class BTFragment extends Fragment {
                 }
             });
 
-            //Listening
+            // Listening
             final EditText listenfilename = rootView.findViewById(R.id.listenfilename);
 
-            //Injecting
+            // Injecting
             final EditText injectfilename = rootView.findViewById(R.id.injectfilename);
             final Button injectfilebrowse = rootView.findViewById(R.id.injectfilebrowse);
 
@@ -875,12 +883,12 @@ public class BTFragment extends Fragment {
                 startActivityForResult(Intent.createChooser(intent, "Select audio file"),1001);
                 });
 
-            //Launch
+            // Launch
             Button StartCWButton = rootView.findViewById(R.id.start_cw);
             StartCWButton.setOnClickListener( v -> {
                 String cw_iface = cw_interface.getText().toString();
                 String cw_target = cw_address.getText().toString();
-                if (!cw_target.equals("")) {
+                if (!cw_target.isEmpty()) {
                     String cw_channel = hci_channel.getText().toString();
                     String cw_listenfile = listenfilename.getText().toString();
                     String cw_injectfile = injectfilename.getText().toString();
@@ -896,14 +904,14 @@ public class BTFragment extends Fragment {
                     Toast.makeText(requireActivity().getApplicationContext(), "No target address!", Toast.LENGTH_SHORT).show();
             });
 
-            //Kill
+            // Kill
             Button StopCWButton = rootView.findViewById(R.id.stop_cw);
             StopCWButton.setOnClickListener( v -> {
                     exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd pkill carwhisperer"});
                     Toast.makeText(requireActivity().getApplicationContext(), "Killed", Toast.LENGTH_SHORT).show();
                     });
 
-            //Stream or play audio
+            // Stream or play audio
             ImageButton PlayAudioButton = rootView.findViewById(R.id.play_audio);
             ImageButton StopAudioButton = rootView.findViewById(R.id.stop_audio);
             AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 8000, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, 20000, AudioTrack.MODE_STREAM);
@@ -912,7 +920,7 @@ public class BTFragment extends Fragment {
                 if (cw_listenfile.length() == 0) {
                     Toast.makeText(getContext(), "File not found!", Toast.LENGTH_SHORT).show();
                 } else {
-                    AsyncTask.execute(() -> {
+                    Executors.newSingleThreadExecutor().execute(() -> {
                         InputStream s = null;
                         try {
                             s = new FileInputStream(cw_listenfile);
@@ -922,7 +930,7 @@ public class BTFragment extends Fragment {
                         audioTrack.play();
                         // Reading data.
                         byte[] data = new byte[200];
-                        int n = 0;
+                        int n;
                         try {
                             while (true) {
                                 assert s != null;
@@ -965,7 +973,7 @@ public class BTFragment extends Fragment {
         public void onResume(){
             super.onResume();
             Toast.makeText(requireActivity().getApplicationContext(), "Status updated", Toast.LENGTH_SHORT).show();
-            AsyncTask.execute(() -> refresh_badbt(requireView().getRootView()));
+            Executors.newSingleThreadExecutor().execute(() -> refresh_badbt(requireView().getRootView()));
         }
 
         @Override
@@ -976,19 +984,19 @@ public class BTFragment extends Fragment {
             SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
             boolean iswatch = requireContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
 
-            //Watch optimisation
+            // Watch optimisation
             final TextView BadBTdesc = rootView.findViewById(R.id.badbt_desc);
             if (iswatch) {
                 BadBTdesc.setVisibility(View.GONE);
             }
 
-            //Selected iface, name, bdaddr, class
+            // Selected iface, name, bdaddr, class
             final EditText badbt_interface = rootView.findViewById(R.id.badbt_interface);
             final EditText badbt_name = rootView.findViewById(R.id.badbt_name);
             final EditText badbt_bdaddr = rootView.findViewById(R.id.badbt_address);
             final EditText badbt_class = rootView.findViewById(R.id.badbt_class);
 
-            //Class spinner
+            // Class spinner
             Spinner badbtclass = rootView.findViewById(R.id.badbt_class_spinner);
             final ArrayList<String> classes = new ArrayList<>();
             classes.add("Keyboard");
@@ -999,27 +1007,36 @@ public class BTFragment extends Fragment {
             classes.add("PC");
             classes.add("Mobile");
             classes.add("Custom");
-            badbtclass.setAdapter(new ArrayAdapter(getContext(), android.R.layout.simple_list_item_1, classes));
+            badbtclass.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, classes));
             badbtclass.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
                     selected_prefix = parentView.getItemAtPosition(pos).toString();
-                    if (selected_prefix.equals("Keyboard")) {
-                        badbt_class.setText("0x000540");
-                    } else if (selected_prefix.equals("Headset")) {
-                        badbt_class.setText("0x000408");
-                    } else if (selected_prefix.equals("Speaker")) {
-                        badbt_class.setText("0x240414");
-                    } else if (selected_prefix.equals("Mouse")) {
-                        badbt_class.setText("0x002580");
-                    } else if (selected_prefix.equals("Printer")) {
-                        badbt_class.setText("0x040680");
-                    } else if (selected_prefix.equals("PC")) {
-                        badbt_class.setText("0x02010c");
-                    } else if (selected_prefix.equals("Mobile")) {
-                        badbt_class.setText("0x000204");
-                    } else if (selected_prefix.equals("Custom")) {
-                        badbt_class.setText("");
+                    switch (selected_prefix) {
+                        case "Keyboard":
+                            badbt_class.setText("0x000540");
+                            break;
+                        case "Headset":
+                            badbt_class.setText("0x000408");
+                            break;
+                        case "Speaker":
+                            badbt_class.setText("0x240414");
+                            break;
+                        case "Mouse":
+                            badbt_class.setText("0x002580");
+                            break;
+                        case "Printer":
+                            badbt_class.setText("0x040680");
+                            break;
+                        case "PC":
+                            badbt_class.setText("0x02010c");
+                            break;
+                        case "Mobile":
+                            badbt_class.setText("0x000204");
+                            break;
+                        case "Custom":
+                            badbt_class.setText("");
+                            break;
                     }
                 }
                 @Override
@@ -1028,7 +1045,7 @@ public class BTFragment extends Fragment {
             });
 
 
-            //Refresh
+            // Refresh
             refresh_badbt(rootView);
             String prevbadbtname = sharedpreferences.getString("badbt-name", "");
             if (!prevbadbtname.isEmpty()) badbt_name.setText(prevbadbtname);
@@ -1039,14 +1056,14 @@ public class BTFragment extends Fragment {
             String prevbadbtclass = sharedpreferences.getString("badbt-class", "");
             if (!prevbadbtclass.isEmpty()) badbt_class.setText(prevbadbtclass);
 
-            //Refresh Status
+            // Refresh Status
             ImageButton RefreshBadBTStatus = rootView.findViewById(R.id.refreshBadBTStatus);
             RefreshBadBTStatus.setOnClickListener(v -> refresh_badbt(rootView));
 
-            //String
+            // String
             final EditText badbt_string = rootView.findViewById(R.id.editBadBT);
 
-            //Services
+            // Services
             badbtServerButton.setOnClickListener( v -> {
                 if (badbtServerButton.getText().equals("Start")) {
                     String BadBT_name = badbt_name.getText().toString();
@@ -1080,13 +1097,13 @@ public class BTFragment extends Fragment {
                 }
             });
 
-            //Mode
+            // Mode
             Spinner badbtmode = rootView.findViewById(R.id.badbtmode);
             View BadBTSettingsView = rootView.findViewById(R.id.badbtsettings_layout);
             final ArrayList<String> modes = new ArrayList<>();
             modes.add("Send strings");
             modes.add("Interactive");
-            badbtmode.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, modes));
+            badbtmode.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, modes));
             badbtmode.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
@@ -1102,7 +1119,7 @@ public class BTFragment extends Fragment {
                 }
             });
 
-            //Prefix
+            // Prefix
             CheckBox uacCheckBox = rootView.findViewById(R.id.uac_bypass);
             View BadBTUACView = rootView.findViewById(R.id.badbtuac_layout);
             Spinner badbtprefix = rootView.findViewById(R.id.badbtprefix);
@@ -1115,54 +1132,61 @@ public class BTFragment extends Fragment {
             prefixes.add("Mac Terminal");
             prefixes.add("Linux Terminal");
             prefixes.add("None");
-            badbtprefix.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, prefixes));
+            badbtprefix.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, prefixes));
             badbtprefix.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
                     selected_prefix = parentView.getItemAtPosition(pos).toString();
-                    if (selected_prefix.equals("Mobile Home")) {
-                        BadBTUACView.setVisibility(View.GONE);
-                        prefixCMD = "mobile";
-                        uacCheckBox.setChecked(false);
-                        presets_uac.clear();
-                        presets_uac.add("None");
-                        badbtpresets_uac.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, presets_uac));
-                        uacCMD = "-";
-                    } else if (selected_prefix.equals("Mobile Browser")) {
-                        BadBTUACView.setVisibility(View.GONE);
-                        prefixCMD = "mobilewww";
-                        uacCheckBox.setChecked(false);
-                        presets_uac.clear();
-                        presets_uac.add("None");
-                        badbtpresets_uac.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, presets_uac));
-                        uacCMD = "-";
-                    } else if (selected_prefix.equals("Windows CMD")) {
-                        BadBTUACView.setVisibility(View.VISIBLE);
-                        prefixCMD = "windows";
-                    } else if (selected_prefix.equals("Mac Terminal")) {
-                        BadBTUACView.setVisibility(View.GONE);
-                        prefixCMD = "mac";
-                        uacCheckBox.setChecked(false);
-                        presets_uac.clear();
-                        presets_uac.add("None");
-                        badbtpresets_uac.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, presets_uac));
-                        uacCMD = "-";
-                    } else if (selected_prefix.equals("Linux Terminal")) {
-                        BadBTUACView.setVisibility(View.GONE);
-                        prefixCMD = "linux";
-                        uacCheckBox.setChecked(false);
-                        presets_uac.clear();
-                        presets_uac.add("None");
-                        badbtpresets_uac.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, presets_uac));
-                        uacCMD = "-";
-                    } else if (selected_prefix.equals("None")) {
-                        BadBTUACView.setVisibility(View.GONE);
-                        uacCMD = "-";
-                        uacCheckBox.setChecked(false);
-                        presets_uac.clear();
-                        presets_uac.add("None");
-                        badbtpresets_uac.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, presets_uac));
-                        uacCMD = "-";
+                    switch (selected_prefix) {
+                        case "Mobile Home":
+                            BadBTUACView.setVisibility(View.GONE);
+                            prefixCMD = "mobile";
+                            uacCheckBox.setChecked(false);
+                            presets_uac.clear();
+                            presets_uac.add("None");
+                            badbtpresets_uac.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, presets_uac));
+                            uacCMD = "-";
+                            break;
+                        case "Mobile Browser":
+                            BadBTUACView.setVisibility(View.GONE);
+                            prefixCMD = "mobilewww";
+                            uacCheckBox.setChecked(false);
+                            presets_uac.clear();
+                            presets_uac.add("None");
+                            badbtpresets_uac.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, presets_uac));
+                            uacCMD = "-";
+                            break;
+                        case "Windows CMD":
+                            BadBTUACView.setVisibility(View.VISIBLE);
+                            prefixCMD = "windows";
+                            break;
+                        case "Mac Terminal":
+                            BadBTUACView.setVisibility(View.GONE);
+                            prefixCMD = "mac";
+                            uacCheckBox.setChecked(false);
+                            presets_uac.clear();
+                            presets_uac.add("None");
+                            badbtpresets_uac.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, presets_uac));
+                            uacCMD = "-";
+                            break;
+                        case "Linux Terminal":
+                            BadBTUACView.setVisibility(View.GONE);
+                            prefixCMD = "linux";
+                            uacCheckBox.setChecked(false);
+                            presets_uac.clear();
+                            presets_uac.add("None");
+                            badbtpresets_uac.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, presets_uac));
+                            uacCMD = "-";
+                            break;
+                        case "None":
+                            BadBTUACView.setVisibility(View.GONE);
+                            uacCMD = "-";
+                            uacCheckBox.setChecked(false);
+                            presets_uac.clear();
+                            presets_uac.add("None");
+                            badbtpresets_uac.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, presets_uac));
+                            uacCMD = "-";
+                            break;
                     }
                 }
                 @Override
@@ -1170,24 +1194,28 @@ public class BTFragment extends Fragment {
                 }
             });
 
-            //Presets
+            // Presets
             Spinner badbtpresets = rootView.findViewById(R.id.badbtpresets);
             EditText badbtstring = rootView.findViewById(R.id.editBadBT);
             final ArrayList<String> presets = new ArrayList<>();
             presets.add("Rickroll");
             presets.add("Fake Windows Update");
             presets.add("None");
-            badbtpresets.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, presets));
+            badbtpresets.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, presets));
             badbtpresets.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
                     selected_preset = parentView.getItemAtPosition(pos).toString();
-                    if (selected_preset.equals("Rickroll")) {
-                        badbtstring.setText("https://www.youtube.com/watch?v=dQw4w9WgXcQ");
-                    } else if (selected_preset.equals("Fake Windows Update")) {
-                        badbtstring.setText("iexplore -k http://fakeupdate.net/win10ue");
-                    } else if (selected_preset.equals("None")) {
-                        badbtstring.setText("");
+                    switch (selected_preset) {
+                        case "Rickroll":
+                            badbtstring.setText(R.string.bt_badbt_string_rickroll);
+                            break;
+                        case "Fake Windows Update":
+                            badbtstring.setText(R.string.bt_badbt_string_fakeupdate);
+                            break;
+                        case "None":
+                            badbtstring.setText("");
+                            break;
                     }
                 }
                 @Override
@@ -1195,7 +1223,7 @@ public class BTFragment extends Fragment {
                 }
             });
 
-            //UAC
+            // UAC
             uacCheckBox.setOnClickListener( v -> {
                 if (uacCheckBox.isChecked()) {
                     badbtpresets_uac.setVisibility(View.VISIBLE);
@@ -1204,12 +1232,12 @@ public class BTFragment extends Fragment {
                     presets_uac.add("Windows 8");
                     presets_uac.add("Windows 10");
                     presets_uac.add("Windows 11");
-                    badbtpresets_uac.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, presets_uac));
+                    badbtpresets_uac.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, presets_uac));
                 }
                 else {
                     presets_uac.clear();
                     presets_uac.add("None");
-                    badbtpresets_uac.setAdapter(new ArrayAdapter(requireContext(), android.R.layout.simple_list_item_1, presets_uac));
+                    badbtpresets_uac.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, presets_uac));
                     badbtpresets_uac.setVisibility(View.GONE);
                     uacCMD = "-";
                 }
@@ -1235,7 +1263,7 @@ public class BTFragment extends Fragment {
                 }
             });
 
-            //Load from file
+            // Load from file
             final Button injectStringButton = rootView.findViewById(R.id.injectstringbrowse);
             injectStringButton.setOnClickListener( v -> {
                 Intent intent2 = new Intent();
@@ -1245,7 +1273,7 @@ public class BTFragment extends Fragment {
                 startActivityForResult(Intent.createChooser(intent2, "Select text file"),1002);
             });
 
-            //Start
+            // Start
             Button StartBadBtButton = rootView.findViewById(R.id.start_badbt);
             StartBadBtButton.setOnClickListener( v -> {
                     if (selected_badbtmode.equals("Send strings")) {
@@ -1269,7 +1297,7 @@ public class BTFragment extends Fragment {
             return rootView;
         }
 
-        //Refresh badbt
+        // Refresh badbt
         private void refresh_badbt(View BTFragment) {
 
             final TextView BadBTServerStatus = BTFragment.findViewById(R.id.BadBTServerStatus);
@@ -1279,50 +1307,52 @@ public class BTFragment extends Fragment {
             requireActivity().runOnUiThread(() -> {
                 String badbtserver_statusCMD = exe.RunAsRootOutput("ps -ef | grep btk_server");
                 if (!badbtserver_statusCMD.contains("btk_server.py")) {
-                    BadBTServerStatus.setText("Stopped");
-                    badbtserverButton.setText("Start");
+                    BadBTServerStatus.setText(R.string.bt_stopped);
+                    badbtserverButton.setText(R.string.bt_start);
                 }
                 else {
-                    BadBTServerStatus.setText("Running");
-                    badbtserverButton.setText("Stop");
+                    BadBTServerStatus.setText(R.string.bt_running);
+                    badbtserverButton.setText(R.string.bt_stop);
                 }
             });
         }
     }
-    public void onActivityResult(int requestCode, int resultCode,
-                                 Intent data) {
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-            if (requestCode == 1001 && (resultCode == Activity.RESULT_OK)) {
-                    ShellExecuter exe = new ShellExecuter();
-                    EditText injectfilename = requireActivity().findViewById(R.id.injectfilename);
-                    String FilePath = Objects.requireNonNull(data.getData()).getPath();
-                    FilePath = exe.RunAsRootOutput("echo " + FilePath + " | sed -e 's/\\/document\\/primary:/\\/sdcard\\//g' ");
-                    injectfilename.setText(FilePath);
-            }
-            if (requestCode == 1002) {
-                if (resultCode == Activity.RESULT_OK) {
-                    ShellExecuter exe = new ShellExecuter();
-                    EditText badbtstring = requireActivity().findViewById(R.id.editBadBT);
-                    String FilePath = Objects.requireNonNull(data.getData()).getPath();
-                    Toast.makeText(requireActivity().getApplicationContext(), FilePath, Toast.LENGTH_SHORT).show();
-                    FilePath = exe.RunAsRootOutput("echo " + FilePath + " | sed -e 's/\\/document\\/primary:/\\/sdcard\\//g' ");
-                    FilePath = exe.RunAsRootOutput("cat " + FilePath);
-                    badbtstring.setText(FilePath);
-                }
-            }
+        if (requestCode == 1001 && resultCode == Activity.RESULT_OK) {
+            EditText injectfilename = requireActivity().findViewById(R.id.injectfilename);
+            String FilePath = Objects.requireNonNull(data.getData()).getPath();
+            assert FilePath != null;
+            FilePath = FilePath.replace("/document/primary:", "/sdcard/");
+            injectfilename.setText(FilePath);
         }
+        if (requestCode == 1002 && resultCode == Activity.RESULT_OK) {
+            EditText badbtstring = requireActivity().findViewById(R.id.editBadBT);
+            String FilePath = Objects.requireNonNull(data.getData()).getPath();
+            assert FilePath != null;
+            FilePath = FilePath.replace("/document/primary:", "/sdcard/");
+            final ShellExecuter exe = new ShellExecuter();
+            String fileContent = exe.RunAsRootOutput("cat " + FilePath);
+            badbtstring.setText(fileContent);
+        }
+    }
 
     public static class PreferencesData {
         public static void saveString(Context context, String key, String value) {
-            SharedPreferences sharedPrefs = PreferenceManager
-                    .getDefaultSharedPreferences(context);
-            sharedPrefs.edit().putString(key, value).apply();
+            if (context != null) {
+                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+                sharedPrefs.edit().putString(key, value).apply();
+            }
         }
 
         public static String getString(Context context, String key, String defaultValue) {
-            SharedPreferences sharedPrefs = PreferenceManager
-                    .getDefaultSharedPreferences(context);
-            return sharedPrefs.getString(key, defaultValue);
+            if (context != null) {
+                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+                return sharedPrefs.getString(key, defaultValue);
+            }
+            return defaultValue;
         }
     }
 

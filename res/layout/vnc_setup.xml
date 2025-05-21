@@ -20,7 +20,6 @@
                 android:id="@+id/kexdesc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal|center"
                 android:gravity="center"
                 android:paddingTop="10dp"
                 android:paddingBottom="10dp"
@@ -47,14 +46,13 @@
                     android:layout_gravity="center_horizontal"
                     android:orientation="horizontal">
 
-                <CheckBox
-                    android:id="@+id/vnc_checkBox"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:checked="false"
-                    android:onClick="vncLocalClick"
-                    android:text="Localhost Only" />
+                    <CheckBox
+                        android:id="@+id/vnc_checkBox"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:checked="false"
+                        android:text="Localhost Only" />
 
                 <CheckBox
                     android:id="@+id/vnc_serviceCheckBox"
@@ -64,7 +62,6 @@
                     android:layout_marginStart="10dp"
                     android:layout_marginEnd="10dp"
                     android:text="Enable at boot" />
-
             </LinearLayout>
 
             <LinearLayout
@@ -86,13 +83,12 @@
                     android:layout_width="fill_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:autofillHints="none"
                     android:text="20"
                     android:inputType="number"
                     android:enabled="false"
                     android:textColor="#40FFFFFF"/>
-
             </LinearLayout>
-
         </LinearLayout>
 
             <LinearLayout
@@ -120,7 +116,6 @@
                     android:layout_marginEnd="5dp"
                     android:dropDownWidth="wrap_content"
                     android:saveEnabled="false" />
-
             </LinearLayout>
 
             <LinearLayout
@@ -148,10 +143,7 @@
                     android:layout_marginEnd="5dp"
                     android:dropDownWidth="match_parent"
                     android:saveEnabled="false" />
-
             </LinearLayout>
-
-
 
             <Button
                 android:id="@+id/vnc_audio"
@@ -183,7 +175,6 @@
                     android:text="Stop Server"
                     android:textColor="#ffffffff" />
             </LinearLayout>
-
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:id="@+id/linearLayout2"
@@ -220,6 +211,7 @@
                     android:id="@+id/refreshKeX"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:contentDescription="none"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:srcCompat="@drawable/ic_action_refresh" />
@@ -233,7 +225,6 @@
                     app:layout_constraintGuide_percent="0.50"
                     app:layout_constraintGuide_begin="185dp"
                     app:layout_constraintStart_toStartOf="parent" />
-
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <androidx.constraintlayout.widget.ConstraintLayout
@@ -277,7 +268,6 @@
                     app:layout_constraintGuide_percent="0.50"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
-
             </androidx.constraintlayout.widget.ConstraintLayout>
 
             <Button
@@ -357,7 +347,6 @@
                         android:text="Restore"
                         android:textColor="#ffffffff"
                         android:textSize="13sp" />
-
                 </LinearLayout>
 
                 <View
@@ -434,7 +423,6 @@
                         android:layout_height="wrap_content"
                         android:text="Apply"
                         android:textColor="#ffffffff" />
-
                 </LinearLayout>
 
                 <Button
@@ -468,7 +456,6 @@
                         android:text="Reset"
                         android:textColor="#ffffffff"
                         android:textSize="13sp" />
-
                 </LinearLayout>
 
                 <LinearLayout
@@ -495,13 +482,8 @@
                         android:text="Restore"
                         android:textColor="#ffffffff"
                         android:textSize="13sp" />
-
                 </LinearLayout>
-
             </LinearLayout>
-
         </LinearLayout>
-
     </ScrollView>
-
 </LinearLayout>

@@ -26,7 +26,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.fragment.app.Fragment;
 
-
 public class NmapFragment extends Fragment {
     private static final String TAG = "NMAPFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";

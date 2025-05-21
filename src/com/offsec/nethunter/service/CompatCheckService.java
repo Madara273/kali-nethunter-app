@@ -15,10 +15,9 @@ import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.SharePrefTag;
 import com.offsec.nethunter.utils.ShellExecuter;
 
-// IntentService class for keep checking the campatibaility every time user switch back to the app.
+// IntentService class for keep checking the compatibility every time user switch back to the app.
 public class CompatCheckService extends IntentService {
     public static final String TAG = "CompatCheckService";
-    private String message = "";
     private int RESULTCODE = -1;
     private SharedPreferences sharedPreferences;
     public CompatCheckService(){
@@ -40,6 +39,7 @@ public class CompatCheckService extends IntentService {
 
         // run checkCompat function, and sendbroadcast back to Main activity if user fails the compat check.
         if (!checkCompat()) {
+            String message = "";
             getApplicationContext().sendBroadcast(new Intent()
                     .putExtra("message", message)
                     .setAction(BuildConfig.APPLICATION_ID + ".CHECKCOMPAT"));
@@ -86,7 +86,7 @@ public class CompatCheckService extends IntentService {
         }
 
         // Check chroot status, push notification to user and disable all the fragments if chroot is not yet up.
-        // if intent is NOT sent by chrootmanager, run the check asynctask again.
+        // if intent is NOT sent by chrootmanager, run the check executors again.
         if (RESULTCODE == -1){
             if ((new ShellExecuter().RunAsRootReturnValue(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"status\" -p " + NhPaths.CHROOT_PATH()) != 0)) {
                 if (AppNavHomeActivity.lastSelectedMenuItem.getItemId() != R.id.createchroot_item) {
@@ -103,7 +103,7 @@ public class CompatCheckService extends IntentService {
                         .setAction(AppNavHomeActivity.NethunterReceiver.CHECKCHROOT));
             }
         } else {
-            // if intent is sent by chrootmanager, no need to run the check asynctask again.
+            // if intent is sent by chrootmanager, no need to run the check executors again.
             if (RESULTCODE != 0) {
                 if (AppNavHomeActivity.lastSelectedMenuItem.getItemId() != R.id.createchroot_item) {
                     startService(new Intent(getApplicationContext(), NotificationChannelService.class).setAction(NotificationChannelService.REMINDMOUNTCHROOT));

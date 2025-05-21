@@ -25,7 +25,7 @@ Install then accept the license. Once you have the SDK you may need to update it
 Checkout the project from version control -> Git =>
 
 ```plaintext
-Github Repository Url: https://gitlab.com/kalilinux/nethunter/apps/kali-nethunter-app.git
+Gitlab Repository Url: https://gitlab.com/kalilinux/nethunter/apps/kali-nethunter-app.git
 Parent Directory: [where you want to store files]
 Directory Name:[nethunter-app]
 ```

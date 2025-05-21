@@ -1,16 +1,58 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
     <item name="blue" type="color">#33B5E5</item>
     <item name="darkorange" type="color">#FFFF8800</item>
-
     <item name="clearTitle" type="color">#fcfcfc</item>
     <item name="clearText" type="color">#d9d9d9</item>
-
     <item name="darkTitle" type="color">#444</item>
-
     <item name="colorPrimary" type="color">#37474F</item>
     <item name="colorPrimaryDark" type="color">#21272B</item>
     <item name="colorAccent" type="color">#45738C</item>
     <item name="textColor" type="color">#FFFFFF</item>
+    <item name="cyan_400" type="color">#18FFFF</item>
+    <item name="cyan_200" type="color">#84FFFF</item>
+    <item name="black" type="color">#1A1A1A</item>
+    <item name="red" type="color">#F44336</item>
+    <item name="green" type="color">#4CAF50</item>
+    <item name="yellow" type="color">#FFEB3B</item>
+    <item name="orange" type="color">#FF9800</item>
+    <item name="purple" type="color">#9C27B0</item>
+    <item name="deep_purple" type="color">#673AB7</item>
+    <item name="indigo" type="color">#3F51B5</item>
+    <item name="light_blue" type="color">#03A9F4</item>
+    <item name="teal" type="color">#009688</item>
+    <item name="light_green" type="color">#8BC34A</item>
+    <item name="lime" type="color">#CDDC39</item>
+    <item name="amber" type="color">#FFC107</item>
+    <item name="deep_orange" type="color">#FF5722</item>
+    <item name="brown" type="color">#795548</item>
+    <item name="grey" type="color">#9E9E9E</item>
+    <item name="blue_grey" type="color">#607D8B</item>
+    <item name="white" type="color">#FFFFFF</item>
+    <item name="pink" type="color">#E91E63</item>
+    <item name="light_pink" type="color">#F8BBD0</item>
+    <item name="light_red" type="color">#FFCDD2</item>
+    <item name="dark_red" type="color">#B71C1C</item>
+    <item name="light_green2" type="color">#C8E6C9</item>
+    <item name="dark_green" type="color">#1B5E20</item>
+    <item name="light_blue2" type="color">#B3E5FC</item>
+    <item name="dark_blue" type="color">#0D47A1</item>
+    <item name="light_yellow" type="color">#FFF9C4</item>
+    <item name="dark_yellow" type="color">#FBC02D</item>
+    <item name="light_orange" type="color">#FFE0B2</item>
+    <item name="dark_orange2" type="color">#E65100</item>
+    <item name="light_purple" type="color">#E1BEE7</item>
+    <item name="dark_purple" type="color">#4A148C</item>
+    <item name="light_grey" type="color">#F5F5F5</item>
+    <item name="medium_grey" type="color">#BDBDBD</item>
+    <item name="dark_grey" type="color">#212121</item>
+    <item name="transparent" type="color">#00000000</item>
+    <item name="gold" type="color">#FFD700</item>
+    <item name="silver" type="color">#C0C0C0</item>
+    <item name="bronze" type="color">#CD7F32</item>
+    <item name="navy" type="color">#001F3F</item>
+    <item name="olive" type="color">#808000</item>
+    <item name="maroon" type="color">#800000</item>
+    <item name="aqua" type="color">#00FFFF</item>
+    <item name="fuchsia" type="color">#FF00FF</item>
 </resources>

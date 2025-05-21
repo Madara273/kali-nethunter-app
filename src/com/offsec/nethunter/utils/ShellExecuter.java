@@ -8,9 +8,6 @@ import android.util.Log;
 import android.widget.EditText;
 import android.widget.TextView;
 
-import com.offsec.nethunter.AppNavHomeActivity;
-import com.offsec.nethunter.BuildConfig;
-
 import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -18,9 +15,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
+import java.util.Collection;
 import java.util.Date;
 import java.util.Locale;
-
 
 public class ShellExecuter {
     private final SimpleDateFormat timeStamp = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
@@ -29,7 +26,45 @@ public class ShellExecuter {
 
     }
 
-    public String Executer(String command) {
+    public static String execute(String s, Collection<String> args) {
+        StringBuilder output = new StringBuilder();
+        String line;
+        try {
+            Process process = Runtime.getRuntime().exec("su -mm");
+            OutputStream stdin = process.getOutputStream();
+            InputStream stderr = process.getErrorStream();
+            InputStream stdout = process.getInputStream();
+
+            stdin.write((s + '\n').getBytes());
+            stdin.write(("exit\n").getBytes());
+            stdin.flush();
+            stdin.close();
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(stdout));
+            while ((line = br.readLine()) != null) {
+                output.append(line).append('\n');
+            }
+            /* remove the last \n */
+            if (output.length() > 0) output = new StringBuilder(output.substring(0, output.length() - 1));
+
+            br.close();
+            br = new BufferedReader(new InputStreamReader(stderr));
+            while ((line = br.readLine()) != null) {
+                Log.e("Shell Error:", line);
+            }
+            br.close();
+
+            process.waitFor();
+            process.destroy();
+        } catch (IOException e) {
+            Log.d(TAG, "An IOException was caught: " + e.getMessage());
+        } catch (InterruptedException ex) {
+            Log.d(TAG, "An InterruptedException was caught: " + ex.getMessage());
+        }
+        return null;
+    }
+
+    public String Executor(String command) {
         StringBuilder output = new StringBuilder();
         Process p;
         try {
@@ -46,7 +81,7 @@ public class ShellExecuter {
         return output.toString();
     }
 
-    public String Executer(String[] command) {
+    public String Executer(String command) {
         StringBuilder output = new StringBuilder();
         Process p;
         try {
@@ -316,7 +351,7 @@ public class ShellExecuter {
         return output.toString();
     }
     // SAVE FILE CONTENTS: (contents, fullFilePath)
-    public boolean SaveFileContents(String contents, String _path){
+    public boolean SaveFileContents(String contents, String _path) {
         String _newCmd = "cat << 'EOF' > "+_path+"\n"+contents+"\nEOF";
         String _res = RunAsRootOutput(_newCmd);
         if (_res.isEmpty()){ // no error we fine
@@ -325,5 +360,61 @@ public class ShellExecuter {
             Log.d("ErrorSavingFile: ", "Error: " + _res);
             return false;
         }
+    }
+
+    public String ReadFile(String duckyOutputFile) {
+        StringBuilder output = new StringBuilder();
+        String command = "cat " + duckyOutputFile;
+        Process p;
+        try {
+            p = Runtime.getRuntime().exec("su -mm -c " + command);
+            p.waitFor();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            String line;
+            while ((line = reader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return output.toString();
+    }
+
+    public String RunAsRootReturnOutput(String s) {
+        StringBuilder output = new StringBuilder();
+        String line;
+        try {
+            Process process = Runtime.getRuntime().exec("su -mm");
+            OutputStream stdin = process.getOutputStream();
+            InputStream stderr = process.getErrorStream();
+            InputStream stdout = process.getInputStream();
+
+            stdin.write((s + '\n').getBytes());
+            stdin.write(("exit\n").getBytes());
+            stdin.flush();
+            stdin.close();
+
+            BufferedReader br = new BufferedReader(new InputStreamReader(stdout));
+            while ((line = br.readLine()) != null) {
+                output.append(line).append('\n');
+            }
+            /* remove the last \n */
+            if (output.length() > 0) output = new StringBuilder(output.substring(0, output.length() - 1));
+
+            br.close();
+            br = new BufferedReader(new InputStreamReader(stderr));
+            while ((line = br.readLine()) != null) {
+                Log.e("Shell Error:", line);
+            }
+            br.close();
+
+            process.waitFor();
+            process.destroy();
+        } catch (IOException e) {
+            Log.d(TAG, "An IOException was caught: " + e.getMessage());
+        } catch (InterruptedException ex) {
+            Log.d(TAG, "An InterruptedException was caught: " + ex.getMessage());
+        }
+        return output.toString();
     }
 }

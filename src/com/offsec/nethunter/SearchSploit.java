@@ -1,6 +1,5 @@
 package com.offsec.nethunter;
 
-
 public class SearchSploit {
     private long id;
     private String description;

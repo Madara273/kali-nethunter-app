@@ -28,7 +28,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
-
 public class MPCFragment extends Fragment {
     private String typeVar;
     private String callbackTypeVar;
@@ -71,7 +70,7 @@ public class MPCFragment extends Fragment {
                 R.array.mpc_type_array, R.layout.payload_maker_item);
         //typeAdapter.setDropDownViewResource(R.layout.payload_maker_item);
         typeSpinner.setAdapter(typeAdapter);
-        //Give it a initial value: this value stands until onItemSelected is fired
+        // Give it a initial value: this value stands until onItemSelected is fired
         // usually the 1st value of spinner
         typeVar = "asp";
         typeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -124,7 +123,7 @@ public class MPCFragment extends Fragment {
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                //Another interface callback
+                // Another interface callback
             }
         });
 
@@ -134,7 +133,7 @@ public class MPCFragment extends Fragment {
                 R.array.mpc_payload_array, R.layout.payload_maker_item);
         //typeAdapter.setDropDownViewResource(R.layout.payload_maker_item);
         payloadSpinner.setAdapter(payloadAdapter);
-        //Give it a initial value: this value stands until onItemSelected is fired
+        // Give it a initial value: this value stands until onItemSelected is fired
         payloadVar = "msf";
         payloadSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -150,7 +149,7 @@ public class MPCFragment extends Fragment {
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                //Another interface callback
+                // Another interface callback
             }
         });
 
@@ -160,7 +159,7 @@ public class MPCFragment extends Fragment {
                 R.array.mpc_callback_array, R.layout.payload_maker_item);
         //typeAdapter.setDropDownViewResource(R.layout.payload_maker_item);
         callbackSpinner.setAdapter(callbackAdapter);
-        //Give it a initial value: this value stands until onItemSelected is fired
+        // Give it a initial value: this value stands until onItemSelected is fired
         callbackVar = "reverse";
         callbackSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -176,7 +175,7 @@ public class MPCFragment extends Fragment {
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                //Another interface callback
+                // Another interface callback
             }
         });
 
@@ -186,7 +185,7 @@ public class MPCFragment extends Fragment {
                 R.array.mpc_stage_array, R.layout.payload_maker_item);
         //typeAdapter.setDropDownViewResource(R.layout.payload_maker_item);
         stageSpinner.setAdapter(stagerAdapter);
-        //Give it a initial value: this value stands until onItemSelected is fired
+        // Give it a initial value: this value stands until onItemSelected is fired
         stagerVar = "staged";
         stageSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -212,7 +211,7 @@ public class MPCFragment extends Fragment {
                 R.array.mpc_callbacktype_array, R.layout.payload_maker_item);
         //typeAdapter.setDropDownViewResource(R.layout.payload_maker_item);
         callbackTypeSpinner.setAdapter(callbackTypeAdapter);
-        //Give it a initial value: this value stands until onItemSelected is fired
+        // Give it a initial value: this value stands until onItemSelected is fired
         callbackTypeVar = "tcp";
         callbackTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override

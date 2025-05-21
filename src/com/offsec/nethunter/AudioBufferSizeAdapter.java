@@ -11,7 +11,6 @@ import java.text.DecimalFormat;
 import java.util.List;
 
 class AudioBufferSizeAdapter extends BaseAdapter {
-
     private final Context context;
     private final List<Long> presets;
 
@@ -46,10 +45,8 @@ class AudioBufferSizeAdapter extends BaseAdapter {
         }
 
         TextView contentText = view.findViewById(R.id.contentText);
-
         long item = getItem(position);
         contentText.setText(formatBufferLength(item));
-
         return view;
     }
 

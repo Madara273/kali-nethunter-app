@@ -17,34 +17,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
+
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal|center"
-                android:gravity="left"
+                android:gravity="start"
                 android:text="@string/macchanger_description" />
 
-            <LinearLayout
+            <com.google.android.material.divider.MaterialDivider
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:padding="4dp"
-                    android:text="Current Hostname: "
-                    android:textSize="18sp" />
-
-                <TextView
-                    android:id="@+id/f_macchanger_hostname_tv"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    android:padding="4dp"
-                    android:textSize="18sp"
-                    android:textColor="@color/cardview_light_background"/>
-            </LinearLayout>
+                android:layout_marginBottom="8dp"
+                android:layout_marginTop="8dp"
+                app:dividerColor="@color/cardview_light_background" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -58,17 +44,17 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.5"
+                    android:autofillHints="none"
                     android:singleLine="true"
                     android:nextFocusUp="@id/f_macchanger_phone_name_et"
-                    android:nextFocusLeft="@id/f_macchanger_phone_name_et"
-                    android:layout_toStartOf="@+id/f_macchanger_setHostname_btn" />
+                    android:nextFocusLeft="@id/f_macchanger_phone_name_et" />
 
                 <Button
                     style="?android:attr/buttonStyleSmall"
                     android:id="@+id/f_macchanger_setHostname_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Set Hostname"/>
+                    android:text="@string/macchanger_set_hostname"/>
             </LinearLayout>
 
             <TextView
@@ -126,7 +112,6 @@
                     android:layout_marginStart="5dp"
                     android:contentDescription="@string/reloadMAC"
                     app:srcCompat="@drawable/ic_action_refresh" />
-
             </LinearLayout>
 
             <TextView
@@ -155,96 +140,95 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal">
+                android:baselineAligned="false"
+                android:orientation="horizontal"
+                android:gravity="center_horizontal"
+                android:layout_gravity="center_horizontal">
 
-                <LinearLayout
-                    android:layout_width="0dp"
+                <EditText
+                    android:id="@+id/f_macchanger_mac1_et"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:orientation="horizontal"
-                    android:gravity="center"
-                    android:layout_weight="0.1">
+                    android:autofillHints="none"
+                    android:digits="0123456789abcdef"
+                    android:hint="@string/TwoMACDigits"
+                    android:inputType="textNoSuggestions"
+                    android:maxLength="2" />
 
-                    <EditText
-                        android:id="@+id/f_macchanger_mac1_et"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:digits="0123456789abcdef"
-                        android:hint="@string/TwoMACDigits"
-                        android:inputType="textNoSuggestions"
-                        android:maxLength="2" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/macSeparator" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/macSeparator" />
+                <EditText
+                    android:id="@+id/f_macchanger_mac2_et"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="none"
+                    android:digits="0123456789abcdef"
+                    android:hint="@string/TwoMACDigits"
+                    android:inputType="textNoSuggestions"
+                    android:maxLength="2" />
 
-                    <EditText
-                        android:id="@+id/f_macchanger_mac2_et"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:digits="0123456789abcdef"
-                        android:hint="@string/TwoMACDigits"
-                        android:inputType="textNoSuggestions"
-                        android:maxLength="2" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/macSeparator" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/macSeparator" />
+                <EditText
+                    android:id="@+id/f_macchanger_mac3_et"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="none"
+                    android:digits="0123456789abcdef"
+                    android:hint="@string/TwoMACDigits"
+                    android:inputType="textNoSuggestions"
+                    android:maxLength="2" />
 
-                    <EditText
-                        android:id="@+id/f_macchanger_mac3_et"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:digits="0123456789abcdef"
-                        android:hint="@string/TwoMACDigits"
-                        android:inputType="textNoSuggestions"
-                        android:maxLength="2" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/macSeparator" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/macSeparator" />
+                <EditText
+                    android:id="@+id/f_macchanger_mac4_et"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="none"
+                    android:digits="0123456789abcdef"
+                    android:hint="@string/TwoMACDigits"
+                    android:inputType="textNoSuggestions"
+                    android:maxLength="2" />
 
-                    <EditText
-                        android:id="@+id/f_macchanger_mac4_et"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:digits="0123456789abcdef"
-                        android:hint="@string/TwoMACDigits"
-                        android:inputType="textNoSuggestions"
-                        android:maxLength="2" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/macSeparator" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/macSeparator" />
+                <EditText
+                    android:id="@+id/f_macchanger_mac5_et"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="none"
+                    android:digits="0123456789abcdef"
+                    android:hint="@string/TwoMACDigits"
+                    android:inputType="textNoSuggestions"
+                    android:maxLength="2" />
 
-                    <EditText
-                        android:id="@+id/f_macchanger_mac5_et"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:digits="0123456789abcdef"
-                        android:hint="@string/TwoMACDigits"
-                        android:inputType="textNoSuggestions"
-                        android:maxLength="2" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/macSeparator" />
 
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/macSeparator" />
-
-                    <EditText
-                        android:id="@+id/f_macchanger_mac6_et"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:digits="0123456789abcdef"
-                        android:hint="@string/TwoMACDigits"
-                        android:inputType="textNoSuggestions"
-                        android:maxLength="2" />
-                </LinearLayout>
-
+                <EditText
+                    android:id="@+id/f_macchanger_mac6_et"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="none"
+                    android:digits="0123456789abcdef"
+                    android:hint="@string/TwoMACDigits"
+                    android:inputType="textNoSuggestions"
+                    android:maxLength="2" />
             </LinearLayout>
 
             <LinearLayout
@@ -256,7 +240,7 @@
                     android:id="@+id/f_macchanger_regenerate_mac_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="GENERATE"
+                    android:text="@string/macchanger_generate"
                     android:visibility="gone"
                     android:layout_weight="1" />
 
@@ -264,10 +248,9 @@
                     android:id="@+id/f_macchanger_clear_mac_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="CLEAR"
+                    android:text="@string/macchanger_clear"
                     android:visibility="gone"
                     android:layout_weight="1" />
-
             </LinearLayout>
 
             <Button
@@ -282,7 +265,5 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"/>
         </LinearLayout>
-
     </androidx.core.widget.NestedScrollView>
-
 </LinearLayout>

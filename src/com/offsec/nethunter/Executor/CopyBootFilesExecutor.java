@@ -1,16 +1,20 @@
-package com.offsec.nethunter.AsyncTask;
+package com.offsec.nethunter.Executor;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.res.AssetManager;
-import android.os.AsyncTask;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.offsec.nethunter.AppNavHomeActivity;
 import com.offsec.nethunter.BuildConfig;
+import com.offsec.nethunter.R;
 import com.offsec.nethunter.utils.CheckForRoot;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.SharePrefTag;
@@ -26,123 +30,156 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-
-public class CopyBootFilesAsyncTask extends AsyncTask<String, String, String>{
-    public static final String TAG = "CopyBootFilesAsyncTask";
+public class CopyBootFilesExecutor {
+    public static final String TAG = "CopyBootFilesExecutor";
     private final File sdCardDir;
     private final File scriptsDir;
     private final File etcDir;
     private final String buildTime;
     private Boolean shouldRun;
     private final WeakReference<ProgressDialog> progressDialogRef;
-    private CopyBootFilesAsyncTaskListener listener;
+    private CopyBootFilesExecutorListener listener;
     private static final String result = "";
     private final SharedPreferences prefs;
     private final ShellExecuter exe = new ShellExecuter();
     private final WeakReference<Context> context;
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
 
-    public CopyBootFilesAsyncTask(Context context, Activity activity, ProgressDialog progressDialog){
+    public CopyBootFilesExecutor(Context context, Activity activity, ProgressDialog progressDialog) {
         this.context = new WeakReference<>(context);
         this.progressDialogRef = new WeakReference<>(progressDialog);
         this.sdCardDir = new File(NhPaths.APP_SD_FILES_PATH);
         this.scriptsDir = new File(NhPaths.APP_SCRIPTS_PATH);
         this.etcDir = new File(NhPaths.APP_INITD_PATH);
         this.prefs = context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd KK:mm:ss a zzz",
-                Locale.US);
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd KK:mm:ss a zzz", Locale.US);
         this.buildTime = sdf.format(BuildConfig.BUILD_TIME);
         this.shouldRun = true;
     }
 
-    @Override
-    protected void onPreExecute() {
-        // Check if it is a new build and inflates the nethunter files again if yes.
-        // Added versionCode tag to shareprefence to check if the versionCode is different from previous install, this fix the new updated installation not copying files.
-        if (prefs.getInt(SharePrefTag.VERSION_CODE_TAG, 0) != BuildConfig.VERSION_CODE || !prefs.getString(TAG, buildTime).equals(buildTime) || !sdCardDir.isDirectory() || !scriptsDir.isDirectory() || !etcDir.isDirectory()) {
+    public void execute() {
+        mainHandler.post(this::onPreExecute);
+        executorService.submit(() -> {
+            String result = doInBackground();
+            mainHandler.post(() -> onPostExecute(result));
+        });
+    }
+
+    private void onPreExecute() {
+        if (prefs.getInt(SharePrefTag.VERSION_CODE_TAG, 0) != BuildConfig.VERSION_CODE ||
+                !prefs.getString(TAG, buildTime).equals(buildTime) ||
+                !sdCardDir.isDirectory() ||
+                !scriptsDir.isDirectory() ||
+                !etcDir.isDirectory()) {
             Log.d(TAG, "COPYING NEW FILES");
-            ProgressDialog progressDialog = progressDialogRef.get();
-            progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-            progressDialog.setTitle("New app build detected:");
-            progressDialog.setMessage("Coping new files...");
-            progressDialog.setCancelable(false);
-            progressDialog.show();
+            AlertDialog progressDialog = progressDialogRef.get();
+            if (progressDialog != null) {
+                TextView titleView = progressDialog.findViewById(R.id.progress_title);
+                TextView messageView = progressDialog.findViewById(R.id.progress_message);
+                if (titleView != null) {
+                    titleView.setText("New app build detected:");
+                }
+                if (messageView != null) {
+                    messageView.setText("Copying new files...");
+                }
+                progressDialog.setCancelable(false);
+                progressDialog.show();
+            }
         } else {
             Log.d(TAG, "FILES NOT COPIED");
             shouldRun = false;
         }
-        super.onPreExecute();
         if (listener != null) {
-            listener.onAsyncTaskPrepare();
+            listener.onPrepare();
         }
     }
 
-    @Override
-    protected String doInBackground(String ...strings) {
-        // setup
+    private String doInBackground() {
         if (shouldRun) {
             if (!CheckForRoot.isRoot()) {
                 prefs.edit().putBoolean(AppNavHomeActivity.CHROOT_INSTALLED_TAG, false).apply();
                 return "Root permission is required!!";
             }
             Log.d(TAG, "COPYING FILES....");
-            // 1:1 copy (recursive) of the assets/{scripts, etc, wallpapers} folders to /data/data/...
-            publishProgress("Doing app files update. (init.d and filesDir).");
+            updateProgress("Doing app files update. (init.d and filesDir).");
             assetsToFiles(NhPaths.APP_PATH, "", "data");
-            // 1:1 copy (recursive) of the configs to  /sdcard...
-            publishProgress("Doing sdcard files update. (nh_files).");
+            updateProgress("Doing sdcard files update. (nh_files).");
             assetsToFiles(NhPaths.SD_PATH, "", "sdcard");
-            publishProgress("Fixing permissions for new files");
+            updateProgress("Fixing permissions for new files");
             exe.RunAsRoot(new String[]{"chmod -R 700 " + NhPaths.APP_SCRIPTS_PATH + "/*", "chmod -R 700 " + NhPaths.APP_INITD_PATH + "/*"});
-            publishProgress("Checking for encrypted /data....");
+            updateProgress("Checking for encrypted /data....");
             CheckEncrypted();
-            publishProgress("Checking for bootkali symlinks....");
+            updateProgress("Checking for bootkali symlinks....");
             Symlink("bootkali");
             Symlink("bootkali_bash");
             Symlink("bootkali_init");
             Symlink("bootkali_login");
-	    Symlink("killkali");
-            // disable the magisk notification for nethunter app as it will keep popping up bunch of toast message when executing runtime command.
+            Symlink("killkali");
             disableMagiskNotification();
             SharedPreferences.Editor ed = prefs.edit();
             ed.putString(TAG, buildTime);
             ed.putInt(SharePrefTag.VERSION_CODE_TAG, BuildConfig.VERSION_CODE);
             ed.apply();
-
-            publishProgress("Checking for chroot....");
-            String command = "if [ -d " + NhPaths.CHROOT_PATH() + " ];then echo 1; fi"; //check the dir existence
+            updateProgress("Checking for chroot....");
+            String command = "if [ -d " + NhPaths.CHROOT_PATH() + " ];then echo 1; fi";
             final String _res = exe.RunAsRootOutput(command);
             if (_res.equals("1")) {
-                ed = prefs.edit();
-                ed.putBoolean(AppNavHomeActivity.CHROOT_INSTALLED_TAG, true);
-                ed.apply();
-                publishProgress("Chroot Found!");
-
-                // Mount suid /data && fix sudo - this is definitely needed as of 02/2020, Re4son
-                publishProgress(exe.RunAsRootOutput(NhPaths.BUSYBOX + " mount -o remount,suid /data && chmod +s " +
+                ed.putBoolean(AppNavHomeActivity.CHROOT_INSTALLED_TAG, true).apply();
+                updateProgress("Chroot Found!");
+                updateProgress(exe.RunAsRootOutput(NhPaths.BUSYBOX + " mount -o remount,suid /data && chmod +s " +
                         NhPaths.CHROOT_PATH() + "/usr/bin/sudo" +
                         " && echo \"Initial setup done!\""));
             } else {
-                publishProgress("Chroot not Found, install it in Chroot Manager");
+                updateProgress("Chroot not Found, install it in Chroot Manager");
             }
-
-            // This is required to install the additional apks in Android Oreo and newer
-            // We can no longer install user apps through TWRP so we copy them across and install them here
-            // Get the list of *.apk files in /sdcard/nh_files/cache/apk and install them using "pm install"
-            publishProgress("Installing additional apps....");
-            String ApkCachePath= NhPaths.APP_SD_FILES_PATH + "/cache/apk/";
+            updateProgress("Installing additional apps....");
+            String ApkCachePath = NhPaths.APP_SD_FILES_PATH + "/cache/apk/";
             ArrayList<String> filenames = FetchFiles(ApkCachePath);
-
-            for (String object: filenames) {
-                if (object.contains(".apk")){
+            for (String object : filenames) {
+                if (object.contains(".apk")) {
                     String apk = ApkCachePath + object;
-                    //publishProgress("Installing additional apps.\nThe device may be unresponsive for a few minutes\nInstalling " + object);
                     ShellExecuter install = new ShellExecuter();
                     install.RunAsRoot(new String[]{"mv " + apk + " /data/local/tmp/ && pm install /data/local/tmp/" + object + " && rm -f /data/local/tmp/" + object});
                 }
             }
         }
-        return result;
+        return "";
+    }
+
+    private void onPostExecute(String result) {
+        ProgressDialog progressDialog = progressDialogRef.get();
+        if (progressDialog != null) {
+            progressDialog.dismiss();
+        }
+        if (listener != null) {
+            listener.onFinished(result);
+        }
+    }
+
+    private void updateProgress(String message) {
+        mainHandler.post(() -> {
+            AlertDialog progressDialog = progressDialogRef.get();
+            if (progressDialog != null) {
+                TextView progressMessage = progressDialog.findViewById(R.id.progress_message);
+                if (progressMessage != null) {
+                    progressMessage.setText(message);
+                }
+            }
+        });
+    }
+
+    public void setListener(CopyBootFilesExecutorListener listener) {
+        this.listener = listener;
+    }
+
+    public interface CopyBootFilesExecutorListener {
+        void onPrepare();
+
+        void onFinished(String result);
     }
 
     private Boolean pathIsAllowed(String path, String copyType) {
@@ -183,12 +220,12 @@ public class CopyBootFilesAsyncTask extends AsyncTask<String, String, String>{
 
                 File dir = new File(fullPath);
                 if (!dir.exists() && pathIsAllowed(path, copyType) && !dir.mkdirs()) {
-                        ShellExecuter create = new ShellExecuter();
-                        create.RunAsRoot(new String[]{"mkdir " + fullPath});
-                        if (!dir.exists()) {
-                            Log.i(TAG, "could not create dir " + fullPath);
-                        }
+                    ShellExecuter create = new ShellExecuter();
+                    create.RunAsRoot(new String[]{"mkdir " + fullPath});
+                    if (!dir.exists()) {
+                        Log.i(TAG, "could not create dir " + fullPath);
                     }
+                }
 
                 for (String asset : assets) {
                     String p;
@@ -209,7 +246,7 @@ public class CopyBootFilesAsyncTask extends AsyncTask<String, String, String>{
     }
 
     private void copyFile(String TARGET_BASE_PATH, String filename) {
-        if (filename.matches("^.*/kaliservices$|^.*/runonboot_services$")){
+        if (filename.matches("^.*/kaliservices$|^.*/runonboot_services$")) {
             return;
         }
         AssetManager assetManager = context.get().getAssets();
@@ -242,7 +279,7 @@ public class CopyBootFilesAsyncTask extends AsyncTask<String, String, String>{
     }
 
     // Check for symlink for bootkali
-    // http://stackoverflow.com/questions/813710/java-1-6-determine-symbolic-links/813730#813730
+    // https://stackoverflow.com/questions/813710/java-1-6-determine-symbolic-links/813730#813730
     private boolean isSymlink(File file) throws IOException {
         if (file == null)
             throw new NullPointerException("File must not be null");
@@ -278,9 +315,9 @@ public class CopyBootFilesAsyncTask extends AsyncTask<String, String, String>{
         }
     }
 
-    private void Symlink(String filename){
+    private void Symlink(String filename) {
         File checkfile = new File("/system/bin/" + filename);
-        Log.d (TAG, "Checking for " + filename + " symlink....");
+        Log.d(TAG, "Checking for " + filename + " symlink....");
         if (!checkfile.exists()) {
             Log.d(TAG, "Symlinking " + filename);
             Log.d(TAG, "command output: ln -s " + NhPaths.APP_SCRIPTS_PATH + "/" + filename + " /system/bin/" + filename);
@@ -315,7 +352,7 @@ public class CopyBootFilesAsyncTask extends AsyncTask<String, String, String>{
     // This rename the filename which suffix is either [name]-arm64 or [name]-armhf to [name] according to the user's CPU ABI.
     private String renameAssetIfneeded(String asset) {
         String cpuAbi;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
             cpuAbi = Build.SUPPORTED_ABIS[0];
         } else {
             cpuAbi = Build.CPU_ABI;
@@ -332,9 +369,9 @@ public class CopyBootFilesAsyncTask extends AsyncTask<String, String, String>{
         return asset;
     }
 
-    private void disableMagiskNotification(){
+    private void disableMagiskNotification() {
         if (exe.RunAsRootReturnValue("[ -f " + NhPaths.MAGISK_DB_PATH + " ]") == 0) {
-            Log.d(TAG, "Disabling magisk notifcication and log for nethunter app.");
+            Log.d(TAG, "Disabling magisk notification and log for nethunter app.");
             if (exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_BIN_PATH +
                     "/sqlite3 " + NhPaths.MAGISK_DB_PATH + " \"SELECT * from policies\" | grep " +
                     BuildConfig.APPLICATION_ID).startsWith(BuildConfig.APPLICATION_ID)) {
@@ -348,31 +385,5 @@ public class CopyBootFilesAsyncTask extends AsyncTask<String, String, String>{
                         BuildConfig.APPLICATION_ID + ")';\"");
             }
         }
-    }
-
-    @Override
-    protected void onProgressUpdate(String... progress) {
-        super.onProgressUpdate(progress);
-        if (progressDialogRef.get() != null)
-            progressDialogRef.get().setMessage(progress[0]);
-    }
-
-    @Override
-    protected void onPostExecute(String objects) {
-        super.onPostExecute(objects);
-        if (progressDialogRef.get() != null)
-            progressDialogRef.get().dismiss();
-        if (listener != null) {
-            listener.onAsyncTaskFinished(result);
-        }
-    }
-
-    public void setListener(CopyBootFilesAsyncTaskListener listener) {
-        this.listener = listener;
-    }
-
-    public interface CopyBootFilesAsyncTaskListener {
-        void onAsyncTaskPrepare();
-        void onAsyncTaskFinished(Object result);
     }
 }

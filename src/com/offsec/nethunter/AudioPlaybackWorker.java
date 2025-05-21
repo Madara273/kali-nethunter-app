@@ -21,27 +21,22 @@ import java.net.UnknownHostException;
 import com.offsec.nethunter.exception.AudioStoppedException;
 
 public class AudioPlaybackWorker implements Runnable {
-
     /** How often we try to receive per second. */
     private static final int LOOPS_PER_SECOND = 8;
-
     private final String host;
     private final int port;
     private final WakeLock wakeLock;
     private final Handler handler;
     private final Listener listener;
-
     private volatile boolean stopped = false;
     private volatile long headroomUsec = 125;
     private volatile long latencyUsec = 1000;
     private boolean waitingForBufferFill = true;
-
     private Throwable error;
     private Socket sock;
     private InputStream audioData;
     private AudioTrack audioTrack;
     private byte[] audioBuffer;
-
     private int numSkip;
     private int bufferPos;
     private int chunkSize;
@@ -85,7 +80,6 @@ public class AudioPlaybackWorker implements Runnable {
             boolean started = false;
             while (!stopped) {
                 wakeLock.acquire(1000);
-
                 manageBufferSize();
 
                 if (!waitingForBufferFill) {

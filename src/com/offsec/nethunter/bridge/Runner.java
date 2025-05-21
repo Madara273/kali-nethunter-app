@@ -7,10 +7,9 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import java.lang.ref.WeakReference;
 
-
 public class Runner extends AppCompatActivity{
   public static AppCompatActivity activity;
-  public static WeakReference<Context> context = null;
+  public static final WeakReference<Context> context = null;
 
   // Meant to be used in context
   public static void run_cmd(String cmd) {

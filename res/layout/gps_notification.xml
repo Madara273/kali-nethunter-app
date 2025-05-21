@@ -8,6 +8,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:baselineAligned="false"
         android:orientation="horizontal">
 
         <LinearLayout
@@ -27,7 +28,6 @@
                 android:id="@+id/gps_notification_latitude"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
-
         </LinearLayout>
 
         <LinearLayout
@@ -68,12 +68,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content" />
         </LinearLayout>
-
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:baselineAligned="false"
         android:orientation="horizontal">
 
         <LinearLayout
@@ -91,7 +91,7 @@
             <TextView
                 style="@style/TextAppearance.Compat.Notification"
                 android:id="@+id/gps_notification_source"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1" />
         </LinearLayout>
@@ -111,7 +111,7 @@
             <TextView
                 style="@style/TextAppearance.Compat.Notification"
                 android:id="@+id/gps_notification_age"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1" />
         </LinearLayout>
@@ -131,12 +131,9 @@
             <TextView
                 style="@style/TextAppearance.Compat.Notification"
                 android:id="@+id/gps_notification_sats"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1" />
-
         </LinearLayout>
-
     </LinearLayout>
-
 </LinearLayout>

@@ -21,8 +21,7 @@ if [ $# -eq 0 ]; then
     clear
 	$BUSYBOX chroot $MNT $CHROOT_EXEC -E PATH=$PATH su
 else
-	#APACHE
-
+	# APACHE
 	if [ "$1" == "apache" ] && [ "$2" == "start" ]; then
 		$BUSYBOX chroot $MNT sudo service apache2 start
 	fi
@@ -30,8 +29,7 @@ else
 		$BUSYBOX chroot $MNT sudo service apache2 stop
 	fi
 
-	#BEEF-XSS
-
+	# BEEF-XSS
 	if [ "$1" == "beef-xss" ] && [ "$2" == "start" ]; then
 		LANG=en_US.UTF-8 LANGUAGE=en_US.UTF-8 LC_ALL=en_US.UTF-8 $BUSYBOX chroot $MNT sudo service beef-xss start
 		sleep 35
@@ -41,8 +39,7 @@ else
 		$BUSYBOX chroot $MNT sudo service beef-xss stop
 	fi
 
-	#DHCP
-
+	# DHCP
 	if [ "$1" == "dhcp" ] && [ "$2" == "start" ]; then
 		$BUSYBOX chroot $MNT sudo service isc-dhcp-server start
 	fi
@@ -50,8 +47,7 @@ else
 		$BUSYBOX chroot $MNT sudo service isc-dhcp-server stop
 	fi
 
-	#DNSMASQ
-
+	# DNSMASQ
 	if [ "$1" == "dnsmasq" ] && [ "$2" == "start" ]; then
 		$BUSYBOX chroot $MNT service dnsmasq start
 	fi
@@ -286,24 +282,24 @@ else
 		$BUSYBOX chroot $MNT /usr/bin/dumpmifare.sh
 	fi
 
-	#APT-GET
-	#Example: bootkali apt-get install "package-name package2"
+	#APT
+	#Example: bootkali apt install "package-name package2"
 	#Packages don't have to be in quotes but it doesn't hurt
 	#Also, you can leave the packages blank and it'll just update/upgrade
 
-	if [ "$1" == "apt-get" ] && [ "$2" == "install" ]; then
+	if [ "$1" == "apt" ] && [ "$2" == "install" ]; then
 		echo -e "\e[32mHere we go!\n\nInstalling any new metapackages and update/upgrading.\n\nNote that you may be asked to interact during the installation of some packages.\n\n"
-		echo -e "kali-chroot$ /usr/bin/apt-get update\e[0m"
-		LANG=C PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin $BUSYBOX chroot $MNT /usr/bin/apt-get update
+		echo -e "kali-chroot$ /usr/bin/apt update\e[0m"
+		LANG=C PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin $BUSYBOX chroot $MNT /usr/bin/apt update
 		if [ -z ${var+x} ] || [ "$3" != "" ]; then
-			echo -e "\e[32mkali-chroot$ /usr/bin/apt-get -y install "$3"\e[0m"
-			LANG=C DEBIAN_FRONTEND=noninteractive PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin $BUSYBOX chroot $MNT /usr/bin/apt-get -y install "$3"
+			echo -e "\e[32mkali-chroot$ /usr/bin/apt -y install "$3"\e[0m"
+			LANG=C DEBIAN_FRONTEND=noninteractive PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin $BUSYBOX chroot $MNT /usr/bin/apt -y install "$3"
 		fi
-		echo -e "\e[32mkali-chroot$ /usr/bin/apt-get -y dist-upgrade\e[0m"
-		LANG=C DEBIAN_FRONTEND=noninteractive PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin $BUSYBOX chroot $MNT /usr/bin/apt-get -y dist-upgrade
-		LANG=C DEBIAN_FRONTEND=noninteractive PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin $BUSYBOX chroot $MNT /usr/bin/apt-get -y install "$3"
-		echo -e "\e[32mkali-chroot$ /usr/bin/apt-get -y dist-upgrade\e[0m"
-		LANG=C DEBIAN_FRONTEND=noninteractive PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin $BUSYBOX chroot $MNT /usr/bin/apt-get -y dist-upgrade
+		echo -e "\e[32mkali-chroot$ /usr/bin/apt -y dist-upgrade\e[0m"
+		LANG=C DEBIAN_FRONTEND=noninteractive PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin $BUSYBOX chroot $MNT /usr/bin/apt -y dist-upgrade
+		LANG=C DEBIAN_FRONTEND=noninteractive PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin $BUSYBOX chroot $MNT /usr/bin/apt -y install "$3"
+		echo -e "\e[32mkali-chroot$ /usr/bin/apt -y dist-upgrade\e[0m"
+		LANG=C DEBIAN_FRONTEND=noninteractive PATH=$PATH:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin $BUSYBOX chroot $MNT /usr/bin/apt -y dist-upgrade
 		echo -e "\e[32m"
 		printf "\n\nDone!\n\nPress the 'back' key to return to Nethunter.\n\nIf you noticed errors, press the up-arrow key (if your keyboard supports it) to review previously-issued commands.\n"
 		printf "And remember to use the 'Maintain Chroot' button in the Chroot Manager to keep your chroot up-to-date and to install new metapackages.\n\n"

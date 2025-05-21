@@ -3,7 +3,6 @@ package com.offsec.nethunter;
 import android.content.Context;
 import androidx.appcompat.widget.AppCompatButton;
 
-
 public class LauncherButton extends AppCompatButton {
     private long db_id;
     public LauncherButton(Context context) {

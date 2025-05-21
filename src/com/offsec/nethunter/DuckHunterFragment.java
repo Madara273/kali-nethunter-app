@@ -8,7 +8,9 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
+import android.os.Looper;
 import android.os.Parcelable;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -17,26 +19,33 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.offsec.nethunter.AsyncTask.DuckHuntAsyncTask;
+import com.offsec.nethunter.BtDuckyFragment;
+import com.offsec.nethunter.BuildConfig;
+import com.offsec.nethunter.R;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.SharePrefTag;
 import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.io.File;
 import java.util.HashMap;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentStatePagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
 public class DuckHunterFragment extends Fragment {
+    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private static SharedPreferences sharedpreferences;
     // Language vars
-    private static HashMap<String, String> map = new HashMap<>();
+    private static final HashMap<String, String> map = new HashMap<>();
     public static String lang = "us"; // Set US as default language
     private static String[] keyboardLayoutString;
     private static final String ARG_SECTION_NUMBER = "section_number";
@@ -49,8 +58,8 @@ public class DuckHunterFragment extends Fragment {
     private String duckyOutputFile;
     private boolean isReceiverRegistered;
     private boolean shouldconvert = true;
-    private DuckHuntBroadcastReceiver duckHuntBroadcastReceiver = new DuckHuntBroadcastReceiver();
-    private ShellExecuter exe = new ShellExecuter();
+    private final DuckHuntBroadcastReceiver duckHuntBroadcastReceiver = new DuckHuntBroadcastReceiver();
+    private final ShellExecuter exe = new ShellExecuter();
 
     public static DuckHunterFragment newInstance(int sectionNumber) {
         DuckHunterFragment fragment = new DuckHunterFragment();
@@ -100,11 +109,11 @@ public class DuckHunterFragment extends Fragment {
         mViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
             @Override
             public void onPageSelected(int position) {
-                if (position == 1){
+                if (position == 1) {
                     menu.findItem(R.id.duckConvertAttack).setVisible(true);
                     setLang();
                     if (shouldconvert)
-                        activity.sendBroadcast(new Intent().putExtra("ACTION", "WRITEDUCKY").setAction(BuildConfig.APPLICATION_ID + ".WRITEDUCKY"));
+                        activity.sendBroadcast(new Intent().putExtra("ACTION", "WRITEDUCKY").setAction(BuildConfig.APPLICATION_ID + ".WRITEDUCKY").setPackage(activity.getPackageName()));
                 } else
                     menu.findItem(R.id.duckConvertAttack).setVisible(false);
             }
@@ -112,8 +121,8 @@ public class DuckHunterFragment extends Fragment {
 
         sharedpreferences = activity.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
 
-        if (!sharedpreferences.contains("DuckHunterLanguageIndex")){
-            for (int i = 0; i < keyboardLayoutString.length; i++){
+        if (!sharedpreferences.contains("DuckHunterLanguageIndex")) {
+            for (int i = 0; i < keyboardLayoutString.length; i++) {
                 if ("us".equals(map.get(keyboardLayoutString[i]))) {
                     sharedpreferences.edit().putInt("DuckHunterLanguageIndex", i).apply();
                     break;
@@ -133,34 +142,35 @@ public class DuckHunterFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
-        DuckHuntAsyncTask duckHuntAsyncTask;
         switch (item.getItemId()) {
             case R.id.duckConvertAttack:
-                duckHuntAsyncTask = new DuckHuntAsyncTask(DuckHuntAsyncTask.ATTACK);
-                duckHuntAsyncTask.setListener(new DuckHuntAsyncTask.DuckHuntAsyncTaskListener(){
-                    @Override
-                    public void onAsyncTaskPrepare() {
-                        NhPaths.showMessage(context, "Launching Attack");
-                    }
+                // Pre-execution step
+                mainHandler.post(() -> NhPaths.showMessage(context, "Launching Attack"));
 
-                    @Override
-                    public void onAsyncTaskFinished(Object result) {
-                        if (!(boolean)result){
-                                if (new File("/config/usb_gadget/g1").exists())
-                                    NhPaths.showMessage_long(context,"HID interfaces are not enabled! Please enable in USB Arsenal.");
-                                else if (new File("/dev/hidg0").exists()) {
-                                    NhPaths.showMessage_long(context, "Fixing HID interface permissions..");
-                                    exe.RunAsRoot(new String[]{"chmod 666 /dev/hidg*"});
-                                }
-                                else NhPaths.showMessage_long(context,"HID interfaces are not patched or enabled, please check your kernel configuration.");
+                // Background task
+                executorService.execute(() -> {
+                    boolean result = exe.RunAsRootReturnValue("sh " + duckyOutputFile) == 0;
+
+                    // Post-execution step
+                    mainHandler.post(() -> {
+                        if (!result) {
+                            if (new File("/config/usb_gadget/g1").exists()) {
+                                NhPaths.showMessage_long(context, "HID interfaces are not enabled! Please enable in USB Arsenal.");
+                            } else if (new File("/dev/hidg0").exists()) {
+                                NhPaths.showMessage_long(context, "Fixing HID interface permissions..");
+                                exe.RunAsRoot(new String[]{"chmod 666 /dev/hidg*"});
+                            } else {
+                                NhPaths.showMessage_long(context, "HID interfaces are not patched or enabled, please check your kernel configuration.");
+                            }
                         }
-                    }
+                    });
                 });
-                duckHuntAsyncTask.execute("sh " + duckyOutputFile);
                 return true;
+
             case R.id.chooseLanguage:
                 openLanguageDialog();
                 return true;
+
             default:
                 return super.onOptionsItemSelected(item);
         }
@@ -170,7 +180,7 @@ public class DuckHunterFragment extends Fragment {
     public void onResume() {
         super.onResume();
         if (!isReceiverRegistered){
-            activity.registerReceiver(duckHuntBroadcastReceiver, new IntentFilter(BuildConfig.APPLICATION_ID + ".SHOULDCONVERT"));
+            ContextCompat.registerReceiver(activity, duckHuntBroadcastReceiver, new IntentFilter(BuildConfig.APPLICATION_ID + ".SHOULDCONVERT"), ContextCompat.RECEIVER_NOT_EXPORTED);
             isReceiverRegistered = true;
         }
     }
@@ -206,7 +216,9 @@ public class DuckHunterFragment extends Fragment {
                     return;
                 }
                 setLang();
-                activity.sendBroadcast(new Intent().putExtra("ACTION", "WRITEDUCKY").setAction(BuildConfig.APPLICATION_ID + ".WRITEDUCKY"));
+                activity.sendBroadcast(new Intent().putExtra("ACTION", "WRITEDUCKY")
+                        .setAction(BuildConfig.APPLICATION_ID + ".WRITEDUCKY")
+                        .setPackage(activity.getPackageName()));
             }
         });
         builder.setSingleChoiceItems(keyboardLayoutString, keyboardLayoutIndex, (dialog, which) -> {
@@ -219,11 +231,11 @@ public class DuckHunterFragment extends Fragment {
     }
 
     public class TabsPagerAdapter extends FragmentStatePagerAdapter {
-
         TabsPagerAdapter(FragmentManager fm) {
             super(fm);
         }
 
+        @NonNull
         @Override
         public Fragment getItem(int i) {
             switch (i) {
@@ -262,12 +274,9 @@ public class DuckHunterFragment extends Fragment {
     public class DuckHuntBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            switch (intent.getStringExtra("ACTION")){
-                case "SHOULDCONVERT":
-                    shouldconvert = intent.getBooleanExtra("SHOULDCONVERT", true);
-                    break;
+            if (Objects.equals(intent.getStringExtra("ACTION"), "SHOULDCONVERT")) {
+                shouldconvert = intent.getBooleanExtra("SHOULDCONVERT", true);
             }
         }
     }
 }
-

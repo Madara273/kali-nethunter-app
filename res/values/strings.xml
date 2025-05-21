@@ -27,7 +27,7 @@
     <string name="kaliservices_howto_runServiceOnBoot">To automatically start the service after Kali Chroot is up, check this option.</string>
 
     <!-- Modules -->
-    <string name="modules_description">Load drivers, if you have any enabled as modules. Most devices use all drivers as inbuilt. Alpha version.</string>
+    <string name="modules_description">Manage kernel modules, if your kernel has any supported. Most devices use all drivers as inbuilt. For information (modinfo) click and hold selected module for menu.</string>
 
     <!-- CustomCommands -->
     <string name="custom_commands_description">You can ADD, DELETE, MOVE, SEARCH, BACKUP, RESTORE and RESET your custom command item. You can also long click on the item label to EDIT the item.</string>
@@ -298,7 +298,7 @@
     <string name="drawertitlepineapple">Pineapple Connector</string>
     <string name="drawertitlegps">Wardriving</string>
     <string name="drawertitledeauth">DeAuth</string>
-    <string name="drawertitlecan">CAN Arsenal</string>
+    <string name="drawertitlecan">CARsenal</string>
     <string name="drawertitlesettings">Settings</string>
     <string name="drawertitlekernel">Kernel</string>
     <string name="drawertitlemodules">Modules</string>
@@ -554,7 +554,152 @@
     <string name="build_version">1.0</string>
     <string name="moduleInfo">Module Based on PulseDroid by dront78</string>
 
-    <!-- CAN -->
-    <string name="can_description">This module allow you to use CAN Bus with various tools. Kernel device should have CAN support enabled, for more information look at the documentation in the menu.</string>
+    <string name="duckhunter_conversion_failed">Conversion failed.</string>
 
+    <!-- AUDIO -->
+    <string name="audio_service_not_connected">Service not connected yet. Please wait.</string>
+    <string name="audio_serverinput">127.0.0.1</string>
+    <string name="audio_portinput">8000</string>
+    <string name="audio_service_not_bound">Service not bound. Please try again.</string>
+    <string name="error_title_empty">services_error_title_empty</string>
+
+    <!-- VNC -->
+    <string name="vnc_watch_status">Status:</string>
+    <string name="vnc_watch_sessions">Sessions:</string>
+    <string name="vnc_hide_advanced_settings">HIDE ADVANCED SETTINGS</string>
+    <string name="vnc_disable_audio">Disable audio</string>
+    <string name="vnc_enable_audio">Enable audio</string>
+    <string name="vnc_hide_advanced_settings2">HIDE ADVANCED SETTINGS</string>
+    <string name="vnc_show_advanced_settings">SHOW ADVANCED SETTINGS</string>
+    <string name="vnc_stopped">STOPPED</string>
+    <string name="vnc_kexuser_none">None</string>
+    <string name="vnc_running">RUNNING</string>
+    <string name="vnc_enable_audio2">Enable audio</string>
+    <string name="vnc_disable_audio2">Disable audio</string>
+
+    <!-- MACCHANGER -->
+    <string name="macchanger_generate">GENERATE</string>
+    <string name="macchanger_clear">CLEAR</string>
+    <string name="macchanger_set_hostname">Set Hostname</string>
+    <string name="macchanger_current_hostname">Current Hostname:</string>
+
+    <!-- SERVICES -->
+    <string name="kaliservices_full_path_save_db">Full path to where you want to save the database:</string>
+    <string name="kaliservices_full_path_restore_db">Full path of the db file from where you want to restore:</string>
+    <string name="service_servicename_start"><![CDATA[service <servicename> start]]></string>
+    <string name="service_servicename_stop"><![CDATA[service <servicename> stop]]></string>
+    <string name="service_servicename"><![CDATA[<servicename>]]></string>
+
+    <!-- BLUETOOTH (BT) -->
+    <string name="bt_interface">Interface</string>
+    <string name="bt_service">BT Service</string>
+    <string name="bt_smd">Bluetooth SMD</string>
+    <string name="bt_stopped">Stopped</string>
+    <string name="bt_start">Start</string>
+    <string name="bt_running">Running</string>
+    <string name="bt_stop">Stop</string>
+    <string name="bt_enabled">Enabled</string>
+    <string name="bt_disabled">Disabled</string>
+    <string name="bt_up">Up</string>
+    <string name="bt_down">Down</string>
+    <string name="bt_badbt_string_rickroll">https://www.youtube.com/watch?v=dQw4w9WgXcQ</string>
+    <string name="bt_badbt_string_fakeupdate">iexplore -k http://fakeupdate.net/win10ue</string>
+
+    <!-- WPS -->
+    <string name="wps_wireless_interface">Wireless interface:</string>
+    <string name="wps_scan">Scan</string>
+    <string name="wps_reset_interface">Reset interface</string>
+    <string name="wps_pixie_dust">Pixie Dust</string>
+    <string name="wps_pixie_force">Pixie Force</string>
+    <string name="wps_online_bruteforce">Online Bruteforce</string>
+    <string name="wps_custom_pin">Custom PIN</string>
+    <string name="wps_delay">Delay</string>
+    <string name="wps_wps_button">WPS Button</string>
+    <string name="wps_pin">PIN:</string>
+    <string name="wps_wpspin_hint">12345678</string>
+    <string name="wps_delay2">Delay:</string>
+    <string name="wps_delaytime_hint">1</string>
+    <string name="wps_seconds">seconds</string>
+    <string name="wps_launch_attack">Launch attack</string>
+
+    <!-- KERNEL -->
+    <string name="kernel_device_details">Device details</string>
+    <string name="kernel_device">Device:</string>
+    <string name="kernel_loading">Loading ..</string>
+    <string name="kernel_codename">Codename:</string>
+    <string name="kernel_android">Android:</string>
+    <string name="kernel_custom_codename">Custom codename</string>
+    <string name="kernel_device_codename">device_codename</string>
+    <string name="kernel_check">Check</string>
+    <string name="kernel_select_kernel_to_flash">Select kernel to flash</string>
+    <string name="kernel_kernel_nethunter_zip">/sdcard/kernel_nethunter.zip</string>
+    <string name="kernel_dots">...</string>
+    <string name="kernel_flash_kernel">Flash kernel</string>
+
+    <!-- CHROOTMGR -->
+    <string name="chrootmgr_download_latest">DOWNLOAD LATEST KALI CHROOT</string>
+    <string name="chrootmgr_install_from_local_storage">INSTALL FROM LOCAL STORAGE</string>
+
+    <!-- MODULES -->
+    <string name="modules_path">Modules path</string>
+    <string name="modules_system_lib_path">/system/lib/modules</string>
+    <string name="modules_lsmod">lsmod</string>
+    <string name="modules_refresh">Refresh</string>
+    <string name="modules_available_modules">Available modules</string>
+    <string-array name="sort_options">
+        <item>Alphabetical</item>
+        <item>Reverse Alphabetical</item>
+    </string-array>
+
+    <!-- USB ARSENAL -->
+    <string name="usbarsenal_full_db_path_save">Full path to where you want to save the database:</string>
+    <string name="usbarsenal_full_db_path_restore">Full path of the db file from where you want to restore:</string>
+    <string name="usbarsenal_no_usb_function_enabled">No USB function has been enabled</string>
+    <string name="usbarsenal_no_image_mounted">No image is mounted.</string>
+    <string name="usbarsenal_linux_file_cd_store_gadget">Linux File-CD/Stor gadget (kernel default)</string>
+
+    <!-- SETTINGS -->
+    <string name="settings_bootanimation_path">Bootanimation path not found</string>
+    <string name="settings_set_enforcing">Set to Enforcing</string>
+    <string name="settings_selinux_disabled">SELinux is Disabled</string>
+    <string name="settings_selinux_permissive">Set to Permissive</string>
+    <string name="settings_enforcing">Enforcing</string>
+    <string name="settings_permissive">Permissive</string>
+
+    <!-- GPS -->
+    <string name="gps_permissions">gps_permissions</string>
+
+    <!-- WIFI PUMPKIN3 -->
+    <string name="wp3_supported">Supported</string>
+    <string name="wp3_not_supported">Not supported</string>
+
+    <!-- NETHUNTER FRAGMENT / APPNAVHOME -->
+    <string name="nethunter_full_path_save_db">Full path to where you want to save the database:</string>
+    <string name="nethunter_full_path_db_restore">Full path of the db file from where you want to restore:</string>
+
+    <!-- CARsenal -->
+    <string name="can_description">This module allow you to use CAN Bus with various tools. Kernel device should have CAN support enabled, for more information look at the documentation in the menu.</string>
+    <string name="can_tools_desc">Unleash the power of can-utils suite by managing logs and Generate, Dump, Sniff or Replay signals! You may also run car diagnosis using Freediag and transfert CAN frames between two machines using Cannelloni tool!</string>
+    <string name="can_canusb_desc">Use your CAN Analyzer USB by Dumping and Sending signals using usb-can tool!</string>
+    <string name="can_caribou_desc">A friendly automotive security exploration tool.</string>
+    <string name="can_icsim_desc">Instrument Cluster Simulator for SocketCAN</string>
+    <string name="can_app_name">MyApp</string>
+    <string name="can_settings">Settings</string>
+    <string name="can_refresh_button">Refresh</string>
+    <!-- CARsenal About menu -->
+    <string name="about_author">
+        ABOUT:\n\n
+        Found a bug? A suggestion? Follow me on my networks and let me know!\n\n
+        https://linktr.ee/v0lk3n\n\n
+        CREDITS:\n\n
+        Made with ♥ by V0lk3n\n\n
+        - Fenugrec! For freediag tool.\nhttps://github.com/fenugrec\n\n
+        - Kobolt! For can-usb.\nhttps://github.com/kobolt\n\n
+        - Alexmohr! For can-usb fork.\nhttps://github.com/alexmohr\n\n
+        - Linux-Can! For can-utils and socketcand.\nhttps://github.com/linux-can\n\n
+        - Mguentner! For cannelloni.\nhttps://github.com/mguentner\n\n
+        - CaringCaribou!\nhttps://github.com/CaringCaribou\n\n
+        - zombieCraig! For ICSim tool.\nhttps://github.com/zombieCraig\n\n
+        - idlesign! For VIN Info tool.\nhttps://github.com/idlesign\n\n
+    </string>
 </resources>

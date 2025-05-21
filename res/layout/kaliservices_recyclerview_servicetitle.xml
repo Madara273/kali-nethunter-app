@@ -52,12 +52,14 @@
             android:text="Service is NOT running."
             android:layout_weight="0.35"
             android:layout_marginStart="12dp"/>
+
         <CheckBox
             android:id="@+id/f_kaliservices_recyclerview_runonchrootstart_checkbox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_weight="0.35"
             android:text="RunOnChrootStart"/>
+
         <androidx.appcompat.widget.SwitchCompat
             android:id="@+id/f_kaliservices_recyclerview_switch_toggle"
             android:layout_width="match_parent"

@@ -39,12 +39,11 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.viewpager.widget.ViewPager;
 
-
 public class HidFragment extends Fragment {
     private ViewPager mViewPager;
     private SharedPreferences sharedpreferences;
     private final CharSequence[] platforms = {"No UAC Bypass", "Windows 7", "Windows 8", "Windows 10"};
-    private final CharSequence[] languages = {"American English", "Belgian", "British English", "Danish", "French", "German", "Italian", "Norwegian", "Portugese", "Russian", "Spanish", "Swedish", "Canadian Multilingual", "Canadian", "Hungarian"};
+    private final CharSequence[] languages = {"American English", "Belgian", "British English", "Danish", "French", "German", "Italian", "Norwegian", "Portuguese", "Russian", "Spanish", "Swedish", "Canadian Multilingual", "Canadian", "Hungarian"};
     private String configFilePath;
     private Context context;
     private Activity activity;
@@ -283,7 +282,7 @@ public class HidFragment extends Fragment {
     }
 
     public static class TabsPagerAdapter extends FragmentPagerAdapter {
-        TabsPagerAdapter(FragmentManager fm) {
+        public TabsPagerAdapter(FragmentManager fm) {
             super(fm);
         }
 
@@ -419,7 +418,9 @@ public class HidFragment extends Fragment {
 
                     if (matcherPayload.find()) {
                         String payloadValue = matcherPayload.group(1);
-                        ArrayAdapter myAdap = (ArrayAdapter) payload.getAdapter();
+                        @SuppressWarnings("unchecked")
+                        ArrayAdapter<String> myAdap = (ArrayAdapter<String>) payload.getAdapter();
+                        myAdap.getPosition(payloadValue);
                         int spinnerPosition;
                         spinnerPosition = myAdap.getPosition(payloadValue);
                         payload.setSelection(spinnerPosition);
