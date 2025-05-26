@@ -26,6 +26,7 @@
                 android:id="@+id/divider2"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
+                android:layout_marginTop="10dp"
                 android:layout_marginBottom="10dp"
                 android:background="?android:attr/listDivider" />
 
@@ -142,7 +143,6 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginBottom="8dp"
                         android:text="Level"
                         android:textAppearance="?android:attr/textAppearanceSmall"
                         android:textColor="@android:color/holo_red_light"
@@ -154,6 +154,7 @@
                     android:id="@+id/level_spinner"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="8dp"
                     android:dropDownWidth="wrap_content"
                     android:visibility="gone"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
@@ -168,7 +169,7 @@
             <WebView
                 android:id="@+id/controls"
                 android:layout_width="match_parent"
-                android:layout_height="200dp" />
+                android:layout_height="260dp" />
 
         </LinearLayout>
     </ScrollView>
