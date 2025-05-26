@@ -189,9 +189,9 @@ public class CANFragment extends Fragment {
         setupCommand += checkAndInstall("hlcand", "/usr/local/bin/hlcand", "/opt/car_hacking/usb-can-2", "cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/usb-can-2.git; cd /opt/car_hacking/usb-can-2; sudo ./build.sh; cp -f src/hlcand /usr/local/bin/hlcand;");
         setupCommand += checkAndInstall("CaringCaribou", "/usr/local/bin/caringcaribou", "/opt/car_hacking/caringcaribou", "cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/caringcaribou.git; cd /opt/car_hacking/caringcaribou; sudo python setup.py install;");
         setupCommand += checkAndInstall("noVNC", "/opt/noVNC/utils/novnc_proxy", "/opt/noVNC", "cd /opt; sudo git clone https://github.com/novnc/noVNC.git;");
-        setupCommand += checkAndInstall("ICSIM", "/opt/car_hacking/ICSim/builddir/icsim", "/opt/car_hacking/ICSim", "cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/ICSim.git; cd /opt/car_hacking/ICSim; sudo cp /opt/car_hacking/can-utils/lib.o .; sudo meson setup builddir && cd builddir && sudo meson compile; cd /opt/car_hacking; wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CarArsenal/refs/heads/main/icsim_start.sh; wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CarArsenal/refs/heads/main/icsim_stop.sh; sudo chmod +x /opt/car_hacking/icsim_start.sh; sudo chmod +x /opt/car_hacking/icsim_stop.sh;");
-        setupCommand += checkAndInstall("sequence_finder.sh", "/opt/car_hacking/sequence_finder.sh", "/opt/car_hacking", "cd /opt/car_hacking && sudo wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CarArsenal/refs/heads/main/sequence_finder.sh; sudo chmod +x /opt/car_hacking/sequence_finder.sh;");
-        setupCommand += checkAndInstall("can_reset.sh", "/opt/car_hacking/can_reset.sh", "/opt/car_hacking", "cd /opt/car_hacking && wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CarArsenal/refs/heads/main/can_reset.sh; sudo chmod +x /opt/car_hacking/can_reset.sh;");
+        setupCommand += checkAndInstall("ICSIM", "/opt/car_hacking/ICSim/builddir/icsim", "/opt/car_hacking/ICSim", "cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/ICSim.git; cd /opt/car_hacking/ICSim; sudo cp /opt/car_hacking/can-utils/lib.o .; sudo meson setup builddir && cd builddir && sudo meson compile; cd /opt/car_hacking; wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/icsim_start.sh; wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/icsim_stop.sh; sudo chmod +x /opt/car_hacking/icsim_start.sh; sudo chmod +x /opt/car_hacking/icsim_stop.sh;");
+        setupCommand += checkAndInstall("sequence_finder.sh", "/opt/car_hacking/sequence_finder.sh", "/opt/car_hacking", "cd /opt/car_hacking && sudo wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/sequence_finder.sh; sudo chmod +x /opt/car_hacking/sequence_finder.sh;");
+        setupCommand += checkAndInstall("can_reset.sh", "/opt/car_hacking/can_reset.sh", "/opt/car_hacking", "cd /opt/car_hacking && wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/can_reset.sh; sudo chmod +x /opt/car_hacking/can_reset.sh;");
         setupCommand += checkAndInstall("VinInfo", "/opt/car_hacking/car_venv/bin/vininfo", "/opt/car_hacking/car_venv", "sudo python3 -m venv /opt/car_hacking/car_venv; /opt/car_hacking/car_venv/bin/pip install vininfo[cli];");
         setupCommand += "echo '\\nSetup done!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit";
 
@@ -219,9 +219,9 @@ public class CANFragment extends Fragment {
         updateCommand += checkAndUpdate("hlcand", "/usr/local/bin/hlcand", "/opt/car_hacking/usb-can-2", "cd /opt/car_hacking/usb-can-2 && old=$(git rev-parse HEAD) && sudo git pull && new=$(git rev-parse HEAD) && [ \"$old\" != \"$new\" ] && { echo \"Update detected! Updating...\" && sudo ./build.sh; sudo cp -f src/hlcand /usr/local/bin/hlcand };");
         updateCommand += checkAndUpdate("CaringCaribou", "/usr/local/bin/caringcaribou", "/opt/car_hacking/caringcaribou", "cd /opt/car_hacking/caringcaribou && old=$(git rev-parse HEAD) && sudo git pull && new=$(git rev-parse HEAD) && [ \"$old\" != \"$new\" ] && { echo \"Update detected! Updating...\" && sudo python setup.py install };");
         updateCommand += checkAndUpdate("noVNC", "/opt/noVNC/utils/novnc_proxy", "/opt/noVNC", "cd /opt/noVNC && sudo git pull;");
-        updateCommand += checkAndUpdate("ICSIM", "/opt/car_hacking/ICSim/builddir/icsim", "/opt/car_hacking/ICSim", "cd /opt/car_hacking/ICSim && old=$(git rev-parse HEAD) && sudo git pull && new=$(git rev-parse HEAD) && [ \"$old\" != \"$new\" ] && { echo \"Update detected! Updating...\" && sudo meson setup builddir && sudo cp /opt/car_hacking/can-utils/lib.o . && cd builddir && sudo meson compile }; cd /opt/car_hacking; sudo rm icsim_start.sh; rm icsim_stop.sh; sudo wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CarArsenal/refs/heads/main/icsim_start.sh; sudo wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CarArsenal/refs/heads/main/icsim_stop.sh; sudo chmod +x /opt/car_hacking/icsim_start.sh; sudo chmod +x /opt/car_hacking/icsim_stop.sh;");
-        updateCommand += checkAndUpdate("can_reset.sh", "/opt/car_hacking/can_reset.sh", "/opt/car_hacking", "cd /opt/car_hacking && sudo rm can_reset.sh && wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CarArsenal/refs/heads/main/can_reset.sh; sudo chmod +x /opt/car_hacking/can_reset.sh;");
-        updateCommand += checkAndUpdate("sequence_finder.sh", "/opt/car_hacking/sequence_finder.sh", "/opt/car_hacking", "cd /opt/car_hacking && sudo rm sequence_finder.sh && wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CarArsenal/refs/heads/main/sequence_finder.sh; sudo chmod +x /opt/car_hacking/sequence_finder.sh;");
+        updateCommand += checkAndUpdate("ICSIM", "/opt/car_hacking/ICSim/builddir/icsim", "/opt/car_hacking/ICSim", "cd /opt/car_hacking/ICSim && old=$(git rev-parse HEAD) && sudo git pull && new=$(git rev-parse HEAD) && [ \"$old\" != \"$new\" ] && { echo \"Update detected! Updating...\" && sudo meson setup builddir && sudo cp /opt/car_hacking/can-utils/lib.o . && cd builddir && sudo meson compile }; cd /opt/car_hacking; sudo rm icsim_start.sh; rm icsim_stop.sh; sudo wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/icsim_start.sh; sudo wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/icsim_stop.sh; sudo chmod +x /opt/car_hacking/icsim_start.sh; sudo chmod +x /opt/car_hacking/icsim_stop.sh;");
+        updateCommand += checkAndUpdate("can_reset.sh", "/opt/car_hacking/can_reset.sh", "/opt/car_hacking", "cd /opt/car_hacking && sudo rm can_reset.sh && wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/can_reset.sh; sudo chmod +x /opt/car_hacking/can_reset.sh;");
+        updateCommand += checkAndUpdate("sequence_finder.sh", "/opt/car_hacking/sequence_finder.sh", "/opt/car_hacking", "cd /opt/car_hacking && sudo rm sequence_finder.sh && wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/sequence_finder.sh; sudo chmod +x /opt/car_hacking/sequence_finder.sh;");
         updateCommand += checkAndUpdate("VinInfo", "/opt/car_hacking/car_venv/bin/vininfo", "/opt/car_hacking/car_venv", "sudo python3 -m venv /opt/car_hacking/car_venv; /opt/car_hacking/car_venv/bin/pip install vininfo[cli];");
         updateCommand += "echo '\\nEverything is updated! Closing in 3secs..'; sleep 3 && exit";
 
@@ -1979,6 +1979,7 @@ public class CANFragment extends Fragment {
 
     public static class CANICSIMFragment extends CANFragment {
         final ShellExecuter exe = new ShellExecuter();
+        private boolean isRandomizeEnabled = false;
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private static final String ICSIM_START_SCRIPT_PATH = "/opt/car_hacking/icsim_start.sh";
         private static final String ICSIM_STOP_SCRIPT_PATH = "/opt/car_hacking/icsim_stop.sh";
@@ -2053,6 +2054,51 @@ public class CANFragment extends Fragment {
                 });
             });
 
+            // Level Spinner
+            final Spinner levelList = rootView.findViewById(R.id.level_spinner);
+            // 0 = No randomization added to the packets other than location and ID
+            // 1 = Add NULL padding
+            // 2 = Randomize unused bytes
+            final String[] levelOptions = {"Level", "0", "1", "2"};
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, levelOptions) {
+                @Override
+                public boolean isEnabled(int position) {
+                    // Disable "Level" item
+                    return position != 0;
+                }
+
+                @Override
+                public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                    View view = super.getDropDownView(position, convertView, parent);
+                    TextView tv = (TextView) view;
+                    if (position == 0) {
+                        tv.setTextColor(Color.GRAY);  // Hint text color
+                    } else {
+                        tv.setTextColor(Color.WHITE); // Normal text
+                    }
+                    return view;
+                }
+            };
+
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            levelList.setAdapter(adapter);
+            levelList.setSelection(0);  // Set initial selection to "Level"
+
+            levelList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                    if (pos != 0) { // Ignore "Mode" hint
+                        String level_selected = parentView.getItemAtPosition(pos).toString();
+                        sharedpreferences.edit().putString("level_selected", level_selected).apply();
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parentView) {
+                }
+            });
+
             // Refresh Status
             ImageButton RefreshUSB = rootView.findViewById(R.id.refreshUSB);
             RefreshUSB.setOnClickListener(v -> {
@@ -2061,29 +2107,54 @@ public class CANFragment extends Fragment {
             });
             executorService.submit(() -> refresh(rootView));
 
-            // ICSIM WebView
-            WebView webView = rootView.findViewById(R.id.icsim);
-            WebSettings webSettings = webView.getSettings();
-            webSettings.setJavaScriptEnabled(true);
-            webSettings.setDomStorageEnabled(true);
+            // Randomize
+            // Button btnRandomize = rootView.findViewById(R.id.btn_toggle_randomize);
 
-            webSettings.setLoadWithOverviewMode(true);
-            webSettings.setUseWideViewPort(true);
-            webSettings.setBuiltInZoomControls(true);
-            webSettings.setDisplayZoomControls(false);
+            // btnRandomize.setOnClickListener(v -> {
+            //     isRandomizeEnabled = !isRandomizeEnabled;
 
-            webView.setWebViewClient(new WebViewClient());
+            //     int color = isRandomizeEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
+            //     btnRandomize.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
+            // });
+
+            // Level
+            Button btnLevel = rootView.findViewById(R.id.btn_toggle_level);
+
+            btnLevel.setOnClickListener(v -> {
+                boolean visible = levelList.getVisibility() == View.VISIBLE;
+                levelList.setVisibility(visible ? View.GONE : View.VISIBLE);
+
+                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
+                btnLevel.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
+            });
 
             // ICSIM
             Button runICSIM = rootView.findViewById(R.id.run_icsim);
             runICSIM.setOnClickListener(v -> {
                 if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
-                    run_cmd("su -c 'sh " + ICSIM_START_SCRIPT_PATH + " " + selected_caniface + "'");
+                    // String randomizeEnabled = isRandomizeEnabled ? " -r" : "";
+                    String levelValue = getVisibleParam(levelList, " -l ");
+                    run_cmd("su -c 'sh " + ICSIM_START_SCRIPT_PATH + " " + selected_caniface + levelValue + "'");
                     showToast("Running ICSim...");
-                    new Handler().postDelayed(() ->
-                                    webView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale"),
-                            SHORT_DELAY + LONG_DELAY
-                    );
+                    new Handler().postDelayed(() -> {
+                        WebView icsimView = rootView.findViewById(R.id.icsim);
+                        WebView controlsView = rootView.findViewById(R.id.controls);
+
+                        for (WebView view : new WebView[]{icsimView, controlsView}) {
+                            WebSettings settings = view.getSettings();
+                            settings.setJavaScriptEnabled(true);
+                            settings.setDomStorageEnabled(true);
+                            settings.setLoadWithOverviewMode(true);
+                            settings.setUseWideViewPort(true);
+                            settings.setBuiltInZoomControls(true);
+                            settings.setDisplayZoomControls(false);
+                            view.setWebViewClient(new WebViewClient());
+                        }
+
+                        icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale");
+                        controlsView.loadUrl("http://localhost:6081/vnc.html?autoconnect=true&resize=scale");
+
+                    }, SHORT_DELAY + LONG_DELAY);
                 } else {
                     showToast("Please set a CAN interface!");
                 }
@@ -2091,20 +2162,47 @@ public class CANFragment extends Fragment {
 
             Button stopICSIM = rootView.findViewById(R.id.stop_icsim);
             stopICSIM.setOnClickListener(v -> {
+                WebView icsimView = rootView.findViewById(R.id.icsim);
+                WebView controlsView = rootView.findViewById(R.id.controls);
+
                 run_cmd("su -c 'sh " + ICSIM_STOP_SCRIPT_PATH + "'");
                 showToast("Stopping ICSim...");
-                webView.setBackgroundColor(Color.BLACK);
-                webView.loadUrl("about:blank");
+                icsimView.setBackgroundColor(Color.BLACK);
+                icsimView.loadUrl("about:blank");
+                controlsView.setBackgroundColor(Color.BLACK);
+                controlsView.loadUrl("about:blank");
             });
 
             Button refreshButton = rootView.findViewById(R.id.refresh_icsim);
             refreshButton.setOnClickListener(v -> {
                 showToast("Refreshing ICSim display...");
-                webView.reload();
+                WebView icsimView = rootView.findViewById(R.id.icsim);
+                WebView controlsView = rootView.findViewById(R.id.controls);
+
+                icsimView.reload();
+                controlsView.reload();
             });
 
             return rootView;
         }
+
+        private String getVisibleParam(View view, String prefix) {
+            if (view.getVisibility() == View.VISIBLE) {
+                if (view instanceof EditText) {
+                    String input = ((EditText) view).getText().toString().trim();
+                    if (!input.isEmpty()) {
+                        return prefix + input;
+                    }
+                } else if (view instanceof Spinner) {
+                    String selected = ((Spinner) view).getSelectedItem().toString().trim();
+                    if (!selected.isEmpty()) {
+                        return prefix + selected;
+                    }
+                }
+            }
+            return "";
+        }
+
         // Refresh iface
         private void refresh(View CANFragment) {
             final Spinner deviceList = CANFragment.findViewById(R.id.device_interface);
