@@ -180,57 +180,24 @@ public class CANFragment extends Fragment {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
         Log.i(TAG, "Running setup commands");
-        String setupCommand = "echo -ne \"\\033]0;CAN Arsenal Setup\\007\" && clear; echo '\\nUpdating and Installing Packages...\\n' && apt update && apt install -y autoconf cmake expect fluxbox git libconfig-dev libsdl2-dev libsdl2-image-dev libsocketcan-dev make maven meson python3-pip websockify x11vnc xserver-xephyr xvfb && mkdir -p /opt/car_hacking && ";
-        setupCommand += checkAndInstall("Can-Utils", "/usr/bin/cangen", "/opt/car_hacking/can-utils", "cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/can-utils.git; cd /opt/car_hacking/can-utils; sudo make; sudo make install;");
-        setupCommand += checkAndInstall("Cannelloni", "/usr/local/bin/cannelloni", "/opt/car_hacking/cannelloni", "cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/cannelloni.git; cd /opt/car_hacking/cannelloni; sudo cmake -DCMAKE_BUILD_TYPE=Release; sudo make; sudo make install;");
-        setupCommand += checkAndInstall("USB-CAN", "/usr/local/bin/canusb", "/opt/car_hacking/usb-can", "cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/usb-can.git; cd /opt/car_hacking/usb-can; sudo gcc -o canusb canusb.c; sudo cp canusb /usr/local/bin/canusb;");
-        setupCommand += checkAndInstall("Freediag", "/usr/local/bin/freediag", "/opt/car_hacking/freediag", "cd /opt/car_hacking; sudo git clone https://github.com/v0lk3n/freediag.git; cd /opt/car_hacking/freediag; ./build_simple.sh; sudo cp build/scantool/freediag /usr/local/bin/freediag && sudo cp build/scantool/diag_test /usr/local/bin/diag_test;");
-        setupCommand += checkAndInstall("Socketcand", "/usr/local/sbin/socketcand", "/opt/car_hacking/socketcand", "cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/socketcand.git; cd /opt/car_hacking/socketcand; sudo meson setup -Dlibconfig=true --buildtype=release build; sudo meson compile -C build; sudo meson install -C build;");
-        setupCommand += checkAndInstall("hlcand", "/usr/local/bin/hlcand", "/opt/car_hacking/usb-can-2", "cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/usb-can-2.git; cd /opt/car_hacking/usb-can-2; sudo ./build.sh; cp -f src/hlcand /usr/local/bin/hlcand;");
-        setupCommand += checkAndInstall("CaringCaribou", "/usr/local/bin/caringcaribou", "/opt/car_hacking/caringcaribou", "cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/caringcaribou.git; cd /opt/car_hacking/caringcaribou; sudo python setup.py install;");
-        setupCommand += checkAndInstall("noVNC", "/opt/noVNC/utils/novnc_proxy", "/opt/noVNC", "cd /opt; sudo git clone https://github.com/novnc/noVNC.git;");
-        setupCommand += checkAndInstall("ICSIM", "/opt/car_hacking/ICSim/builddir/icsim", "/opt/car_hacking/ICSim", "cd /opt/car_hacking; sudo git clone https://github.com/V0lk3n/ICSim.git; cd /opt/car_hacking/ICSim; sudo cp /opt/car_hacking/can-utils/lib.o .; sudo meson setup builddir && cd builddir && sudo meson compile; cd /opt/car_hacking; wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/icsim_start.sh; wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/icsim_stop.sh; sudo chmod +x /opt/car_hacking/icsim_start.sh; sudo chmod +x /opt/car_hacking/icsim_stop.sh;");
-        setupCommand += checkAndInstall("sequence_finder.sh", "/opt/car_hacking/sequence_finder.sh", "/opt/car_hacking", "cd /opt/car_hacking && sudo wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/sequence_finder.sh; sudo chmod +x /opt/car_hacking/sequence_finder.sh;");
-        setupCommand += checkAndInstall("can_reset.sh", "/opt/car_hacking/can_reset.sh", "/opt/car_hacking", "cd /opt/car_hacking && wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/can_reset.sh; sudo chmod +x /opt/car_hacking/can_reset.sh;");
-        setupCommand += checkAndInstall("VinInfo", "/opt/car_hacking/car_venv/bin/vininfo", "/opt/car_hacking/car_venv", "sudo python3 -m venv /opt/car_hacking/car_venv; /opt/car_hacking/car_venv/bin/pip install vininfo[cli];");
-        setupCommand += "echo '\\nSetup done!' && echo '\\nPress any key to continue...' && read -s -n 1 && exit";
-
+        String setupCommand = "curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup";
         String setupResult = run_cmd(setupCommand);
         Log.d("SetupResult",setupResult);
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
         Log.i(TAG, "Setup completed");
     }
 
-    private String checkAndInstall(String name, String filePath, String folderPath, String installCommand) {
-        return "if [[ -f " + filePath + " && -d " + folderPath + " ]]; then echo '\\n" + name + " already installed!'; "
-                + "else echo '\\nInstalling " + name + "...\\n'; " + installCommand + " fi; ";
-    }
-
     // Update item
     public void RunUpdate() {
+        Log.d(TAG, "RunUpdate called");
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
-        String updateCommand = "echo -ne \"\\033]0;CAN Arsenal Update\\007\" && clear; echo '\\nUpdating Packages...\\n' && apt update && apt install -y autoconf cmake expect fluxbox git libconfig-dev libsdl2-dev libsdl2-image-dev libsocketcan-dev make maven meson python3-pip websockify x11vnc xserver-xephyr xvfb && mkdir -p /opt/car_hacking && ";
-        updateCommand += checkAndUpdate("Can-Utils", "/usr/bin/cangen", "/opt/car_hacking/can-utils", "cd /opt/car_hacking/can-utils && old=$(git rev-parse HEAD) && sudo git pull && new=$(git rev-parse HEAD) && [ \"$old\" != \"$new\" ] && { echo \"Update detected! Updating...\" && sudo make; sudo make install };");
-        updateCommand += checkAndUpdate("Cannelloni", "/usr/local/bin/cannelloni", "/opt/car_hacking/cannelloni", "cd /opt/car_hacking/cannelloni && old=$(git rev-parse HEAD) && sudo git pull && new=$(git rev-parse HEAD) && [ \"$old\" != \"$new\" ] && { echo \"Update detected! Updating...\" && sudo cmake -DCMAKE_BUILD_TYPE=Release; sudo make; sudo make install };");
-        updateCommand += checkAndUpdate("USB-CAN", "/usr/local/bin/canusb", "/opt/car_hacking/usb-can", "cd /opt/car_hacking/usb-can && old=$(git rev-parse HEAD) && sudo git pull && new=$(git rev-parse HEAD) && [ \"$old\" != \"$new\" ] && { echo \"Update detected! Updating...\" && sudo gcc -o canusb canusb.c; sudo cp canusb /usr/local/bin/canusb };");
-        updateCommand += checkAndUpdate("Freediag", "/usr/local/bin/freediag", "/opt/car_hacking/freediag", "cd /opt/car_hacking/freediag && old=$(git rev-parse HEAD) && sudo git pull && new=$(git rev-parse HEAD) && [ \"$old\" != \"$new\" ] && { echo \"Update detected! Updating...\" && ./build_simple.sh; sudo cp build/scantool/freediag /usr/local/bin/freediag && sudo cp build/scantool/diag_test /usr/local/bin/diag_test };");
-        updateCommand += checkAndUpdate("Socketcand", "/usr/local/sbin/socketcand", "/opt/car_hacking/socketcand", "cd /opt/car_hacking/socketcand && old=$(git rev-parse HEAD) && sudo git pull && new=$(git rev-parse HEAD) && [ \"$old\" != \"$new\" ] && { echo \"Update detected! Updating...\" && sudo meson setup -Dlibconfig=true --buildtype=release build; sudo meson compile -C build; sudo meson install -C build };");
-        updateCommand += checkAndUpdate("hlcand", "/usr/local/bin/hlcand", "/opt/car_hacking/usb-can-2", "cd /opt/car_hacking/usb-can-2 && old=$(git rev-parse HEAD) && sudo git pull && new=$(git rev-parse HEAD) && [ \"$old\" != \"$new\" ] && { echo \"Update detected! Updating...\" && sudo ./build.sh; sudo cp -f src/hlcand /usr/local/bin/hlcand };");
-        updateCommand += checkAndUpdate("CaringCaribou", "/usr/local/bin/caringcaribou", "/opt/car_hacking/caringcaribou", "cd /opt/car_hacking/caringcaribou && old=$(git rev-parse HEAD) && sudo git pull && new=$(git rev-parse HEAD) && [ \"$old\" != \"$new\" ] && { echo \"Update detected! Updating...\" && sudo python setup.py install };");
-        updateCommand += checkAndUpdate("noVNC", "/opt/noVNC/utils/novnc_proxy", "/opt/noVNC", "cd /opt/noVNC && sudo git pull;");
-        updateCommand += checkAndUpdate("ICSIM", "/opt/car_hacking/ICSim/builddir/icsim", "/opt/car_hacking/ICSim", "cd /opt/car_hacking/ICSim && old=$(git rev-parse HEAD) && sudo git pull && new=$(git rev-parse HEAD) && [ \"$old\" != \"$new\" ] && { echo \"Update detected! Updating...\" && sudo meson setup builddir && sudo cp /opt/car_hacking/can-utils/lib.o . && cd builddir && sudo meson compile }; cd /opt/car_hacking; sudo rm icsim_start.sh; rm icsim_stop.sh; sudo wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/icsim_start.sh; sudo wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/icsim_stop.sh; sudo chmod +x /opt/car_hacking/icsim_start.sh; sudo chmod +x /opt/car_hacking/icsim_stop.sh;");
-        updateCommand += checkAndUpdate("can_reset.sh", "/opt/car_hacking/can_reset.sh", "/opt/car_hacking", "cd /opt/car_hacking && sudo rm can_reset.sh && wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/can_reset.sh; sudo chmod +x /opt/car_hacking/can_reset.sh;");
-        updateCommand += checkAndUpdate("sequence_finder.sh", "/opt/car_hacking/sequence_finder.sh", "/opt/car_hacking", "cd /opt/car_hacking && sudo rm sequence_finder.sh && wget https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/sequence_finder.sh; sudo chmod +x /opt/car_hacking/sequence_finder.sh;");
-        updateCommand += checkAndUpdate("VinInfo", "/opt/car_hacking/car_venv/bin/vininfo", "/opt/car_hacking/car_venv", "sudo python3 -m venv /opt/car_hacking/car_venv; /opt/car_hacking/car_venv/bin/pip install vininfo[cli];");
-        updateCommand += "echo '\\nEverything is updated! Closing in 3secs..'; sleep 3 && exit";
-
-        run_cmd(updateCommand);
+        Log.i(TAG, "Running update commands");
+        String updateCommand = "curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update";
+        String updateResult = run_cmd(updateCommand);
+        Log.d("UpdateResult",updateResult);
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
-    }
-
-    private String checkAndUpdate(String name, String filePath, String folderPath, String updateCommand) {
-        return "if [[ -f " + filePath + " && -d " + folderPath + " ]]; then echo '\\n" + name + " detected! Updating...\\n'; " + updateCommand + " else echo '" + name + " not detected! Please run Setup first.'; fi; ";
+        Log.i(TAG, "Update completed");
     }
 
     public void RunAbout() {
