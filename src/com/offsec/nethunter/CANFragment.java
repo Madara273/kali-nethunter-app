@@ -1948,8 +1948,7 @@ public class CANFragment extends Fragment {
         final ShellExecuter exe = new ShellExecuter();
         private boolean isRandomizeEnabled = false;
         private final ExecutorService executorService = Executors.newCachedThreadPool();
-        private static final String ICSIM_START_SCRIPT_PATH = "/opt/car_hacking/icsim_start.sh";
-        private static final String ICSIM_STOP_SCRIPT_PATH = "/opt/car_hacking/icsim_stop.sh";
+        private static final String ICSIM_SCRIPT_PATH = "/opt/car_hacking/icsim_service.sh";
         private static final long SHORT_DELAY = 1000;
         private static final long LONG_DELAY = 2000;
         private Context context;
@@ -2101,7 +2100,7 @@ public class CANFragment extends Fragment {
                 if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
                     // String randomizeEnabled = isRandomizeEnabled ? " -r" : "";
                     String levelValue = getVisibleParam(levelList, " -l ");
-                    run_cmd("su -c 'sh " + ICSIM_START_SCRIPT_PATH + " " + selected_caniface + levelValue + "'");
+                    run_cmd("su -c 'sh " + ICSIM_SCRIPT_PATH + " " + selected_caniface + levelValue + "'");
                     showToast("Running ICSim...");
                     new Handler().postDelayed(() -> {
                         WebView icsimView = rootView.findViewById(R.id.icsim);
@@ -2132,7 +2131,7 @@ public class CANFragment extends Fragment {
                 WebView icsimView = rootView.findViewById(R.id.icsim);
                 WebView controlsView = rootView.findViewById(R.id.controls);
 
-                run_cmd("su -c 'sh " + ICSIM_STOP_SCRIPT_PATH + "'");
+                run_cmd("su -c 'sh " + ICSIM_SCRIPT_PATH + " stop'");
                 showToast("Stopping ICSim...");
                 icsimView.setBackgroundColor(Color.BLACK);
                 icsimView.loadUrl("about:blank");
