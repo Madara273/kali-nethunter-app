@@ -111,8 +111,7 @@ public class NetHunterFragment extends Fragment {
         //WearOS optimisation
         TextView NHDesc = view.findViewById(R.id.f_nethunter_banner2);
         LinearLayout NHButtons = view.findViewById(R.id.f_nethunter_linearlayoutBtn);
-        boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
-
+        Boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         sharedpreferences.edit().putBoolean("running_on_wearos", iswatch).apply();
         if(iswatch) {

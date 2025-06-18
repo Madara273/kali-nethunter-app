@@ -126,11 +126,13 @@ public class BTFragment extends Fragment {
         if (activity != null) {
             sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         }
+        Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
         builder.setTitle("Welcome to Bluetooth Arsenal!");
         builder.setMessage("This seems to be the first run. Install the Bluetooth tools?");
         builder.setPositiveButton("Install", (dialog, which) -> {
-            RunSetup();
+            if (iswatch) RunSetupWatch();
+            else RunSetup();
             sharedpreferences.edit().putBoolean("setup_done", true).apply();
         });
         builder.setNegativeButton("Disable message", (dialog, which) -> {
@@ -307,7 +309,7 @@ public class BTFragment extends Fragment {
             Boolean setupdone = sharedpreferences.getBoolean("setup_done", false);
             if (!setupdone.equals(true)) {
                 if (iswatch) SetupDialogWatch();
-                SetupDialog();
+                else SetupDialog();
             }
 
             final Spinner ifaces = rootView.findViewById(R.id.hci_interface);
