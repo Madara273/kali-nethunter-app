@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -54,6 +55,7 @@ import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.Map;
@@ -91,7 +93,7 @@ public class CANFragment extends Fragment {
 
         ViewPager2 mViewPager = rootView.findViewById(R.id.pagerCAN);
         mViewPager.setAdapter(tabsPagerAdapter);
-        mViewPager.setOffscreenPageLimit(6);
+        mViewPager.setOffscreenPageLimit(7);
 
         TabLayout tabLayout = rootView.findViewById(R.id.tabLayoutCAN);
         new TabLayoutMediator(tabLayout, mViewPager,
@@ -102,6 +104,7 @@ public class CANFragment extends Fragment {
                         case 2: tab.setText("CAN-USB"); break;
                         case 3: tab.setText("Caribou"); break;
                         case 4: tab.setText("ICSim"); break;
+                        case 5: tab.setText("MSF"); break;
                         default: tab.setText("Tab " + (position + 1));
                     }
                 }
@@ -203,7 +206,7 @@ public class CANFragment extends Fragment {
     public void RunAbout() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         MaterialAlertDialogBuilder aboutDialog = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-        aboutDialog.setTitle("About CAN Arsenal");
+        aboutDialog.setTitle("About CARsenal");
 
         TextView message = new TextView(context);
         message.setText(getResources().getText(R.string.about_author));
@@ -233,14 +236,16 @@ public class CANFragment extends Fragment {
                     return new CANUSBFragment();
                 case 3:
                     return new CANFragment.CANCARIBOUFragment();
-                default:
+                case 4:
                     return new CANICSIMFragment();
+                default :
+                    return new CANMSFFragment();
             }
         }
 
         @Override
         public int getItemCount() {
-            return 5;
+            return 6;
         }
     }
 
@@ -2167,6 +2172,334 @@ public class CANFragment extends Fragment {
                 }
             }
             return "";
+        }
+
+        // Refresh iface
+        private void refresh(View CANFragment) {
+            final Spinner deviceList = CANFragment.findViewById(R.id.device_interface);
+            if (context == null) return;
+
+            executorService.submit(() -> {
+                String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$'");
+                final ArrayList<String> deviceIfaces = new ArrayList<>();
+                if (outputDevice != null && !outputDevice.isEmpty()) {
+                    final String[] deviceifacesArray = outputDevice.split("\n");
+                    Activity activity = getActivity();
+                    if (sharedpreferences != null && activity != null) {
+                        int lastiface = sharedpreferences.getInt("selected_device", 0);
+                        requireActivity().runOnUiThread(() -> {
+                            deviceList.setAdapter(new ArrayAdapter<>(activity, android.R.layout.simple_list_item_1, deviceifacesArray));
+                            deviceList.setSelection(lastiface);
+                        });
+                        String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
+                        if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
+                            showToast(detected_device);
+                        }
+                    }
+                } else {
+                    deviceIfaces.add("None");
+                    Activity activity = getActivity();
+                    if (sharedpreferences != null && activity != null) {
+                        requireActivity().runOnUiThread(() -> {
+                            deviceList.setAdapter(new ArrayAdapter<>(activity, android.R.layout.simple_list_item_1, deviceIfaces));
+                            sharedpreferences.edit().putInt("selected_device", deviceList.getSelectedItemPosition()).apply();
+                        });
+                    }
+                }
+            });
+
+            String message = "Device list refreshed!";
+            showToast(message);
+        }
+    }
+
+
+    public static class CANMSFFragment extends CANFragment {
+        final ShellExecuter exe = new ShellExecuter();
+        private final ExecutorService executorService = Executors.newCachedThreadPool();
+        private Context context;
+        private String selected_caniface;
+        private String selected_module;
+
+
+        @Override
+        public void onCreate(@Nullable Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            context = getContext();
+        }
+
+        @SuppressLint("SetJavaScriptEnabled")
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.can_msf, container, false);
+
+            final EditText selected_baud = rootView.findViewById(R.id.baud_speed);
+
+            // Interfaces
+            final Spinner deviceList = rootView.findViewById(R.id.device_interface);
+
+            executorService.submit(() -> {
+                String result = exe.RunAsChrootOutput(
+                        "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
+                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$' | sed 's|^|/dev/|'"
+                );
+
+                ArrayList<String> deviceIfaces = new ArrayList<>();
+
+                if (result == null || result.trim().isEmpty()) {
+                    deviceIfaces.add("None");
+                } else {
+                    deviceIfaces.addAll(Arrays.asList(result.split("\n")));
+                }
+
+                // Post UI update back to the main thread
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, deviceIfaces);
+                    deviceList.setAdapter(adapter);
+
+                    // Restore previous selection if saved
+                    int savedPosition = sharedpreferences.getInt("selected_usb", 0);
+                    if (savedPosition < deviceIfaces.size()) {
+                        deviceList.setSelection(savedPosition);
+                        selected_caniface = deviceIfaces.get(savedPosition);
+                    } else {
+                        selected_caniface = "None";
+                    }
+
+                    deviceList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                            selected_caniface = parentView.getItemAtPosition(pos).toString();
+                            sharedpreferences.edit().putInt("selected_usb", pos).apply();
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> parentView) {
+                            selected_caniface = "None";
+                        }
+                    });
+
+                    // Optional: show toast for newly detected device
+                    if (!deviceIfaces.contains("None")) {
+                        String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
+                        if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
+                            showToast(detected_device);
+                        }
+                    }
+                });
+            });
+
+            // ELM327 Relay
+            Button elm327relayButton = rootView.findViewById(R.id.run_relay);
+
+            elm327relayButton.setOnClickListener(v -> {
+                String baudSpeed = selected_baud.getText().toString();
+
+                String baudValue;
+                if (!baudSpeed.isEmpty()) {
+                    baudValue = " -b " + baudSpeed;
+                } else {
+                    baudValue = "";
+                }
+
+                run_cmd("/usr/share/metasploit-framework/tools/hardware/elm327_relay.rb -s " + selected_caniface + baudValue);
+            });
+
+            // Modules
+            final Spinner modulesList = rootView.findViewById(R.id.msf_modules_spinner);
+
+            executorService.submit(() -> {
+                String result = exe.RunAsChrootOutput(
+                        "ls /usr/share/metasploit-framework/modules/post/hardware/automotive/"
+                );
+
+                ArrayList<String> module = new ArrayList<>();
+
+                if (result == null || result.trim().isEmpty()) {
+                    module.add("None");
+                } else {
+                    module.addAll(Arrays.asList(result.split("\n")));
+                }
+
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, module);
+                    modulesList.setAdapter(adapter);
+
+                    int savedPosition = sharedpreferences.getInt("selected_module", 0);
+                    if (savedPosition < module.size()) {
+                        modulesList.setSelection(savedPosition);
+                        selected_module = module.get(savedPosition);
+                    } else {
+                        selected_module = "None";
+                    }
+
+                    modulesList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                            selected_module = parentView.getItemAtPosition(pos).toString();
+                            sharedpreferences.edit().putInt("selected_module", pos).apply();
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> parentView) {
+                            selected_module = "None";
+                        }
+                    });
+                });
+            });
+
+            TextView infoText = rootView.findViewById(R.id.module_info_text);
+            LinearLayout optionsContainer = rootView.findViewById(R.id.module_options_container);
+
+            // Info button
+            Button infoBtn = rootView.findViewById(R.id.info_module);
+            infoBtn.setOnClickListener(v -> {
+                if (selected_module == null || selected_module.equals("None")) {
+                    showToast("Select a module first");
+                    return;
+                }
+
+                String moduleNameKey = selected_module.replace(".rb", "").toLowerCase();
+                String resourceKey = "module_info_" + moduleNameKey;
+
+                int resId = getResources().getIdentifier(resourceKey, "string", requireContext().getPackageName());
+
+                if (resId == 0) {
+                    showToast("No info available for this module");
+                    return;
+                }
+
+                String moduleInfo = getString(resId);
+
+                // Build popup dialog
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setTitle("Module Information");
+                    builder.setMessage(moduleInfo);
+                    builder.setPositiveButton("Close", (dialog, which) -> dialog.dismiss());
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+
+                    Button closeButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                    if (closeButton != null) {
+                        closeButton.setTextColor(Color.WHITE);
+                    }
+                });
+            });
+
+
+            // Set button
+            Button setBtn = rootView.findViewById(R.id.set_module);
+            setBtn.setOnClickListener(v -> {
+                if (selected_module == null || selected_module.equals("None")) {
+                    showToast("Select a module first");
+                    return;
+                }
+
+                infoText.setVisibility(View.GONE);
+
+                int optionsStringId = getResources().getIdentifier(
+                        "module_set_" + selected_module.replace(".rb", "").toLowerCase().trim(),
+                        "string",
+                        requireContext().getPackageName());
+
+                if (optionsStringId == 0) {
+                    infoText.setVisibility(View.VISIBLE);
+                    infoText.setText("No options available for this module.");
+                    return;
+                }
+
+                String optionsText = getString(optionsStringId);
+                String[] optionLines = optionsText.split("\n");
+
+                LinearLayout inputLayout = new LinearLayout(requireContext());
+                inputLayout.setOrientation(LinearLayout.VERTICAL);
+                inputLayout.setPadding(20, 20, 20, 20);
+
+                Map<String, EditText> userInputs = new LinkedHashMap<>();
+
+                for (String line : optionLines) {
+                    line = line.trim();
+                    if (line.isEmpty()) continue;
+
+                    if (!line.contains("|")) {
+                        TextView header = new TextView(requireContext());
+                        header.setText(line);
+                        header.setTextAppearance(requireContext(), android.R.style.TextAppearance_Medium);
+                        header.setTypeface(null, Typeface.BOLD);
+                        header.setPadding(0, 30, 0, 30);
+
+                        inputLayout.addView(header);
+                        continue;
+                    }
+
+                    String[] parts = line.split("\\|");
+                    String name = parts.length > 0 ? parts[0].trim() : "";
+                    String defaultVal = parts.length > 1 ? parts[1].trim() : "";
+                    String required = parts.length > 2 ? parts[2].trim() : "optional";
+
+                    if (name.isEmpty()) continue;
+
+                    TextView label = new TextView(requireContext());
+                    label.setText(name + " (" + required + ")");
+                    label.setTextSize(14);
+                    label.setPadding(0, 10, 0, 4);
+
+                    EditText input = new EditText(requireContext());
+                    input.setHint("Enter " + name);
+                    input.setText(defaultVal);
+                    input.setTag(name);
+                    input.setTextSize(14);
+
+                    inputLayout.addView(label);
+                    inputLayout.addView(input);
+
+                    userInputs.put(name, input);
+                }
+
+                optionsContainer.removeAllViews();
+                optionsContainer.addView(inputLayout);
+                optionsContainer.setVisibility(View.VISIBLE);
+                optionsContainer.setTag(userInputs);
+            });
+
+            Button runBtn = rootView.findViewById(R.id.run_module);
+            runBtn.setOnClickListener(v -> {
+                if (selected_module == null || selected_module.equals("None")) {
+                    showToast("Select a module first");
+                    return;
+                }
+
+                @SuppressWarnings("unchecked")
+                Map<String, EditText> userInputs = (Map<String, EditText>) optionsContainer.getTag();
+
+                if (userInputs == null || userInputs.isEmpty()) {
+                    showToast("Please press Set and fill options first.");
+                    return;
+                }
+
+                StringBuilder msfCmd = new StringBuilder();
+                msfCmd.append("msfconsole -q -x 'use post/hardware/automotive/")
+                        .append(selected_module)
+                        .append("; ");
+
+                for (Map.Entry<String, EditText> entry : userInputs.entrySet()) {
+                    String key = entry.getKey();
+                    String value = entry.getValue().getText().toString().trim();
+
+                    if (!value.isEmpty()) {
+                        msfCmd.append("set ").append(key.toUpperCase()).append(" ").append(value).append("; ");
+                    }
+                }
+
+                msfCmd.append("run'");
+
+                executorService.submit(() -> {
+                    run_cmd(msfCmd.toString());
+                });
+            });
+
+            return rootView;
         }
 
         // Refresh iface
