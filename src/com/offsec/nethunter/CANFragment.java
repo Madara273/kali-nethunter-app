@@ -2289,6 +2289,14 @@ public class CANFragment extends Fragment {
                 });
             });
 
+            // Refresh Status
+            ImageButton RefreshUSB = rootView.findViewById(R.id.refreshUSB);
+            RefreshUSB.setOnClickListener(v -> {
+                showToast("Refreshing Devices...");
+                refresh(rootView);
+            });
+            executorService.submit(() -> refresh(rootView));
+
             // ELM327 Relay
             Button elm327relayButton = rootView.findViewById(R.id.run_relay);
 
@@ -2310,7 +2318,7 @@ public class CANFragment extends Fragment {
 
             executorService.submit(() -> {
                 String result = exe.RunAsChrootOutput(
-                        "ls /usr/share/metasploit-framework/modules/post/hardware/automotive/"
+                        "basename /usr/share/metasploit-framework/modules/auxiliary/client/hwbridge/connect.rb && ls /usr/share/metasploit-framework/modules/post/hardware/automotive/"
                 );
 
                 ArrayList<String> module = new ArrayList<>();
@@ -2479,20 +2487,27 @@ public class CANFragment extends Fragment {
                 }
 
                 StringBuilder msfCmd = new StringBuilder();
-                msfCmd.append("msfconsole -q -x 'use post/hardware/automotive/")
-                        .append(selected_module)
-                        .append("; ");
+                if (selected_module.equals("connect.rb")){
+                    msfCmd.append("msfconsole -q -x \"use auxiliary/client/hwbridge/")
+                            .append(selected_module)
+                            .append("; ");
+                } else {
+                    msfCmd.append("msfconsole -q -x \"use post/hardware/automotive/")
+                            .append(selected_module)
+                            .append("; ");
+                }
 
                 for (Map.Entry<String, EditText> entry : userInputs.entrySet()) {
                     String key = entry.getKey();
                     String value = entry.getValue().getText().toString().trim();
 
                     if (!value.isEmpty()) {
-                        msfCmd.append("set ").append(key.toUpperCase()).append(" ").append(value).append("; ");
+                        String sanitized = value.replace("'", "'\"'\"'");
+                        msfCmd.append("set ").append(key.toUpperCase()).append(" '").append(sanitized).append("'; ");
                     }
                 }
 
-                msfCmd.append("run'");
+                msfCmd.append("run\"");
 
                 executorService.submit(() -> {
                     run_cmd(msfCmd.toString());

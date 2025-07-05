@@ -704,6 +704,49 @@
         - idlesign! For VIN Info tool.\nhttps://github.com/idlesign\n\n
     </string>
     <!-- CARsenal MSF Modules -->
+    <string name="module_info_connect">
+        Module Info:\n\n
+        Name: Hardware Bridge Session Connector\n
+        Module: auxiliary/client/hwbridge/connect\n
+        License: Metasploit Framework License (BSD)\n
+        Rank: Normal\n\n
+
+        Provided by:\n
+            Craig Smith\n\n
+
+        Module stability:\n
+            crash-safe\n\n
+
+        Check supported:\n
+            No\n\n
+
+        Basic Options:\n
+            DEBUGJSON     (optional)   - Additional debugging out for JSON requests to HW Bridge\n
+            Proxies       (optional)   - A proxy chain of format type:host:port[,type:host:port][..]\n
+            RHOSTS        (required)   - The target host(s), see https://docs.metasploit.com/docs/using-metasploit/basics/using-metasploit.html\n
+            RPORT         (required)   - The target port (TCP)\n
+            SSL           (optional)   - Negotiate SSL/TLS for outgoing connections\n
+            TARGETURI     (required)   - The path to the hwbridge API\n
+            VHOST         (optional)   - HTTP server virtual host\n\n
+
+        Description:\n
+            The Hardware Bridge (HWBridge) is a standardized method for
+            Metasploit to interact with Hardware Devices.  This extends
+            the normal exploit capabilities to the non-ethernet realm and
+            enables direct hardware and alternative bus manipulations.  You
+            must have compatible bridging hardware attached to this machine or
+            reachable on your network to use any HWBridge exploits.
+
+            Use this exploit module to connect the physical HWBridge which
+            will start an interactive hwbridge session.  You can launch a hwbridge
+            server locally by using compliant hardware and executing the local_hwbridge
+            module.  After that module has started, pass the HWBRIDGE_BASE_URL
+            options to this connector module.\n\n
+
+        References:\n
+            https://web.archive.org/web/20170206145056/http://opengarages.org/hwbridge/
+    </string>
+
     <string name="module_info_can_flood">
         Module Info:\n\n
         Name: CAN Flood\n
@@ -980,6 +1023,33 @@
                 https://nvd.nist.gov/vuln/detail/CVE-2017-14937
                 https://www.researchgate.net/publication/321183727_Security_Evaluation_of_an_Airbag-ECU_by_Reusing_Threat_Modeling_Artefacts
 
+    </string>
+    <string name="module_set_connect">
+        \nOptions :\n
+        \nDEBUGJSON|false|optional
+        \nProxies||optional
+        \nRHOSTS|127.0.0.1|required
+        \nRPORT|8080|required
+        \nSSL|false|optional
+        \nTARGETURI|/|required
+        \nVHOST||optional
+        \nAdvanced Options :\n
+        \nDOMAIN|WORKSTATION|required
+        \nDigestAuthIIS|true|optional
+        \nFingerprintCheck|true|optional
+        \nHttpClientTimeout||optional
+        \nHttpPassword||optional
+        \nHttpRawHeaders||optional
+        \nHttpTrace|false|optional
+        \nHttpTraceColors|red/blu|optional
+        \nHttpTraceHeadersOnly|false|optional
+        \nHttpUsername||optional
+        \nSSLKeyLogFile||optional
+        \nSSLServerNameIndication||optional
+        \nSSLVersion|Auto|required
+        \nUserAgent||optional
+        \nVERBOSE|false|optional
+        \nWORKSPACE||optional
     </string>
     <string name="module_set_can_flood">
         \nOptions :\n
