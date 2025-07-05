@@ -148,6 +148,15 @@
                     tools:ignore="TouchTargetSizeCheck" />
             </LinearLayout>
 
+            <!-- To be replaced with MSFRPCD-->
+            <Button
+                android:id="@+id/msfconsole_start"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="start msfconsole"
+                tools:ignore="ButtonStyle,HardcodedText,VisualLintButtonSize" />
+
             <LinearLayout
                 android:id="@+id/button_row"
                 android:layout_width="match_parent"

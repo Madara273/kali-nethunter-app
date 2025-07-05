@@ -2557,6 +2557,14 @@ public class CANFragment extends Fragment {
                 optionsContainer.setTag(userInputs);
             });
 
+            // Screen to be replaced with msfrpcd
+            Button msfBtn = rootView.findViewById(R.id.msfconsole_start);
+            msfBtn.setOnClickListener(v -> {
+                executorService.submit(() -> {
+                    run_cmd("screen -S msf -d -m msfconsole");
+                });
+            });
+
             Button runBtn = rootView.findViewById(R.id.run_module);
             runBtn.setOnClickListener(v -> {
                 if (selected_module == null || selected_module.equals("None")) {
@@ -2574,11 +2582,11 @@ public class CANFragment extends Fragment {
 
                 StringBuilder msfCmd = new StringBuilder();
                 if (selected_module.equals("connect.rb")){
-                    msfCmd.append("msfconsole -q -x \"use auxiliary/client/hwbridge/")
+                    msfCmd.append("screen -S msf -x \"use auxiliary/client/hwbridge/")
                             .append(selected_module)
                             .append("; ");
                 } else {
-                    msfCmd.append("msfconsole -q -x \"use post/hardware/automotive/")
+                    msfCmd.append("screen -S msf -x \"use post/hardware/automotive/")
                             .append(selected_module)
                             .append("; ");
                 }
