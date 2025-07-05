@@ -269,7 +269,6 @@ public class CANFragment extends Fragment {
             // Common used variables
             SelectedIface = rootView.findViewById(R.id.can_iface);
 
-            final EditText bt_target_mac = rootView.findViewById(R.id.bttarget);
             final EditText selected_vin = rootView.findViewById(R.id.vin_number);
 
             // First run
@@ -514,44 +513,166 @@ public class CANFragment extends Fragment {
                 return true; // long click handled
             });
 
-            // Start rfcomm binder
+            // Rfcomm Binder
             Button RfcommBinderButton = rootView.findViewById(R.id.start_rfcommbinder);
 
-            RfcommBinderButton.setOnClickListener(v -> {
-                String selected_caniface = SelectedIface.getText().toString();
-                String bt_target = bt_target_mac.getText().toString();
+            // Access SharedPreferences
+            SharedPreferences rfcommBinder_prefs = requireActivity().getSharedPreferences("rfcommBinder_prefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editorRfcommBinder = rfcommBinder_prefs.edit();
 
-                if (!selected_caniface.isEmpty() && !bt_target.isEmpty()) {
-                    run_cmd("rfcomm bind " + selected_caniface + " " + bt_target);
+            // Load the saved command or use a default
+            String savedCmd_rfcomm_binder = rfcommBinder_prefs.getString("rfcommBinder_cmd", "rfcomm bind vcan0 00:AA:BB:CC:DD:EE:FF");
+            String[] rfcommBinderCmdHolder = { savedCmd_rfcomm_binder };
+
+            RfcommBinderButton.setOnClickListener(v -> {
+                String rfcommBinderRun = rfcommBinderCmdHolder[0];
+
+                if (!rfcommBinderRun.isEmpty()) {
+                    run_cmd(rfcommBinderRun);
+                    showToast("Press CTRL+C to stop.");
                 } else {
-                    showToast("Please ensure your CAN Interface and Target field is set!");
+                    showToast("Please set your rfcomm binder command!");
                 }
             });
 
-            // Start Socketcand
-            Button SocketCandButton = rootView.findViewById(R.id.start_socketcand);
+            // Long click lets user edit the command
+            RfcommBinderButton.setOnLongClickListener(v -> {
+                AlertDialog.Builder builder_rfcommBinder = new AlertDialog.Builder(requireContext());
+                builder_rfcommBinder.setTitle("Edit Command");
 
-            SocketCandButton.setOnClickListener(v -> {
-                String selected_caniface = SelectedIface.getText().toString();
+                final EditText input_rfcomm_binder = new EditText(requireContext());
+                input_rfcomm_binder.setText(rfcommBinderCmdHolder[0]);
+                builder_rfcommBinder.setView(input_rfcomm_binder);
 
-                if (!selected_caniface.isEmpty()) {
-                    run_cmd("socketcand -v -l wlan0 -i " + selected_caniface);
+                builder_rfcommBinder.setPositiveButton("Save", (dialog, which) -> {
+                    String newRfcommBinderCmd = input_rfcomm_binder.getText().toString();
+                    rfcommBinderCmdHolder[0] = newRfcommBinderCmd;
+
+                    // Save to SharedPreferences
+                    editorRfcommBinder.putString("rfcommBinder_cmd", newRfcommBinderCmd);
+                    editorRfcommBinder.apply();
+
+                    showToast("Command updated!");
+                });
+
+                builder_rfcommBinder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+                AlertDialog dialog = builder_rfcommBinder.create();
+                dialog.setOnShowListener(d -> {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                });
+                dialog.show();
+                return true; // long click handled
+            });
+
+            // Rfcomm Connect
+            Button RfcommConnectButton = rootView.findViewById(R.id.start_rfcommconnect);
+
+            // Access SharedPreferences
+            SharedPreferences rfcommConnect_prefs = requireActivity().getSharedPreferences("rfcommConnect_prefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editorRfcommConnect = rfcommConnect_prefs.edit();
+
+            // Load the saved command or use a default
+            String savedCmd_rfcomm_connect = rfcommConnect_prefs.getString("rfcommConnect_cmd", "rfcomm connect /dev/ttyS0 00:AA:BB:CC:DD:EE:FF");
+            String[] rfcommConnectCmdHolder = { savedCmd_rfcomm_connect };
+
+            RfcommConnectButton.setOnClickListener(v -> {
+                String rfcommConnectRun = rfcommConnectCmdHolder[0];
+
+                if (!rfcommConnectRun.isEmpty()) {
+                    run_cmd(rfcommConnectRun);
+                    showToast("Press CTRL+C to stop.");
                 } else {
-                    showToast("Please ensure your CAN Interface field is set!");
+                    showToast("Please set your rfcomm connect command!");
                 }
+            });
+
+            // Long click lets user edit the command
+            RfcommConnectButton.setOnLongClickListener(v -> {
+                AlertDialog.Builder builder_rfcommConnect = new AlertDialog.Builder(requireContext());
+                builder_rfcommConnect.setTitle("Edit Command");
+
+                final EditText input_rfcomm_connect = new EditText(requireContext());
+                input_rfcomm_connect.setText(rfcommConnectCmdHolder[0]);
+                builder_rfcommConnect.setView(input_rfcomm_connect);
+
+                builder_rfcommConnect.setPositiveButton("Save", (dialog, which) -> {
+                    String newRfcommConnectCmd = input_rfcomm_connect.getText().toString();
+                    rfcommConnectCmdHolder[0] = newRfcommConnectCmd;
+
+                    // Save to SharedPreferences
+                    editorRfcommConnect.putString("rfcommConnect_cmd", newRfcommConnectCmd);
+                    editorRfcommConnect.apply();
+
+                    showToast("Command updated!");
+                });
+
+                builder_rfcommConnect.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+                AlertDialog dialog = builder_rfcommConnect.create();
+                dialog.setOnShowListener(d -> {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                });
+                dialog.show();
+                return true; // long click handled
+            });
+
+            // Socketcand
+            Button SocketcandButton = rootView.findViewById(R.id.start_socketcand);
+
+            // Access SharedPreferences
+            SharedPreferences socketcand_prefs = requireActivity().getSharedPreferences("socketcand_prefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editorSocketcand = socketcand_prefs.edit();
+
+            // Load the saved command or use a default
+            String savedCmd_socketcand = socketcand_prefs.getString("socketcand_cmd", "socketcand -v -l wlan0 -i vcan0");
+            String[] socketcandCmdHolder = { savedCmd_socketcand };
+
+            SocketcandButton.setOnClickListener(v -> {
+                String socketcandRun = socketcandCmdHolder[0];
+
+                if (!socketcandRun.isEmpty()) {
+                    run_cmd(socketcandRun);
+                    showToast("Press CTRL+C to stop.");
+                } else {
+                    showToast("Please set your rfcomm connect command!");
+                }
+            });
+
+            // Long click lets user edit the command
+            SocketcandButton.setOnLongClickListener(v -> {
+                AlertDialog.Builder builder_socketcand = new AlertDialog.Builder(requireContext());
+                builder_socketcand.setTitle("Edit Command");
+
+                final EditText input_socketcand = new EditText(requireContext());
+                input_socketcand.setText(socketcandCmdHolder[0]);
+                builder_socketcand.setView(input_socketcand);
+
+                builder_socketcand.setPositiveButton("Save", (dialog, which) -> {
+                    String newsocketcandCmd = input_socketcand.getText().toString();
+                    socketcandCmdHolder[0] = newsocketcandCmd;
+
+                    // Save to SharedPreferences
+                    editorSocketcand.putString("socketcand_cmd", newsocketcandCmd);
+                    editorSocketcand.apply();
+
+                    showToast("Command updated!");
+                });
+
+                builder_socketcand.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+                AlertDialog dialog = builder_socketcand.create();
+                dialog.setOnShowListener(d -> {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                });
+                dialog.show();
+                return true; // long click handled
             });
 
             // Interfaces
-            // Declare SharedPreferences at the class level
-            SharedPreferences preferences = requireActivity().getSharedPreferences("CANInterfaceState", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = preferences.edit();
-
-            // Store CAN Interface States
-            Map<String, Boolean> buttonStates = new HashMap<>();
-
-            // Load saved button states from SharedPreferences when fragment/activity is created
-            buttonStates.put("start_caniface", preferences.getBoolean("start_caniface", false));
-
             // Can Type Spinner
             // Spinner for CAN interfaces
             final Spinner canTypeList = rootView.findViewById(R.id.cantype_spinner);
@@ -573,65 +694,40 @@ public class CANFragment extends Fragment {
 
             // Start CAN interface
             Button StartCanButton = rootView.findViewById(R.id.start_caniface);
-
-            // Set initial button text based on saved state
-            StartCanButton.setText(Boolean.TRUE.equals(buttonStates.get("start_caniface")) ? "⏹ CAN" : "▶ CAN");
-
             StartCanButton.setOnClickListener(v -> {
                 String selected_caniface = SelectedIface.getText().toString();
                 String selected_mtu = SelectedMTU.getText().toString();
                 String selected_txqueuelen = SelectedTxqueuelen.getText().toString();
                 String interface_type = sharedpreferences.getString("cantype_selected", "");
-                boolean isStarted = Boolean.TRUE.equals(buttonStates.get("start_caniface"));
 
                 if (!selected_caniface.isEmpty() && selected_caniface.matches("^(can|vcan|slcan)[0-9]$")) {
-                    if (isStarted) {
-                        String stopCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && echo Success || echo Failed");
-                        stopCanIface = stopCanIface.trim();
-                        if ("vcan".equals(interface_type)) {
-                            String delVcanIface = exe.RunAsChrootOutput("sudo ip link delete " + selected_caniface + " && echo Success || echo Failed");
-                            if (delVcanIface.contains("FATAL:") || delVcanIface.contains("Failed")) {
-                                showToast("Failed to delete " + selected_caniface + " interface!");
-                            }
-                        }
-                        if (stopCanIface.contains("FATAL:") || stopCanIface.contains("Failed")) {
-                            showToast("Failed to stop " + selected_caniface + " interface!");
-                        } else {
-                            buttonStates.put("start_caniface", false);
-                            StartCanButton.setText("▶ CAN");
-                            showToast("Interface " + selected_caniface + " stopped!");
-                        }
-                    } else {
-                        if ("vcan".equals(interface_type)) {
-                            String addVcanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && echo Success || echo Failed");
-                            if (addVcanIface.contains("FATAL:") || addVcanIface.contains("Failed")) {
-                                showToast("Failed to add " + selected_caniface + " interface! Interface may already existing.");
-                            }
-                        }
-                        if ("can".equals(interface_type) || "slcan".equals(interface_type)) {
-                            String usbDevice = exe.RunAsChrootOutput("ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$'");
-                            if (usbDevice.isEmpty()) {
-                                showToast("No CAN Hardware detected, please connect adapter and try again.");
-                                return;
-                            }
-                        }
-
-                        if (!selected_mtu.isEmpty()) {
-                            exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && echo Success || echo Failed");
-                        }
-                        if (!selected_txqueuelen.isEmpty()) {
-                            exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " txqueuelen " + selected_txqueuelen + " && echo Success || echo Failed");
-                        }
-
-                        String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
-                        if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
-                            showToast("Failed to start " + selected_caniface + " interface!");
+                    if ("vcan".equals(interface_type)) {
+                        String addVcanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && echo Success || echo Failed");
+                        if (addVcanIface.contains("FATAL:") || addVcanIface.contains("Failed")) {
+                            showToast("Failed to add " + selected_caniface + " interface! Interface may already existing.");
                             return;
-                        } else {
-                            buttonStates.put("start_caniface", true);
-                            StartCanButton.setText("⏹ CAN");
-                            showToast("Interface " + selected_caniface + " started!");
                         }
+                    }
+                    if ("can".equals(interface_type) || "slcan".equals(interface_type)) {
+                        String usbDevice = exe.RunAsChrootOutput("ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$'");
+                        if (usbDevice.isEmpty()) {
+                            showToast("No CAN Hardware detected, please connect adapter and try again.");
+                            return;
+                        }
+                    }
+
+                    if (!selected_mtu.isEmpty()) {
+                        exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && echo Success || echo Failed");
+                    }
+                    if (!selected_txqueuelen.isEmpty()) {
+                        exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " txqueuelen " + selected_txqueuelen + " && echo Success || echo Failed");
+                    }
+
+                    String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
+                    if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
+                        showToast("Failed to start " + selected_caniface + " interface!");
+                    } else {
+                        showToast("Interface " + selected_caniface + " started!");
                     }
                 } else {
                     if (selected_caniface.isEmpty()) {
@@ -640,13 +736,8 @@ public class CANFragment extends Fragment {
                     }
                     if (!selected_caniface.matches("^(can|vcan|slcan)[0-9]$")) {
                         showToast("CAN Interface should be named \"^(can|vcan|slcan)[0-9]$\"");
-                        return;
                     }
                 }
-
-                // Save button state to SharedPreferences
-                editor.putBoolean("start_caniface", Boolean.TRUE.equals(buttonStates.get("start_caniface")));
-                editor.apply();
             });
 
             // Button Reset Interface
@@ -654,11 +745,6 @@ public class CANFragment extends Fragment {
 
             ResetIfaceButton.setOnClickListener(v -> {
                 exe.RunAsChrootOutput("/opt/car_hacking/can_reset.sh");
-                buttonStates.put("start_caniface", false);
-                StartCanButton.setText("▶ CAN");
-                // Save button state to SharedPreferences
-                editor.putBoolean("start_caniface", Boolean.TRUE.equals(buttonStates.get("start_caniface")));
-                editor.apply();
                 showToast("Interface reset!");
             });
 

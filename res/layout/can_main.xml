@@ -69,24 +69,6 @@
                     tools:layout_editor_absoluteY="10dp" />
             </androidx.constraintlayout.widget.ConstraintLayout>
 
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <EditText
-                    android:id="@+id/bttarget"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    android:hint="MAC Address (e.g., 0A:1B:2C:3D:4E:5F:6A:7B)"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="MissingConstraints,TouchTargetSizeCheck"
-                    tools:layout_editor_absoluteX="30dp"
-                    tools:layout_editor_absoluteY="10dp" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
             <LinearLayout
                 android:id="@+id/can_advanced_options"
                 android:layout_width="match_parent"
@@ -212,7 +194,7 @@
                         android:id="@+id/start_caniface"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="▶ CAN"
+                        android:text="Start"
                         android:layout_weight="1"
                         android:minWidth="100dp" />
 
@@ -220,7 +202,7 @@
                         android:id="@+id/reset_iface"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:text="Reset"
+                        android:text="Stop"
                         android:layout_weight="1"
                         android:minWidth="100dp"
                         tools:ignore="VisualLintButtonSize" />
@@ -266,7 +248,9 @@
                     android:layout_columnWeight="1"
                     android:layout_row="0"
                     android:layout_column="2"
-                    android:text="socketcand" />
+                    android:text="socketcand"
+                    android:textColor="@android:color/holo_orange_dark"
+                    tools:ignore="VisualLintButtonSize" />
 
                 <Button
                     android:id="@+id/start_slcanattach"
@@ -295,9 +279,21 @@
                     android:layout_columnWeight="1"
                     android:layout_row="1"
                     android:layout_column="2"
-                    android:text="rfcomm bind" />
+                    android:text="rfcomm bind"
+                    android:textColor="@android:color/holo_orange_dark" />
 
             </GridLayout>
+
+            <Button
+                android:id="@+id/start_rfcommconnect"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_columnWeight="1"
+                android:text="rfcomm connect"
+                android:textColor="@android:color/holo_orange_dark"
+                tools:ignore="VisualLintButtonSize" />
 
             <TextView
                 android:layout_width="match_parent"
