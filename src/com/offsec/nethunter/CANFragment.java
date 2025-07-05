@@ -709,7 +709,7 @@ public class CANFragment extends Fragment {
                         }
                     }
                     if ("can".equals(interface_type) || "slcan".equals(interface_type)) {
-                        String usbDevice = exe.RunAsChrootOutput("ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$'");
+                        String usbDevice = exe.RunAsChrootOutput("ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$'");
                         if (usbDevice.isEmpty()) {
                             showToast("No CAN Hardware detected, please connect adapter and try again.");
                             return;
@@ -837,7 +837,7 @@ public class CANFragment extends Fragment {
             executorService.submit(() -> {
                 String result = exe.RunAsChrootOutput(
                         "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
-                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$' | sed 's|^|/dev/|'"
+                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
                 );
 
                 ArrayList<String> deviceIfaces = new ArrayList<>();
@@ -1222,7 +1222,7 @@ public class CANFragment extends Fragment {
             executorService.submit(() -> {
                 String result = exe.RunAsChrootOutput(
                         "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
-                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$' | sed 's|^|/dev/|'"
+                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
                 );
 
                 ArrayList<String> deviceIfaces = new ArrayList<>();
@@ -1437,7 +1437,7 @@ public class CANFragment extends Fragment {
             if (context == null) return;
 
             executorService.submit(() -> {
-                String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$' | sed 's|^|/dev/|'");
+                String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'");
                 final ArrayList<String> deviceIfaces = new ArrayList<>();
                 if (outputDevice != null && !outputDevice.isEmpty()) {
                     final String[] deviceifacesArray = outputDevice.split("\n");
@@ -1505,7 +1505,7 @@ public class CANFragment extends Fragment {
             executorService.submit(() -> {
                 String result = exe.RunAsChrootOutput(
                         "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
-                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$' | sed 's|^|/dev/|'"
+                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
                 );
 
                 ArrayList<String> deviceIfaces = new ArrayList<>();
@@ -2063,7 +2063,7 @@ public class CANFragment extends Fragment {
             executorService.submit(() -> {
                 String result = exe.RunAsChrootOutput(
                         "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
-                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$' | sed 's|^|/dev/|'"
+                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
                 );
 
                 ArrayList<String> deviceIfaces = new ArrayList<>();
@@ -2327,7 +2327,7 @@ public class CANFragment extends Fragment {
             executorService.submit(() -> {
                 String result = exe.RunAsChrootOutput(
                         "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
-                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$' | sed 's|^|/dev/|'"
+                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
                 );
 
                 ArrayList<String> deviceIfaces = new ArrayList<>();
@@ -2367,7 +2367,7 @@ public class CANFragment extends Fragment {
 
                     // Optional: show toast for newly detected device
                     if (!deviceIfaces.contains("None")) {
-                        String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
+                        String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }';ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'");
                         if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
                             showToast(detected_device);
                         }
@@ -2561,7 +2561,7 @@ public class CANFragment extends Fragment {
             Button msfBtn = rootView.findViewById(R.id.msfconsole_start);
             msfBtn.setOnClickListener(v -> {
                 executorService.submit(() -> {
-                    run_cmd("screen -S msf -d -m msfconsole");
+                    run_cmd("pkill screen;screen -S msf -m msfconsole");
                 });
             });
 
@@ -2581,14 +2581,15 @@ public class CANFragment extends Fragment {
                 }
 
                 StringBuilder msfCmd = new StringBuilder();
-                if (selected_module.equals("connect.rb")){
-                    msfCmd.append("screen -S msf -x \"use auxiliary/client/hwbridge/")
-                            .append(selected_module)
-                            .append("; ");
+                String moduleName = selected_module.replace(".rb", "");
+                if (moduleName.equals("connect")){
+                    msfCmd.append("screen -r -X stuff \"use auxiliary/client/hwbridge/")
+                            .append(moduleName)
+                            .append("`echo -ne '\\015'`");
                 } else {
-                    msfCmd.append("screen -S msf -x \"use post/hardware/automotive/")
-                            .append(selected_module)
-                            .append("; ");
+                    msfCmd.append("screen -r -X stuff \"use post/hardware/automotive/")
+                            .append(moduleName)
+                            .append("`echo -ne '\\015'`");
                 }
 
                 for (Map.Entry<String, EditText> entry : userInputs.entrySet()) {
@@ -2597,11 +2598,11 @@ public class CANFragment extends Fragment {
 
                     if (!value.isEmpty()) {
                         String sanitized = value.replace("'", "'\"'\"'");
-                        msfCmd.append("set ").append(key.toUpperCase()).append(" '").append(sanitized).append("'; ");
+                        msfCmd.append("set ").append(key.toUpperCase()).append(" '").append(sanitized).append("'`echo -ne '\\015'`");
                     }
                 }
 
-                msfCmd.append("run\"");
+                msfCmd.append("run\"`echo -ne '\\015'`;screen -r");
 
                 executorService.submit(() -> {
                     run_cmd(msfCmd.toString());
@@ -2617,7 +2618,7 @@ public class CANFragment extends Fragment {
             if (context == null) return;
 
             executorService.submit(() -> {
-                String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$'");
+                String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'");
                 final ArrayList<String> deviceIfaces = new ArrayList<>();
                 if (outputDevice != null && !outputDevice.isEmpty()) {
                     final String[] deviceifacesArray = outputDevice.split("\n");
