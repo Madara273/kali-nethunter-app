@@ -129,7 +129,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         copyBootFilesExecutor.setListener(new CopyBootFilesExecutor.CopyBootFilesExecutorListener() {
             @Override
             public void onPrepare() {
-                progressDialog.setMessage("Copying files...");
+                progressDialog.setMessage("Initializing...");
                 progressDialog.setCancelable(false);
                 progressDialog.setIndeterminate(true);
                 progressDialog.show();
@@ -157,7 +157,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
                 }
 
                 AlertDialog.Builder builder = new AlertDialog.Builder(context);
-                builder.setTitle("Copying files...");
+                builder.setTitle("Initializing...");
 
                 View customView = LayoutInflater.from(context).inflate(R.layout.progress_dialog, null);
                 builder.setView(customView);
