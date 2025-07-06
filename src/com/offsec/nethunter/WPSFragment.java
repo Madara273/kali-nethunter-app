@@ -86,7 +86,7 @@ public class WPSFragment extends Fragment {
 
         // Enabling wifi in case it's down
         if (iswatch) {
-            exe.RunAsRoot(new String[]{"ip link set wlan0 up"});
+            exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting on; ifconfig wlan0 up"});
         }
         else exe.RunAsRoot(new String[]{"svc wifi enable"});
 
@@ -145,7 +145,7 @@ public class WPSFragment extends Fragment {
         resetifaceButton.setOnClickListener(view -> {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.execute(() -> requireActivity().runOnUiThread(() -> {
-                if (iswatch) exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting off; sleep 1 && settings put system clockwork_wifi_setting on && ip link set wlan0 up"});
+                if (iswatch) exe.RunAsRoot(new String[]{"ip link set wlan0 down; sleep 1 && ip link set wlan0 up"});
                 else exe.RunAsRoot(new String[]{"svc wifi disable; sleep 1 && svc wifi enable"});
                 Toast.makeText(requireActivity().getApplicationContext(), "Done", Toast.LENGTH_SHORT).show();
             }));
@@ -234,6 +234,16 @@ public class WPSFragment extends Fragment {
             customPIN = CustomPIN.getText().toString();
             delayTIME = DelayTime.getText().toString();
             if (!selected_network.isEmpty()) {
+                if (iswatch) {
+                    //WearOS needs a sort of interface reset
+                    Handler handler = new Handler();
+                    handler.postDelayed(() -> {
+                        exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting off"});
+                    }, 10000);
+                    handler.postDelayed(() -> {
+                        exe.RunAsRoot(new String[]{"ifconfig wlan0 up"});
+                    }, 11000);
+                }
                 run_cmd("python3 /sdcard/nh_files/modules/oneshot.py -b " + selected_network +
                         " -i " + selectedInterface + pixieCMD + pixieforceCMD + bruteCMD + customPINCMD + customPIN + delayCMD + delayTIME + pbcCMD);
             }
@@ -247,6 +257,12 @@ public class WPSFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
     }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (iswatch)
+            exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting on"});
+    }
 
     private void scanWifi() {
         arrayList.clear();
@@ -254,9 +270,6 @@ public class WPSFragment extends Fragment {
         WPSList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, arrayList));
         WPSList.setVisibility(View.VISIBLE);
         Handler handler = new Handler();
-        arrayList.clear();
-        arrayList.add("Scanning..");
-        WPSList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, arrayList));
         handler.postDelayed(() -> {
             arrayList.clear();
             arrayList.add("Scanning...");
