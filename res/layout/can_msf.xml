@@ -157,6 +157,20 @@
                 android:text="start msfconsole"
                 tools:ignore="ButtonStyle,HardcodedText,VisualLintButtonSize" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_gravity="center_horizontal"
+                android:gravity="center"
+                android:text="WARNING : Please, close msfconsole terminal window each time before running a module!"
+                android:textColor="#FF0000"
+                android:textStyle="bold"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                tools:ignore="HardcodedText" />
+
             <LinearLayout
                 android:id="@+id/button_row"
                 android:layout_width="match_parent"

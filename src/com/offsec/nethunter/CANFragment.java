@@ -59,7 +59,6 @@ import java.util.LinkedHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.Map;
-import java.util.HashMap;
 
 public class CANFragment extends Fragment {
     private static final String TAG = "CANFragment";
@@ -2112,10 +2111,10 @@ public class CANFragment extends Fragment {
             });
 
             // Level Spinner
-            final Spinner levelList = rootView.findViewById(R.id.level_spinner);
             // 0 = No randomization added to the packets other than location and ID
             // 1 = Add NULL padding
             // 2 = Randomize unused bytes
+            final Spinner levelList = rootView.findViewById(R.id.level_spinner);
             final String[] levelOptions = {"Level", "0", "1", "2"};
 
             ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, levelOptions) {
@@ -2557,7 +2556,6 @@ public class CANFragment extends Fragment {
                 optionsContainer.setTag(userInputs);
             });
 
-            // Screen to be replaced with msfrpcd
             Button msfBtn = rootView.findViewById(R.id.msfconsole_start);
             msfBtn.setOnClickListener(v -> {
                 executorService.submit(() -> {
