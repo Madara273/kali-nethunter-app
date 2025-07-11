@@ -704,6 +704,35 @@
         - idlesign! For VIN Info tool.\nhttps://github.com/idlesign\n\n
     </string>
     <!-- CARsenal MSF Modules -->
+    <string name="module_info_local_hwbridge">
+        Module Info:\n\n
+        Name: Hardware Bridge Server\n
+        Module: auxiliary/server/local_hwbridge\n
+        License: Metasploit Framework License (BSD)\n
+        Rank: Normal\n\n
+
+        Provided by:\n
+            Craig Smith\n\n
+
+        Available actions:\n
+            WebServer - Run HWBridge web server\n\n
+
+        Check supported:\n
+            No\n\n
+
+        Basic Options:\n
+            SRVHOST       (required)   - The local host or network interface to listen on. This must be an address on the local machine or 0.0.0.0 to listen on all addresses.\n
+            SRVPORT       (required)   - The local port to listen on.\n
+            SSL           (optional)   - Negotiate SSL for incoming connections\n
+            SSLCert       (optional)   - Path to a custom SSL certificate (default is randomly generated)\n
+            URIPATH       (optional)   - The URI to use for this exploit (default is random)\n
+
+        Description:\n
+            This module sets up a web server to bridge communications between
+            Metasploit and physically attached hardware.
+            Currently this module supports: automotive
+    </string>
+
     <string name="module_info_connect">
         Module Info:\n\n
         Name: Hardware Bridge Session Connector\n
@@ -1023,6 +1052,26 @@
                 https://nvd.nist.gov/vuln/detail/CVE-2017-14937
                 https://www.researchgate.net/publication/321183727_Security_Evaluation_of_an_Airbag-ECU_by_Reusing_Threat_Modeling_Artefacts
 
+    </string>
+    <string name="module_set_local_hwbridge">
+        \nOptions :\n
+        \nSRVHOST|0.0.0.0|required
+        \nSRVPORT|8080|required
+        \nSSL|false|optional
+        \nSSLCert||optional
+        \nURIPATH||optional
+        \nAdvanced Options :\n
+        \nListenerBindAddress||optional
+        \nListenerBindPort||optional
+        \nListenerComm||optional
+        \nSSLCipher||optional
+        \nSSLCompression|false|optional
+        \nSSLVersion|Auto|optional
+        \nSendRobots|false|optional
+        \nURIHOST||optional
+        \nURIPORT||optional
+        \nVERBOSE|false|optional
+        \nWORKSPACE||optional
     </string>
     <string name="module_set_connect">
         \nOptions :\n
