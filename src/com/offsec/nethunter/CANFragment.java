@@ -2561,7 +2561,7 @@ public class CANFragment extends Fragment {
             Button msfBtn = rootView.findViewById(R.id.msfconsole_start);
             msfBtn.setOnClickListener(v -> {
                 executorService.submit(() -> {
-                    run_cmd("pkill screen;screen -S msf -m echo -ne \"\\033]0;msf\\007\" && clear;msfconsole");
+                    run_cmd("pkill screen;screen -S msf -m msfconsole");
                 });
             });
 
