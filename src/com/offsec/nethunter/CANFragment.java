@@ -2582,8 +2582,12 @@ public class CANFragment extends Fragment {
 
                 StringBuilder msfCmd = new StringBuilder();
                 String moduleName = selected_module.replace(".rb", "");
-                if (moduleName.equals("connect")){
+                if (moduleName.equals("connect")) {
                     msfCmd.append("screen -r -X stuff \"use auxiliary/client/hwbridge/")
+                            .append(moduleName)
+                            .append("`echo -ne '\\015'`");
+                } else if (moduleName.equals("local_hwbridge")){
+                    msfCmd.append("screen -r -X stuff \"use auxiliary/server/")
                             .append(moduleName)
                             .append("`echo -ne '\\015'`");
                 } else {
