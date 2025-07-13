@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -54,10 +55,10 @@ import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.Map;
-import java.util.HashMap;
 
 public class CANFragment extends Fragment {
     private static final String TAG = "CANFragment";
@@ -91,7 +92,7 @@ public class CANFragment extends Fragment {
 
         ViewPager2 mViewPager = rootView.findViewById(R.id.pagerCAN);
         mViewPager.setAdapter(tabsPagerAdapter);
-        mViewPager.setOffscreenPageLimit(6);
+        mViewPager.setOffscreenPageLimit(7);
 
         TabLayout tabLayout = rootView.findViewById(R.id.tabLayoutCAN);
         new TabLayoutMediator(tabLayout, mViewPager,
@@ -102,6 +103,7 @@ public class CANFragment extends Fragment {
                         case 2: tab.setText("CAN-USB"); break;
                         case 3: tab.setText("Caribou"); break;
                         case 4: tab.setText("ICSim"); break;
+                        case 5: tab.setText("MSF"); break;
                         default: tab.setText("Tab " + (position + 1));
                     }
                 }
@@ -180,7 +182,7 @@ public class CANFragment extends Fragment {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
         Log.i(TAG, "Running setup commands");
-        String setupCommand = "curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup";
+        String setupCommand = "echo -ne \"\\033]0;CARsenal Setup\\007\" && clear;curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup";
         String setupResult = run_cmd(setupCommand);
         Log.d("SetupResult",setupResult);
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
@@ -193,7 +195,7 @@ public class CANFragment extends Fragment {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
         Log.i(TAG, "Running update commands");
-        String updateCommand = "curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update";
+        String updateCommand = "echo -ne \"\\033]0;CARsenal Update\\007\" && clear;curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update";
         String updateResult = run_cmd(updateCommand);
         Log.d("UpdateResult",updateResult);
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
@@ -203,7 +205,7 @@ public class CANFragment extends Fragment {
     public void RunAbout() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         MaterialAlertDialogBuilder aboutDialog = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-        aboutDialog.setTitle("About CAN Arsenal");
+        aboutDialog.setTitle("About CARsenal");
 
         TextView message = new TextView(context);
         message.setText(getResources().getText(R.string.about_author));
@@ -233,14 +235,16 @@ public class CANFragment extends Fragment {
                     return new CANUSBFragment();
                 case 3:
                     return new CANFragment.CANCARIBOUFragment();
-                default:
+                case 4:
                     return new CANICSIMFragment();
+                default :
+                    return new CANMSFFragment();
             }
         }
 
         @Override
         public int getItemCount() {
-            return 5;
+            return 6;
         }
     }
 
@@ -264,7 +268,6 @@ public class CANFragment extends Fragment {
             // Common used variables
             SelectedIface = rootView.findViewById(R.id.can_iface);
 
-            final EditText bt_target_mac = rootView.findViewById(R.id.bttarget);
             final EditText selected_vin = rootView.findViewById(R.id.vin_number);
 
             // First run
@@ -509,44 +512,166 @@ public class CANFragment extends Fragment {
                 return true; // long click handled
             });
 
-            // Start rfcomm binder
+            // Rfcomm Binder
             Button RfcommBinderButton = rootView.findViewById(R.id.start_rfcommbinder);
 
-            RfcommBinderButton.setOnClickListener(v -> {
-                String selected_caniface = SelectedIface.getText().toString();
-                String bt_target = bt_target_mac.getText().toString();
+            // Access SharedPreferences
+            SharedPreferences rfcommBinder_prefs = requireActivity().getSharedPreferences("rfcommBinder_prefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editorRfcommBinder = rfcommBinder_prefs.edit();
 
-                if (!selected_caniface.isEmpty() && !bt_target.isEmpty()) {
-                    run_cmd("rfcomm bind " + selected_caniface + " " + bt_target);
+            // Load the saved command or use a default
+            String savedCmd_rfcomm_binder = rfcommBinder_prefs.getString("rfcommBinder_cmd", "rfcomm bind vcan0 00:AA:BB:CC:DD:EE:FF");
+            String[] rfcommBinderCmdHolder = { savedCmd_rfcomm_binder };
+
+            RfcommBinderButton.setOnClickListener(v -> {
+                String rfcommBinderRun = rfcommBinderCmdHolder[0];
+
+                if (!rfcommBinderRun.isEmpty()) {
+                    run_cmd(rfcommBinderRun);
+                    showToast("Press CTRL+C to stop.");
                 } else {
-                    showToast("Please ensure your CAN Interface and Target field is set!");
+                    showToast("Please set your rfcomm binder command!");
                 }
             });
 
-            // Start Socketcand
-            Button SocketCandButton = rootView.findViewById(R.id.start_socketcand);
+            // Long click lets user edit the command
+            RfcommBinderButton.setOnLongClickListener(v -> {
+                AlertDialog.Builder builder_rfcommBinder = new AlertDialog.Builder(requireContext());
+                builder_rfcommBinder.setTitle("Edit Command");
 
-            SocketCandButton.setOnClickListener(v -> {
-                String selected_caniface = SelectedIface.getText().toString();
+                final EditText input_rfcomm_binder = new EditText(requireContext());
+                input_rfcomm_binder.setText(rfcommBinderCmdHolder[0]);
+                builder_rfcommBinder.setView(input_rfcomm_binder);
 
-                if (!selected_caniface.isEmpty()) {
-                    run_cmd("socketcand -v -l wlan0 -i " + selected_caniface);
+                builder_rfcommBinder.setPositiveButton("Save", (dialog, which) -> {
+                    String newRfcommBinderCmd = input_rfcomm_binder.getText().toString();
+                    rfcommBinderCmdHolder[0] = newRfcommBinderCmd;
+
+                    // Save to SharedPreferences
+                    editorRfcommBinder.putString("rfcommBinder_cmd", newRfcommBinderCmd);
+                    editorRfcommBinder.apply();
+
+                    showToast("Command updated!");
+                });
+
+                builder_rfcommBinder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+                AlertDialog dialog = builder_rfcommBinder.create();
+                dialog.setOnShowListener(d -> {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                });
+                dialog.show();
+                return true; // long click handled
+            });
+
+            // Rfcomm Connect
+            Button RfcommConnectButton = rootView.findViewById(R.id.start_rfcommconnect);
+
+            // Access SharedPreferences
+            SharedPreferences rfcommConnect_prefs = requireActivity().getSharedPreferences("rfcommConnect_prefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editorRfcommConnect = rfcommConnect_prefs.edit();
+
+            // Load the saved command or use a default
+            String savedCmd_rfcomm_connect = rfcommConnect_prefs.getString("rfcommConnect_cmd", "rfcomm connect /dev/ttyS0 00:AA:BB:CC:DD:EE:FF");
+            String[] rfcommConnectCmdHolder = { savedCmd_rfcomm_connect };
+
+            RfcommConnectButton.setOnClickListener(v -> {
+                String rfcommConnectRun = rfcommConnectCmdHolder[0];
+
+                if (!rfcommConnectRun.isEmpty()) {
+                    run_cmd(rfcommConnectRun);
+                    showToast("Press CTRL+C to stop.");
                 } else {
-                    showToast("Please ensure your CAN Interface field is set!");
+                    showToast("Please set your rfcomm connect command!");
                 }
+            });
+
+            // Long click lets user edit the command
+            RfcommConnectButton.setOnLongClickListener(v -> {
+                AlertDialog.Builder builder_rfcommConnect = new AlertDialog.Builder(requireContext());
+                builder_rfcommConnect.setTitle("Edit Command");
+
+                final EditText input_rfcomm_connect = new EditText(requireContext());
+                input_rfcomm_connect.setText(rfcommConnectCmdHolder[0]);
+                builder_rfcommConnect.setView(input_rfcomm_connect);
+
+                builder_rfcommConnect.setPositiveButton("Save", (dialog, which) -> {
+                    String newRfcommConnectCmd = input_rfcomm_connect.getText().toString();
+                    rfcommConnectCmdHolder[0] = newRfcommConnectCmd;
+
+                    // Save to SharedPreferences
+                    editorRfcommConnect.putString("rfcommConnect_cmd", newRfcommConnectCmd);
+                    editorRfcommConnect.apply();
+
+                    showToast("Command updated!");
+                });
+
+                builder_rfcommConnect.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+                AlertDialog dialog = builder_rfcommConnect.create();
+                dialog.setOnShowListener(d -> {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                });
+                dialog.show();
+                return true; // long click handled
+            });
+
+            // Socketcand
+            Button SocketcandButton = rootView.findViewById(R.id.start_socketcand);
+
+            // Access SharedPreferences
+            SharedPreferences socketcand_prefs = requireActivity().getSharedPreferences("socketcand_prefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editorSocketcand = socketcand_prefs.edit();
+
+            // Load the saved command or use a default
+            String savedCmd_socketcand = socketcand_prefs.getString("socketcand_cmd", "socketcand -v -l wlan0 -i vcan0");
+            String[] socketcandCmdHolder = { savedCmd_socketcand };
+
+            SocketcandButton.setOnClickListener(v -> {
+                String socketcandRun = socketcandCmdHolder[0];
+
+                if (!socketcandRun.isEmpty()) {
+                    run_cmd(socketcandRun);
+                    showToast("Press CTRL+C to stop.");
+                } else {
+                    showToast("Please set your rfcomm connect command!");
+                }
+            });
+
+            // Long click lets user edit the command
+            SocketcandButton.setOnLongClickListener(v -> {
+                AlertDialog.Builder builder_socketcand = new AlertDialog.Builder(requireContext());
+                builder_socketcand.setTitle("Edit Command");
+
+                final EditText input_socketcand = new EditText(requireContext());
+                input_socketcand.setText(socketcandCmdHolder[0]);
+                builder_socketcand.setView(input_socketcand);
+
+                builder_socketcand.setPositiveButton("Save", (dialog, which) -> {
+                    String newsocketcandCmd = input_socketcand.getText().toString();
+                    socketcandCmdHolder[0] = newsocketcandCmd;
+
+                    // Save to SharedPreferences
+                    editorSocketcand.putString("socketcand_cmd", newsocketcandCmd);
+                    editorSocketcand.apply();
+
+                    showToast("Command updated!");
+                });
+
+                builder_socketcand.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+                AlertDialog dialog = builder_socketcand.create();
+                dialog.setOnShowListener(d -> {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                });
+                dialog.show();
+                return true; // long click handled
             });
 
             // Interfaces
-            // Declare SharedPreferences at the class level
-            SharedPreferences preferences = requireActivity().getSharedPreferences("CANInterfaceState", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = preferences.edit();
-
-            // Store CAN Interface States
-            Map<String, Boolean> buttonStates = new HashMap<>();
-
-            // Load saved button states from SharedPreferences when fragment/activity is created
-            buttonStates.put("start_caniface", preferences.getBoolean("start_caniface", false));
-
             // Can Type Spinner
             // Spinner for CAN interfaces
             final Spinner canTypeList = rootView.findViewById(R.id.cantype_spinner);
@@ -568,65 +693,40 @@ public class CANFragment extends Fragment {
 
             // Start CAN interface
             Button StartCanButton = rootView.findViewById(R.id.start_caniface);
-
-            // Set initial button text based on saved state
-            StartCanButton.setText(Boolean.TRUE.equals(buttonStates.get("start_caniface")) ? "⏹ CAN" : "▶ CAN");
-
             StartCanButton.setOnClickListener(v -> {
                 String selected_caniface = SelectedIface.getText().toString();
                 String selected_mtu = SelectedMTU.getText().toString();
                 String selected_txqueuelen = SelectedTxqueuelen.getText().toString();
                 String interface_type = sharedpreferences.getString("cantype_selected", "");
-                boolean isStarted = Boolean.TRUE.equals(buttonStates.get("start_caniface"));
 
                 if (!selected_caniface.isEmpty() && selected_caniface.matches("^(can|vcan|slcan)[0-9]$")) {
-                    if (isStarted) {
-                        String stopCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && echo Success || echo Failed");
-                        stopCanIface = stopCanIface.trim();
-                        if ("vcan".equals(interface_type)) {
-                            String delVcanIface = exe.RunAsChrootOutput("sudo ip link delete " + selected_caniface + " && echo Success || echo Failed");
-                            if (delVcanIface.contains("FATAL:") || delVcanIface.contains("Failed")) {
-                                showToast("Failed to delete " + selected_caniface + " interface!");
-                            }
-                        }
-                        if (stopCanIface.contains("FATAL:") || stopCanIface.contains("Failed")) {
-                            showToast("Failed to stop " + selected_caniface + " interface!");
-                        } else {
-                            buttonStates.put("start_caniface", false);
-                            StartCanButton.setText("▶ CAN");
-                            showToast("Interface " + selected_caniface + " stopped!");
-                        }
-                    } else {
-                        if ("vcan".equals(interface_type)) {
-                            String addVcanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && echo Success || echo Failed");
-                            if (addVcanIface.contains("FATAL:") || addVcanIface.contains("Failed")) {
-                                showToast("Failed to add " + selected_caniface + " interface! Interface may already existing.");
-                            }
-                        }
-                        if ("can".equals(interface_type) || "slcan".equals(interface_type)) {
-                            String usbDevice = exe.RunAsChrootOutput("ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$'");
-                            if (usbDevice.isEmpty()) {
-                                showToast("No CAN Hardware detected, please connect adapter and try again.");
-                                return;
-                            }
-                        }
-
-                        if (!selected_mtu.isEmpty()) {
-                            exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && echo Success || echo Failed");
-                        }
-                        if (!selected_txqueuelen.isEmpty()) {
-                            exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " txqueuelen " + selected_txqueuelen + " && echo Success || echo Failed");
-                        }
-
-                        String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
-                        if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
-                            showToast("Failed to start " + selected_caniface + " interface!");
+                    if ("vcan".equals(interface_type)) {
+                        String addVcanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && echo Success || echo Failed");
+                        if (addVcanIface.contains("FATAL:") || addVcanIface.contains("Failed")) {
+                            showToast("Failed to add " + selected_caniface + " interface! Interface may already existing.");
                             return;
-                        } else {
-                            buttonStates.put("start_caniface", true);
-                            StartCanButton.setText("⏹ CAN");
-                            showToast("Interface " + selected_caniface + " started!");
                         }
+                    }
+                    if ("can".equals(interface_type) || "slcan".equals(interface_type)) {
+                        String usbDevice = exe.RunAsChrootOutput("ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$'");
+                        if (usbDevice.isEmpty()) {
+                            showToast("No CAN Hardware detected, please connect adapter and try again.");
+                            return;
+                        }
+                    }
+
+                    if (!selected_mtu.isEmpty()) {
+                        exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && echo Success || echo Failed");
+                    }
+                    if (!selected_txqueuelen.isEmpty()) {
+                        exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " txqueuelen " + selected_txqueuelen + " && echo Success || echo Failed");
+                    }
+
+                    String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
+                    if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
+                        showToast("Failed to start " + selected_caniface + " interface!");
+                    } else {
+                        showToast("Interface " + selected_caniface + " started!");
                     }
                 } else {
                     if (selected_caniface.isEmpty()) {
@@ -635,13 +735,8 @@ public class CANFragment extends Fragment {
                     }
                     if (!selected_caniface.matches("^(can|vcan|slcan)[0-9]$")) {
                         showToast("CAN Interface should be named \"^(can|vcan|slcan)[0-9]$\"");
-                        return;
                     }
                 }
-
-                // Save button state to SharedPreferences
-                editor.putBoolean("start_caniface", Boolean.TRUE.equals(buttonStates.get("start_caniface")));
-                editor.apply();
             });
 
             // Button Reset Interface
@@ -649,11 +744,6 @@ public class CANFragment extends Fragment {
 
             ResetIfaceButton.setOnClickListener(v -> {
                 exe.RunAsChrootOutput("/opt/car_hacking/can_reset.sh");
-                buttonStates.put("start_caniface", false);
-                StartCanButton.setText("▶ CAN");
-                // Save button state to SharedPreferences
-                editor.putBoolean("start_caniface", Boolean.TRUE.equals(buttonStates.get("start_caniface")));
-                editor.apply();
                 showToast("Interface reset!");
             });
 
@@ -746,7 +836,7 @@ public class CANFragment extends Fragment {
             executorService.submit(() -> {
                 String result = exe.RunAsChrootOutput(
                         "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
-                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$' | sed 's|^|/dev/|'"
+                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
                 );
 
                 ArrayList<String> deviceIfaces = new ArrayList<>();
@@ -1131,7 +1221,7 @@ public class CANFragment extends Fragment {
             executorService.submit(() -> {
                 String result = exe.RunAsChrootOutput(
                         "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
-                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$' | sed 's|^|/dev/|'"
+                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
                 );
 
                 ArrayList<String> deviceIfaces = new ArrayList<>();
@@ -1346,7 +1436,7 @@ public class CANFragment extends Fragment {
             if (context == null) return;
 
             executorService.submit(() -> {
-                String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$' | sed 's|^|/dev/|'");
+                String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'");
                 final ArrayList<String> deviceIfaces = new ArrayList<>();
                 if (outputDevice != null && !outputDevice.isEmpty()) {
                     final String[] deviceifacesArray = outputDevice.split("\n");
@@ -1414,7 +1504,7 @@ public class CANFragment extends Fragment {
             executorService.submit(() -> {
                 String result = exe.RunAsChrootOutput(
                         "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
-                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$' | sed 's|^|/dev/|'"
+                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
                 );
 
                 ArrayList<String> deviceIfaces = new ArrayList<>();
@@ -1972,7 +2062,7 @@ public class CANFragment extends Fragment {
             executorService.submit(() -> {
                 String result = exe.RunAsChrootOutput(
                         "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
-                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$' | sed 's|^|/dev/|'"
+                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
                 );
 
                 ArrayList<String> deviceIfaces = new ArrayList<>();
@@ -2021,10 +2111,10 @@ public class CANFragment extends Fragment {
             });
 
             // Level Spinner
-            final Spinner levelList = rootView.findViewById(R.id.level_spinner);
             // 0 = No randomization added to the packets other than location and ID
             // 1 = Add NULL padding
             // 2 = Randomize unused bytes
+            final Spinner levelList = rootView.findViewById(R.id.level_spinner);
             final String[] levelOptions = {"Level", "0", "1", "2"};
 
             ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, levelOptions) {
@@ -2176,6 +2266,361 @@ public class CANFragment extends Fragment {
 
             executorService.submit(() -> {
                 String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$'");
+                final ArrayList<String> deviceIfaces = new ArrayList<>();
+                if (outputDevice != null && !outputDevice.isEmpty()) {
+                    final String[] deviceifacesArray = outputDevice.split("\n");
+                    Activity activity = getActivity();
+                    if (sharedpreferences != null && activity != null) {
+                        int lastiface = sharedpreferences.getInt("selected_device", 0);
+                        requireActivity().runOnUiThread(() -> {
+                            deviceList.setAdapter(new ArrayAdapter<>(activity, android.R.layout.simple_list_item_1, deviceifacesArray));
+                            deviceList.setSelection(lastiface);
+                        });
+                        String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
+                        if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
+                            showToast(detected_device);
+                        }
+                    }
+                } else {
+                    deviceIfaces.add("None");
+                    Activity activity = getActivity();
+                    if (sharedpreferences != null && activity != null) {
+                        requireActivity().runOnUiThread(() -> {
+                            deviceList.setAdapter(new ArrayAdapter<>(activity, android.R.layout.simple_list_item_1, deviceIfaces));
+                            sharedpreferences.edit().putInt("selected_device", deviceList.getSelectedItemPosition()).apply();
+                        });
+                    }
+                }
+            });
+
+            String message = "Device list refreshed!";
+            showToast(message);
+        }
+    }
+
+
+    public static class CANMSFFragment extends CANFragment {
+        final ShellExecuter exe = new ShellExecuter();
+        private final ExecutorService executorService = Executors.newCachedThreadPool();
+        private Context context;
+        private String selected_caniface;
+        private String selected_module;
+
+
+        @Override
+        public void onCreate(@Nullable Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            context = getContext();
+        }
+
+        @SuppressLint("SetJavaScriptEnabled")
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.can_msf, container, false);
+
+            final EditText selected_baud = rootView.findViewById(R.id.baud_speed);
+
+            // Interfaces
+            final Spinner deviceList = rootView.findViewById(R.id.device_interface);
+
+            executorService.submit(() -> {
+                String result = exe.RunAsChrootOutput(
+                        "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
+                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
+                );
+
+                ArrayList<String> deviceIfaces = new ArrayList<>();
+
+                if (result == null || result.trim().isEmpty()) {
+                    deviceIfaces.add("None");
+                } else {
+                    deviceIfaces.addAll(Arrays.asList(result.split("\n")));
+                }
+
+                // Post UI update back to the main thread
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, deviceIfaces);
+                    deviceList.setAdapter(adapter);
+
+                    // Restore previous selection if saved
+                    int savedPosition = sharedpreferences.getInt("selected_usb", 0);
+                    if (savedPosition < deviceIfaces.size()) {
+                        deviceList.setSelection(savedPosition);
+                        selected_caniface = deviceIfaces.get(savedPosition);
+                    } else {
+                        selected_caniface = "None";
+                    }
+
+                    deviceList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                            selected_caniface = parentView.getItemAtPosition(pos).toString();
+                            sharedpreferences.edit().putInt("selected_usb", pos).apply();
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> parentView) {
+                            selected_caniface = "None";
+                        }
+                    });
+
+                    // Optional: show toast for newly detected device
+                    if (!deviceIfaces.contains("None")) {
+                        String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }';ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'");
+                        if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
+                            showToast(detected_device);
+                        }
+                    }
+                });
+            });
+
+            // Refresh Status
+            ImageButton RefreshUSB = rootView.findViewById(R.id.refreshUSB);
+            RefreshUSB.setOnClickListener(v -> {
+                showToast("Refreshing Devices...");
+                refresh(rootView);
+            });
+            executorService.submit(() -> refresh(rootView));
+
+            // ELM327 Relay
+            Button elm327relayButton = rootView.findViewById(R.id.run_relay);
+
+            elm327relayButton.setOnClickListener(v -> {
+                String baudSpeed = selected_baud.getText().toString();
+
+                String baudValue;
+                if (!baudSpeed.isEmpty()) {
+                    baudValue = " -b " + baudSpeed;
+                } else {
+                    baudValue = "";
+                }
+
+                run_cmd("/usr/share/metasploit-framework/tools/hardware/elm327_relay.rb -s " + selected_caniface + baudValue);
+            });
+
+            // Modules
+            final Spinner modulesList = rootView.findViewById(R.id.msf_modules_spinner);
+
+            executorService.submit(() -> {
+                String result = exe.RunAsChrootOutput(
+                        "basename /usr/share/metasploit-framework/modules/auxiliary/server/local_hwbridge.rb && basename /usr/share/metasploit-framework/modules/auxiliary/client/hwbridge/connect.rb && ls /usr/share/metasploit-framework/modules/post/hardware/automotive/"
+                );
+
+                ArrayList<String> module = new ArrayList<>();
+
+                if (result == null || result.trim().isEmpty()) {
+                    module.add("None");
+                } else {
+                    module.addAll(Arrays.asList(result.split("\n")));
+                }
+
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, module);
+                    modulesList.setAdapter(adapter);
+
+                    int savedPosition = sharedpreferences.getInt("selected_module", 0);
+                    if (savedPosition < module.size()) {
+                        modulesList.setSelection(savedPosition);
+                        selected_module = module.get(savedPosition);
+                    } else {
+                        selected_module = "None";
+                    }
+
+                    modulesList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                            selected_module = parentView.getItemAtPosition(pos).toString();
+                            sharedpreferences.edit().putInt("selected_module", pos).apply();
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> parentView) {
+                            selected_module = "None";
+                        }
+                    });
+                });
+            });
+
+            TextView infoText = rootView.findViewById(R.id.module_info_text);
+            LinearLayout optionsContainer = rootView.findViewById(R.id.module_options_container);
+
+            // Info button
+            Button infoBtn = rootView.findViewById(R.id.info_module);
+            infoBtn.setOnClickListener(v -> {
+                if (selected_module == null || selected_module.equals("None")) {
+                    showToast("Select a module first");
+                    return;
+                }
+
+                String moduleNameKey = selected_module.replace(".rb", "").toLowerCase();
+                String resourceKey = "module_info_" + moduleNameKey;
+
+                int resId = getResources().getIdentifier(resourceKey, "string", requireContext().getPackageName());
+
+                if (resId == 0) {
+                    showToast("No info available for this module");
+                    return;
+                }
+
+                String moduleInfo = getString(resId);
+
+                // Build popup dialog
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setTitle("Module Information");
+                    builder.setMessage(moduleInfo);
+                    builder.setPositiveButton("Close", (dialog, which) -> dialog.dismiss());
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+
+                    Button closeButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                    if (closeButton != null) {
+                        closeButton.setTextColor(Color.WHITE);
+                    }
+                });
+            });
+
+
+            // Set button
+            Button setBtn = rootView.findViewById(R.id.set_module);
+            setBtn.setOnClickListener(v -> {
+                if (selected_module == null || selected_module.equals("None")) {
+                    showToast("Select a module first");
+                    return;
+                }
+
+                infoText.setVisibility(View.GONE);
+
+                int optionsStringId = getResources().getIdentifier(
+                        "module_set_" + selected_module.replace(".rb", "").toLowerCase().trim(),
+                        "string",
+                        requireContext().getPackageName());
+
+                if (optionsStringId == 0) {
+                    infoText.setVisibility(View.VISIBLE);
+                    infoText.setText("No options available for this module.");
+                    return;
+                }
+
+                String optionsText = getString(optionsStringId);
+                String[] optionLines = optionsText.split("\n");
+
+                LinearLayout inputLayout = new LinearLayout(requireContext());
+                inputLayout.setOrientation(LinearLayout.VERTICAL);
+                inputLayout.setPadding(20, 20, 20, 20);
+
+                Map<String, EditText> userInputs = new LinkedHashMap<>();
+
+                for (String line : optionLines) {
+                    line = line.trim();
+                    if (line.isEmpty()) continue;
+
+                    if (!line.contains("|")) {
+                        TextView header = new TextView(requireContext());
+                        header.setText(line);
+                        header.setTextAppearance(requireContext(), android.R.style.TextAppearance_Medium);
+                        header.setTypeface(null, Typeface.BOLD);
+                        header.setPadding(0, 30, 0, 30);
+
+                        inputLayout.addView(header);
+                        continue;
+                    }
+
+                    String[] parts = line.split("\\|");
+                    String name = parts.length > 0 ? parts[0].trim() : "";
+                    String defaultVal = parts.length > 1 ? parts[1].trim() : "";
+                    String required = parts.length > 2 ? parts[2].trim() : "optional";
+
+                    if (name.isEmpty()) continue;
+
+                    TextView label = new TextView(requireContext());
+                    label.setText(name + " (" + required + ")");
+                    label.setTextSize(14);
+                    label.setPadding(0, 10, 0, 4);
+
+                    EditText input = new EditText(requireContext());
+                    input.setHint("Enter " + name);
+                    input.setText(defaultVal);
+                    input.setTag(name);
+                    input.setTextSize(14);
+
+                    inputLayout.addView(label);
+                    inputLayout.addView(input);
+
+                    userInputs.put(name, input);
+                }
+
+                optionsContainer.removeAllViews();
+                optionsContainer.addView(inputLayout);
+                optionsContainer.setVisibility(View.VISIBLE);
+                optionsContainer.setTag(userInputs);
+            });
+
+            Button msfBtn = rootView.findViewById(R.id.msfconsole_start);
+            msfBtn.setOnClickListener(v -> {
+                executorService.submit(() -> {
+                    run_cmd("pkill screen;screen -S msf -m msfconsole");
+                });
+            });
+
+            Button runBtn = rootView.findViewById(R.id.run_module);
+            runBtn.setOnClickListener(v -> {
+                if (selected_module == null || selected_module.equals("None")) {
+                    showToast("Select a module first");
+                    return;
+                }
+
+                @SuppressWarnings("unchecked")
+                Map<String, EditText> userInputs = (Map<String, EditText>) optionsContainer.getTag();
+
+                if (userInputs == null || userInputs.isEmpty()) {
+                    showToast("Please press Set and fill options first.");
+                    return;
+                }
+
+                StringBuilder msfCmd = new StringBuilder();
+                String moduleName = selected_module.replace(".rb", "");
+                if (moduleName.equals("connect")) {
+                    msfCmd.append("screen -r -X stuff \"use auxiliary/client/hwbridge/")
+                            .append(moduleName)
+                            .append("`echo -ne '\\015'`");
+                } else if (moduleName.equals("local_hwbridge")){
+                    msfCmd.append("screen -r -X stuff \"use auxiliary/server/")
+                            .append(moduleName)
+                            .append("`echo -ne '\\015'`");
+                } else {
+                    msfCmd.append("screen -r -X stuff \"use post/hardware/automotive/")
+                            .append(moduleName)
+                            .append("`echo -ne '\\015'`");
+                }
+
+                for (Map.Entry<String, EditText> entry : userInputs.entrySet()) {
+                    String key = entry.getKey();
+                    String value = entry.getValue().getText().toString().trim();
+
+                    if (!value.isEmpty()) {
+                        String sanitized = value.replace("'", "'\"'\"'");
+                        msfCmd.append("set ").append(key.toUpperCase()).append(" '").append(sanitized).append("'`echo -ne '\\015'`");
+                    }
+                }
+
+                msfCmd.append("run\"`echo -ne '\\015'`;screen -r");
+
+                executorService.submit(() -> {
+                    run_cmd(msfCmd.toString());
+                });
+            });
+
+            return rootView;
+        }
+
+        // Refresh iface
+        private void refresh(View CANFragment) {
+            final Spinner deviceList = CANFragment.findViewById(R.id.device_interface);
+            if (context == null) return;
+
+            executorService.submit(() -> {
+                String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'");
                 final ArrayList<String> deviceIfaces = new ArrayList<>();
                 if (outputDevice != null && !outputDevice.isEmpty()) {
                     final String[] deviceifacesArray = outputDevice.split("\n");

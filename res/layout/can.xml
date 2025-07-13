@@ -10,6 +10,7 @@
         android:layout_height="wrap_content"
         android:paddingTop="10dp"
         android:paddingBottom="10dp"
+        app:tabMode="scrollable"
         app:layout_constraintBottom_toTopOf="@id/pagerCAN"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="SpeakableTextPresentCheck" />
