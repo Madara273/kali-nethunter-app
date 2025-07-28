@@ -108,20 +108,36 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
-                    android:layout_weight="3"
+                    android:layout_weight="1"
                     android:text="ELM327 Relay :"
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="HardcodedText" />
 
+
                 <Button
                     android:id="@+id/run_relay"
-                    android:layout_width="0dp"
+                    android:layout_width="100dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:text="Run"
                     tools:ignore="ButtonStyle,HardcodedText,VisualLintButtonSize" />
 
             </LinearLayout>
+
+            <View
+                android:id="@+id/divider3"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:background="?android:attr/listDivider" />
+
+            <Button
+                android:id="@+id/msfconsole_start"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="start msfconsole"
+                tools:ignore="ButtonStyle,HardcodedText,VisualLintButtonSize" />
 
             <LinearLayout
                 android:id="@+id/spinner_layout"
@@ -146,14 +162,6 @@
                     android:spinnerMode="dropdown"
                     tools:ignore="TouchTargetSizeCheck" />
             </LinearLayout>
-
-            <Button
-                android:id="@+id/msfconsole_start"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="start msfconsole"
-                tools:ignore="ButtonStyle,HardcodedText,VisualLintButtonSize" />
 
             <LinearLayout
                 android:id="@+id/button_row"
