@@ -349,13 +349,6 @@
                     android:layout_weight="1"
                     android:text="CanDump" />
 
-                <Button
-                    android:id="@+id/start_cansend"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="CanSend" />
-
             </LinearLayout>
 
             <LinearLayout
@@ -366,11 +359,34 @@
                 android:layout_marginEnd="20dp">
 
                 <Button
+                    android:id="@+id/start_cansend"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="CanSend" />
+
+                <Button
                     android:id="@+id/start_canplayer"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="CanPlayer" />
+
+                <Button
+                    android:id="@+id/start_sequencefinder"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Seq.Finder" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp">
 
                 <Button
                     android:id="@+id/start_asc2log"
@@ -387,11 +403,11 @@
                     android:text="Log2Asc" />
 
                 <Button
-                    android:id="@+id/start_freediag"
+                    android:id="@+id/start_cannelloni"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Freediag" />
+                    android:text="Cannelloni"/>
 
             </LinearLayout>
 
@@ -403,25 +419,18 @@
                 android:layout_marginEnd="20dp">
 
                 <Button
+                    android:id="@+id/start_freediag"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Freediag" />
+
+                <Button
                     android:id="@+id/start_diagtest"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="DiagTest" />
-
-                <Button
-                    android:id="@+id/start_sequencefinder"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Seq.Finder" />
-
-                <Button
-                    android:id="@+id/start_cannelloni"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Cannelloni"/>
 
             </LinearLayout>
 
