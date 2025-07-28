@@ -2559,7 +2559,10 @@ public class CANFragment extends Fragment {
             Button msfBtn = rootView.findViewById(R.id.msfconsole_start);
             msfBtn.setOnClickListener(v -> {
                 executorService.submit(() -> {
-                    run_cmd("pkill screen;screen -S msf -m msfconsole");
+                    run_cmd("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n); "
+                            + "if [ -n \"$msfsession\" ]; then "
+                            + "screen -d \"$msfsession\"; screen -r \"$msfsession\"; "
+                            + "else screen -S msf -m msfconsole;exit; fi");
                 });
             });
 
@@ -2581,15 +2584,15 @@ public class CANFragment extends Fragment {
                 StringBuilder msfCmd = new StringBuilder();
                 String moduleName = selected_module.replace(".rb", "");
                 if (moduleName.equals("connect")) {
-                    msfCmd.append("screen -r -X stuff \"use auxiliary/client/hwbridge/")
+                    msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use auxiliary/client/hwbridge/")
                             .append(moduleName)
                             .append("`echo -ne '\\015'`");
                 } else if (moduleName.equals("local_hwbridge")){
-                    msfCmd.append("screen -r -X stuff \"use auxiliary/server/")
+                    msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use auxiliary/server/")
                             .append(moduleName)
                             .append("`echo -ne '\\015'`");
                 } else {
-                    msfCmd.append("screen -r -X stuff \"use post/hardware/automotive/")
+                    msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use post/hardware/automotive/")
                             .append(moduleName)
                             .append("`echo -ne '\\015'`");
                 }
@@ -2604,7 +2607,8 @@ public class CANFragment extends Fragment {
                     }
                 }
 
-                msfCmd.append("run\"`echo -ne '\\015'`;screen -r");
+                msfCmd.append("run\"`echo -ne '\\015'`;screen -d -r $msfsession;exit" +
+                        "");
 
                 executorService.submit(() -> {
                     run_cmd(msfCmd.toString());
