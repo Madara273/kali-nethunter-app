@@ -42,7 +42,7 @@
                     android:layout_weight="1"
                     android:layout_marginStart="20dp"
                     android:layout_marginTop="10dp"
-                    android:text="Settings"
+                    android:text="Instrument Cluster Simulator"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:textStyle="bold"
                     tools:ignore="HardcodedText" />
