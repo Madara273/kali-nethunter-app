@@ -94,42 +94,36 @@
                 android:orientation="horizontal"
                 android:padding="10dp">
 
-                <TextView
-                    android:id="@+id/textView14"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:text="Baudrate :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
-
                 <EditText
                     android:id="@+id/baudrate_usb"
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
                     android:inputType="number"
-                    android:saveEnabled="true"
-                    android:gravity="right|bottom"
-                    android:hint="200000"
+                    android:gravity="bottom"
+                    android:hint="Baudrate : 200000"
                     tools:ignore="TouchTargetSizeCheck"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
-                <TextView
-                    android:id="@+id/textView15"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="95dp"
-                    android:text="CAN Speed :"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="horizontal"
+                android:padding="10dp">
 
                 <EditText
                     android:id="@+id/canspeed_usb"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
                     android:inputType="number"
-                    android:saveEnabled="true"
-                    android:gravity="right|bottom"
-                    android:hint="500000"
+                    android:gravity="bottom"
+                    android:hint="CAN Speed : 500000"
                     tools:ignore="TouchTargetSizeCheck"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
             </LinearLayout>
