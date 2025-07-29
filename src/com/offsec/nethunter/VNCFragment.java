@@ -454,7 +454,13 @@ public class VNCFragment extends Fragment {
                 } else run_cmd("echo -ne \"\\033]0;Setting up Server\\007\" && clear;chmod +x ~/.vnc/xstartup && clear;echo $'\n'\"Please enter your new VNC server password\"$'\n' && " + "if [ \"" + selected_user + "\" == \"root\" ]; then " + "  if [ ! -d /root/.config/tigervnc ]; then mkdir -p -m 0777 /root/.config/tigervnc; fi; " + "  sudo -u root vncpasswd; " + "  if [ ! -f ~/.vnc/passwd ]; then cp -rf ~/.config/tigervnc/passwd ~/.vnc/; fi; " + "else " + " user_uid=$(id -u " + selected_user + "); " + " if [ \"$user_uid\" -eq 100000 ] || [ \"$user_uid\" -eq 9000 ]; then " + " if [ ! -d /home/" + selected_user + "/.config/tigervnc ]; then mkdir -p -m 0777 /home/" + selected_user + "/.config/tigervnc; fi; " + "  sudo -u " + selected_user + " vncpasswd; " + "  if [ ! -f /home/" + selected_user + "/.vnc/passwd ]; then cp -rf /home/" + selected_user + "/.config/tigervnc/passwd /home/" + selected_user + "/.vnc/; fi; " + " fi; " + "fi && sleep 2 && exit"); // since is a kali command we can send it as is
             }
         });
+	final TextView VNCstatus = rootView.findViewById(R.id.KeXstatus);
         addClickListener(StartVNCButton, v -> {
+	    /* ── NEW: bail out when the server is already running ── */
+            if (VNCstatus.getText().toString().equals("RUNNING")) {
+                Toast.makeText(requireActivity().getApplicationContext(), "VNC server is already running", Toast.LENGTH_SHORT).show();
+                return; //  nothing else is executed
+            }
             if (selected_user.equals("root")) {
                 File rootvncpasswd = new File(NhPaths.CHROOT_PATH() + "/root/.vnc/passwd");
                 vnc_passwd = exe.RunAsRootOutput("cat " + rootvncpasswd);
