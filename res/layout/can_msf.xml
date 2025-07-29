@@ -59,22 +59,15 @@
                 android:id="@+id/linearLayout2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_weight="3"
-                    android:text="Interface :"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="HardcodedText" />
+                android:orientation="horizontal">
 
                 <Spinner
                     android:id="@+id/device_interface"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
                     android:spinnerMode="dropdown"
                     tools:ignore="TouchTargetSizeCheck" />
             </LinearLayout>
@@ -144,21 +137,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
-                android:padding="10dp">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_weight="3"
-                    android:text="Modules :"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="HardcodedText" />
+                android:layout_marginTop="10dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp">
 
                 <Spinner
                     android:id="@+id/msf_modules_spinner"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
                     android:spinnerMode="dropdown"
                     tools:ignore="TouchTargetSizeCheck" />
             </LinearLayout>

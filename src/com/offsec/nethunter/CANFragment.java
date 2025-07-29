@@ -673,17 +673,40 @@ public class CANFragment extends Fragment {
 
             // Interfaces
             // Can Type Spinner
-            // Spinner for CAN interfaces
             final Spinner canTypeList = rootView.findViewById(R.id.cantype_spinner);
-            final String[] interfaceTypeOptions = {"can", "vcan", "slcan"};
+            final String[] interfaceTypeOptions = {"Type", "can", "vcan", "slcan"};
 
-            canTypeList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, interfaceTypeOptions));
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, interfaceTypeOptions) {
+                @Override
+                public boolean isEnabled(int position) {
+                    // Disable "Type" item
+                    return position != 0;
+                }
+
+                @Override
+                public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                    View view = super.getDropDownView(position, convertView, parent);
+                    TextView tv = (TextView) view;
+                    if (position == 0) {
+                        tv.setTextColor(Color.GRAY);  // Hint text color
+                    } else {
+                        tv.setTextColor(Color.WHITE); // Normal text
+                    }
+                    return view;
+                }
+            };
+
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            canTypeList.setAdapter(adapter);
+            canTypeList.setSelection(0);  // Set initial selection to "Type"
 
             canTypeList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                    String cantype_selected = parentView.getItemAtPosition(pos).toString();
-                    sharedpreferences.edit().putString("cantype_selected", cantype_selected).apply();
+                    if (pos != 0) { // Ignore "Type" hint
+                        String cantype_selected = parentView.getItemAtPosition(pos).toString();
+                        sharedpreferences.edit().putString("cantype_selected", cantype_selected).apply();
+                    }
                 }
 
                 @Override
@@ -842,7 +865,7 @@ public class CANFragment extends Fragment {
                 ArrayList<String> deviceIfaces = new ArrayList<>();
 
                 if (result == null || result.trim().isEmpty()) {
-                    deviceIfaces.add("None");
+                    deviceIfaces.add("Interface (None)");
                 } else {
                     deviceIfaces.addAll(Arrays.asList(result.split("\n")));
                 }
@@ -858,7 +881,7 @@ public class CANFragment extends Fragment {
                         deviceList.setSelection(savedPosition);
                         selected_caniface = deviceIfaces.get(savedPosition);
                     } else {
-                        selected_caniface = "None";
+                        selected_caniface = "Interface (None)";
                     }
 
                     deviceList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -870,12 +893,12 @@ public class CANFragment extends Fragment {
 
                         @Override
                         public void onNothingSelected(AdapterView<?> parentView) {
-                            selected_caniface = "None";
+                            selected_caniface = "Interface (None)";
                         }
                     });
 
                     // Optional: show toast for newly detected device
-                    if (!deviceIfaces.contains("None")) {
+                    if (!deviceIfaces.contains("Interface (None)")) {
                         String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
                         if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
                             showToast(detected_device);
@@ -983,7 +1006,7 @@ public class CANFragment extends Fragment {
             CanGenButton.setOnClickListener(v -> {
                 String verboseEnabled = isVerboseEnabled ? " -v" : "";
                 String disableLoopbackEnabled = isDisableLoopbackEnabled ? " -x" : "";
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     run_cmd("cangen " + selected_caniface + verboseEnabled + disableLoopbackEnabled);
                 } else {
                     showToast("Please ensure your CAN Interface field is set!");
@@ -995,7 +1018,7 @@ public class CANFragment extends Fragment {
             Button CanSnifferButton = rootView.findViewById(R.id.start_cansniffer);
 
             CanSnifferButton.setOnClickListener(v -> {
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     run_cmd("cansniffer " + selected_caniface);
                 } else {
                     showToast("Please ensure your CAN Interface field is set!");
@@ -1010,7 +1033,7 @@ public class CANFragment extends Fragment {
             CanDumpButton.setOnClickListener(v -> {
                 String outputfile = outputfilepath.getText().toString();
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None") && !outputfile.isEmpty()) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !outputfile.isEmpty()) {
                     run_cmd("candump " + selected_caniface + " -f " + outputfile);
                 } else {
                     showToast("Please ensure your CAN Interface and Output File fields is set!");
@@ -1025,7 +1048,7 @@ public class CANFragment extends Fragment {
             CanSendButton.setOnClickListener(v -> {
                 String sequence = cansend_sequence.getText().toString();
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None") && !sequence.isEmpty()) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !sequence.isEmpty()) {
                     run_cmd("cansend " + selected_caniface + " " + sequence);
                 } else {
                     showToast("Please ensure your CAN Interface and Sequence fields is set!");
@@ -1093,7 +1116,7 @@ public class CANFragment extends Fragment {
                 String rport = SelectedRPort.getText().toString();
                 String lport = SelectedLPort.getText().toString();
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None") && !rhost.isEmpty() && !rport.isEmpty() && !lport.isEmpty()) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !rhost.isEmpty() && !rport.isEmpty() && !lport.isEmpty()) {
                     run_cmd("sudo cannelloni -I " + selected_caniface + " -R " + rhost + " -r " + rport + " -l " + lport);
                 } else {
                     showToast("Please ensure your CAN Interface, RHOST, RPORT, LPORT fields is set!");
@@ -1125,7 +1148,7 @@ public class CANFragment extends Fragment {
                 String inputfile = inputfilepath.getText().toString();
                 String outputfile = outputfilepath.getText().toString();
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None") && !inputfile.isEmpty() && !outputfile.isEmpty()) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !inputfile.isEmpty() && !outputfile.isEmpty()) {
                     run_cmd("log2asc -I " + inputfile + " -O " + outputfile + " " + selected_caniface);
                 } else {
                     showToast("Please ensure your CAN Interface, Input and Output File fields is set!");
@@ -1175,7 +1198,7 @@ public class CANFragment extends Fragment {
                         }
                     }
                 } else {
-                    deviceIfaces.add("None");
+                    deviceIfaces.add("Interface (None)");
                     Activity activity = getActivity();
                     if (sharedpreferences != null && activity != null) {
                         requireActivity().runOnUiThread(() -> {
@@ -1227,7 +1250,7 @@ public class CANFragment extends Fragment {
                 ArrayList<String> deviceIfaces = new ArrayList<>();
 
                 if (result == null || result.trim().isEmpty()) {
-                    deviceIfaces.add("None");
+                    deviceIfaces.add("USB Device (None)");
                 } else {
                     deviceIfaces.addAll(Arrays.asList(result.split("\n")));
                 }
@@ -1243,7 +1266,7 @@ public class CANFragment extends Fragment {
                         deviceList.setSelection(savedPosition);
                         selected_usb = deviceIfaces.get(savedPosition);
                     } else {
-                        selected_usb = "None";
+                        selected_usb = "USB Device (None)";
                     }
 
                     deviceList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -1255,11 +1278,11 @@ public class CANFragment extends Fragment {
 
                         @Override
                         public void onNothingSelected(AdapterView<?> parentView) {
-                            selected_usb = "None";
+                            selected_usb = "USB Device (None)";
                         }
                     });
 
-                    if (!deviceIfaces.contains("None")) {
+                    if (!deviceIfaces.contains("USB Device (None)")) {
                         String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
                         if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
                             showToast(detected_device);
@@ -1401,7 +1424,7 @@ public class CANFragment extends Fragment {
                 String sleepValue = getVisibleParam(selectedSleep, " -g ");
                 String modeValue = getVisibleParam(canusbModeList, " -m ");
 
-                if (!selected_usb.isEmpty() && !selected_usb.equals("None") && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
+                if (!selected_usb.isEmpty() && !selected_usb.equals("USB Device (None)") && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
                     run_cmd("canusb -d " + selected_usb + " -s " + USBCANSpeed + " -b " + USBBaudrate + debugEnabled + idValue + dataValue + sleepValue + countValue + modeValue);
                 } else {
                     showToast("Please ensure your USB Device and USB CAN Speed, Baudrate, Data fields is set!");
@@ -1453,7 +1476,7 @@ public class CANFragment extends Fragment {
                         }
                     }
                 } else {
-                    deviceIfaces.add("None");
+                    deviceIfaces.add("USB Device (None)");
                     Activity activity = getActivity();
                     if (sharedpreferences != null && activity != null) {
                         requireActivity().runOnUiThread(() -> {
@@ -1510,7 +1533,7 @@ public class CANFragment extends Fragment {
                 ArrayList<String> deviceIfaces = new ArrayList<>();
 
                 if (result == null || result.trim().isEmpty()) {
-                    deviceIfaces.add("None");
+                    deviceIfaces.add("Interface (None)");
                 } else {
                     deviceIfaces.addAll(Arrays.asList(result.split("\n")));
                 }
@@ -1526,7 +1549,7 @@ public class CANFragment extends Fragment {
                         deviceList.setSelection(savedPosition);
                         selected_caniface = deviceIfaces.get(savedPosition);
                     } else {
-                        selected_caniface = "None";
+                        selected_caniface = "Interface (None)";
                     }
 
                     deviceList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -1538,12 +1561,12 @@ public class CANFragment extends Fragment {
 
                         @Override
                         public void onNothingSelected(AdapterView<?> parentView) {
-                            selected_caniface = "None";
+                            selected_caniface = "Interface (None)";
                         }
                     });
 
                     // Optional: show toast for newly detected device
-                    if (!deviceIfaces.contains("None")) {
+                    if (!deviceIfaces.contains("Interface (None)")) {
                         String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
                         if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
                             showToast(detected_device);
@@ -1774,7 +1797,7 @@ public class CANFragment extends Fragment {
                 String candumpFormat = isCandumpEnabled ? " -t" : "";
                 String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
                 String separateLineValue = getVisibleParam(selectedLine, " -s ");
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " dump" + separateLineValue + candumpFormat + outputEnabled);
                 } else {
                     showToast("Please chose a CAN Interface!");
@@ -1788,7 +1811,7 @@ public class CANFragment extends Fragment {
 
             CaribouListenerButton.setOnClickListener(v -> {
                 String reverseEnabled = isReverseEnabled ? " -r" : "";
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " listener" + reverseEnabled);
                 } else {
                     showToast("Please chose a CAN Interface!");
@@ -1825,7 +1848,7 @@ public class CANFragment extends Fragment {
                 String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
                 String seedValue         = getVisibleParam(selectedSeed, " --seed ");
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     if ("brute".equals(fuzzer_module)) {
                         run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer brute" + idValue);
                     }
@@ -1877,7 +1900,7 @@ public class CANFragment extends Fragment {
                 String padEnabled       = isPadEnabled ? " -p" : "";
                 String send_module      = sharedpreferences.getString("send_selected", "");
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     if ("file".equals(send_module)) {
                         run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " send file" + delayValue + loopEnabled + " " + selected_file);
                     }
@@ -1920,7 +1943,7 @@ public class CANFragment extends Fragment {
                 String delayValue        = getVisibleParam(selectedDelay, " -d ");
                 String uds_module        = sharedpreferences.getString("uds_selected", "");
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     if ("discovery".equals(uds_module)) {
                         run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds discovery" + minValue + maxValue + delayValue);
                     }
@@ -1965,7 +1988,7 @@ public class CANFragment extends Fragment {
                 String maxValue          = getVisibleParam(selectedMax, " -max ");
                 String xcp_module = sharedpreferences.getString("xcp_selected", "");
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     if ("discovery".equals(xcp_module)) {
                         run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp discovery" + minValue + maxValue);
                     }
@@ -2008,7 +2031,7 @@ public class CANFragment extends Fragment {
                         }
                     }
                 } else {
-                    deviceIfaces.add("None");
+                    deviceIfaces.add("Interface (None)");
                     Activity activity = getActivity();
                     if (sharedpreferences != null && activity != null) {
                         requireActivity().runOnUiThread(() -> {
@@ -2068,7 +2091,7 @@ public class CANFragment extends Fragment {
                 ArrayList<String> deviceIfaces = new ArrayList<>();
 
                 if (result == null || result.trim().isEmpty()) {
-                    deviceIfaces.add("None");
+                    deviceIfaces.add("Interface (None)");
                 } else {
                     deviceIfaces.addAll(Arrays.asList(result.split("\n")));
                 }
@@ -2084,7 +2107,7 @@ public class CANFragment extends Fragment {
                         deviceList.setSelection(savedPosition);
                         selected_caniface = deviceIfaces.get(savedPosition);
                     } else {
-                        selected_caniface = "None";
+                        selected_caniface = "Interface (None)";
                     }
 
                     deviceList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -2096,12 +2119,12 @@ public class CANFragment extends Fragment {
 
                         @Override
                         public void onNothingSelected(AdapterView<?> parentView) {
-                            selected_caniface = "None";
+                            selected_caniface = "Interface (None)";
                         }
                     });
 
                     // Optional: show toast for newly detected device
-                    if (!deviceIfaces.contains("None")) {
+                    if (!deviceIfaces.contains("Interface (None)")) {
                         String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
                         if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
                             showToast(detected_device);
@@ -2187,7 +2210,7 @@ public class CANFragment extends Fragment {
             // ICSIM
             Button runICSIM = rootView.findViewById(R.id.run_icsim);
             runICSIM.setOnClickListener(v -> {
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     // String randomizeEnabled = isRandomizeEnabled ? " -r" : "";
                     String levelValue = getVisibleParam(levelList, " -l ");
                     run_cmd("su -c 'sh " + ICSIM_SCRIPT_PATH + " " + selected_caniface + levelValue + "'");
@@ -2282,7 +2305,7 @@ public class CANFragment extends Fragment {
                         }
                     }
                 } else {
-                    deviceIfaces.add("None");
+                    deviceIfaces.add("Interface (None)");
                     Activity activity = getActivity();
                     if (sharedpreferences != null && activity != null) {
                         requireActivity().runOnUiThread(() -> {
@@ -2332,7 +2355,7 @@ public class CANFragment extends Fragment {
                 ArrayList<String> deviceIfaces = new ArrayList<>();
 
                 if (result == null || result.trim().isEmpty()) {
-                    deviceIfaces.add("None");
+                    deviceIfaces.add("Interface (None)");
                 } else {
                     deviceIfaces.addAll(Arrays.asList(result.split("\n")));
                 }
@@ -2348,7 +2371,7 @@ public class CANFragment extends Fragment {
                         deviceList.setSelection(savedPosition);
                         selected_caniface = deviceIfaces.get(savedPosition);
                     } else {
-                        selected_caniface = "None";
+                        selected_caniface = "Interface (None)";
                     }
 
                     deviceList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -2360,12 +2383,12 @@ public class CANFragment extends Fragment {
 
                         @Override
                         public void onNothingSelected(AdapterView<?> parentView) {
-                            selected_caniface = "None";
+                            selected_caniface = "Interface (None)";
                         }
                     });
 
                     // Optional: show toast for newly detected device
-                    if (!deviceIfaces.contains("None")) {
+                    if (!deviceIfaces.contains("Interface (None)")) {
                         String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }';ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'");
                         if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
                             showToast(detected_device);
@@ -2409,7 +2432,7 @@ public class CANFragment extends Fragment {
                 ArrayList<String> module = new ArrayList<>();
 
                 if (result == null || result.trim().isEmpty()) {
-                    module.add("None");
+                    module.add("Module (None)");
                 } else {
                     module.addAll(Arrays.asList(result.split("\n")));
                 }
@@ -2423,7 +2446,7 @@ public class CANFragment extends Fragment {
                         modulesList.setSelection(savedPosition);
                         selected_module = module.get(savedPosition);
                     } else {
-                        selected_module = "None";
+                        selected_module = "Module (None)";
                     }
 
                     modulesList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -2435,7 +2458,7 @@ public class CANFragment extends Fragment {
 
                         @Override
                         public void onNothingSelected(AdapterView<?> parentView) {
-                            selected_module = "None";
+                            selected_module = "Module (None)";
                         }
                     });
                 });
@@ -2447,7 +2470,7 @@ public class CANFragment extends Fragment {
             // Info button
             Button infoBtn = rootView.findViewById(R.id.info_module);
             infoBtn.setOnClickListener(v -> {
-                if (selected_module == null || selected_module.equals("None")) {
+                if (selected_module == null || selected_module.equals("Module (None)")) {
                     showToast("Select a module first");
                     return;
                 }
@@ -2484,7 +2507,7 @@ public class CANFragment extends Fragment {
             // Set button
             Button setBtn = rootView.findViewById(R.id.set_module);
             setBtn.setOnClickListener(v -> {
-                if (selected_module == null || selected_module.equals("None")) {
+                if (selected_module == null || selected_module.equals("Module (None)")) {
                     showToast("Select a module first");
                     return;
                 }
@@ -2568,7 +2591,7 @@ public class CANFragment extends Fragment {
 
             Button runBtn = rootView.findViewById(R.id.run_module);
             runBtn.setOnClickListener(v -> {
-                if (selected_module == null || selected_module.equals("None")) {
+                if (selected_module == null || selected_module.equals("Module (None)")) {
                     showToast("Select a module first");
                     return;
                 }
@@ -2641,7 +2664,7 @@ public class CANFragment extends Fragment {
                         }
                     }
                 } else {
-                    deviceIfaces.add("None");
+                    deviceIfaces.add("Interface (None)");
                     Activity activity = getActivity();
                     if (sharedpreferences != null && activity != null) {
                         requireActivity().runOnUiThread(() -> {
