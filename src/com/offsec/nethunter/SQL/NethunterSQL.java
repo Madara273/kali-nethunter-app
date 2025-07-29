@@ -35,6 +35,7 @@ public class NethunterSQL extends SQLiteOpenHelper {
             {"7", "Network Interface Status", " ip -o addr show | " + NhPaths.BUSYBOX + " awk '{print $2, $3, $4}'", "\\n", "1"},
             {"8", "External IP", NhPaths.BUSYBOX + " which wget > /dev/null 2>&1 && " + NhPaths.BUSYBOX + " wget -qO - icanhazip.com || " + NhPaths.BUSYBOX + " curl -s ipv4.icanhazip.com", "\\n", "0"}
     };
+    private Context context;
 
     public static synchronized NethunterSQL getInstance(Context context){
         if (instance == null) {

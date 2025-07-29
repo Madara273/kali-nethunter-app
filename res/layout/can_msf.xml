@@ -106,7 +106,6 @@
                     android:textAppearance="?android:attr/textAppearanceSmall"
                     tools:ignore="HardcodedText" />
 
-
                 <Button
                     android:id="@+id/run_relay"
                     android:layout_width="100dp"
