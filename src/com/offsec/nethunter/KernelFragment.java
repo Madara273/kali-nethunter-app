@@ -186,7 +186,6 @@ public class KernelFragment extends Fragment {
     @Nullable
     private static String getString(String version) {
         Map<String, String> versionMap = new HashMap<>();
-        versionMap.put("4", "kitkat");
         versionMap.put("5", "lollipop");
         versionMap.put("6", "marshmallow");
         versionMap.put("7", "nougat");
