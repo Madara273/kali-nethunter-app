@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <item name="blue" type="color">#33B5E5</item>
+    <item name="blue" type="color">#A7FFEB</item>
     <item name="darkorange" type="color">#FFFF8800</item>
     <item name="clearTitle" type="color">#fcfcfc</item>
     <item name="clearText" type="color">#d9d9d9</item>
@@ -48,11 +48,33 @@
     <item name="dark_grey" type="color">#212121</item>
     <item name="transparent" type="color">#00000000</item>
     <item name="gold" type="color">#FFD700</item>
-    <item name="silver" type="color">#C0C0C0</item>
     <item name="bronze" type="color">#CD7F32</item>
     <item name="navy" type="color">#001F3F</item>
     <item name="olive" type="color">#808000</item>
     <item name="maroon" type="color">#800000</item>
     <item name="aqua" type="color">#00FFFF</item>
     <item name="fuchsia" type="color">#FF00FF</item>
+    <item name="silver" type="color">#C0C0C0</item>
+    <item name="translucent_white" type="color">#80FFFFFF</item>
+    <item name="md_theme_dark_surfaceVariant" type="color">#23272F</item>
+    <item name="md_theme_dark_onSurfaceVariant" type="color">#C6C6D0</item>
+    <item name="md_theme_dark_onSurface" type="color">#E0E0E0</item>
+    <item name="md_theme_dark_primary" type="color">#00B8D4</item>
+    <item name="md_theme_dark_outlineVariant" type="color">#3A3F4B</item>
+    <item name="md_theme_dark_onPrimary" type="color">#FFFFFF</item>
+    <item name="md_theme_dark_background" type="color">#121212</item>
+    <item name="md_theme_dark_secondary" type="color">#03DAC6</item>
+    <item name="md_theme_light_surface" type="color">#FFF8F6F3</item>
+    <item name="md_theme_light_primary" type="color">#FF9800</item>
+    <item name="md_theme_light_surfaceVariant" type="color">#FFEDE7E1</item>
+    <item name="hightech_bg" type="color">#121212</item>
+    <item name="hightech_card" type="color">#1E1E1E</item>
+    <item name="hightech_accent" type="color">#FF5722</item>
+    <item name="system_bg" type="color">#10131A</item>
+    <item name="system_tab_text" type="color">#B0BEC5</item>
+    <item name="system_tab_selected" type="color">#00FFF6</item>
+    <item name="system_accent" type="color">#00FFF6</item>
+    <item name="system_card_bg" type="color">#181C24</item>
+    <item name="system_tab_ripple" type="color">#33B0BEC5</item>
+    <item name="system_card_button_bg" type="color">#1A2233</item>
 </resources>

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="Theme.Nethunter" parent="@style/Theme.Material3.Dark">
-        <!-- customize the color palette -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
@@ -12,6 +11,17 @@
         <item name="materialButtonStyle">@style/button_style</item>
         <item name="android:textColor">#FFFFFF</item>
         <item name="android:textColorPrimary">#FFFFFF</item>
+        <item name="popupMenuStyle">@style/WhitePopupMenu</item>
+    </style>
+
+    <style name="PopupMenuDark" parent="Widget.AppCompat.PopupMenu.Overflow">
+        <item name="android:popupBackground">@color/system_card_bg</item>
+        <item name="android:textColor">@color/system_tab_text</item>
+    </style>
+
+    <style name="WhitePopupMenu" parent="Widget.AppCompat.PopupMenu">
+        <item name="android:popupBackground">@color/colorPrimaryDark</item>
+        <item name="android:textColor">@android:color/white</item>
     </style>
 
     <style name="AppTheme.PopupOverlay" parent="@style/Theme.Material3.Dark"/>
@@ -25,7 +35,6 @@
         <item name="colorPrimary">#111111</item>
         <item name="colorPrimaryDark">#0B1E4E</item>
         <item name="colorAccent">#183C9A</item>
-
         <item name="android:textColor">@color/textColor</item>
         <item name="android:textColorSecondary">@color/textColor</item>
         <item name="android:textColorLink">#2255D3</item>
@@ -48,12 +57,11 @@
     <style name="DialogStyle" parent="@style/MaterialAlertDialog.Material3">
         <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
         <item name="android:windowExitAnimation">@android:anim/fade_out</item>
-
+        <item name="android:background">@android:color/black</item>
         <item name="colorPrimary">#547383</item>
-        <item name="android:textColor">@color/textColor</item>
+        <item name="android:textColor">@android:color/white</item>
         <item name="android:textColorSecondary">@color/textColor</item>
         <item name="android:textColorLink">#2D55A3</item>
-
         <item name="buttonBarPositiveButtonStyle">@style/Alert.Button.Positive</item>
         <item name="buttonBarNegativeButtonStyle">@style/Alert.Button.Neutral</item>
         <item name="buttonBarNeutralButtonStyle">@style/Alert.Button.Neutral</item>
@@ -62,12 +70,10 @@
     <style name="DialogStyleCompat" parent="@style/ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
         <item name="android:windowExitAnimation">@android:anim/fade_out</item>
-
         <item name="colorPrimary">#547383</item>
         <item name="android:textColor">@color/textColor</item>
         <item name="android:textColorSecondary">@color/textColor</item>
         <item name="android:textColorLink">#2D55A3</item>
-
         <item name="buttonBarPositiveButtonStyle">@style/Alert.Button.Positive</item>
         <item name="buttonBarNegativeButtonStyle">@style/Alert.Button.Neutral</item>
         <item name="buttonBarNeutralButtonStyle">@style/Alert.Button.Neutral</item>
@@ -129,4 +135,118 @@
         <item name="indicatorSize">64dp</item>
     </style>
 
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
+    <style name="Theme.KaliNetHunterTech" parent="@style/Theme.Material3.Dark">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+        <item name="materialAlertDialogTheme">@style/DialogStyle</item>
+        <item name="spinnerStyle">@style/Widget.AppCompat.Spinner</item>
+        <item name="checkboxStyle">@style/checkbox_theme</item>
+        <item name="drawerArrowStyle">@style/DrawerArrowStyle</item>
+        <item name="materialButtonStyle">@style/button_style</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textColorPrimary">#FFFFFF</item>
+    </style>
+
+    <style name="Widget.Material3.Button.Filled" parent="Widget.Material3.Button">
+        <item name="android:backgroundTint">?attr/colorPrimary</item>
+        <item name="android:textColor">?android:attr/textColorPrimaryInverse</item>
+        <item name="android:elevation">2dp</item>
+        <item name="cornerRadius">16dp</item>
+    </style>
+
+    <style name="Widget.Material3.Button.Outlined" parent="Widget.Material3.Button.OutlinedButton">
+        <item name="android:backgroundTint">@android:color/transparent</item>
+        <item name="strokeColor">?attr/colorPrimary</item>
+        <item name="strokeWidth">2dp</item>
+        <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="cornerRadius">16dp</item>
+    </style>
+
+    <style name="Widget.Material3.Button.FilledTonalButton" parent="Widget.Material3.Button">
+        <item name="backgroundTint">@color/orange</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="android:textColor">@color/black</item>
+        <item name="iconTint">@color/orange</item>
+    </style>
+
+    <style name="Widget.MaterialComponents.Spinner.Underlined" parent="Widget.AppCompat.Spinner">
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:paddingBottom">4dp</item>
+        <item name="android:popupBackground">@color/design_default_color_surface</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:foreground">@drawable/material_spinner_underline</item>
+    </style>
+
+    <style name="PopupMenuTextStyle" parent="TextAppearance.AppCompat.Body1">
+        <item name="android:textColor">#FF000000</item>
+    </style>
+
+    <style name="CustomPopupMenu" parent="Widget.AppCompat.PopupMenu">
+        <item name="android:textAppearance">@style/PopupMenuTextStyle</item>
+    </style>
+
+    <style name="Widget.MaterialComponents.Button.OutlinedButton" parent="Widget.MaterialComponents.Button">
+        <item name="android:backgroundTint">@android:color/transparent</item>
+        <item name="strokeColor">?attr/colorPrimary</item>
+        <item name="strokeWidth">2dp</item>
+        <item name="android:textColor">?attr/colorPrimary</item>
+        <item name="cornerRadius">16dp</item>
+        <item name="android:elevation">0dp</item>
+    </style>
+
+    <style name="Widget.Material3.TextInputLayout.FilledBox" parent="Widget.MaterialComponents.TextInputLayout.FilledBox">
+        <item name="boxBackgroundColor">@color/system_card_bg</item>
+        <item name="boxStrokeColor">@color/system_accent</item>
+        <item name="boxCornerRadiusTopStart">12dp</item>
+        <item name="boxCornerRadiusTopEnd">12dp</item>
+        <item name="boxCornerRadiusBottomStart">12dp</item>
+        <item name="boxCornerRadiusBottomEnd">12dp</item>
+        <item name="android:textColor">@color/system_tab_text</item>
+        <item name="android:textColorHint">@color/system_tab_text</item>
+    </style>
+
+    <style name="Widget.Material3.Button.Icon" parent="Widget.Material3.Button">
+        <item name="android:backgroundTint">?attr/colorPrimary</item>
+        <item name="android:padding">8dp</item>
+        <item name="android:minWidth">40dp</item>
+        <item name="android:minHeight">40dp</item>
+        <item name="cornerRadius">20dp</item>
+        <item name="iconTint">@color/system_tab_text</item>
+        <item name="android:elevation">2dp</item>
+        <item name="android:textColor">@android:color/transparent</item>
+    </style>
+
+    <style name="TextAppearance.Material3.BodyMedium" parent="TextAppearance.AppCompat.Body1">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">?android:textColorPrimary</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <style name="TextAppearance.Material3.Body1" parent="TextAppearance.AppCompat.Body1">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">?android:textColorPrimary</item>
+        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:textStyle">normal</item>
+    </style>
+
+    <style name="Widget.Material3.Button.Tonal" parent="Widget.Material3.Button">
+        <item name="android:backgroundTint">@color/system_card_button_bg</item>
+        <item name="android:textColor">@color/system_accent</item>
+        <item name="iconTint">@color/system_accent</item>
+        <item name="cornerRadius">12dp</item>
+        <item name="elevation">4dp</item>
+        <item name="android:fontFamily">@font/roboto_medium</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="PopupMenuStyle" parent="Widget.AppCompat.PopupMenu.Overflow">
+        <item name="android:popupBackground">@android:color/darker_gray</item>
+    </style>
 </resources>

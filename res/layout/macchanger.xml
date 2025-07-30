@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/scrollView"
@@ -18,7 +17,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal|center"
@@ -39,17 +38,23 @@
                 android:focusable="true"
                 android:focusableInTouchMode="true">
 
-                <EditText
-                    android:id="@+id/f_macchanger_phone_name_et"
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="0.5"
-                    android:autofillHints="none"
-                    android:singleLine="true"
-                    android:nextFocusUp="@id/f_macchanger_phone_name_et"
-                    android:nextFocusLeft="@id/f_macchanger_phone_name_et" />
+                    app:hintEnabled="false">
 
-                <Button
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/f_macchanger_phone_name_et"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:autofillHints="none"
+                        android:singleLine="true"
+                        android:nextFocusUp="@id/f_macchanger_phone_name_et"
+                        android:nextFocusLeft="@id/f_macchanger_phone_name_et" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
                     style="?android:attr/buttonStyleSmall"
                     android:id="@+id/f_macchanger_setHostname_btn"
                     android:layout_width="wrap_content"
@@ -57,7 +62,7 @@
                     android:text="@string/macchanger_set_hostname"/>
             </LinearLayout>
 
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -72,12 +77,12 @@
                 android:prompt="@string/interface_select"
                 android:textSize="18sp" />
 
-            <View
-                android:layout_width="fill_parent"
-                android:layout_height="1dp"
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:layout_marginTop="8dp"
-                android:background="#ffffff" />
+                app:dividerColor="@color/cardview_light_background" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -86,7 +91,7 @@
                 android:focusableInTouchMode="true"
                 android:orientation="horizontal">
 
-                <TextView
+                <com.google.android.material.textview.MaterialTextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
@@ -94,7 +99,7 @@
                     android:text="@string/currentmac"
                     android:textAppearance="?android:attr/textAppearanceMedium" />
 
-                <TextView
+                <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/f_macchanger_currMac_tv"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -114,7 +119,7 @@
                     app:srcCompat="@drawable/ic_action_refresh" />
             </LinearLayout>
 
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
@@ -130,12 +135,12 @@
                 android:prompt="@string/macchanger_select"
                 android:textSize="18sp" />
 
-            <View
-                android:layout_width="fill_parent"
-                android:layout_height="1dp"
+            <com.google.android.material.divider.MaterialDivider
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="8dp"
                 android:layout_marginTop="8dp"
-                android:background="#ffffff" />
+                app:dividerColor="@color/cardview_light_background" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -145,90 +150,127 @@
                 android:gravity="center_horizontal"
                 android:layout_gravity="center_horizontal">
 
-                <EditText
-                    android:id="@+id/f_macchanger_mac1_et"
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:autofillHints="none"
-                    android:digits="0123456789abcdef"
-                    android:hint="@string/TwoMACDigits"
-                    android:inputType="textNoSuggestions"
-                    android:maxLength="2" />
+                    app:hintEnabled="false">
 
-                <TextView
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/f_macchanger_mac1_et"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:autofillHints="none"
+                        android:digits="0123456789abcdef"
+                        android:hint="@string/TwoMACDigits"
+                        android:inputType="textNoSuggestions"
+                        android:maxLength="2" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textview.MaterialTextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/macSeparator" />
 
-                <EditText
-                    android:id="@+id/f_macchanger_mac2_et"
+                <!-- Repeat above block for mac2_et, mac3_et, mac4_et, mac5_et, mac6_et -->
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:autofillHints="none"
-                    android:digits="0123456789abcdef"
-                    android:hint="@string/TwoMACDigits"
-                    android:inputType="textNoSuggestions"
-                    android:maxLength="2" />
+                    app:hintEnabled="false">
 
-                <TextView
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/f_macchanger_mac2_et"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:autofillHints="none"
+                        android:digits="0123456789abcdef"
+                        android:hint="@string/TwoMACDigits"
+                        android:inputType="textNoSuggestions"
+                        android:maxLength="2" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textview.MaterialTextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/macSeparator" />
 
-                <EditText
-                    android:id="@+id/f_macchanger_mac3_et"
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:autofillHints="none"
-                    android:digits="0123456789abcdef"
-                    android:hint="@string/TwoMACDigits"
-                    android:inputType="textNoSuggestions"
-                    android:maxLength="2" />
+                    app:hintEnabled="false">
 
-                <TextView
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/f_macchanger_mac3_et"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:autofillHints="none"
+                        android:digits="0123456789abcdef"
+                        android:hint="@string/TwoMACDigits"
+                        android:inputType="textNoSuggestions"
+                        android:maxLength="2" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textview.MaterialTextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/macSeparator" />
 
-                <EditText
-                    android:id="@+id/f_macchanger_mac4_et"
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:autofillHints="none"
-                    android:digits="0123456789abcdef"
-                    android:hint="@string/TwoMACDigits"
-                    android:inputType="textNoSuggestions"
-                    android:maxLength="2" />
+                    app:hintEnabled="false">
 
-                <TextView
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/f_macchanger_mac4_et"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:autofillHints="none"
+                        android:digits="0123456789abcdef"
+                        android:hint="@string/TwoMACDigits"
+                        android:inputType="textNoSuggestions"
+                        android:maxLength="2" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textview.MaterialTextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/macSeparator" />
 
-                <EditText
-                    android:id="@+id/f_macchanger_mac5_et"
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:autofillHints="none"
-                    android:digits="0123456789abcdef"
-                    android:hint="@string/TwoMACDigits"
-                    android:inputType="textNoSuggestions"
-                    android:maxLength="2" />
+                    app:hintEnabled="false">
 
-                <TextView
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/f_macchanger_mac5_et"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:autofillHints="none"
+                        android:digits="0123456789abcdef"
+                        android:hint="@string/TwoMACDigits"
+                        android:inputType="textNoSuggestions"
+                        android:maxLength="2" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textview.MaterialTextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="@string/macSeparator" />
 
-                <EditText
-                    android:id="@+id/f_macchanger_mac6_et"
+                <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:autofillHints="none"
-                    android:digits="0123456789abcdef"
-                    android:hint="@string/TwoMACDigits"
-                    android:inputType="textNoSuggestions"
-                    android:maxLength="2" />
+                    app:hintEnabled="false">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/f_macchanger_mac6_et"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:autofillHints="none"
+                        android:digits="0123456789abcdef"
+                        android:hint="@string/TwoMACDigits"
+                        android:inputType="textNoSuggestions"
+                        android:maxLength="2" />
+                </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
             <LinearLayout
@@ -236,7 +278,7 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/f_macchanger_regenerate_mac_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -244,7 +286,7 @@
                     android:visibility="gone"
                     android:layout_weight="1" />
 
-                <Button
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/f_macchanger_clear_mac_btn"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -253,13 +295,13 @@
                     android:layout_weight="1" />
             </LinearLayout>
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/f_macchanger_set_mac_btn"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal"/>
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/f_macchanger_reset_mac_btn"
                 android:layout_width="fill_parent"
                 android:layout_height="wrap_content"
