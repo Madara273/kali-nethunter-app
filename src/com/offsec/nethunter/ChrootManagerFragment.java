@@ -424,7 +424,7 @@ public class ChrootManagerFragment extends Fragment {
                     .setItems(options, (dialog, which) -> {
                         String arch = getDeviceArch();
                         String type = (which == 0) ? "minimal" : "full";
-                        String fileName = "kalifs-" + arch + "-" + type + ".tar.xz";
+                        String fileName = "kali-nethunter-rootfs-" + type + "-" + arch + ".tar.xz";
                         File downloadDir = context.getFilesDir();
                         File targetFile;
                         try {

@@ -6,12 +6,16 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -34,7 +38,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Lifecycle;
 
 import java.io.File;
 import java.util.Arrays;
@@ -43,10 +49,12 @@ import java.io.BufferedReader;
 import java.io.IOException;
 
 public class VNCFragment extends Fragment {
-    private static final String TAG = "VNCFragment";
-    private String localhostonly = "";
     private Context context;
     private Activity activity;
+    private static final String TAG = "VNCFragment";
+    // Debug logging: 0=off, 1=low, 2=medium, 3=high
+    private int NH_SYSTEM_LOGGING = 0;
+    private String localhostonly = "";
     private static final String ARG_SECTION_NUMBER = "section_number";
     private String selected_res;
     private String selected_vncres;
@@ -67,6 +75,21 @@ public class VNCFragment extends Fragment {
     private Boolean iswatch;
 
     public VNCFragment() {
+        // Required empty public constructor
+    }
+
+    // Logging wrapper attached to 'NH_SYSTEM_LOGGING' variable ("1" = enabled, "0" = disabled)
+    // Howto add logging around this wrapper with the switch;
+    //   logDebug(TAG, "Your debug message here");
+    //
+    private void logDebug(String tag, String message) {
+        if (NH_SYSTEM_LOGGING > 0) {
+            Log.d(tag, "[Level " + NH_SYSTEM_LOGGING + "] " + message);
+        }
+    }
+
+    private void logToast(String message) {
+        Toast.makeText(requireActivity().getApplicationContext(), message, Toast.LENGTH_SHORT).show();
     }
 
     public static VNCFragment newInstance(int sectionNumber) {
@@ -79,22 +102,63 @@ public class VNCFragment extends Fragment {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
+        logDebug(TAG, "onCreate: Fragment created with savedInstanceState=" + savedInstanceState);
         super.onCreate(savedInstanceState);
         context = getContext();
         activity = getActivity();
+
+        requireActivity().addMenuProvider(new MenuProvider() {
+            @Override
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+                inflater.inflate(R.menu.kex_menu, menu);
+            }
+
+            @Override
+            public boolean onMenuItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+                if (id == R.id.action_debug) {
+                    // Cycle NH_SYSTEM_LOGGING: 0 -> 1 -> 2 -> 3 -> 0
+                    NH_SYSTEM_LOGGING = (NH_SYSTEM_LOGGING + 1) % 4;
+                    String msg = (NH_SYSTEM_LOGGING == 0) ? "Debug OFF" : "Debug level: " + NH_SYSTEM_LOGGING;
+                    logToast(msg);
+                    logDebug(TAG, "Debug level changed: " + NH_SYSTEM_LOGGING);
+                    return true;
+                }
+                if (id == R.id.action_info) {
+                    Activity activity = getActivity();
+                    if (activity != null) {
+                        LayoutInflater inflater = LayoutInflater.from(activity);
+                        View dialogView = inflater.inflate(R.layout.kex_info_dialog, null);
+                        TextView descView = dialogView.findViewById(R.id.dialog_kernel_description);
+                        descView.setText(R.string.kex_description);
+
+                        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+                                .setView(dialogView);
+
+                        final AlertDialog dialog = builder.create();
+
+                        Button closeButton = dialogView.findViewById(R.id.dialog_close_button);
+                        closeButton.setOnClickListener(v -> dialog.dismiss());
+
+                        dialog.show();
+                    }
+                    return true;
+                }
+                return false;
+            }
+        }, this, Lifecycle.State.RESUMED);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        logDebug(TAG, "onCreateView: Starting to inflate layout and initialize components");
         final View rootView = inflater.inflate(R.layout.vnc_setup, container, false);
         View AdvancedView = rootView.findViewById(R.id.AdvancedView);
         Button Advanced = rootView.findViewById(R.id.AdvancedButton);
         CheckBox localhostCheckBox = rootView.findViewById(R.id.vnc_checkBox);
+        localhostCheckBox.setOnClickListener(v -> vncLocalClick());
 
         SharedPreferences sharedpreferences = context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
-
-        CheckBox vncCheckBox = rootView.findViewById(R.id.vnc_checkBox);
-        vncCheckBox.setOnClickListener(v -> vncLocalClick());
 
         boolean confirm_res = sharedpreferences.getBoolean("confirm_res", false);
         if (confirm_res) {
@@ -107,22 +171,24 @@ public class VNCFragment extends Fragment {
         AdvancedView.setVisibility(showingAdvanced ? View.VISIBLE : View.INVISIBLE);
         if (showingAdvanced) {
             Advanced.setText(R.string.vnc_hide_advanced_settings);
-        }
-        else {
+        } else {
             Advanced.setText(R.string.vnc_show_advanced_settings);
         }
         // Check if the device is a watch
         if (sharedpreferences.getBoolean("running_on_wearos", false)) {
+            logDebug(TAG, "onCreateView: detected device type - iswatch=" + iswatch);
             AdvancedView.setVisibility(View.GONE);
             Advanced.setVisibility(View.GONE);
         }
         // Check if the device is a phone
         if (sharedpreferences.getBoolean("running_on_phone", false)) {
+            logDebug(TAG, "onCreateView: detected device type - phone");
             AdvancedView.setVisibility(View.VISIBLE);
             Advanced.setVisibility(View.VISIBLE);
         }
         // Check if the device is a tablet
         if (sharedpreferences.getBoolean("running_on_tablet", false)) {
+            logDebug(TAG, "onCreateView: detected device type - tablet");
             AdvancedView.setVisibility(View.VISIBLE);
             Advanced.setVisibility(View.VISIBLE);
         }
@@ -131,13 +197,10 @@ public class VNCFragment extends Fragment {
         DisplayMetrics displaymetrics = new DisplayMetrics();
         WindowManager wm = (WindowManager) activity.getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
         Display disp = wm.getDefaultDisplay();
-        int API_LEVEL =  android.os.Build.VERSION.SDK_INT;
-        if (API_LEVEL >= 17)
-        {
+        int API_LEVEL =  Build.VERSION.SDK_INT;
+        if (API_LEVEL >= 17) {
             disp.getRealMetrics(displaymetrics);
-        }
-        else
-        {
+        } else {
             disp.getMetrics(displaymetrics);
         }
         final int screen_height = displaymetrics.heightPixels;
@@ -155,12 +218,10 @@ public class VNCFragment extends Fragment {
         }
 
         // Detecting watch
-        final TextView KexDesc = rootView.findViewById(R.id.kexdesc);
         final TextView KexStatus = rootView.findViewById(R.id.status);
         final TextView KexSessions = rootView.findViewById(R.id.sessions);
         iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
         if (iswatch) {
-            KexDesc.setVisibility(View.GONE);
             KexStatus.setText(R.string.vnc_watch_status);
             KexSessions.setText(R.string.vnc_watch_sessions);
         }
@@ -191,15 +252,16 @@ public class VNCFragment extends Fragment {
         if (vncResFile.length() == 0)
             exe.RunAsRoot(new String[]{"echo \"Auto\"$\"\n\"" + device_res + " > " + vncResFile});
 
-        // HDMI resolution\
+        // HDMI resolution
         File hdmiResFile = new File(NhPaths.APP_SD_FILES_PATH + "/configs/hdmi-resolutions");
-        String[] commandRES = {"sh", "-c", "cat " + hdmiResFile};
-        String outputRES = exe.Executer(Arrays.toString(commandRES));
+        String commandRES = "cat " + hdmiResFile;
+        String outputRES = exe.executeCommand(commandRES);
         final String[] resArray = outputRES.split("\n");
 
         // VNC resolution
-        String[] commandVNCRES = {"sh", "-c", "cat " + vncResFile};
-        String outputVNCRES = exe.Executer(Arrays.toString(commandVNCRES));
+        vncResFile = new File(NhPaths.APP_SD_FILES_PATH + "/configs/vnc-resolutions");
+        String commandVNCRES = "cat " + vncResFile;
+        String outputVNCRES = exe.executeCommand(commandVNCRES);
         final String[] vncresArray = outputVNCRES.split("\n");
 
         // HDMI Resolution spinner
@@ -356,7 +418,7 @@ public class VNCFragment extends Fragment {
                     });
                 }
                 else {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Please setup local server first!", Toast.LENGTH_SHORT).show();
+                    logToast( "Please setup local server first!");
                     vnc_serviceCheckBox.setChecked(false);
                 }
             } else
@@ -394,52 +456,52 @@ public class VNCFragment extends Fragment {
         addClickListener(StartAudioButton, v -> {
             File audio = new File(NhPaths.CHROOT_PATH() + "/usr/bin/audio");
             if (audio.exists()) {
-                Log.d("KeXAudio", "Audio script exists at: " + audio.getAbsolutePath());
+                logDebug("KeXAudio", "Audio script exists at: " + audio.getAbsolutePath());
 
                 if (StartAudioButton.getText().equals("Enable audio")) {
                     // START logic
                     if (selected_user.equals("root")) {
-                        Log.d("KeXAudio", "Running audio enable command as root");
+                        logDebug("KeXAudio", "Running audio enable command as root");
                         run_cmd("echo -ne \"\\033]0;Audio Enable\\007\" && clear && audio start;sleep 2 && exit");
                     } else {
-                        Log.d("KeXAudio", "Checking permissions for non-root user: " + selected_user);
+                        logDebug("KeXAudio", "Checking permissions for non-root user: " + selected_user);
                         if (isSuAvailable()) {
-                            Log.d("KeXAudio", "Using su to start audio for non-root user");
+                            logDebug("KeXAudio", "Using su to start audio for non-root user");
                             run_cmd("su -c 'echo -ne \"\\033]0;Audio Enable\\007\" && clear && sudo -u " + selected_user + " audio start;sleep 2 && exit'");
                         } else {
-                            Log.w("KeXAudio", "User lacks necessary permissions or su is unavailable. Permission denied.");
-                            Toast.makeText(requireActivity().getApplicationContext(), "User lacks necessary permissions or su is unavailable.", Toast.LENGTH_SHORT).show();
+                            logDebug("KeXAudio", "User lacks necessary permissions or su is unavailable. Permission denied.");
+                            logToast("User lacks necessary permissions or su is unavailable.");
                             return;
                         }
                     }
                     StartAudioButton.setText(R.string.vnc_disable_audio);
                     refreshVNC(rootView);
-                    Log.d("KeXAudio", "Audio enabled for user: " + selected_user);
-                    Toast.makeText(requireActivity().getApplicationContext(), "Audio enabled for user:" + selected_user, Toast.LENGTH_SHORT).show();
+                    logDebug("KeXAudio", "Audio enabled for user: " + selected_user);
+                    logToast("Audio enabled for user:" + selected_user);
                 } else {
                     // STOP logic
                     if (selected_user.equals("root")) {
-                        Log.d("KeXAudio", "Running audio disable command as root");
+                        logDebug("KeXAudio", "Running audio disable command as root");
                         run_cmd("echo -ne \"\\033]0;Audio Disable\\007\" && clear && audio stop;sleep 2 && exit");
                     } else {
-                        Log.d("KeXAudio", "Disabling audio for non-root user: " + selected_user);
+                        logDebug("KeXAudio", "Disabling audio for non-root user: " + selected_user);
                         if (isSuAvailable()) {
-                            Log.d("KeXAudio", "Using su to stop audio for non-root user");
+                            logDebug("KeXAudio", "Using su to stop audio for non-root user");
                             run_cmd("su -c 'echo -ne \"\\033]0;Audio Disable\\007\" && clear && sudo -u " + selected_user + " audio stop;sleep 2 && exit'");
                         } else {
-                            Log.w("KeXAudio", "User lacks necessary permissions or su is unavailable. Permission denied.");
-                            Toast.makeText(requireActivity().getApplicationContext(), "User lacks necessary permissions or su is unavailable.", Toast.LENGTH_SHORT).show();
+                            logDebug("KeXAudio", "User lacks necessary permissions or su is unavailable. Permission denied.");
+                            logToast("User lacks necessary permissions or su is unavailable.");
                             return;
                         }
                     }
                     StartAudioButton.setText(R.string.vnc_enable_audio);
                     refreshVNC(rootView);
-                    Log.d("KeXAudio", "Audio disabled for user: " + selected_user);
-                    Toast.makeText(requireActivity().getApplicationContext(), "Audio disabled for user:" + selected_user, Toast.LENGTH_SHORT).show();
+                    logDebug("KeXAudio", "Audio disabled for user: " + selected_user);
+                    logToast("Audio disabled for user:" + selected_user);
                 }
             } else {
-                Log.d("KeXAudio", "Audio script not found, attempting installation");
-                Toast.makeText(requireActivity().getApplicationContext(), "Installing missing audio script in chroot..", Toast.LENGTH_SHORT).show();
+                logDebug("KeXAudio", "Audio script not found, attempting installation");
+                logToast("Installing missing audio script in chroot..");
                 run_cmd("echo -ne \"\\033]0;Kali NetHunter Utils\\007\" && clear;apt update && apt install nethunter-utils;sleep 2 && exit");
             }
         });
@@ -449,7 +511,7 @@ public class VNCFragment extends Fragment {
                 desktopDialog();
             } else {
                 if (iswatch) {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Use password 123456 with root user for KeX on Smartwatch.", Toast.LENGTH_LONG).show();
+                    logToast("Use password 123456 with root user for KeX on Smartwatch.");
                     run_cmd("echo -ne \"\\033]0;KeX Setup\\007\" && clear;echo 'Setting root:123456 KeX credentials..' && sleep 2 && echo 123456\\\\n123456\\\\nn\\\\n | vncpasswd;echo 'Done! Exiting..' && sleep 2 && exit");
                 } else run_cmd("echo -ne \"\\033]0;Setting up Server\\007\" && clear;chmod +x ~/.vnc/xstartup && clear;echo $'\n'\"Please enter your new VNC server password\"$'\n' && " + "if [ \"" + selected_user + "\" == \"root\" ]; then " + "  if [ ! -d /root/.config/tigervnc ]; then mkdir -p -m 0777 /root/.config/tigervnc; fi; " + "  sudo -u root vncpasswd; " + "  if [ ! -f ~/.vnc/passwd ]; then cp -rf ~/.config/tigervnc/passwd ~/.vnc/; fi; " + "else " + " user_uid=$(id -u " + selected_user + "); " + " if [ \"$user_uid\" -eq 100000 ] || [ \"$user_uid\" -eq 9000 ]; then " + " if [ ! -d /home/" + selected_user + "/.config/tigervnc ]; then mkdir -p -m 0777 /home/" + selected_user + "/.config/tigervnc; fi; " + "  sudo -u " + selected_user + " vncpasswd; " + "  if [ ! -f /home/" + selected_user + "/.vnc/passwd ]; then cp -rf /home/" + selected_user + "/.config/tigervnc/passwd /home/" + selected_user + "/.vnc/; fi; " + " fi; " + "fi && sleep 2 && exit"); // since is a kali command we can send it as is
             }
@@ -473,30 +535,30 @@ public class VNCFragment extends Fragment {
                 delay_cmd = "echo \"Sleeping for " + delayText.getText().toString() + " seconds to avoid soft reboot\" && sleep " + delayText.getText().toString() + ";";
             }
             if (vnc_passwd.isEmpty()) {
-                Toast.makeText(requireActivity().getApplicationContext(), "Please setup local server first!", Toast.LENGTH_SHORT).show();
+                logToast("Please setup local server first!");
             } else {
                 String arch_path = exe.RunAsRootOutput("ls " + NhPaths.CHROOT_PATH() + "/usr/lib/ | grep linux-gnu | head -n1");
-                Toast.makeText(requireActivity().getApplicationContext(), "Starting server.. Please refresh the status in NetHunter app.", Toast.LENGTH_LONG).show();
+                logToast("Starting server.. Please refresh the status in NetHunter app.");
                 if(selected_user.equals("root")) {
                         exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd service dbus start"});
-                        run_cmd("echo -ne \"\\033]0;Starting Server\\007\" && clear;" + delay_cmd + "HOME=/root;USER=root;sudo -u root LD_PRELOAD=/usr/lib/" + arch_path +
-                                "/libgcc_s.so.1 nohup vncserver :" + selected_display + " " + localhostonly + "-name \"NetHunter KeX\" " + selected_vncresCMD + " >/dev/null 2>&1 </dev/null; echo \"Server started! Closing terminal..\" && sleep 2 && exit");
+                        run_cmd("echo -ne \"\\033]0;Starting Server\\007\" && clear;" + delay_cmd + "if HOME=/root;USER=root;sudo -u root LD_PRELOAD=/usr/lib/" + arch_path +
+                                "/libgcc_s.so.1 nohup vncserver :" + selected_display + " " + localhostonly + "-name \"NetHunter KeX\" " + selected_vncresCMD + " >/dev/null 2>&1 </dev/null;then echo \"Server started! Closing terminal..\";else echo -ne \"\\033[0;31mServer already started! \\n\";fi && sleep 2 && exit");
                     } else {
                         exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd service dbus start"});
-                        run_cmd("echo -ne \"\\033]0;Starting Server\\007\" && clear;" + delay_cmd + "HOME=/home/" + selected_user + ";USER=" + selected_user + ";sudo -u " + selected_user + " LD_PRELOAD=/usr/lib/" + arch_path +
-                                "/libgcc_s.so.1 nohup vncserver :" + selected_display + " " + localhostonly + "-name \"NetHunter KeX\" " + selected_vncresCMD + " >/dev/null 2>&1 </dev/null; echo \"Server started! Closing terminal..\" && sleep 2 && exit");
+                        run_cmd("echo -ne \"\\033]0;Starting Server\\007\" && clear;" + delay_cmd + "if HOME=/home/" + selected_user + ";USER=" + selected_user + ";sudo -u " + selected_user + " LD_PRELOAD=/usr/lib/" + arch_path +
+                                "/libgcc_s.so.1 nohup vncserver :" + selected_display + " " + localhostonly + "-name \"NetHunter KeX\" " + selected_vncresCMD + " >/dev/null 2>&1 </dev/null;then echo \"Server started! Closing terminal..\";else echo -ne \"\\033[0;31mServer already started! \\n\";fi && sleep 2 && exit");
                     }
                 Log.d(TAG, localhostonly);
             }
         });
         final TextView KeXstatus = rootView.findViewById(R.id.KeXstatus);
         addClickListener(StopVNCButton, v -> {
-            if (KeXstatus.getText().toString().equals("STOPPED")) Toast.makeText(requireActivity().getApplicationContext(), "There's no active session!" , Toast.LENGTH_LONG).show();
+            if (KeXstatus.getText().toString().equals("STOPPED")) logToast( "There's no active session!");
             else {
                 exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd sudo -u " + selected_user + " vncserver -kill :" + selected_display}); // since is a kali command we can send it as is
                 dbusDialog();
                 refreshVNC(rootView);
-                Toast.makeText(requireActivity().getApplicationContext(), "Stopping display :" + selected_display + " for " + selected_user , Toast.LENGTH_LONG).show();
+                logToast("Stopping display :" + selected_display + " for " + selected_user + " user.");
                 }
             });
         addClickListener(OpenVNCButton, v -> {
@@ -518,7 +580,7 @@ public class VNCFragment extends Fragment {
         addClickListener(AddUserButton, v -> run_cmd("echo -ne \"\\033]0;New User\\007\" && clear;if [[ $SHELL == *zsh ]];then read \"?Please enter your new username\"$'\n' USER;elif [[ $SHELL == *bash ]];then read -p \"Please enter your new username\"$'\n' USER;fi && adduser --firstuid " + MIN_UID + " --lastuid " + MAX_UID + " $USER; groupmod -g $(id -u $USER) $USER; usermod -aG sudo $USER; usermod -aG inet $USER; usermod -aG sockets $USER; echo \"Please refresh your KeX manager, closing in 2 secs\" && sleep 2 && exit"));
         addClickListener(DelUserButton, v -> {
             if (selected_user.contains("root")) {
-                Toast.makeText(requireActivity().getApplicationContext(), "Can't remove root!", Toast.LENGTH_SHORT).show();
+                logToast("Can't remove root!");
             } else {
                 run_cmd("echo -ne \"\\033]0;Removing User\\007\" && clear;deluser -remove-home " + selected_user + " && sleep 2 && exit");
             }
@@ -529,16 +591,16 @@ public class VNCFragment extends Fragment {
         });
         addClickListener(BackupHDMI, v -> {
             exe.RunAsRoot(new String[]{"cp " + hdmiResFile + " " + NhPaths.SD_PATH});
-            Toast.makeText(requireActivity().getApplicationContext(), "Backup successful!", Toast.LENGTH_SHORT).show();
+            logToast("Backup successful!");
         });
         addClickListener(RestoreHDMI, v -> {
             String hdmibackup = exe.RunAsRootOutput("cat " + NhPaths.SD_PATH + "/hdmi-resolutions");
             if (hdmibackup.isEmpty()) {
-                Toast.makeText(requireActivity().getApplicationContext(), "Backup file not found!", Toast.LENGTH_SHORT).show();
+                logToast("Backup file not found!");
             } else {
                 exe.RunAsRoot(new String[]{"cp " + NhPaths.SD_PATH + "/hdmi-resolutions " + hdmiResFile});
                 reload();
-                Toast.makeText(requireActivity().getApplicationContext(), "Restore successful!", Toast.LENGTH_SHORT).show();
+                logToast("Restore successful!");
             }
         });
         addClickListener(AddResolutionButton, v -> openResolutionDialog());
@@ -551,33 +613,38 @@ public class VNCFragment extends Fragment {
                 exe.RunAsRoot(new String[]{"sed -i '/^" + selected_res + "$/d' " + hdmiResFile});
                 reload();
             } else
-                Toast.makeText(requireActivity().getApplicationContext(), "Can't remove default resolution!", Toast.LENGTH_SHORT).show();
+                logToast("Can't remove default resolution!");
         });
         addClickListener(AddVNCResolutionButton, v -> openVNCResolutionDialog());
+        File finalVncResFile = vncResFile;
         addClickListener(DelVNCResolutionButton, v -> {
             if (selected_vncres.equals("Auto")) {
-                Toast.makeText(requireActivity().getApplicationContext(), "Can't remove default resolution!", Toast.LENGTH_SHORT).show();
+                logToast("Can't remove default resolution!");
             } else if (selected_vncres.equals(device_res)) {
-                Toast.makeText(requireActivity().getApplicationContext(), "Can't remove device resolution!", Toast.LENGTH_SHORT).show();
+               logToast("Can't remove device resolution!");
             } else {
-                exe.RunAsRoot(new String[]{"sed -i '/^" + selected_vncres + "$/d' " + vncResFile});
+                exe.RunAsRoot(new String[]{"sed -i '/^" + selected_vncres + "$/d' " + finalVncResFile});
                 reload();
             }
         });
+        File finalVncResFile1 = vncResFile;
         addClickListener(BackupVNC, v -> {
-            exe.RunAsRoot(new String[]{"cp " + vncResFile + " " + NhPaths.SD_PATH});
-            Toast.makeText(requireActivity().getApplicationContext(), "Backup successful!", Toast.LENGTH_SHORT).show();
+            exe.RunAsRoot(new String[]{"cp " + finalVncResFile1 + " " + NhPaths.SD_PATH});
+            logToast("Backup successful!");
         });
+        File finalVncResFile2 = vncResFile;
         addClickListener(RestoreVNC, v -> {
             String vncbackup = exe.RunAsRootOutput("cat " + NhPaths.SD_PATH + "/vnc-resolutions");
             if (vncbackup.isEmpty()) {
-                Toast.makeText(requireActivity().getApplicationContext(), "Backup file not found!", Toast.LENGTH_SHORT).show();
+                logToast("Backup file not found!");
             } else {
-                exe.RunAsRoot(new String[]{"cp " + NhPaths.SD_PATH + "/vnc-resolutions " + vncResFile});
+                exe.RunAsRoot(new String[]{"cp " + NhPaths.SD_PATH + "/vnc-resolutions " + finalVncResFile2});
                 reload();
-                Toast.makeText(requireActivity().getApplicationContext(), "Restore successful!", Toast.LENGTH_SHORT).show();
+                logToast("Restore successful!");
             }
         });
+
+        logDebug(TAG, "onCreateView: Finished initializing components");
         return rootView;
     }
 
@@ -588,14 +655,14 @@ public class VNCFragment extends Fragment {
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String output = reader.readLine();
             if (output != null && output.contains("su")) {
-                Log.d("KeXAudio", "su is available.");
+                logDebug("KeXAudio", "su is available.");
                 return true;
             } else {
-                Log.w("KeXAudio", "su is not available in the environment.");
+                logDebug("KeXAudio", "su is not available in the environment.");
                 return false;
             }
         } catch (IOException e) {
-            Log.e("KeXAudio", "Error checking for su availability", e);
+            logDebug("KeXAudio", "Error checking for su availability: " + e.getMessage());
             return false;
         }
     }
@@ -623,14 +690,17 @@ public class VNCFragment extends Fragment {
     }
 
     private void reload() {
+        logDebug(TAG, "reload: Reloading the fragment");
         requireActivity().getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.container, VNCFragment.newInstance(0))
                 .addToBackStack(null)
                 .commit();
+        logDebug(TAG, "reload: Fragment reloaded");
     }
 
     private void refreshVNC(View VNCFragment) {
+        logDebug(TAG, "refreshVNC: refreshing VNC server status");
         final TextView KeXstatus = VNCFragment.findViewById(R.id.KeXstatus);
         final TextView KeXuser = VNCFragment.findViewById(R.id.KeXuser);
         final Button StartAudioButton = VNCFragment.findViewById(R.id.vnc_audio);
@@ -665,6 +735,17 @@ public class VNCFragment extends Fragment {
         prevusr = sharedpreferences.getString("user", "");
         posu = usersadapter.getPosition(prevusr);
         users.setSelection(posu);
+        users.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                selected_user = parentView.getItemAtPosition(pos).toString();
+                sharedpreferences.edit().putString("user", selected_user).apply();
+            }
+            @Override
+            public void onNothingSelected(AdapterView<?> parentView) {
+            }
+        });
+        logDebug(TAG, "refreshVNC: userArray=" + Arrays.toString(userArray));
 
         // Audio button
         String audio = exe.RunAsRootOutput("pidof pulseaudio");
@@ -688,7 +769,7 @@ public class VNCFragment extends Fragment {
             final String add_height = height.getText().toString();
             final String add_density = density.getText().toString();
             if (add_width.isEmpty() || add_height.isEmpty() || add_density.isEmpty()) {
-                Toast.makeText(requireActivity().getApplicationContext(), "Please enter the values!", Toast.LENGTH_SHORT).show();
+                logToast("Please enter the values!");
                 openResolutionDialog();
             } else if (Integer.parseInt(width.getText().toString()) > Integer.parseInt(height.getText().toString())){
                 MaterialAlertDialogBuilder builder2 = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
@@ -724,7 +805,7 @@ public class VNCFragment extends Fragment {
             final String add_width = width.getText().toString();
             final String add_height = height.getText().toString();
             if (add_width.isEmpty() || add_height.isEmpty()) {
-                Toast.makeText(requireActivity().getApplicationContext(), "Please enter the values!", Toast.LENGTH_SHORT).show();
+                logToast("Please enter the values!");
                 openResolutionDialog();
             } else {
                 exe.RunAsRoot(new String[]{"echo " + add_width + "x" + add_height + " >> " + vncResFile});
@@ -784,7 +865,6 @@ public class VNCFragment extends Fragment {
 
     private void desktopDialog() {
         final MaterialAlertDialogBuilder dbusbuilder = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
-        ShellExecuter exe = new ShellExecuter();
         dbusbuilder.setMessage("There's no desktop environment installed. Would you like to install kali-desktop-xfce?");
         dbusbuilder.setPositiveButton("Yes", (dialogInterface, i) -> run_cmd("echo -ne \"\\033]0;Installing XFCE\\007\" && clear;apt update && apt install -y kali-desktop-xfce tigervnc-standalone-server dbus-x11;apt clean; echo 'Done! Exiting..' && sleep 2 && exit"));
         dbusbuilder.setNegativeButton("No", (dialog, whichButton) -> {
@@ -809,8 +889,8 @@ public class VNCFragment extends Fragment {
     }
 
     private void vncLocalClick() {
-        // Placeholder implementation
-        Toast.makeText(context, "vncLocalClick triggered", Toast.LENGTH_SHORT).show();
+        logDebug(TAG, "vncLocalClick: Localhost checkbox clicked");
+        logToast("vncLocalClick triggered");
     }
 
     ////
@@ -818,12 +898,16 @@ public class VNCFragment extends Fragment {
     ////
 
     public void run_cmd(String cmd) {
+        logDebug(TAG, "run_cmd: Executing command: " + cmd);
         Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
         activity.startActivity(intent);
+        logDebug(TAG, "run_cmd: Command execution started");
     }
 
     public void run_cmd_android(String cmd) {
+        logDebug(TAG, "run_cmd_android: Executing Android command: " + cmd);
         Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/android-su", cmd);
         activity.startActivity(intent);
+        logDebug(TAG, "run_cmd_android: Android command execution started");
     }
 }

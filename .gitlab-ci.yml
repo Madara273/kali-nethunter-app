@@ -5,6 +5,10 @@ stages:
   - build
 
 before_script:
+  - apt update && apt install -y openjdk-17-jdk
+  - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
+  - export PATH=$JAVA_HOME/bin:$PATH
+  - java -version
   - export GRADLE_USER_HOME=$(pwd)/.gradle
   - export PACKAGE=$(egrep '^[[:blank:]]+package' ./AndroidManifest.xml | awk -F'[=>]' '{print $2}' | sed s/\"//g)
   - export VERSION_NAME=$(egrep '^[[:blank:]]+versionName[[:blank:]]' ./build.gradle | awk '{print $2}' | sed s/\"//g)
@@ -61,23 +65,23 @@ cache:
 #   Release builds in the "master" branch
 #   Both debug and release apk can be build manually in any branch
 assembleDebugAuto:
-    extends: .assembleDebug
-    only:
-      - branches
-    except:
-      - master
+  extends: .assembleDebug
+  only:
+    - branches
+  except:
+    - master
 
 ## REF: https://gitlab.com/kalilinux/nethunter/apps/kali-nethunter-app/-/pipelines/latest
 assembleDebugManual:
-    extends: .assembleDebug
-    when: manual
+  extends: .assembleDebug
+  when: manual
 
 assembleReleaseAuto:
-    extends: .assembleRelease
-    only:
-      - master
+  extends: .assembleRelease
+  only:
+    - master
 
 ## REF: https://gitlab.com/kalilinux/nethunter/apps/kali-nethunter-app/-/pipelines/latest
 assembleReleaseManual:
-    extends: .assembleRelease
-    when: manual
+  extends: .assembleRelease
+  when: manual

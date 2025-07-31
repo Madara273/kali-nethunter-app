@@ -2,8 +2,8 @@ package com.offsec.nethunter.utils;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Environment;
-import android.util.Log;
 import android.view.Gravity;
 import android.widget.Toast;
 
@@ -14,22 +14,23 @@ import java.io.File;
 public class NhPaths implements SharedPreferences.OnSharedPreferenceChangeListener{
     private static final String TAG = "NhPaths";
     private static NhPaths instance;
-    private SharedPreferences sharedPreferences;
-
+    private final SharedPreferences sharedPreferences;
     public static String APP;
     public static String APP_PATH;
     public static String APP_DATABASE_PATH;
     public static String APP_INITD_PATH;
     public static String APP_SCRIPTS_PATH;
+    public static String APP_NHFILES_PATH;
     public static String APP_SCRIPTS_BIN_PATH;
+    public static String APP_NHFILES_BACKUP_PATH;
     public static String NH_SD_FOLDER_NAME;
     public static String SD_PATH;
     public static String APP_SD_FILES_PATH;
-    private static String BASE_PATH;
     public static String NH_SYSTEM_PATH;
     public static String ARCH_FOLDER;
     public static String CHROOT_SD_PATH;
     public static String CHROOT_SUDO;
+    public static String CHROOT_HOME;
     public static String CHROOT_INITD_SCRIPT_PATH;
     public static String CHROOT_SYMLINK_PATH;
     public static String APP_SD_SQLBACKUP_PATH;
@@ -46,16 +47,19 @@ public class NhPaths implements SharedPreferences.OnSharedPreferenceChangeListen
         APP_DATABASE_PATH               = APP_PATH + "/databases";
         APP_INITD_PATH                  = APP_PATH + "/etc/init.d";
         APP_SCRIPTS_PATH                = APP_PATH + "/scripts";
+        APP_NHFILES_PATH                = APP_PATH + "/nh_files";
         APP_SCRIPTS_BIN_PATH            = APP_SCRIPTS_PATH + "/bin";
+        APP_NHFILES_BACKUP_PATH         = "/sdcard/nh_files/backups";
         SD_PATH                         = getSdcardPath();
         NH_SD_FOLDER_NAME               = "nh_files";
         APP_SD_FILES_PATH               = SD_PATH + "/" + NH_SD_FOLDER_NAME;
         APP_SD_FILES_IMG_PATH           = APP_SD_FILES_PATH + "/diskimage";
         APP_SD_SQLBACKUP_PATH           = APP_SD_FILES_PATH + "/nh_sql_backups";
-        BASE_PATH                       = "/data/local";
+        String BASE_PATH                = "/data/local";
         NH_SYSTEM_PATH                  = BASE_PATH + "/nhsystem";
         ARCH_FOLDER                     = sharedPreferences.getString(SharePrefTag.CHROOT_ARCH_SHAREPREF_TAG, "kali-arm64");
         CHROOT_SUDO                     = "/usr/bin/sudo";
+        CHROOT_HOME                     = "/root";
         CHROOT_INITD_SCRIPT_PATH        = APP_INITD_PATH + "/80postservices";
         CHROOT_SD_PATH                  = "/sdcard";
         CHROOT_SYMLINK_PATH             = NH_SYSTEM_PATH + "/kalifs";
@@ -75,6 +79,7 @@ public class NhPaths implements SharedPreferences.OnSharedPreferenceChangeListen
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+        assert key != null;
         if (key.equals(SharePrefTag.CHROOT_ARCH_SHAREPREF_TAG)){
             ARCH_FOLDER = sharedPreferences.getString(SharePrefTag.CHROOT_ARCH_SHAREPREF_TAG, "kali-arm64");
         }
@@ -115,13 +120,17 @@ public class NhPaths implements SharedPreferences.OnSharedPreferenceChangeListen
 
     public static void showMessage(Context context, String msg) {
         Toast toast = Toast.makeText(context, msg, Toast.LENGTH_SHORT);
-        toast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 0);
+        if (Build.VERSION.SDK_INT < 30) {
+            toast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 0);
+        }
         toast.show();
     }
 
     public static void showMessage_long(Context context, String msg) {
         Toast toast = Toast.makeText(context, msg, Toast.LENGTH_LONG);
-        toast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 0);
+        if (Build.VERSION.SDK_INT < 30) {
+            toast.setGravity(Gravity.TOP | Gravity.CENTER_HORIZONTAL, 0, 0);
+        }
         toast.show();
     }
 }

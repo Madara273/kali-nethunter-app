@@ -7,6 +7,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -80,13 +82,12 @@ public class WifipumpkinFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.setup:
-            case R.id.update:
-                RunSetup();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        int itemId = item.getItemId();
+        if (itemId == R.id.setup || itemId == R.id.update) {
+            RunSetup();
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
         }
     }
 
@@ -149,8 +150,9 @@ public class WifipumpkinFragment extends Fragment {
                     myBrowser.getSettings().setJavaScriptEnabled(true); // Enable JavaScript Support
                     myBrowser.setWebViewClient(new WebViewClient());
                     myBrowser.getSettings().setAllowFileAccess(true);
-                    myBrowser.loadDataWithBaseURL("file:///sdcard/nh_files/templates/" + selected_template + "/static", template_src, "text/html", "UTF-8", null);
-                    myBrowser.loadUrl(template_src);
+                    String externalStoragePath = Environment.getExternalStorageDirectory().getPath();
+                    myBrowser.loadDataWithBaseURL("file://" + externalStoragePath + "/nh_files/templates/" + selected_template + "/static", template_src, "text/html", "UTF-8", null);
+                    myBrowser.loadUrl(externalStoragePath + "/nh_files/templates/" + selected_template + "/templates/login.html");
                     TemplateString[0] = selected_template;
                 }
             }
@@ -354,22 +356,13 @@ public class WifipumpkinFragment extends Fragment {
         builder.setTitle("Script to execute:");
         builder.setPositiveButton("Start", (dialog, which) -> {
             switch (selectedScriptIndex) {
-                // launching mana on the terminal so it doesn't die suddenly
                 case 0:
                     NhPaths.showMessage(context, "Starting MANA NAT FULL");
-                    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
-                        run_cmd(NhPaths.makeTermTitle("MANA-FULL") + "/usr/share/mana-toolkit/run-mana/start-nat-full-lollipop.sh");
-                    } else {
-                        run_cmd(NhPaths.makeTermTitle("MANA-FULL") + "/usr/share/mana-toolkit/run-mana/start-nat-full-kitkat.sh");
-                    }
+                    run_cmd(NhPaths.makeTermTitle("MANA-FULL") + "/usr/share/mana-toolkit/run-mana/start-nat-full-lollipop.sh");
                     break;
                 case 1:
                     NhPaths.showMessage(context, "Starting MANA NAT SIMPLE");
-                    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
-                        run_cmd(NhPaths.makeTermTitle("MANA-SIMPLE") + "/usr/share/mana-toolkit/run-mana/start-nat-simple-lollipop.sh");
-                    } else {
-                        run_cmd(NhPaths.makeTermTitle("MANA-SIMPLE") + "/usr/share/mana-toolkit/run-mana/start-nat-simple-kitkat.sh");
-                    }
+                    run_cmd(NhPaths.makeTermTitle("MANA-SIMPLE") + "/usr/share/mana-toolkit/run-mana/start-nat-simple-lollipop.sh");
                     break;
                 case 2:
                     NhPaths.showMessage(context, "Starting MANA Bettercap");
@@ -377,13 +370,10 @@ public class WifipumpkinFragment extends Fragment {
                     break;
                 case 3:
                     NhPaths.showMessage(context, "Starting MANA NAT SIMPLE && BDF");
-                    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
-                        run_cmd(NhPaths.makeTermTitle("MANA-BDF") + "/usr/share/mana-toolkit/run-mana/start-nat-simple-bdf-lollipop.sh");
-                    } else {
-                        run_cmd(NhPaths.makeTermTitle("MANA-BDF") + "/usr/share/mana-toolkit/run-mana/start-nat-simple-bdf-kitkat.sh");
-                    }
-                    // we wait ~10 secs before launching msf
-                    new android.os.Handler().postDelayed(
+                    run_cmd(NhPaths.makeTermTitle("MANA-BDF") + "/usr/share/mana-toolkit/run-mana/start-nat-simple-bdf-lollipop.sh");
+
+                    // Delay launching msfconsole
+                    new android.os.Handler(Looper.getMainLooper()).postDelayed(
                             () -> {
                                 NhPaths.showMessage(context, "Starting MSF with BDF resource.rc");
                                 run_cmd(NhPaths.makeTermTitle("MSF") + "msfconsole -q -r /usr/share/bdfproxy/bdfproxy_msf_resource.rc");
@@ -407,7 +397,6 @@ public class WifipumpkinFragment extends Fragment {
         });
         builder.setSingleChoiceItems(scripts, selectedScriptIndex, (dialog, which) -> selectedScriptIndex = which);
         builder.show();
-
     }
 
     public void Firstrun() {
@@ -477,16 +466,14 @@ public class WifipumpkinFragment extends Fragment {
                 EditText channel = view.findViewById(R.id.wpe_channel);
                 EditText privatekey = view.findViewById(R.id.wpe_private_key);
 
-                if (source != null) {
-                    source = updateConfig(source, "interface", ifc.getText().toString());
-                    source = updateConfig(source, "bssid", bssid.getText().toString());
-                    source = updateConfig(source, "ssid", ssid.getText().toString());
-                    source = updateConfig(source, "channel", channel.getText().toString());
-                    source = updateConfig(source, "private_key_passwd", privatekey.getText().toString());
+                source = updateConfig(source, "interface", ifc.getText().toString());
+                source = updateConfig(source, "bssid", bssid.getText().toString());
+                source = updateConfig(source, "ssid", ssid.getText().toString());
+                source = updateConfig(source, "channel", channel.getText().toString());
+                source = updateConfig(source, "private_key_passwd", privatekey.getText().toString());
 
-                    exe.SaveFileContents(source, configFilePath);
-                    NhPaths.showMessage(context, "Source updated");
-                }
+                exe.SaveFileContents(source, configFilePath);
+                NhPaths.showMessage(context, "Source updated");
             });
             return rootView;
         }
