@@ -47,38 +47,40 @@
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:textStyle="bold"/>
 
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/linearLayout2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:orientation="horizontal"
+                android:padding="10dp"
+                android:gravity="center_vertical">
+
+                <Spinner
+                    android:id="@+id/device_interface"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:spinnerMode="dropdown"
+                    tools:ignore="TouchTargetSizeCheck" />
+
                 <ImageButton
                     android:id="@+id/refreshUSB"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="20dp"
-                    android:ems="10"
-                    app:srcCompat="@drawable/ic_action_refresh"
-                    tools:ignore="SpeakableTextPresentCheck,TouchTargetSizeCheck" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="10dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp">
-
-                <Spinner
-                    android:id="@+id/device_interface"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:dropDownWidth="wrap_content"
-                    android:saveEnabled="false"
-                    android:spinnerMode="dropdown"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/ic_action_refresh"
+                    android:contentDescription="Refresh USB"
+                    android:background="?attr/selectableItemBackgroundBorderless"
                     tools:ignore="TouchTargetSizeCheck" />
-
             </LinearLayout>
 
             <GridLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
                 android:columnCount="3"
