@@ -46,35 +46,45 @@
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:textStyle="bold"
                     tools:ignore="HardcodedText" />
-
-                <ImageButton
-                    android:id="@+id/refreshUSB"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="20dp"
-                    android:src="@drawable/ic_action_refresh"
-                    tools:ignore="ContentDescription,SpeakableTextPresentCheck,TouchTargetSizeCheck" />
             </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/linearLayout2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
                 android:orientation="horizontal"
-                android:padding="10dp">
+                android:padding="10dp"
+                android:gravity="center_vertical">
 
                 <Spinner
                     android:id="@+id/device_interface"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:spinnerMode="dropdown"
                     tools:ignore="TouchTargetSizeCheck" />
+
+                <ImageButton
+                    android:id="@+id/refreshUSB"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:src="@drawable/ic_action_refresh"
+                    android:contentDescription="Refresh USB"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    tools:ignore="TouchTargetSizeCheck" />
             </LinearLayout>
+
+
 
             <LinearLayout
                 android:id="@+id/button_row"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
                 android:orientation="horizontal"
                 android:layout_marginTop="8dp"
                 android:gravity="center">
@@ -114,6 +124,8 @@
                     android:id="@+id/button_row2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
                     android:layout_marginBottom="8dp"
                     android:orientation="horizontal">
 
@@ -154,12 +166,16 @@
             <WebView
                 android:id="@+id/icsim"
                 android:layout_width="match_parent"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
                 android:layout_height="200dp"
                 android:layout_marginBottom="8dp"/>
 
             <WebView
                 android:id="@+id/controls"
                 android:layout_width="match_parent"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
                 android:layout_height="260dp" />
 
         </LinearLayout>
