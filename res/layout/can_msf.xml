@@ -15,6 +15,17 @@
             tools:ignore="WebViewLayout">
 
             <TextView
+                android:id="@+id/textView1"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:text="Metasploit Automotive"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textStyle="bold"/>
+
+            <TextView
                 android:id="@+id/can_desc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -30,38 +41,19 @@
                 android:background="?android:attr/listDivider" />
 
             <LinearLayout
-                android:id="@+id/linearLayout1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginTop="10dp"
-                    android:text="Metasploit Automotive"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:textStyle="bold"
-                    tools:ignore="HardcodedText" />
-            </LinearLayout>
-
-            <LinearLayout
                 android:id="@+id/linearLayout2"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
-                android:layout_marginTop="10dp"
+                android:layout_marginBottom="5dp"
                 android:orientation="horizontal"
-                android:padding="10dp"
                 android:gravity="center_vertical">
 
                 <Spinner
                     android:id="@+id/device_interface"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_weight="1"
                     android:spinnerMode="dropdown"
                     tools:ignore="TouchTargetSizeCheck" />
@@ -77,49 +69,56 @@
                     tools:ignore="TouchTargetSizeCheck" />
             </LinearLayout>
 
-            <LinearLayout
-                android:id="@+id/elm327_relay_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+            <Button
+                android:id="@+id/btn_toggle_relay"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
-                android:orientation="horizontal"
-                android:padding="10dp">
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="ELM327 Relay Configuration" />
 
-                <TextView
-                    android:layout_width="0dp"
+            <LinearLayout
+                android:id="@+id/msf_elmconfig"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:id="@+id/elm327_relay_layout"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="ELM327 Relay :"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="HardcodedText" />
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:orientation="horizontal"
+                    android:padding="10dp">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <EditText
+                            android:id="@+id/baud_speed"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:autofillHints="115200"
+                            android:hint="ELM327 Relay Baud Speed (Default : 115200)"
+                            android:inputType="text"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            tools:ignore="MissingConstraints,TextFields,TouchTargetSizeCheck" />
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                </LinearLayout>
 
                 <Button
                     android:id="@+id/run_relay"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Start Relay"
-                    tools:ignore="ButtonStyle,HardcodedText,VisualLintButtonSize" />
-
-            </LinearLayout>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp">
-
-                <EditText
-                    android:id="@+id/baud_speed"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="ELM327 Relay Baud Speed (Default : 115200)"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="MissingConstraints,TextFields,TouchTargetSizeCheck" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:text="Start Relay"
+                    tools:ignore="ButtonStyle,HardcodedText,VisualLintButtonSize" />
+            </LinearLayout>
             <View
                 android:id="@+id/divider3"
                 android:layout_width="match_parent"
