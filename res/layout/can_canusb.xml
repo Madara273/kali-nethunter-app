@@ -94,7 +94,7 @@
                         android:id="@+id/baudrate_usb"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text"
+                        android:inputType="number"
                         android:text="200000"
                         android:textColor="#40FFFFFF"/>
 
@@ -123,7 +123,7 @@
                         android:id="@+id/canspeed_usb"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="text"
+                        android:inputType="number"
                         android:text="500000"
                         android:textColor="#40FFFFFF"/>
 
