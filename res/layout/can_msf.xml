@@ -1,7 +1,8 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -85,28 +86,32 @@
                 android:visibility="gone">
 
                 <LinearLayout
-                    android:id="@+id/elm327_relay_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
-                    android:orientation="horizontal"
-                    android:padding="10dp">
+                    android:layout_marginTop="5dp"
+                    android:layout_marginBottom="5dp"
+                    android:orientation="horizontal">
 
-                    <androidx.constraintlayout.widget.ConstraintLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Baud Speed">
 
-                        <EditText
+                        <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/baud_speed"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:autofillHints="115200"
-                            android:hint="ELM327 Relay Baud Speed (Default : 115200)"
-                            android:inputType="text"
-                            android:textAppearance="?android:attr/textAppearanceSmall"
-                            tools:ignore="MissingConstraints,TextFields,TouchTargetSizeCheck" />
-                    </androidx.constraintlayout.widget.ConstraintLayout>
+                            android:inputType="number"
+                            android:text="115200"
+                            android:textColor="#40FFFFFF"/>
+
+                    </com.google.android.material.textfield.TextInputLayout>
 
                 </LinearLayout>
 
