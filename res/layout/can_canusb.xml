@@ -16,6 +16,17 @@
             android:orientation="vertical">
 
             <TextView
+                android:id="@+id/textView1"
+                android:gravity="center"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
+                android:text="CAN-USB"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:textStyle="bold"/>
+
+            <TextView
                 android:id="@+id/can_desc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -26,29 +37,11 @@
                 tools:ignore="VisualLintLongText" />
 
             <View
-                android:id="@+id/divider2"
+                android:id="@+id/divider1"
                 android:layout_width="match_parent"
                 android:layout_marginBottom="10dp"
                 android:layout_height="1dp"
                 android:background="?android:attr/listDivider" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginTop="10dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/textView1"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_weight="3"
-                    android:text="CAN USB"
-                    android:textAppearance="?android:attr/textAppearanceMedium"
-                    android:textStyle="bold" />
-            </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/linearLayout2"
@@ -83,42 +76,59 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
+                android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/baudrate_usb"
-                    android:layout_width="match_parent"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:inputType="number"
-                    android:gravity="bottom"
-                    android:hint="Baudrate : 200000"
-                    tools:ignore="TouchTargetSizeCheck"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:layout_weight="1"
+                    app:boxStrokeColor="@color/ifc_box_stroke"
+                    app:boxBackgroundColor="@color/transparent"
+                    app:hintTextColor="@color/ifc_hint_text"
+                    android:hint="Baudrate">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/baudrate_usb"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:text="200000"
+                        android:textColor="#40FFFFFF"/>
+
+                </com.google.android.material.textfield.TextInputLayout>
 
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
-                android:layout_gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dp">
+                android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/canspeed_usb"
-                    android:layout_width="match_parent"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:inputType="number"
-                    android:gravity="bottom"
-                    android:hint="CAN Speed : 500000"
-                    tools:ignore="TouchTargetSizeCheck"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:layout_weight="1"
+                    app:boxStrokeColor="@color/ifc_box_stroke"
+                    app:boxBackgroundColor="@color/transparent"
+                    app:hintTextColor="@color/ifc_hint_text"
+                    android:hint="CAN Speed">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/canspeed_usb"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:text="500000"
+                        android:textColor="#40FFFFFF"/>
+
+                </com.google.android.material.textfield.TextInputLayout>
+
             </LinearLayout>
 
             <LinearLayout
@@ -133,8 +143,6 @@
                     android:id="@+id/button_row"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
                     android:orientation="horizontal"
                     android:layout_marginTop="8dp"
                     android:gravity="center">
@@ -175,8 +183,6 @@
                     android:id="@+id/button_row2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
                     android:orientation="horizontal"
                     android:gravity="center">
 
@@ -270,8 +276,6 @@
                     android:id="@+id/start_canusb_send"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
                     android:text="Run" />
 
             </LinearLayout>

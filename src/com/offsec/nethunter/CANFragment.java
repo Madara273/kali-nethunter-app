@@ -299,6 +299,20 @@ public class CANFragment extends Fragment {
                 btnTxqueuelen.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
             });
 
+            // Services Toggle
+            Button btnServicesToggle = rootView.findViewById(R.id.btn_toggle_services);
+            LinearLayout servicesLayout = rootView.findViewById(R.id.main_services);
+
+            btnServicesToggle.setOnClickListener(v -> {
+                if (servicesLayout.getVisibility() == View.GONE) {
+                    servicesLayout.setVisibility(View.VISIBLE);
+                    btnServicesToggle.setText("Hide Services");
+                } else {
+                    servicesLayout.setVisibility(View.GONE);
+                    btnServicesToggle.setText("Services");
+                }
+            });
+
             // Attach and Daemon
             // ldattach
             Button LdAttachButton = rootView.findViewById(R.id.start_ldattach);
@@ -782,11 +796,11 @@ public class CANFragment extends Fragment {
                     return;
                 }
 
-                String cmd_show = "/opt/car_hacking/car_venv/bin/vininfo show " + vinNumber + " | tr -s [:space:] > /sdcard/nh_files/can_arsenal/output.txt";
+                String cmd_show = "sudo mkdir -p /sdcard/nh_files/carsenal;/opt/car_hacking/car_venv/bin/vininfo show " + vinNumber + " | tr -s [:space:] > /sdcard/nh_files" + "/carsenal/output.txt";
                 new BootKali(cmd_show).run_bg();
                 try {
                     Thread.sleep(SHORT_DELAY);
-                    String output = exe.RunAsRootOutput("cat " + NhPaths.APP_SD_FILES_PATH + "/can_arsenal/output.txt");
+                    String output = exe.RunAsRootOutput("cat " + NhPaths.APP_SD_FILES_PATH + "/carsenal/output.txt");
                     term.setText(output);
                 } catch (Exception e) {
                     Log.e("VINShowError", "Exception while reading VIN info", e);
@@ -804,11 +818,11 @@ public class CANFragment extends Fragment {
                     return;
                 }
 
-                String cmd_check = "/opt/car_hacking/car_venv/bin/vininfo check " + vinNumber + " | tr -s [:space:] > /sdcard/nh_files/can_arsenal/output.txt";
+                String cmd_check = "sudo mkdir -p /sdcard/nh_files/carsenal;/opt/car_hacking/car_venv/bin/vininfo check " + vinNumber + " | tr -s [:space:] > /sdcard/nh_files/carsenal/output.txt";
                 new BootKali(cmd_check).run_bg();
                 try {
                     Thread.sleep(SHORT_DELAY);
-                    String output = exe.RunAsRootOutput("cat " + NhPaths.APP_SD_FILES_PATH + "/can_arsenal/output.txt");
+                    String output = exe.RunAsRootOutput("cat " + NhPaths.APP_SD_FILES_PATH + "/carsenal/output.txt");
                     term.setText(output);
                 } catch (Exception e) {
                     Log.e("VINCheckError", "Exception while reading VIN info", e);
@@ -852,6 +866,20 @@ public class CANFragment extends Fragment {
             final EditText outputfilepath = rootView.findViewById(R.id.outputfilepath);
             final Button outputfilebrowse = rootView.findViewById(R.id.outputfilebrowse);
             final EditText CustomCmd = rootView.findViewById(R.id.customcmd);
+
+            // Configuration Toggle
+            Button btnConfigurationToggle = rootView.findViewById(R.id.btn_toggle_config_tools);
+            LinearLayout configurationLayout = rootView.findViewById(R.id.tools_config);
+
+            btnConfigurationToggle.setOnClickListener(v -> {
+                if (configurationLayout.getVisibility() == View.GONE) {
+                    configurationLayout.setVisibility(View.VISIBLE);
+                    btnConfigurationToggle.setText("Hide Configuration");
+                } else {
+                    configurationLayout.setVisibility(View.GONE);
+                    btnConfigurationToggle.setText("Configuration");
+                }
+            });
 
             // Interfaces
             final Spinner deviceList = rootView.findViewById(R.id.device_interface);
@@ -2133,6 +2161,20 @@ public class CANFragment extends Fragment {
                 });
             });
 
+            // Configuration Toggle
+            Button btnConfigurationToggle = rootView.findViewById(R.id.btn_toggle_config_icsim);
+            LinearLayout configurationLayout = rootView.findViewById(R.id.icsim_configuration);
+
+            btnConfigurationToggle.setOnClickListener(v -> {
+                if (configurationLayout.getVisibility() == View.GONE) {
+                    configurationLayout.setVisibility(View.VISIBLE);
+                    btnConfigurationToggle.setText("Hide Configuration");
+                } else {
+                    configurationLayout.setVisibility(View.GONE);
+                    btnConfigurationToggle.setText("Configuration");
+                }
+            });
+
             // Level Spinner
             // 0 = No randomization added to the packets other than location and ID
             // 1 = Add NULL padding
@@ -2404,6 +2446,20 @@ public class CANFragment extends Fragment {
                 refresh(rootView);
             });
             executorService.submit(() -> refresh(rootView));
+
+            // ELM327 Configuration Toggle
+            Button btnConfigurationToggle = rootView.findViewById(R.id.btn_toggle_relay);
+            LinearLayout configurationLayout = rootView.findViewById(R.id.msf_elmconfig);
+
+            btnConfigurationToggle.setOnClickListener(v -> {
+                if (configurationLayout.getVisibility() == View.GONE) {
+                    configurationLayout.setVisibility(View.VISIBLE);
+                    btnConfigurationToggle.setText("Hide Configuration");
+                } else {
+                    configurationLayout.setVisibility(View.GONE);
+                    btnConfigurationToggle.setText("ELM327 Relay Configuration");
+                }
+            });
 
             // ELM327 Relay
             Button elm327relayButton = rootView.findViewById(R.id.run_relay);
