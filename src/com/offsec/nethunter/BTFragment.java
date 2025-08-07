@@ -47,6 +47,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -165,7 +168,7 @@ public class BTFragment extends Fragment {
         }
         run_cmd("echo -ne \"\\033]0;BT Arsenal Setup\\007\" && clear;" +
                 "apt update && apt install screen bluetooth bluez bluez-tools bluez-obexd libbluetooth3 sox spooftooph libglib2.0*-dev " +
-                "libsystemd-dev python3-dbus python3-bluez python3-pyudev python3-evdev libbluetooth-dev redfang bluelog blueranger -y;" +
+                "libsystemd-dev python3-dbus python3-bluez python3-pyudev python3-evdev libbluetooth-dev redfang bluelog blueranger espeak -y;" +
                 "if [[ -f /usr/sbin/bluebinder ]]; then echo 'Bluebinder is installed!'; else wget https://raw.githubusercontent.com/yesimxev/bluebinder/master/prebuilt/armhf/bluebinder -P /usr/sbin/ && chmod +x /usr/sbin/bluebinder;fi;" +
                 "if [[ -f /usr/lib/libgbinder.so.1.1.25 ]]; then echo 'libgbinder.so.1.1.25 is installed!'; else wget https://raw.githubusercontent.com/yesimxev/libgbinder/master/prebuilt/armhf/libgbinder.so.1.1.25 -P /usr/lib/ &&" +
                 " ln -s libgbinder.so.1.1.25 /usr/lib/libgbinder.so.1.1 && ln -s libgbinder.so.1.1 /usr/lib/libgbinder.so.1 && ln -s libgbinder.so.1 /usr/lib/libgbinder.so;fi;" +
@@ -846,9 +849,47 @@ public class BTFragment extends Fragment {
 
             // Target address
             final EditText cw_address = rootView.findViewById(R.id.hci_address);
+            
+            // TTS Fields
+            final Spinner ttsDropdown = rootView.findViewById(R.id.tts_message_dropdown);
+            Spinner ttsVoiceSpinner = rootView.findViewById(R.id.tts_voice_spinner);
+            Spinner ttsSpeedSpinner = rootView.findViewById(R.id.tts_speed_spinner);
+            final EditText ttsInput = rootView.findViewById(R.id.tts_input);
+            final Button ttsGenerate = rootView.findViewById(R.id.generate_tts);
+
+
+            // Hide the TTS input field by default
+            ttsInput.setVisibility(View.GONE);
+
+            // Create TTS output directory
+            new File("/sdcard/nh_files/CarWhisperer/TTS").mkdirs();
 
             // Set target
             Button SetTarget = rootView.findViewById(R.id.set_target);
+
+            // Populate dropdown
+            String[] ttsOptions = getResources().getStringArray(R.array.tts_phrases);
+            ArrayAdapter<String> ttsAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, ttsOptions);
+            ttsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            ttsDropdown.setAdapter(ttsAdapter);
+
+            // Handle selection
+            ttsDropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    String selected = ttsOptions[position];
+                    if ("Custom TTS message".equals(selected)) {
+                        ttsInput.setVisibility(View.VISIBLE);
+                    } else {
+                        ttsInput.setVisibility(View.GONE);
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                    ttsInput.setVisibility(View.GONE);
+                }
+            });
 
             SetTarget.setOnClickListener( v -> {
                 String selected_address = PreferencesData.getString(context, "selected_address", "");
@@ -888,6 +929,49 @@ public class BTFragment extends Fragment {
                 intent.setAction(Intent.ACTION_GET_CONTENT);
                 startActivityForResult(Intent.createChooser(intent, "Select audio file"),1001);
                 });
+
+            // Text-to-Speech Generation
+            ttsGenerate.setOnClickListener(v -> {
+                String selectedPhrase = ttsDropdown.getSelectedItem().toString();
+                String finalInput;
+
+                if ("Custom message".equals(selectedPhrase)) {
+                    finalInput = ttsInput.getText().toString().trim();
+                    if (finalInput.isEmpty()) {
+                        Toast.makeText(requireActivity().getApplicationContext(), "Enter text to convert", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                } else {
+                    finalInput = selectedPhrase;
+                }
+
+                if (selectedPhrase.equals("Choose Message")){
+                    Toast.makeText(requireContext(), "Please select a TTS Message", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Get selected voice and speed
+                String selectedVoice = ttsVoiceSpinner.getSelectedItem().toString();
+                String selectedSpeed = ttsSpeedSpinner.getSelectedItem().toString();
+
+                if (selectedVoice.equals("Voice model") || selectedSpeed.equals("Voice speed")) {
+                    Toast.makeText(requireContext(), "Please select both voice model and speed", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                String outTmp = "/root/tts_output.wav";
+                String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+                String outFinal = "/sdcard/nh_files/CarWhisperer/TTS/tts_" + timestamp + ".wav";
+
+                String escapedInput = finalInput.replace("\"", "\\\"");
+
+                String ttsCmd = "espeak -v " + selectedVoice + " -s " + selectedSpeed + " \"" + escapedInput + "\" -w " + outTmp + " && " +
+                        "cp " + outTmp + " " + outFinal + " && chmod 777 " + outFinal + " && sleep 1 && exit";
+
+                run_cmd(ttsCmd);
+                Toast.makeText(requireActivity().getApplicationContext(), "TTS audio generated at: " + outFinal, Toast.LENGTH_LONG).show();
+                injectfilename.setText(outFinal);
+            });
 
             // Launch
             Button StartCWButton = rootView.findViewById(R.id.start_cw);
