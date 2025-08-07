@@ -1004,10 +1004,17 @@ public class BTFragment extends Fragment {
             // Stream or play audio
             ImageButton PlayAudioButton = rootView.findViewById(R.id.play_audio);
             ImageButton StopAudioButton = rootView.findViewById(R.id.stop_audio);
-            AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 8000, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, 20000, AudioTrack.MODE_STREAM);
+            AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 22000, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, 20000, AudioTrack.MODE_STREAM);
             PlayAudioButton.setOnClickListener( v -> {
-                File cw_listenfile = new File(NhPaths.SD_PATH + "/rec.raw");
-                if (cw_listenfile.length() == 0) {
+                String selectedPath = injectfilename.getText().toString().trim();
+                File cw_listenfile;
+                if (!selectedPath.isEmpty() && new File(selectedPath).exists()) {
+                    cw_listenfile = new File(selectedPath);
+                } else {
+                    cw_listenfile = new File(NhPaths.SD_PATH + "/nh_files/CarWhisperer/rec.raw");
+                }
+
+                if (!cw_listenfile.exists() || cw_listenfile.length() == 0) {
                     Toast.makeText(getContext(), "File not found!", Toast.LENGTH_SHORT).show();
                 } else {
                     Executors.newSingleThreadExecutor().execute(() -> {
