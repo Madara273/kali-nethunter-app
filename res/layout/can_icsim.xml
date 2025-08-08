@@ -107,14 +107,6 @@
                         android:layout_weight="1"
                         android:text="Stop"
                         tools:ignore="ButtonStyle,HardcodedText,VisualLintButtonSize" />
-
-                    <Button
-                        android:id="@+id/refresh_icsim"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Refresh"
-                        tools:ignore="ButtonStyle,HardcodedText,VisualLintButtonSize" />
                 </LinearLayout>
 
                 <LinearLayout
