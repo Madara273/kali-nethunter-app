@@ -48,6 +48,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import com.google.android.material.textfield.TextInputLayout;
 import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.BootKali;
 import com.offsec.nethunter.utils.NhPaths;
@@ -393,7 +394,7 @@ public class CANFragment extends Fragment {
 
             // Toggle Advanced Options
             Button btnMtu = rootView.findViewById(R.id.btn_toggle_mtu);
-            EditText SelectedMTU = rootView.findViewById(R.id.mtu_value);
+            TextInputLayout SelectedMTU = rootView.findViewById(R.id.mtu_container);
 
             btnMtu.setOnClickListener(v -> {
                 boolean isVisible = SelectedMTU.getVisibility() == View.VISIBLE;
@@ -404,7 +405,7 @@ public class CANFragment extends Fragment {
             });
 
             Button btnTxqueuelen = rootView.findViewById(R.id.btn_toggle_txqueuelen);
-            EditText SelectedTxqueuelen = rootView.findViewById(R.id.txqueuelen_value);
+            TextInputLayout SelectedTxqueuelen = rootView.findViewById(R.id.txqueuelen_container);
 
             btnTxqueuelen.setOnClickListener(v -> {
                 boolean isVisible = SelectedTxqueuelen.getVisibility() == View.VISIBLE;
@@ -413,6 +414,7 @@ public class CANFragment extends Fragment {
                 int color = isVisible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
                 btnTxqueuelen.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
             });
+
 
             // Services Toggle
             Button btnServicesToggle = rootView.findViewById(R.id.btn_toggle_services);
@@ -847,8 +849,8 @@ public class CANFragment extends Fragment {
             Button StartCanButton = rootView.findViewById(R.id.start_caniface);
             StartCanButton.setOnClickListener(v -> {
                 String selected_caniface = SelectedIface.getText().toString();
-                String selected_mtu = SelectedMTU.getText().toString();
-                String selected_txqueuelen = SelectedTxqueuelen.getText().toString();
+                String selected_mtu = SelectedMTU.getEditText().getText().toString();
+                String selected_txqueuelen = SelectedTxqueuelen.getEditText().getText().toString();
                 String interface_type = sharedpreferences.getString("cantype_selected", "");
 
                 if (!selected_caniface.isEmpty() && selected_caniface.matches("^(can|vcan|slcan)[0-9]$")) {
