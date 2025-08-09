@@ -25,16 +25,6 @@ android {
     //noinspection GradleDependency
     compileSdk 34
 
-    defaultConfig {
-        //noinspection HighAppVersionCode
-        versionCode 2025020200
-        versionName "2025.2"
-        multiDexEnabled true
-        buildConfigField "int", "VERSION_CODE", "${versionCode}"
-        buildConfigField "String", "VERSION_NAME", "\"${versionName}\""
-        applicationId "com.offsec.nethunter"
-    }
-
     buildFeatures {
         dataBinding true
         aidl true
@@ -53,31 +43,28 @@ android {
         jvmTarget = "17"
     }
 
-    // Declare flavor dimension
-    flavorDimensions "render_backend"
-
-    // Build flavors
-    productFlavors {
-        renderscript {
-            dimension "render_backend"
-            renderscriptSupportModeEnabled true
-            renderscriptTargetApi 21
-            minSdk 21
-            maxSdk 23
-            externalNativeBuild {
-                cmake {
-                    arguments "-DUSE_VULKAN=OFF"
-                }
+    defaultConfig {
+        minSdk 21
+        //noinspection ExpiredTargetSdkVersion
+        targetSdk 29
+        //noinspection HighAppVersionCode
+        versionCode 2025020200
+        versionName "2025.2"
+        multiDexEnabled true
+        applicationId "com.offsec.nethunter"
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_PLATFORM=android-24"
+                cppFlags ""
             }
         }
-        vulkan {
-            dimension "render_backend"
-            minSdk 24
-            externalNativeBuild {
-                cmake {
-                    arguments "-DUSE_VULKAN=ON"
-                }
-            }
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
         }
     }
 
@@ -104,17 +91,18 @@ android {
     buildTypes {
         debug {
             minifyEnabled false
-            buildConfigField "String", "BUILD_TIME", "\"${new Date(System.currentTimeMillis())}\""
-            buildConfigField "String", "BUILD_NAME", "\"${System.getenv("USER") ?: "Unknown"}\""
+            buildConfigField "java.util.Date", "BUILD_TIME", "new java.util.Date(" + System.currentTimeMillis() + "L)"
+            buildConfigField "String", "BUILD_NAME", "\"" + System.getenv("USER") + "\""
         }
 
         release {
+            //signingConfig signingConfigs.release
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt')
             debuggable false
             jniDebuggable false
-            buildConfigField "String", "BUILD_TIME", "\"${new Date(System.currentTimeMillis())}\""
+            buildConfigField "java.util.Date", "BUILD_TIME", "new java.util.Date(" + System.currentTimeMillis() + "L)"
             buildConfigField "String", "BUILD_NAME", "\"" + System.getenv("USER") + "\""
         }
     }
