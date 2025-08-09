@@ -128,7 +128,7 @@
             </intent-filter>
         </receiver>
         <service
-            android:name=".AudioPlaybackService"
+            android:name=".audio.AudioPlaybackService"
             android:label="@string/playback_service_label" />
         <service
             android:name=".service.CompatCheckService"
