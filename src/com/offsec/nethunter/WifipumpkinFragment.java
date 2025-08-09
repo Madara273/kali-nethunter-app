@@ -304,34 +304,14 @@ public class WifipumpkinFragment extends Fragment {
         sharedpreferences.edit().putBoolean("set_setup_done", true).apply();
     }
 
-    public void LinkTemplates() {
-        String cmd =
-                "echo -ne \"\\033]0;Wifipumpkin3 Templates\\007\" && clear;" +
-                        "TEMPL_DIR='/root/.config/wifipumpkin3/config/templates';" +
-                        "TARGET='/sdcard/nh_files/templates';" +
-                        "if [ -L \"$TEMPL_DIR\" ]; then " +
-                        "if [ \"$(readlink \"$TEMPL_DIR\")\" != \"$TARGET\" ]; then " +
-                        "rm \"$TEMPL_DIR\"; " +
-                        "ln -s \"$TARGET\" \"$TEMPL_DIR\"; " +
-                        "fi; " +
-                        "elif [ -d \"$TEMPL_DIR\" ]; then " +
-                        "mv \"$TEMPL_DIR\" \"${TEMPL_DIR}_orig\"; " +
-                        "ln -s \"$TARGET\" \"$TEMPL_DIR\"; " +
-                        "elif [ ! -e \"$TEMPL_DIR\" ]; then " +
-                        "ln -s \"$TARGET\" \"$TEMPL_DIR\"; " +
-                        "fi; " +
-                        "echo 'Done!'; echo 'Closing in 3secs..'; sleep 3 && exit";
-        run_cmd(cmd);
-        sharedpreferences.edit().putBoolean("set_setup_done", true).apply();
-    }
-
     // Refresh templates
     private void refresh_wp3_templates(View WifipumpkinFragment) {
         Spinner TemplatesSpinner = WifipumpkinFragment.findViewById(R.id.templates);
-        final String outputTemplates = "None\n" + exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd ls /root/.config/wifipumpkin3/config/templates | tail -n +10");
+        final String outputTemplates = "None\n" + exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd ls /usr/share/wifipumpkin3/config/templates | tail -n +10");
         final String[] TemplatesArray = outputTemplates.split("\n");
         TemplatesSpinner.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, TemplatesArray));
     }
+
     private void checkiptables() {
         ShellExecuter exe = new ShellExecuter();
         String iptables_ver = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd iptables -V | grep iptables");

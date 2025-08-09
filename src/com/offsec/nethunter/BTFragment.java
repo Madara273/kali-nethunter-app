@@ -1,6 +1,5 @@
 package com.offsec.nethunter;
 
-import android.os.Handler;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -12,7 +11,6 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Bundle;
 import android.os.Parcelable;
-import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -102,23 +100,21 @@ public class BTFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
-
-        switch (item.getItemId()) {
-            case R.id.setup:
-                if (iswatch) RunSetupWatch();
-                else RunSetup();
-                return true;
-            case R.id.update:
-                if (iswatch) {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Updates have to be done manually through adb shell. If anything gone wrong at first run, please run Setup again.", Toast.LENGTH_LONG).show();
-                } else {
-                    RunUpdate();
-                }
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        int id = item.getItemId();
+        if (id == R.id.setup) {
+            if (iswatch) RunSetupWatch();
+            else RunSetup();
+            return true;
+        } else if (id == R.id.update) {
+            if (iswatch) {
+                Toast.makeText(requireActivity().getApplicationContext(), "Updates have to be done manually through adb shell. If anything gone wrong at first run, please run Setup again.", Toast.LENGTH_LONG).show();
+            } else {
+                RunUpdate();
+            }
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
         }
     }
 
@@ -1348,14 +1344,14 @@ public class BTFragment extends Fragment {
     public static class PreferencesData {
         public static void saveString(Context context, String key, String value) {
             if (context != null) {
-                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+                SharedPreferences sharedPrefs = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
                 sharedPrefs.edit().putString(key, value).apply();
             }
         }
 
         public static String getString(Context context, String key, String defaultValue) {
             if (context != null) {
-                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+                SharedPreferences sharedPrefs = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
                 return sharedPrefs.getString(key, defaultValue);
             }
             return defaultValue;
