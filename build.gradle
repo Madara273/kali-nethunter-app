@@ -22,11 +22,21 @@ repositories {
 
 android {
     namespace "com.offsec.nethunter"
+    //noinspection GradleDependency
     compileSdk 34
+
+    defaultConfig {
+        //noinspection HighAppVersionCode
+        versionCode 2025020200
+        versionName "2025.2"
+        multiDexEnabled true
+        buildConfigField "int", "VERSION_CODE", "${versionCode}"
+        buildConfigField "String", "VERSION_NAME", "\"${versionName}\""
+        applicationId "com.offsec.nethunter"
+    }
 
     buildFeatures {
         dataBinding true
-        renderScript true
         aidl true
         buildConfig true
         //compose true
@@ -43,28 +53,31 @@ android {
         jvmTarget = "17"
     }
 
-    defaultConfig {
-        minSdk 21
-        //noinspection ExpiredTargetSdkVersion
-        targetSdk 29
-        //noinspection HighAppVersionCode
-        versionCode 2025020200
-        versionName "2025.2"
-        multiDexEnabled true
-        applicationId "com.offsec.nethunter"
-        externalNativeBuild {
-            cmake {
-                arguments "-DANDROID_PLATFORM=android-24"
-                cppFlags ""
+    // Declare flavor dimension
+    flavorDimensions "render_backend"
+
+    // Build flavors
+    productFlavors {
+        renderscript {
+            dimension "render_backend"
+            renderscriptSupportModeEnabled true
+            renderscriptTargetApi 21
+            minSdk 21
+            maxSdk 23
+            externalNativeBuild {
+                cmake {
+                    arguments "-DUSE_VULKAN=OFF"
+                }
             }
         }
-        ndk {
-            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
-        }
-    }
-    externalNativeBuild {
-        cmake {
-            path "CMakeLists.txt"
+        vulkan {
+            dimension "render_backend"
+            minSdk 24
+            externalNativeBuild {
+                cmake {
+                    arguments "-DUSE_VULKAN=ON"
+                }
+            }
         }
     }
 
@@ -91,8 +104,8 @@ android {
     buildTypes {
         debug {
             minifyEnabled false
-            buildConfigField "java.util.Date", "BUILD_TIME", "new java.util.Date(" + System.currentTimeMillis() + "L)"
-            buildConfigField "String", "BUILD_NAME", "\"" + System.getenv("USER") + "\""
+            buildConfigField "String", "BUILD_TIME", "\"${new Date(System.currentTimeMillis())}\""
+            buildConfigField "String", "BUILD_NAME", "\"${System.getenv("USER") ?: "Unknown"}\""
         }
 
         release {
