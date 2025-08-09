@@ -42,8 +42,10 @@ import com.offsec.nethunter.utils.SharePrefTag;
 import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.io.File;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -62,7 +64,6 @@ import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
-import androidx.lifecycle.ViewModelProvider;
 
 public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpdates.Provider {
     public final static String TAG = "AppNavHomeActivity";
@@ -446,7 +447,17 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         readmeButton.setOnClickListener(v -> showLicense());
 
         // Moved build info to the menu
-        final String buildTime = SDF.format(BuildConfig.BUILD_TIME);
+        String buildTime;
+        try {
+            SimpleDateFormat inputFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
+            buildTime = BuildConfig.BUILD_TIME;
+            Object date = inputFormat.parse(buildTime);
+            assert date != null;
+            buildTime = SDF.format(date);
+        } catch (ParseException e) {
+            buildTime = BuildConfig.BUILD_TIME;
+        }
+
         TextView buildInfo1 = navigationHeadView.findViewById(R.id.buildinfo1);
         TextView buildInfo2 = navigationHeadView.findViewById(R.id.buildinfo2);
         buildInfo1.setText(String.format("Version: %s (%s)", BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE));

@@ -19,7 +19,11 @@ public class NethunterModel {
     }
 
     public NethunterModel() {
-
+        this.title = "";
+        this.command = "";
+        this.delimiter = "";
+        this.runOnCreate = "";
+        this.result = new String[0];
     }
 
     public String getTitle() { return title; }
