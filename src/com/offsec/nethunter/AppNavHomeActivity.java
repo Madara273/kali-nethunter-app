@@ -450,11 +450,12 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         String buildTime;
         try {
             SimpleDateFormat inputFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
-            Date date = inputFormat.parse(BuildConfig.BUILD_TIME);
+            buildTime = BuildConfig.BUILD_TIME;
+            Object date = inputFormat.parse(buildTime);
             assert date != null;
             buildTime = SDF.format(date);
         } catch (ParseException e) {
-            buildTime = BuildConfig.BUILD_TIME; // Fallback to the raw string
+            buildTime = BuildConfig.BUILD_TIME;
         }
 
         TextView buildInfo1 = navigationHeadView.findViewById(R.id.buildinfo1);
