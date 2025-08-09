@@ -120,7 +120,7 @@ public class CANFragment extends Fragment {
                         }
 
                         @Override
-                        public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                        public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
                             View view = super.getDropDownView(position, convertView, parent);
                             TextView tv = (TextView) view;
                             tv.setTextColor(position == 0 ? Color.GRAY : Color.WHITE);
@@ -239,28 +239,23 @@ public class CANFragment extends Fragment {
                 menuInflater.inflate(R.menu.can, menu);
             }
 
-            @SuppressLint("NonConstantResourceId")
             @Override
             public boolean onMenuItemSelected(@NonNull MenuItem item) {
-                switch (item.getItemId()) {
-                    case R.id.documentation:
-                        sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-                        RunDocumentation();
-                        return true;
-                    case R.id.setup:
-                        sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-                        RunSetup();
-                        return true;
-                    case R.id.update:
-                        sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-                        RunUpdate();
-                        return true;
-                    case R.id.about:
-                        sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-                        RunAbout();
-                        return true;
-                    default:
-                        return false;
+                int id = item.getItemId();
+                if (id == R.id.documentation) {
+                    RunDocumentation();
+                    return true;
+                } else if (id == R.id.setup) {
+                    RunSetup();
+                    return true;
+                } else if (id == R.id.update) {
+                    RunUpdate();
+                    return true;
+                } else if (id == R.id.about) {
+                    RunAbout();
+                    return true;
+                } else {
+                    return false;
                 }
             }
         }, getViewLifecycleOwner());
@@ -376,7 +371,6 @@ public class CANFragment extends Fragment {
             context = getContext();
         }
 
-        @SuppressLint("SetTextI18n")
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.can_main, container, false);
@@ -415,7 +409,6 @@ public class CANFragment extends Fragment {
                 btnTxqueuelen.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
             });
 
-
             // Services Toggle
             Button btnServicesToggle = rootView.findViewById(R.id.btn_toggle_services);
             LinearLayout servicesLayout = rootView.findViewById(R.id.main_services);
@@ -423,10 +416,10 @@ public class CANFragment extends Fragment {
             btnServicesToggle.setOnClickListener(v -> {
                 if (servicesLayout.getVisibility() == View.GONE) {
                     servicesLayout.setVisibility(View.VISIBLE);
-                    btnServicesToggle.setText("Hide Services");
+                    btnServicesToggle.setText(R.string.can_hide_services);
                 } else {
                     servicesLayout.setVisibility(View.GONE);
-                    btnServicesToggle.setText("Services");
+                    btnServicesToggle.setText(R.string.can_services);
                 }
             });
 
@@ -805,29 +798,7 @@ public class CANFragment extends Fragment {
             // Interfaces
             // Can Type Spinner
             final Spinner canTypeList = rootView.findViewById(R.id.cantype_spinner);
-            final String[] interfaceTypeOptions = {"Type", "can", "vcan", "slcan"};
-
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, interfaceTypeOptions) {
-                @Override
-                public boolean isEnabled(int position) {
-                    // Disable "Type" item
-                    return position != 0;
-                }
-
-                @Override
-                public View getDropDownView(int position, View convertView, ViewGroup parent) {
-                    View view = super.getDropDownView(position, convertView, parent);
-                    TextView tv = (TextView) view;
-                    if (position == 0) {
-                        tv.setTextColor(Color.GRAY);  // Hint text color
-                    } else {
-                        tv.setTextColor(Color.WHITE); // Normal text
-                    }
-                    return view;
-                }
-            };
-
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            ArrayAdapter<String> adapter = getStringArrayAdapter();
             canTypeList.setAdapter(adapter);
             canTypeList.setSelection(0);  // Set initial selection to "Type"
 
@@ -842,6 +813,7 @@ public class CANFragment extends Fragment {
 
                 @Override
                 public void onNothingSelected(AdapterView<?> parentView) {
+                    // Do nothing
                 }
             });
 
@@ -849,7 +821,9 @@ public class CANFragment extends Fragment {
             Button StartCanButton = rootView.findViewById(R.id.start_caniface);
             StartCanButton.setOnClickListener(v -> {
                 String selected_caniface = SelectedIface.getText().toString();
+                assert SelectedMTU.getEditText() != null;
                 String selected_mtu = SelectedMTU.getEditText().getText().toString();
+                assert SelectedTxqueuelen.getEditText() != null;
                 String selected_txqueuelen = SelectedTxqueuelen.getEditText().getText().toString();
                 String interface_type = sharedpreferences.getString("cantype_selected", "");
 
@@ -921,7 +895,7 @@ public class CANFragment extends Fragment {
                     term.setText(output);
                 } catch (Exception e) {
                     Log.e("VINShowError", "Exception while reading VIN info", e);
-                    term.setText("Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                    term.setText(String.format("Error: %s - %s", e.getClass().getSimpleName(), e.getMessage()));
                 }
             });
 
@@ -943,11 +917,39 @@ public class CANFragment extends Fragment {
                     term.setText(output);
                 } catch (Exception e) {
                     Log.e("VINCheckError", "Exception while reading VIN info", e);
-                    term.setText("Error: " + e.getClass().getSimpleName() + " - " + e.getMessage());
+                    term.setText(String.format("Error: %s - %s", e.getClass().getSimpleName(), e.getMessage()));
                 }
             });
 
             return rootView;
+        }
+
+        @NonNull
+        private ArrayAdapter<String> getStringArrayAdapter() {
+            final String[] interfaceTypeOptions = {"Type", "can", "vcan", "slcan"};
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, interfaceTypeOptions) {
+                @Override
+                public boolean isEnabled(int position) {
+                    // Disable "Type" item
+                    return position != 0;
+                }
+
+                @Override
+                public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
+                    View view = super.getDropDownView(position, convertView, parent);
+                    TextView tv = (TextView) view;
+                    if (position == 0) {
+                        tv.setTextColor(Color.GRAY);  // Hint text color
+                    } else {
+                        tv.setTextColor(Color.WHITE); // Normal text
+                    }
+                    return view;
+                }
+            };
+
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            return adapter;
         }
     }
 
@@ -958,18 +960,15 @@ public class CANFragment extends Fragment {
         private boolean isInteractiveEnabled = false;
         private boolean isVerboseEnabled = false;
         private boolean isDisableLoopbackEnabled = false;
-        private Context context;
         private String selected_caniface;
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             activity = getActivity();
-            context = getContext();
+            Context context = getContext();
         }
 
-
-        @SuppressLint("SetTextI18n")
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.can_tools, container, false);
@@ -991,10 +990,10 @@ public class CANFragment extends Fragment {
             btnConfigurationToggle.setOnClickListener(v -> {
                 if (configurationLayout.getVisibility() == View.GONE) {
                     configurationLayout.setVisibility(View.VISIBLE);
-                    btnConfigurationToggle.setText("Hide Configuration");
+                    btnConfigurationToggle.setText(R.string.can_hide_configuration);
                 } else {
                     configurationLayout.setVisibility(View.GONE);
-                    btnConfigurationToggle.setText("Configuration");
+                    btnConfigurationToggle.setText(R.string.can_configuration);
                 }
             });
 
@@ -1021,10 +1020,10 @@ public class CANFragment extends Fragment {
             btnToggle.setOnClickListener(v -> {
                 if (advancedOptionsLayout.getVisibility() == View.GONE) {
                     advancedOptionsLayout.setVisibility(View.VISIBLE);
-                    btnToggle.setText("Hide Advanced Options");
+                    btnToggle.setText(R.string.can_hide_advanced_options);
                 } else {
                     advancedOptionsLayout.setVisibility(View.GONE);
-                    btnToggle.setText("Advanced Options");
+                    btnToggle.setText(R.string.can_advanced_options);
                 }
             });
 
@@ -1280,7 +1279,6 @@ public class CANFragment extends Fragment {
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private Activity activity;
         private boolean isDebugEnabled = false;
-        private Context context;
         private EditText SelectedBaudrateUSB;
         private EditText SelectedCanSpeedUSB;
         private String selected_usb;
@@ -1289,7 +1287,7 @@ public class CANFragment extends Fragment {
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             activity = getActivity();
-            context = getContext();
+            Context context = getContext();
         }
 
         @Override
@@ -1317,29 +1315,7 @@ public class CANFragment extends Fragment {
 
             // Can-Usb Mode Spinner
             final Spinner canusbModeList = rootView.findViewById(R.id.usb_mode_spinner);
-            final String[] modeOptions = {"Mode", "0", "1", "2"};
-
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, modeOptions) {
-                @Override
-                public boolean isEnabled(int position) {
-                    // Disable "Mode" item
-                    return position != 0;
-                }
-
-                @Override
-                public View getDropDownView(int position, View convertView, ViewGroup parent) {
-                    View view = super.getDropDownView(position, convertView, parent);
-                    TextView tv = (TextView) view;
-                    if (position == 0) {
-                        tv.setTextColor(Color.GRAY);  // Hint text color
-                    } else {
-                        tv.setTextColor(Color.WHITE); // Normal text
-                    }
-                    return view;
-                }
-            };
-
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            ArrayAdapter<String> adapter = getStringArrayAdapter();
             canusbModeList.setAdapter(adapter);
             canusbModeList.setSelection(0);  // Set initial selection to "Mode"
 
@@ -1354,6 +1330,7 @@ public class CANFragment extends Fragment {
 
                 @Override
                 public void onNothingSelected(AdapterView<?> parentView) {
+                    // Do nothing
                 }
             });
 
@@ -1452,6 +1429,34 @@ public class CANFragment extends Fragment {
             return rootView;
         }
 
+        @NonNull
+        private ArrayAdapter<String> getStringArrayAdapter() {
+            final String[] modeOptions = {"Mode", "0", "1", "2"};
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, modeOptions) {
+                @Override
+                public boolean isEnabled(int position) {
+                    // Disable "Mode" item
+                    return position != 0;
+                }
+
+                @Override
+                public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
+                    View view = super.getDropDownView(position, convertView, parent);
+                    TextView tv = (TextView) view;
+                    if (position == 0) {
+                        tv.setTextColor(Color.GRAY);  // Hint text color
+                    } else {
+                        tv.setTextColor(Color.WHITE); // Normal text
+                    }
+                    return view;
+                }
+            };
+
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            return adapter;
+        }
+
         private String getVisibleParam(View view, String prefix) {
             if (view.getVisibility() == View.VISIBLE) {
                 if (view instanceof EditText) {
@@ -1491,7 +1496,6 @@ public class CANFragment extends Fragment {
             context = getContext();
         }
 
-        @SuppressLint("SetTextI18n")
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.can_caribou, container, false);
@@ -1543,13 +1547,12 @@ public class CANFragment extends Fragment {
             btnToggle.setOnClickListener(v -> {
                 if (advancedOptionsLayout.getVisibility() == View.GONE) {
                     advancedOptionsLayout.setVisibility(View.VISIBLE);
-                    btnToggle.setText("Hide Advanced Options");
+                    btnToggle.setText(R.string.can_hide_advanced_options);
                 } else {
                     advancedOptionsLayout.setVisibility(View.GONE);
-                    btnToggle.setText("Advanced Options");
+                    btnToggle.setText(R.string.can_advanced_options);
                 }
             });
-
 
             // Advanced Options - Options
             // Start Address
@@ -1767,6 +1770,7 @@ public class CANFragment extends Fragment {
 
                 @Override
                 public void onNothingSelected(AdapterView<?> parentView) {
+                    // Do nothing
                 }
             });
 
@@ -1818,6 +1822,7 @@ public class CANFragment extends Fragment {
 
                 @Override
                 public void onNothingSelected(AdapterView<?> parentView) {
+                    // Do nothing
                 }
             });
 
@@ -1904,6 +1909,7 @@ public class CANFragment extends Fragment {
 
                 @Override
                 public void onNothingSelected(AdapterView<?> parentView) {
+                    // Do nothing
                 }
             });
 
@@ -1996,14 +2002,13 @@ public class CANFragment extends Fragment {
         private static final String ICSIM_SCRIPT_PATH = "/opt/car_hacking/icsim_service.sh";
         private static final long SHORT_DELAY = 1000;
         private static final long LONG_DELAY = 2000;
-        private Context context;
         private String selected_caniface;
 
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            context = getContext();
+            Context context = getContext();
         }
 
         @SuppressLint("SetJavaScriptEnabled")
@@ -2034,10 +2039,10 @@ public class CANFragment extends Fragment {
             btnConfigurationToggle.setOnClickListener(v -> {
                 if (configurationLayout.getVisibility() == View.GONE) {
                     configurationLayout.setVisibility(View.VISIBLE);
-                    btnConfigurationToggle.setText("Hide Configuration");
+                    btnConfigurationToggle.setText(R.string.can_hide_configuration);
                 } else {
                     configurationLayout.setVisibility(View.GONE);
-                    btnConfigurationToggle.setText("Configuration");
+                    btnConfigurationToggle.setText(R.string.can_configuration);
                 }
             });
 
@@ -2046,29 +2051,7 @@ public class CANFragment extends Fragment {
             // 1 = Add NULL padding
             // 2 = Randomize unused bytes
             final Spinner levelList = rootView.findViewById(R.id.level_spinner);
-            final String[] levelOptions = {"Level", "0", "1", "2"};
-
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, levelOptions) {
-                @Override
-                public boolean isEnabled(int position) {
-                    // Disable "Level" item
-                    return position != 0;
-                }
-
-                @Override
-                public View getDropDownView(int position, View convertView, ViewGroup parent) {
-                    View view = super.getDropDownView(position, convertView, parent);
-                    TextView tv = (TextView) view;
-                    if (position == 0) {
-                        tv.setTextColor(Color.GRAY);  // Hint text color
-                    } else {
-                        tv.setTextColor(Color.WHITE); // Normal text
-                    }
-                    return view;
-                }
-            };
-
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            ArrayAdapter<String> adapter = getStringArrayAdapter();
             levelList.setAdapter(adapter);
             levelList.setSelection(0);  // Set initial selection to "Level"
 
@@ -2083,6 +2066,7 @@ public class CANFragment extends Fragment {
 
                 @Override
                 public void onNothingSelected(AdapterView<?> parentView) {
+                    // Do nothing
                 }
             });
 
@@ -2112,7 +2096,7 @@ public class CANFragment extends Fragment {
             runICSIM.setOnClickListener(v -> {
                 if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     // String randomizeEnabled = isRandomizeEnabled ? " -r" : "";
-                    String levelValue = getVisibleParam(levelList, " -l ");
+                    String levelValue = getVisibleParam(levelList);
                     run_cmd("su -c 'sh " + ICSIM_SCRIPT_PATH + " " + selected_caniface + levelValue + "'");
                     showToast("Running ICSim...");
                     new Handler().postDelayed(() -> {
@@ -2155,21 +2139,57 @@ public class CANFragment extends Fragment {
             return rootView;
         }
 
-        private String getVisibleParam(View view, String prefix) {
+        @NonNull
+        private ArrayAdapter<String> getStringArrayAdapter() {
+            final String[] levelOptions = {"Level", "0", "1", "2"};
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, levelOptions) {
+                @Override
+                public boolean isEnabled(int position) {
+                    // Disable "Level" item
+                    return position != 0;
+                }
+
+                @Override
+                public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
+                    View view = super.getDropDownView(position, convertView, parent);
+                    TextView tv = (TextView) view;
+                    if (position == 0) {
+                        tv.setTextColor(Color.GRAY);  // Hint text color
+                    } else {
+                        tv.setTextColor(Color.WHITE); // Normal text
+                    }
+                    return view;
+                }
+            };
+
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            return adapter;
+        }
+
+        private String getVisibleParam(View view) {
             if (view.getVisibility() == View.VISIBLE) {
                 if (view instanceof EditText) {
                     String input = ((EditText) view).getText().toString().trim();
                     if (!input.isEmpty()) {
-                        return prefix + input;
+                        return " -l " + input;
                     }
                 } else if (view instanceof Spinner) {
                     String selected = ((Spinner) view).getSelectedItem().toString().trim();
                     if (!selected.isEmpty()) {
-                        return prefix + selected;
+                        return " -l " + selected;
                     }
                 }
             }
             return "";
+        }
+
+        public boolean isRandomizeEnabled() {
+            return isRandomizeEnabled;
+        }
+
+        public void setRandomizeEnabled(boolean randomizeEnabled) {
+            isRandomizeEnabled = randomizeEnabled;
         }
     }
 
@@ -2216,10 +2236,10 @@ public class CANFragment extends Fragment {
             btnConfigurationToggle.setOnClickListener(v -> {
                 if (configurationLayout.getVisibility() == View.GONE) {
                     configurationLayout.setVisibility(View.VISIBLE);
-                    btnConfigurationToggle.setText("Hide Configuration");
+                    btnConfigurationToggle.setText(R.string.can_hide_configuration);
                 } else {
                     configurationLayout.setVisibility(View.GONE);
-                    btnConfigurationToggle.setText("ELM327 Relay Configuration");
+                    btnConfigurationToggle.setText(R.string.can_elm327_relay_configuration);
                 }
             });
 
@@ -2266,7 +2286,7 @@ public class CANFragment extends Fragment {
                         }
 
                         @Override
-                        public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                        public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
                             View view = super.getDropDownView(position, convertView, parent);
                             TextView tv = (TextView) view;
                             tv.setTextColor(position == 0 ? Color.GRAY : Color.WHITE);
@@ -2357,7 +2377,7 @@ public class CANFragment extends Fragment {
 
                 if (optionsStringId == 0) {
                     infoText.setVisibility(View.VISIBLE);
-                    infoText.setText("No options available for this module.");
+                    infoText.setText(R.string.can_no_options_for_module);
                     return;
                 }
 
@@ -2393,7 +2413,7 @@ public class CANFragment extends Fragment {
                     if (name.isEmpty()) continue;
 
                     TextView label = new TextView(requireContext());
-                    label.setText(name + " (" + required + ")");
+                    label.setText(String.format("%s (%s)", name, required));
                     label.setTextSize(14);
                     label.setPadding(0, 10, 0, 4);
 
@@ -2466,8 +2486,7 @@ public class CANFragment extends Fragment {
                     }
                 }
 
-                msfCmd.append("run\"`echo -ne '\\015'`;screen -d -r $msfsession;exit" +
-                        "");
+                msfCmd.append("run\"`echo -ne '\\015'`;screen -d -r $msfsession;exit");
 
                 executorService.submit(() -> {
                     run_cmd(msfCmd.toString());

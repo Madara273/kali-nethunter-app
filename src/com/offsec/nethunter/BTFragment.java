@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.view.LayoutInflater;
@@ -45,7 +46,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.Executors;
@@ -276,12 +279,14 @@ public class BTFragment extends Fragment {
             super.onCreate(savedInstanceState);
             context = getContext();
         }
+
         @Override
         public void onResume(){
             super.onResume();
             Toast.makeText(requireActivity().getApplicationContext(), "Status updated", Toast.LENGTH_SHORT).show();
             Executors.newSingleThreadExecutor().execute(() -> refresh(requireView().getRootView()));
         }
+
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
@@ -318,16 +323,17 @@ public class BTFragment extends Fragment {
             }
 
             // Bluetooth interfaces
-            final String[] outputHCI = {""};
-            Executors.newSingleThreadExecutor().execute(() -> outputHCI[0] = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig | grep hci | cut -d: -f1"));
-            final ArrayList<String> hciIfaces = new ArrayList<>();
-            if (outputHCI[0].isEmpty()) {
-                hciIfaces.add("None");
-                ifaces.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, hciIfaces));
-            } else {
-                final String[] ifacesArray = outputHCI[0].split("\n");
-                ifaces.setAdapter(new ArrayAdapter<>(requireContext(),android.R.layout.simple_list_item_1, ifacesArray));
-            }
+            Executors.newSingleThreadExecutor().execute(() -> {
+                String outputHCI = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig | grep hci | cut -d: -f1");
+                ArrayList<String> hciIfaces = new ArrayList<>();
+                if (outputHCI.isEmpty()) {
+                    hciIfaces.add("None");
+                } else {
+                    String[] ifacesArray = outputHCI.split("\n");
+                    hciIfaces.addAll(Arrays.asList(ifacesArray));
+                }
+                requireActivity().runOnUiThread(() -> ifaces.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, hciIfaces)));
+            });
 
             ifaces.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
@@ -362,7 +368,11 @@ public class BTFragment extends Fragment {
                         confirmbuilder.setMessage("Your device does not support hwbinder, vhci, or bt_smd. Make sure your kernel config has the recommended drivers enabled in order to use internal bluetooth.");
                         confirmbuilder.setPositiveButton("Sure", (dialogInterface, i) -> {
                             bluebinderButton.setEnabled(false);
-                            bluebinderButton.setTextColor(Color.parseColor("#40FFFFFF"));
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                bluebinderButton.setTextColor(getResources().getColor(R.color.translucent_white, requireContext().getTheme()));
+                            } else {
+                                bluebinderButton.setTextColor(Color.WHITE);
+                            }
                             dialogInterface.cancel();
                         });
                         confirmbuilder.setNegativeButton("Try anyway", (dialogInterface, i) -> dialogInterface.cancel());
@@ -384,7 +394,7 @@ public class BTFragment extends Fragment {
                                     //"svc bluetooth disable",
                                     //"svc wifi disable",
                                     //"settings put global airplane_mode_on 1;am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true",
-				    //"pm disable com.android.bluetooth"
+                                    //"pm disable com.android.bluetooth"
                                 //});
 
                                 // Run the Bluebinder script
@@ -410,8 +420,8 @@ public class BTFragment extends Fragment {
                     }
                     else {
                         exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd pkill bluebinder;exit"});
-			exe.RunAsRoot(new String[]{"pm enable com.android.bluetooth"});
-			exe.RunAsRoot(new String[]{"svc bluetooth enable"});
+                        exe.RunAsRoot(new String[]{"pm enable com.android.bluetooth"});
+                        exe.RunAsRoot(new String[]{"svc bluetooth enable"});
                     }
                     refresh(rootView);
                 }
@@ -816,6 +826,8 @@ public class BTFragment extends Fragment {
         private Context context;
         private String selected_mode;
         final ShellExecuter exe = new ShellExecuter();
+        private static final String TTS_DIRECTORY = NhPaths.SD_PATH + "/nh_files/CarWhisperer/TTS";
+        private static final String TTS_TEMP_FILE = "/root/tts_output.wav";
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -849,12 +861,11 @@ public class BTFragment extends Fragment {
             final EditText ttsInput = rootView.findViewById(R.id.tts_input);
             final Button ttsGenerate = rootView.findViewById(R.id.generate_tts);
 
-
             // Hide the TTS input field by default
             ttsInput.setVisibility(View.GONE);
 
             // Create TTS output directory
-            new File("/sdcard/nh_files/CarWhisperer/TTS").mkdirs();
+            new File(TTS_DIRECTORY).mkdirs();
 
             // Set target
             Button SetTarget = rootView.findViewById(R.id.set_target);
@@ -953,7 +964,7 @@ public class BTFragment extends Fragment {
 
                 String outTmp = "/root/tts_output.wav";
                 String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
-                String outFinal = "/sdcard/nh_files/CarWhisperer/TTS/tts_" + timestamp + ".wav";
+                String outFinal = TTS_DIRECTORY + "/tts_" + timestamp + ".wav";
 
                 String escapedInput = finalInput.replace("\"", "\\\"");
 
@@ -997,7 +1008,7 @@ public class BTFragment extends Fragment {
             ImageButton PlayAudioButton = rootView.findViewById(R.id.play_audio);
             ImageButton StopAudioButton = rootView.findViewById(R.id.stop_audio);
             AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 22000, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, 20000, AudioTrack.MODE_STREAM);
-            PlayAudioButton.setOnClickListener( v -> {
+            PlayAudioButton.setOnClickListener(v -> {
                 String selectedPath = injectfilename.getText().toString().trim();
                 File cw_listenfile;
                 if (!selectedPath.isEmpty() && new File(selectedPath).exists()) {
@@ -1010,26 +1021,36 @@ public class BTFragment extends Fragment {
                     Toast.makeText(getContext(), "File not found!", Toast.LENGTH_SHORT).show();
                 } else {
                     Executors.newSingleThreadExecutor().execute(() -> {
-                        InputStream s = null;
-                        try {
-                            s = new FileInputStream(cw_listenfile);
-                        } catch (NullPointerException | IOException e) {
-                            e.printStackTrace();
-                        }
-                        audioTrack.play();
-                        // Reading data.
-                        byte[] data = new byte[200];
-                        int n;
-                        try {
-                            while (true) {
-                                assert s != null;
-                                if ((n = s.read(data)) == -1) break;
-                                synchronized (audioTrack) {
-                                    audioTrack.write(data, 0, n);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            try (InputStream s = Files.newInputStream(cw_listenfile.toPath())) {
+                                audioTrack.play();
+                                byte[] data = new byte[200];
+                                int n;
+                                while ((n = s.read(data)) != -1) {
+                                    synchronized (audioTrack) {
+                                        audioTrack.write(data, 0, n);
+                                    }
                                 }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            } finally {
+                                audioTrack.release();
                             }
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        } else {
+                            try (InputStream s = new FileInputStream(cw_listenfile)) {
+                                audioTrack.play();
+                                byte[] data = new byte[200];
+                                int n;
+                                while ((n = s.read(data)) != -1) {
+                                    synchronized (audioTrack) {
+                                        audioTrack.write(data, 0, n);
+                                    }
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            } finally {
+                                audioTrack.release();
+                            }
                         }
                     });
                 }
@@ -1041,6 +1062,7 @@ public class BTFragment extends Fragment {
             return rootView;
         }
     }
+
     public static class BadBtFragment extends BTFragment {
         private Context context;
         private String selected_badbtmode;
@@ -1132,7 +1154,6 @@ public class BTFragment extends Fragment {
                 public void onNothingSelected(AdapterView<?> parentView) {
                 }
             });
-
 
             // Refresh
             refresh_badbt(rootView);
@@ -1414,14 +1435,14 @@ public class BTFragment extends Fragment {
             EditText injectfilename = requireActivity().findViewById(R.id.injectfilename);
             String FilePath = Objects.requireNonNull(data.getData()).getPath();
             assert FilePath != null;
-            FilePath = FilePath.replace("/document/primary:", "/sdcard/");
+            FilePath = FilePath.replace("/document/primary:", NhPaths.SD_PATH);
             injectfilename.setText(FilePath);
         }
         if (requestCode == 1002 && resultCode == Activity.RESULT_OK) {
             EditText badbtstring = requireActivity().findViewById(R.id.editBadBT);
             String FilePath = Objects.requireNonNull(data.getData()).getPath();
             assert FilePath != null;
-            FilePath = FilePath.replace("/document/primary:", "/sdcard/");
+            FilePath = FilePath.replace("/document/primary:", NhPaths.SD_PATH);
             final ShellExecuter exe = new ShellExecuter();
             String fileContent = exe.RunAsRootOutput("cat " + FilePath);
             badbtstring.setText(fileContent);
