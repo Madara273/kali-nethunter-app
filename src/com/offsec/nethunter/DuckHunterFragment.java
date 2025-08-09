@@ -142,37 +142,35 @@ public class DuckHunterFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(final MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.duckConvertAttack:
-                // Pre-execution step
-                mainHandler.post(() -> NhPaths.showMessage(context, "Launching Attack"));
+        int itemId = item.getItemId();
+        if (itemId == R.id.duckConvertAttack) {
+            // Pre-execution step
+            mainHandler.post(() -> NhPaths.showMessage(context, "Launching Attack"));
 
-                // Background task
-                executorService.execute(() -> {
-                    boolean result = exe.RunAsRootReturnValue("sh " + duckyOutputFile) == 0;
+            // Background task
+            executorService.execute(() -> {
+                boolean result = exe.RunAsRootReturnValue("sh " + duckyOutputFile) == 0;
 
-                    // Post-execution step
-                    mainHandler.post(() -> {
-                        if (!result) {
-                            if (new File("/config/usb_gadget/g1").exists()) {
-                                NhPaths.showMessage_long(context, "HID interfaces are not enabled! Please enable in USB Arsenal.");
-                            } else if (new File("/dev/hidg0").exists()) {
-                                NhPaths.showMessage_long(context, "Fixing HID interface permissions..");
-                                exe.RunAsRoot(new String[]{"chmod 666 /dev/hidg*"});
-                            } else {
-                                NhPaths.showMessage_long(context, "HID interfaces are not patched or enabled, please check your kernel configuration.");
-                            }
+                // Post-execution step
+                mainHandler.post(() -> {
+                    if (!result) {
+                        if (new File("/config/usb_gadget/g1").exists()) {
+                            NhPaths.showMessage_long(context, "HID interfaces are not enabled! Please enable in USB Arsenal.");
+                        } else if (new File("/dev/hidg0").exists()) {
+                            NhPaths.showMessage_long(context, "Fixing HID interface permissions..");
+                            exe.RunAsRoot(new String[]{"chmod 666 /dev/hidg*"});
+                        } else {
+                            NhPaths.showMessage_long(context, "HID interfaces are not patched or enabled, please check your kernel configuration.");
                         }
-                    });
+                    }
                 });
-                return true;
-
-            case R.id.chooseLanguage:
-                openLanguageDialog();
-                return true;
-
-            default:
-                return super.onOptionsItemSelected(item);
+            });
+            return true;
+        } else if (itemId == R.id.chooseLanguage) {
+            openLanguageDialog();
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
         }
     }
 
@@ -208,6 +206,18 @@ public class DuckHunterFragment extends Fragment {
 
     private void openLanguageDialog() {
         int keyboardLayoutIndex = sharedpreferences.getInt("DuckHunterLanguageIndex", 0);
+        MaterialAlertDialogBuilder builder = getMaterialAlertDialogBuilder();
+        builder.setSingleChoiceItems(keyboardLayoutString, keyboardLayoutIndex, (dialog, which) -> {
+            Editor editor = sharedpreferences.edit();
+            editor.putInt("DuckHunterLanguageIndex", which);
+            editor.putString(SharePrefTag.DUCKHUNTER_LANG_SHAREPREF_TAG, map.get(keyboardLayoutString[which]));
+            editor.apply();
+        });
+        builder.show();
+    }
+
+    @NonNull
+    private MaterialAlertDialogBuilder getMaterialAlertDialogBuilder() {
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
         builder.setTitle("Language:");
         builder.setPositiveButton("OK", (dialog, which) -> {
@@ -221,13 +231,7 @@ public class DuckHunterFragment extends Fragment {
                         .setPackage(activity.getPackageName()));
             }
         });
-        builder.setSingleChoiceItems(keyboardLayoutString, keyboardLayoutIndex, (dialog, which) -> {
-            Editor editor = sharedpreferences.edit();
-            editor.putInt("DuckHunterLanguageIndex", which);
-            editor.putString(SharePrefTag.DUCKHUNTER_LANG_SHAREPREF_TAG, map.get(keyboardLayoutString[which]));
-            editor.apply();
-        });
-        builder.show();
+        return builder;
     }
 
     public class TabsPagerAdapter extends FragmentStatePagerAdapter {

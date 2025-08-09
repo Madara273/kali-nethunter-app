@@ -8,7 +8,6 @@ import com.offsec.nethunter.utils.ShellExecuter;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-
 public class DuckHuntExecutor {
     public static final Object ATTACK = 1;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();

@@ -20,17 +20,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.offsec.nethunter.R;
 import com.offsec.nethunter.utils.NhPaths;
-import com.offsec.nethunter.BuildConfig;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -42,7 +38,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-
 
 public class DuckHunterConvertFragment extends Fragment implements View.OnClickListener {
     private static final String TAG = "DuckHunterConvert";
@@ -82,6 +77,11 @@ public class DuckHunterConvertFragment extends Fragment implements View.OnClickL
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+                // Send broadcast to indicate that the text has changed and should be converted
+                activity.sendBroadcast(new Intent().putExtra("ACTION", "SHOULDCONVERT")
+                        .putExtra("SHOULDCONVERT", true)
+                        .setAction(BuildConfig.APPLICATION_ID + ".SHOULDCONVERT")
+                        .setPackage(activity.getPackageName()));
             }
 
             @Override
@@ -220,74 +220,69 @@ public class DuckHunterConvertFragment extends Fragment implements View.OnClickL
             NhPaths.showMessage(context, e.getMessage());
         }
     }
+
     public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.duckyLoad:
-                try {
-                    File scriptsDir = new File(NhPaths.APP_SD_FILES_PATH, loadFilePath);
-                    if (!scriptsDir.exists()) scriptsDir.mkdirs();
-                } catch (Exception e) {
-                    NhPaths.showMessage(context, e.getMessage());
-                }
-                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                Uri selectedUri = Uri.parse(NhPaths.APP_SD_FILES_PATH + loadFilePath);
-                intent.setDataAndType(selectedUri, "file/*");
-                startActivityForResult(intent, PICKFILE_RESULT_CODE);
-                break;
-            case R.id.duckySave:
-                try {
-                    File scriptsDir = new File(NhPaths.APP_SD_FILES_PATH, loadFilePath);
-                    if (!scriptsDir.exists()) scriptsDir.mkdirs();
-                } catch (Exception e) {
-                    NhPaths.showMessage(context, e.getMessage());
-                }
-                MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
+        int id = v.getId();
+        if (id == R.id.duckyLoad) {
+            try {
+                File scriptsDir = new File(NhPaths.APP_SD_FILES_PATH, loadFilePath);
+                if (!scriptsDir.exists()) scriptsDir.mkdirs();
+            } catch (Exception e) {
+                NhPaths.showMessage(context, e.getMessage());
+            }
+            Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+            Uri selectedUri = Uri.parse(NhPaths.APP_SD_FILES_PATH + loadFilePath);
+            intent.setDataAndType(selectedUri, "file/*");
+            startActivityForResult(intent, PICKFILE_RESULT_CODE);
+        } else if (id == R.id.duckySave) {
+            try {
+                File scriptsDir = new File(NhPaths.APP_SD_FILES_PATH, loadFilePath);
+                if (!scriptsDir.exists()) scriptsDir.mkdirs();
+            } catch (Exception e) {
+                NhPaths.showMessage(context, e.getMessage());
+            }
+            MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
 
-                alert.setTitle("Name");
-                alert.setMessage("Please enter a name for your script.");
+            alert.setTitle("Name");
+            alert.setMessage("Please enter a name for your script.");
 
-                // Set an EditText view to get user input
-                final EditText input = new EditText(activity);
-                alert.setView(input);
+            final EditText input = new EditText(activity);
+            alert.setView(input);
 
-                alert.setPositiveButton("Ok", (dialog, whichButton) -> {
-                    String value = input.getText().toString();
-                    if (!value.isEmpty()) {
-                        // Save file (ask name)
-                        File scriptFile = new File(NhPaths.APP_SD_FILES_PATH + loadFilePath + File.separator + value + ".conf");
-                        System.out.println(scriptFile.getAbsolutePath());
-                        if (!scriptFile.exists()) {
-                            try {
-                                if (getView() != null) {
-                                    EditText source = getView().findViewById(R.id.editSource);
-                                    String text = source.getText().toString();
-                                    scriptFile.createNewFile();
-                                    FileOutputStream fOut = new FileOutputStream(scriptFile);
-                                    OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
-                                    myOutWriter.append(text);
-                                    myOutWriter.close();
-                                    fOut.close();
-                                    NhPaths.showMessage(context, "Script saved");
-                                }
-                            } catch (Exception e) {
-                                NhPaths.showMessage(context, e.getMessage());
+            alert.setPositiveButton("Ok", (dialog, whichButton) -> {
+                String value = input.getText().toString();
+                if (!value.isEmpty()) {
+                    File scriptFile = new File(NhPaths.APP_SD_FILES_PATH + loadFilePath + File.separator + value + ".conf");
+                    if (!scriptFile.exists()) {
+                        try {
+                            if (getView() != null) {
+                                EditText source = getView().findViewById(R.id.editSource);
+                                String text = source.getText().toString();
+                                scriptFile.createNewFile();
+                                FileOutputStream fOut = new FileOutputStream(scriptFile);
+                                OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+                                myOutWriter.append(text);
+                                myOutWriter.close();
+                                fOut.close();
+                                NhPaths.showMessage(context, "Script saved");
                             }
-                        } else {
-                            NhPaths.showMessage(context, "File already exists");
+                        } catch (Exception e) {
+                            NhPaths.showMessage(context, e.getMessage());
                         }
                     } else {
-                        NhPaths.showMessage(context, "Wrong name provided");
+                        NhPaths.showMessage(context, "File already exists");
                     }
-                });
+                } else {
+                    NhPaths.showMessage(context, "Wrong name provided");
+                }
+            });
 
-                alert.setNegativeButton("Cancel", (dialog, whichButton) -> {
-                    ///Do nothing
-                });
-                alert.show();
-                break;
-            default:
-                NhPaths.showMessage(context, "Unknown click");
-                break;
+            alert.setNegativeButton("Cancel", (dialog, whichButton) -> {
+                // Do nothing
+            });
+            alert.show();
+        } else {
+            NhPaths.showMessage(context, "Unknown click");
         }
     }
 
