@@ -688,6 +688,7 @@
         - zombieCraig! For ICSim tool.\nhttps://github.com/zombieCraig\n\n
         - idlesign! For VIN Info tool.\nhttps://github.com/idlesign\n\n
     </string>
+
     <!-- CARsenal MSF Modules -->
     <string name="module_info_local_hwbridge">
         Module Info:\n\n
@@ -1222,4 +1223,35 @@
     <string name="vnc_information_menu_button">Information</string>
     <string name="nethunter_full_path_savedb">Full path to where you want to save the database:</string>
     <string name="nethunter_full_path_restoredb">Full path of the db file from where you want to restore:</string>
+
+    <!-- TTS Voice Model-->
+    <string-array name="tts_voices">
+        <item>Voice model</item>
+        <item>en-us</item>
+        <item>en-uk</item>
+        <item>en+f3</item>
+        <item>en+m3</item>
+        <item>en-sc</item>
+    </string-array>
+
+    <!-- TTS Speed -->
+    <string-array name="tts_speeds">
+        <item>Voice speed</item>
+        <item>120</item>
+        <item>150</item>
+        <item>180</item>
+        <item>200</item>
+        <item>250</item>
+    </string-array>
+
+    <!-- TTS Messages-->
+    <string-array name="tts_phrases">
+        <item>Choose Message</item>
+        <item>You have been compromised. Enjoy the chaos.</item>
+        <item>Bluetooth access hijacked. This is not a drill.</item>
+        <item>This is a demonstration of total control.</item>
+        <item>Your system is no longer yours.</item>
+        <item>Custom TTS message</item>
+    </string-array>
+
 </resources>
