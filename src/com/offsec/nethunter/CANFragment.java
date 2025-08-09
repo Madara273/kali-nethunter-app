@@ -886,7 +886,7 @@ public class CANFragment extends Fragment {
 
             executorService.submit(() -> {
                 String result = exe.RunAsChrootOutput(
-                        "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
+                        "ip -o link show | awk -F': ' '{print $2}' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
                                 "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
                 );
 
@@ -1139,7 +1139,7 @@ public class CANFragment extends Fragment {
             // Cannelloni
             Button CannelloniButton = rootView.findViewById(R.id.start_cannelloni);
 
-            CannelloniButton.setOnClickListener(v ->  {
+            CannelloniButton.setOnClickListener(v -> {
                 String rhost = SelectedRHost.getText().toString();
                 String rport = SelectedRPort.getText().toString();
                 String lport = SelectedLPort.getText().toString();
@@ -1156,7 +1156,7 @@ public class CANFragment extends Fragment {
             // Start Asc2Log
             Button Asc2LogButton = rootView.findViewById(R.id.start_asc2log);
 
-            Asc2LogButton.setOnClickListener(v ->  {
+            Asc2LogButton.setOnClickListener(v -> {
                 String inputfile = inputfilepath.getText().toString();
                 String outputfile = outputfilepath.getText().toString();
 
@@ -1172,7 +1172,7 @@ public class CANFragment extends Fragment {
             // Start Log2asc
             Button Log2AscButton = rootView.findViewById(R.id.start_log2asc);
 
-            Log2AscButton.setOnClickListener(v ->  {
+            Log2AscButton.setOnClickListener(v -> {
                 String inputfile = inputfilepath.getText().toString();
                 String outputfile = outputfilepath.getText().toString();
 
@@ -1188,7 +1188,7 @@ public class CANFragment extends Fragment {
             // Start CustomCommand
             Button CustomCmdButton = rootView.findViewById(R.id.start_customcmd);
 
-            CustomCmdButton.setOnClickListener(v ->  {
+            CustomCmdButton.setOnClickListener(v -> {
                 String command = CustomCmd.getText().toString();
 
                 if (!command.isEmpty()) {
@@ -1209,7 +1209,7 @@ public class CANFragment extends Fragment {
             if (context == null) return;
 
             executorService.submit(() -> {
-                String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$'");
+                String outputDevice = exe.RunAsChrootOutput("ip -o link show | awk -F': ' '{print $2}' | grep -E '^(can|vcan|slcan)[0-9]+$'");
                 final ArrayList<String> deviceIfaces = new ArrayList<>();
                 if (outputDevice != null && !outputDevice.isEmpty()) {
                     final String[] deviceifacesArray = outputDevice.split("\n");
@@ -1271,7 +1271,7 @@ public class CANFragment extends Fragment {
 
             executorService.submit(() -> {
                 String result = exe.RunAsChrootOutput(
-                        "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
+                        "ip -o link show | awk -F': ' '{print $2}' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
                                 "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
                 );
 
@@ -1487,7 +1487,7 @@ public class CANFragment extends Fragment {
             if (context == null) return;
 
             executorService.submit(() -> {
-                String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'");
+                String outputDevice = exe.RunAsChrootOutput("ip -o link show | awk -F': ' '{print $2}' | grep -E '^(can|vcan|slcan)[0-9]+$';ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'");
                 final ArrayList<String> deviceIfaces = new ArrayList<>();
                 if (outputDevice != null && !outputDevice.isEmpty()) {
                     final String[] deviceifacesArray = outputDevice.split("\n");
@@ -1554,7 +1554,7 @@ public class CANFragment extends Fragment {
 
             executorService.submit(() -> {
                 String result = exe.RunAsChrootOutput(
-                        "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
+                        "ip -o link show | awk -F': ' '{print $2}' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
                                 "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
                 );
 
@@ -1850,7 +1850,7 @@ public class CANFragment extends Fragment {
 
             // FUZZER Spinner
             final Spinner FUZZERList = rootView.findViewById(R.id.fuzzer_spinner);
-            final String[] FUZZEROptions = {"brute","identify","mutate","random","replay"};
+            final String[] FUZZEROptions = {"brute", "identify", "mutate", "random", "replay"};
 
             FUZZERList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, FUZZEROptions));
 
@@ -1871,10 +1871,10 @@ public class CANFragment extends Fragment {
 
             CaribouFUZZERButton.setOnClickListener(v -> {
                 String fuzzer_module = sharedpreferences.getString("fuzzer_selected", "");
-                String idValue           = getVisibleParam(selectedID, " ");
-                String minValue          = getVisibleParam(selectedMin, " -min ");
+                String idValue = getVisibleParam(selectedID, " ");
+                String minValue = getVisibleParam(selectedMin, " -min ");
                 String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
-                String seedValue         = getVisibleParam(selectedSeed, " --seed ");
+                String seedValue = getVisibleParam(selectedSeed, " --seed ");
 
                 if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     if ("brute".equals(fuzzer_module)) {
@@ -1901,7 +1901,7 @@ public class CANFragment extends Fragment {
 
             // SEND Spinner
             final Spinner SENDList = rootView.findViewById(R.id.send_spinner);
-            final String[] SENDTypeOptions = {"file","message"};
+            final String[] SENDTypeOptions = {"file", "message"};
 
             SENDList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, SENDTypeOptions));
 
@@ -1922,11 +1922,11 @@ public class CANFragment extends Fragment {
 
             CaribouSENDButton.setOnClickListener(v -> {
                 String selected_message = SelectedMessage.getText().toString();
-                String selected_file    = SelectedFile.getText().toString();
-                String delayValue       = getVisibleParam(selectedDelay, " -d ");
-                String loopEnabled      = isLoopEnabled ? " -l" : "";
-                String padEnabled       = isPadEnabled ? " -p" : "";
-                String send_module      = sharedpreferences.getString("send_selected", "");
+                String selected_file = SelectedFile.getText().toString();
+                String delayValue = getVisibleParam(selectedDelay, " -d ");
+                String loopEnabled = isLoopEnabled ? " -l" : "";
+                String padEnabled = isPadEnabled ? " -p" : "";
+                String send_module = sharedpreferences.getString("send_selected", "");
 
                 if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     if ("file".equals(send_module)) {
@@ -1944,7 +1944,7 @@ public class CANFragment extends Fragment {
 
             // UDS Spinner
             final Spinner UDSList = rootView.findViewById(R.id.uds_spinner);
-            final String[] UDSTypeOptions = {"discovery","services"};
+            final String[] UDSTypeOptions = {"discovery", "services"};
 
             UDSList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, UDSTypeOptions));
 
@@ -1964,12 +1964,12 @@ public class CANFragment extends Fragment {
             Button CaribouUDSButton = rootView.findViewById(R.id.start_uds);
 
             CaribouUDSButton.setOnClickListener(v -> {
-                String srcValue          = getVisibleParam(selectedSrc, " ");
-                String dstValue          = getVisibleParam(selectedDst, " ");
-                String minValue          = getVisibleParam(selectedMin, " -min ");
-                String maxValue          = getVisibleParam(selectedMax, " -max ");
-                String delayValue        = getVisibleParam(selectedDelay, " -d ");
-                String uds_module        = sharedpreferences.getString("uds_selected", "");
+                String srcValue = getVisibleParam(selectedSrc, " ");
+                String dstValue = getVisibleParam(selectedDst, " ");
+                String minValue = getVisibleParam(selectedMin, " -min ");
+                String maxValue = getVisibleParam(selectedMax, " -max ");
+                String delayValue = getVisibleParam(selectedDelay, " -d ");
+                String uds_module = sharedpreferences.getString("uds_selected", "");
 
                 if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     if ("discovery".equals(uds_module)) {
@@ -1987,7 +1987,7 @@ public class CANFragment extends Fragment {
 
             // XCP Spinner
             final Spinner XCPList = rootView.findViewById(R.id.xcp_spinner);
-            final String[] XCPOptions = {"discovery","info","dump"};
+            final String[] XCPOptions = {"discovery", "info", "dump"};
 
             XCPList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, XCPOptions));
 
@@ -2007,13 +2007,13 @@ public class CANFragment extends Fragment {
             Button CaribouXCPButton = rootView.findViewById(R.id.start_xcp);
 
             CaribouXCPButton.setOnClickListener(v -> {
-                String addrValue         = getVisibleParam(selectedAddr, " ");
-                String lengthValue       = getVisibleParam(selectedLength, " ");
+                String addrValue = getVisibleParam(selectedAddr, " ");
+                String lengthValue = getVisibleParam(selectedLength, " ");
                 String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
-                String srcValue          = getVisibleParam(selectedSrc, " ");
-                String dstValue          = getVisibleParam(selectedDst, " ");
-                String minValue          = getVisibleParam(selectedMin, " -min ");
-                String maxValue          = getVisibleParam(selectedMax, " -max ");
+                String srcValue = getVisibleParam(selectedSrc, " ");
+                String dstValue = getVisibleParam(selectedDst, " ");
+                String minValue = getVisibleParam(selectedMin, " -min ");
+                String maxValue = getVisibleParam(selectedMax, " -max ");
                 String xcp_module = sharedpreferences.getString("xcp_selected", "");
 
                 if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
@@ -2042,7 +2042,7 @@ public class CANFragment extends Fragment {
             if (context == null) return;
 
             executorService.submit(() -> {
-                String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$'");
+                String outputDevice = exe.RunAsChrootOutput("ip -o link show | awk -F': ' '{print $2}' | grep -E '^(can|vcan|slcan)[0-9]+$'");
                 final ArrayList<String> deviceIfaces = new ArrayList<>();
                 if (outputDevice != null && !outputDevice.isEmpty()) {
                     final String[] deviceifacesArray = outputDevice.split("\n");
@@ -2112,7 +2112,7 @@ public class CANFragment extends Fragment {
 
             executorService.submit(() -> {
                 String result = exe.RunAsChrootOutput(
-                        "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
+                        "ip -o link show | awk -F': ' '{print $2}' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
                                 "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
                 );
 
@@ -2330,7 +2330,7 @@ public class CANFragment extends Fragment {
             if (context == null) return;
 
             executorService.submit(() -> {
-                String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$'");
+                String outputDevice = exe.RunAsChrootOutput("ip -o link show | awk -F': ' '{print $2}' | grep -E '^(can|vcan|slcan)[0-9]+$'");
                 final ArrayList<String> deviceIfaces = new ArrayList<>();
                 if (outputDevice != null && !outputDevice.isEmpty()) {
                     final String[] deviceifacesArray = outputDevice.split("\n");
@@ -2363,14 +2363,12 @@ public class CANFragment extends Fragment {
         }
     }
 
-
     public static class CANMSFFragment extends CANFragment {
         final ShellExecuter exe = new ShellExecuter();
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private Context context;
         private String selected_caniface;
         private String selected_module;
-
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -2390,7 +2388,7 @@ public class CANFragment extends Fragment {
 
             executorService.submit(() -> {
                 String result = exe.RunAsChrootOutput(
-                        "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
+                        "ip -o link show | awk -F': ' '{print $2}' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
                                 "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
                 );
 
@@ -2559,7 +2557,6 @@ public class CANFragment extends Fragment {
                 });
             });
 
-
             // Set button
             Button setBtn = rootView.findViewById(R.id.set_module);
             setBtn.setOnClickListener(v -> {
@@ -2666,7 +2663,7 @@ public class CANFragment extends Fragment {
                     msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use auxiliary/client/hwbridge/")
                             .append(moduleName)
                             .append("`echo -ne '\\015'`");
-                } else if (moduleName.equals("local_hwbridge")){
+                } else if (moduleName.equals("local_hwbridge")) {
                     msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use auxiliary/server/")
                             .append(moduleName)
                             .append("`echo -ne '\\015'`");
@@ -2703,7 +2700,7 @@ public class CANFragment extends Fragment {
             if (context == null) return;
 
             executorService.submit(() -> {
-                String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'");
+                String outputDevice = exe.RunAsChrootOutput("ip -o link show | awk -F': ' '{print $2}' | grep -E '^(can|vcan|slcan)[0-9]+$';ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'");
                 final ArrayList<String> deviceIfaces = new ArrayList<>();
                 if (outputDevice != null && !outputDevice.isEmpty()) {
                     final String[] deviceifacesArray = outputDevice.split("\n");
