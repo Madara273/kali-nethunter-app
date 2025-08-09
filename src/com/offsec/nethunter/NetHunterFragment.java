@@ -32,6 +32,7 @@ import com.offsec.nethunter.SQL.NethunterSQL;
 import com.offsec.nethunter.models.NethunterModel;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.viewmodels.NethunterViewModel;
+import com.offsec.nethunter.Executor.NethunterExecutor;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +48,6 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import static com.offsec.nethunter.R.id.f_nethunter_action_search;
 import static com.offsec.nethunter.R.id.f_nethunter_action_snowfall;
-
 
 public class NetHunterFragment extends Fragment {
     private static final String ARG_SECTION_NUMBER = "section_number";
@@ -73,6 +73,7 @@ public class NetHunterFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        NethunterExecutor.checkVulkanSupportOnStart(this);
         setHasOptionsMenu(true);
         this.context = getContext();
         this.activity = getActivity();

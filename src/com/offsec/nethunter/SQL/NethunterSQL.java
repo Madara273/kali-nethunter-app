@@ -11,6 +11,7 @@ import android.text.TextUtils;
 import com.offsec.nethunter.BuildConfig;
 import com.offsec.nethunter.models.NethunterModel;
 import com.offsec.nethunter.utils.NhPaths;
+import com.offsec.nethunter.utils.VulkanChecker;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,6 +47,7 @@ public class NethunterSQL extends SQLiteOpenHelper {
 
     private NethunterSQL(Context context) {
         super(context, DATABASE_NAME, null, 1);
+        this.context = context;
         COLUMNS.add("id");
         COLUMNS.add("TitleName");
         COLUMNS.add("CommandforResult");
@@ -90,6 +92,15 @@ public class NethunterSQL extends SQLiteOpenHelper {
             String columnValue2 = columnIndex2 != -1 ? cursor.getString(columnIndex2) : null;
             String columnValue3 = columnIndex3 != -1 ? cursor.getString(columnIndex3) : null;
             String columnValue4 = columnIndex4 != -1 ? cursor.getString(columnIndex4) : null;
+
+            // Check for GPU Info row
+            if ("GPU Info".equals(columnValue1) && "vulkan_check".equals(columnValue2)) {
+                boolean supported = VulkanChecker.isVulkanSupported(context);
+                columnValue2 = supported ? "Vulkan supported" : "Vulkan NOT supported";
+                columnValue4 = "0"; // Prevent accidental execution as a shell command
+            } else if ("vulkan_check".equals(columnValue2)) {
+                columnValue2 = "Invalid command: vulkan_check";
+            }
 
             nethunterModelArrayList.add(new NethunterModel(
                     columnValue1,
