@@ -7,20 +7,17 @@ import android.os.IBinder;
 
 import androidx.annotation.Nullable;
 
-import com.offsec.nethunter.AppNavHomeActivity;
 import com.offsec.nethunter.BuildConfig;
-import com.offsec.nethunter.R;
-import com.offsec.nethunter.utils.CheckForRoot;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.SharePrefTag;
 import com.offsec.nethunter.utils.ShellExecuter;
 
-// IntentService class for keep checking the compatibility every time user switch back to the app.
 public class CompatCheckService extends IntentService {
     public static final String TAG = "CompatCheckService";
     private int RESULTCODE = -1;
     private SharedPreferences sharedPreferences;
-    public CompatCheckService(){
+
+    public CompatCheckService() {
         super("CompatCheckService");
     }
 
@@ -32,12 +29,10 @@ public class CompatCheckService extends IntentService {
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
-        // if no resultCode passed by ChrootManagerFragment, then set RESULTCODE to -1;
-        if (intent != null){
+        if (intent != null) {
             RESULTCODE = intent.getIntExtra("RESULTCODE", -1);
         }
 
-        // run checkCompat function, and sendbroadcast back to Main activity if user fails the compat check.
         if (!checkCompat()) {
             String message = "";
             getApplicationContext().sendBroadcast(new Intent()
@@ -64,63 +59,44 @@ public class CompatCheckService extends IntentService {
     }
 
     private boolean checkCompat() {
-        // All of the code start from here will always be executed every time this service is started.
-        // And remember no any return true or false except the last line of this function.
-        /* Other compat checks start from here */
+        if (!sharedPreferences.contains("SElinux")) {
+            new ShellExecuter().RunAsRootOutput("[ ! \"$(getenforce | grep Permissive)\" ] && setenforce 0");
+        }
 
-        // Check if selinux is in permissive mode, if not, set it to permissive mode, unless it was set manually in settings.
-        if (! sharedPreferences.contains("SElinux")) new ShellExecuter().RunAsRootOutput("[ ! \"$(getenforce | grep Permissive)\" ] && setenforce 0");
-
-        // Check only for the first installation, find out the possible chroot folder and point it to the chroot path.
         if (sharedPreferences.getString(SharePrefTag.CHROOT_ARCH_SHAREPREF_TAG, null) == null) {
             String[] chrootDirs = new ShellExecuter().RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"findchroot\"").split("\\n");
-            // if findchroot returns empty string then default the chroot arch to kali-arm64, else default to the first valid chroot arch.
-            if (chrootDirs[0].isEmpty()) {
-                sharedPreferences.edit().putString(SharePrefTag.CHROOT_ARCH_SHAREPREF_TAG, "kali-arm64").apply();
-                sharedPreferences.edit().putString(SharePrefTag.CHROOT_PATH_SHAREPREF_TAG, NhPaths.NH_SYSTEM_PATH + "/kali-arm64").apply();
-                new ShellExecuter().RunAsRootOutput("ln -sfn " + NhPaths.NH_SYSTEM_PATH + "/kali-arm64 " + NhPaths.CHROOT_SYMLINK_PATH);
-            } else {
+            if (chrootDirs.length > 0 && !chrootDirs[0].isEmpty()) {
                 sharedPreferences.edit().putString(SharePrefTag.CHROOT_ARCH_SHAREPREF_TAG, chrootDirs[0]).apply();
                 sharedPreferences.edit().putString(SharePrefTag.CHROOT_PATH_SHAREPREF_TAG, NhPaths.NH_SYSTEM_PATH + "/" + chrootDirs[0]).apply();
                 new ShellExecuter().RunAsRootOutput("ln -sfn " + NhPaths.NH_SYSTEM_PATH + "/" + chrootDirs[0] + " " + NhPaths.CHROOT_SYMLINK_PATH);
+            } else {
+                sharedPreferences.edit().putString(SharePrefTag.CHROOT_ARCH_SHAREPREF_TAG, "kali-arm64").apply();
+                sharedPreferences.edit().putString(SharePrefTag.CHROOT_PATH_SHAREPREF_TAG, NhPaths.NH_SYSTEM_PATH + "/kali-arm64").apply();
+                new ShellExecuter().RunAsRootOutput("ln -sfn " + NhPaths.NH_SYSTEM_PATH + "/kali-arm64 " + NhPaths.CHROOT_SYMLINK_PATH);
             }
         }
 
-        // Check chroot status, push notification to user and disable all the fragments if chroot is not yet up.
-        // if intent is NOT sent by chrootmanager, run the check executors again.
-        if (RESULTCODE == -1){
-            if ((new ShellExecuter().RunAsRootReturnValue(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"status\" -p " + NhPaths.CHROOT_PATH()) != 0)) {
-                if (AppNavHomeActivity.lastSelectedMenuItem.getItemId() != R.id.createchroot_item) {
-                    startService(new Intent(getApplicationContext(), NotificationChannelService.class).setAction(NotificationChannelService.REMINDMOUNTCHROOT));
-                    getApplicationContext().sendBroadcast(new Intent()
-                            .putExtra("ENABLEFRAGMENT", false)
-                            .setAction(AppNavHomeActivity.NethunterReceiver.CHECKCHROOT));
-                } else {
-                    sendBroadcast(new Intent().putExtra("ENABLEFRAGMENT", false).setAction(AppNavHomeActivity.NethunterReceiver.CHECKCHROOT));
-                }
+        if (RESULTCODE == -1) {
+            if (new ShellExecuter().RunAsRootReturnValue(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"status\" -p " + NhPaths.CHROOT_PATH()) != 0) {
+                getApplicationContext().sendBroadcast(new Intent()
+                        .putExtra("ENABLEFRAGMENT", false)
+                        .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT"));
             } else {
                 getApplicationContext().sendBroadcast(new Intent()
                         .putExtra("ENABLEFRAGMENT", true)
-                        .setAction(AppNavHomeActivity.NethunterReceiver.CHECKCHROOT));
+                        .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT"));
             }
         } else {
-            // if intent is sent by chrootmanager, no need to run the check executors again.
             if (RESULTCODE != 0) {
-                if (AppNavHomeActivity.lastSelectedMenuItem.getItemId() != R.id.createchroot_item) {
-                    startService(new Intent(getApplicationContext(), NotificationChannelService.class).setAction(NotificationChannelService.REMINDMOUNTCHROOT));
-                    getApplicationContext().sendBroadcast(new Intent()
-                            .putExtra("ENABLEFRAGMENT", false)
-                            .setAction(AppNavHomeActivity.NethunterReceiver.CHECKCHROOT));
-                } else {
-                    sendBroadcast(new Intent().putExtra("ENABLEFRAGMENT", false).setAction(AppNavHomeActivity.NethunterReceiver.CHECKCHROOT));
-                }
+                getApplicationContext().sendBroadcast(new Intent()
+                        .putExtra("ENABLEFRAGMENT", false)
+                        .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT"));
             } else {
                 getApplicationContext().sendBroadcast(new Intent()
                         .putExtra("ENABLEFRAGMENT", true)
-                        .setAction(AppNavHomeActivity.NethunterReceiver.CHECKCHROOT));
+                        .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT"));
             }
         }
-        /* End of the other compat checks */
         return true;
     }
 }
