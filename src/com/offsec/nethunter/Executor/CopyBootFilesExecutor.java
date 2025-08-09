@@ -172,8 +172,7 @@ public class CopyBootFilesExecutor {
         this.scriptsDir = new File(NhPaths.APP_SCRIPTS_PATH);
         this.etcDir = new File(NhPaths.APP_INITD_PATH);
         this.prefs = context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd KK:mm:ss a zzz", Locale.getDefault());
-        this.buildTime = sdf.format(BuildConfig.BUILD_TIME);
+        this.buildTime = BuildConfig.BUILD_TIME;
         this.shouldRun = true;
     }
 
@@ -192,7 +191,7 @@ public class CopyBootFilesExecutor {
                 !scriptsDir.isDirectory() ||
                 !etcDir.isDirectory()) {
 
-            if (NH_SYSTEM_LOGGING == 1) logDebug("COPYING NEW FILES");
+            logDebug(TAG, "COPYING NEW FILES", null);
             ProgressDialog progressDialog = progressDialogRef.get();
             if (progressDialog != null) {
                 progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
@@ -202,7 +201,7 @@ public class CopyBootFilesExecutor {
                 progressDialog.show();
             }
         } else {
-            if (NH_SYSTEM_LOGGING == 1) logDebug("NO NEW FILES TO COPY. Skipping file copy.");
+            logDebug(TAG, "NO NEW FILES TO COPY. Skipping file copy.", null);
             shouldRun = false;
         }
         if (listener != null) {
