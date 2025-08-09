@@ -1,7 +1,11 @@
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    android:layout_margin="16dp"
+    app:cardElevation="4dp"
+    app:cardCornerRadius="12dp">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -107,14 +111,6 @@
                         android:layout_weight="1"
                         android:text="Stop"
                         tools:ignore="ButtonStyle,HardcodedText,VisualLintButtonSize" />
-
-                    <Button
-                        android:id="@+id/refresh_icsim"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="Refresh"
-                        tools:ignore="ButtonStyle,HardcodedText,VisualLintButtonSize" />
                 </LinearLayout>
 
                 <LinearLayout
@@ -186,5 +182,7 @@
                 android:layout_height="200dp" />
 
         </LinearLayout>
+
     </ScrollView>
-</androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

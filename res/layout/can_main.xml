@@ -1,10 +1,11 @@
-<LinearLayout xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    tools:ignore="Autofill,HardcodedText,LabelFor,TouchTargetSizeCheck,TooManyViews,UselessParent,InefficientWeight,RtlHardcoded,ContentDescription,ButtonStyle,DuplicateSpeakableTextCheck">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="16dp"
+    app:cardElevation="4dp"
+    app:cardCornerRadius="12dp">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -33,8 +34,7 @@
                 android:layout_gravity="center_horizontal|center"
                 android:gravity="center"
                 android:padding="10dp"
-                android:text="@string/can_description"
-                tools:ignore="VisualLintLongText" />
+                android:text="@string/can_description" />
 
             <View
                 android:id="@+id/divider1"
@@ -71,6 +71,7 @@
 
             </LinearLayout>
 
+
             <LinearLayout
                 android:id="@+id/can_advanced_options"
                 android:layout_width="match_parent"
@@ -95,8 +96,7 @@
                         android:layout_weight="1"
                         android:text="MTU"
                         android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:textColor="@android:color/holo_red_light"
-                        tools:ignore="TextContrastCheck" />
+                        android:textColor="@android:color/holo_red_light"/>
 
                     <Button
                         android:id="@+id/btn_toggle_txqueuelen"
@@ -105,28 +105,50 @@
                         android:layout_weight="1"
                         android:text="txqueuelen"
                         android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:textColor="@android:color/holo_red_light"
-                        tools:ignore="TextContrastCheck" />
+                        android:textColor="@android:color/holo_red_light"/>
                 </LinearLayout>
 
-                <EditText
-                    android:id="@+id/mtu_value"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/mtu_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="MTU Value (e.g., 16)"
+                    android:layout_marginTop="4dp"
                     android:visibility="gone"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    app:boxStrokeColor="@color/ifc_box_stroke"
+                    app:boxBackgroundColor="@color/transparent"
+                    app:hintTextColor="@color/ifc_hint_text"
+                    android:hint="MTU Value (e.g., 16)">
 
-                <EditText
-                    android:id="@+id/txqueuelen_value"
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/mtu_value"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textColor="#40FFFFFF" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/txqueuelen_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="txqueuelen Value (e.g., 1000)"
+                    android:layout_marginTop="4dp"
                     android:visibility="gone"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    app:boxStrokeColor="@color/ifc_box_stroke"
+                    app:boxBackgroundColor="@color/transparent"
+                    app:hintTextColor="@color/ifc_hint_text"
+                    android:hint="txqueuelen Value (e.g., 1000)">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/txqueuelen_value"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="number"
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        android:textColor="#40FFFFFF" />
+                </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
+
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
@@ -140,9 +162,9 @@
                     android:layout_height="wrap_content"
                     android:dropDownWidth="wrap_content"
                     android:saveEnabled="false"
-                    tools:ignore="MissingConstraints,TouchTargetSizeCheck"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent" />
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    tools:ignore="MissingConstraints" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -168,8 +190,7 @@
                         android:layout_height="wrap_content"
                         android:text="Stop"
                         android:layout_weight="1"
-                        android:minWidth="100dp"
-                        tools:ignore="VisualLintButtonSize" />
+                        android:minWidth="100dp"/>
                 </LinearLayout>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
@@ -218,8 +239,7 @@
                         android:layout_row="0"
                         android:layout_column="1"
                         android:text="hlcand"
-                        android:textColor="@android:color/holo_orange_dark"
-                        tools:ignore="VisualLintButtonSize" />
+                        android:textColor="@android:color/holo_orange_dark"/>
 
                     <Button
                         android:id="@+id/start_socketcand"
@@ -229,8 +249,7 @@
                         android:layout_row="0"
                         android:layout_column="2"
                         android:text="socketcand"
-                        android:textColor="@android:color/holo_orange_dark"
-                        tools:ignore="VisualLintButtonSize" />
+                        android:textColor="@android:color/holo_orange_dark"/>
 
                     <Button
                         android:id="@+id/start_slcanattach"
@@ -272,8 +291,7 @@
                     android:layout_marginEnd="20dp"
                     android:layout_columnWeight="1"
                     android:text="rfcomm connect"
-                    android:textColor="@android:color/holo_orange_dark"
-                    tools:ignore="VisualLintButtonSize" />
+                    android:textColor="@android:color/holo_orange_dark"/>
 
                 <TextView
                     android:layout_width="match_parent"
@@ -352,24 +370,38 @@
 
             </GridLayout>
 
-            <EditText
-                android:id="@+id/TerminalOutputVINInfo"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
                 android:layout_marginBottom="10dp"
-                android:background="@android:color/black"
-                android:enabled="false"
-                android:fontFamily="monospace"
-                android:inputType="none"
-                android:padding="16dp"
-                android:scrollbars="vertical"
-                android:textColor="@android:color/holo_green_light"
-                android:textSize="14sp"
-                tools:ignore="LabelFor,SpeakableTextPresentCheck" />
+                android:orientation="horizontal">
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    app:boxStrokeColor="@color/ifc_box_stroke"
+                    app:boxBackgroundColor="@android:color/black"
+                    app:hintEnabled="false">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/TerminalOutputVINInfo"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="monospace"
+                        android:inputType="textMultiLine"
+                        android:enabled="false"
+                        android:padding="16dp"
+                        android:scrollbars="vertical"
+                        android:textColor="@android:color/holo_green_light"
+                        android:textSize="14sp"/>
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+            </LinearLayout>
         </LinearLayout>
 
     </ScrollView>
-
-</LinearLayout>
+</com.google.android.material.card.MaterialCardView>
