@@ -406,7 +406,7 @@ public class VNCFragment extends Fragment {
             if (isChecked) {
                 File rootvncpasswd = new File(NhPaths.CHROOT_PATH() + "/root/.vnc/passwd");
                 String vnc_passwd = exe.RunAsRootOutput("cat " + rootvncpasswd);
-                if (!vnc_passwd.isEmpty()) {
+                if (vnc_passwd != null && !vnc_passwd.isEmpty()) {
                     String arch_path = exe.RunAsRootOutput("ls " + NhPaths.CHROOT_PATH() + "/usr/lib/ | grep linux-gnu | head -n1");
                     String shebang = "#!/system/bin/sh\n";
                     String kex_prep = "\n# KeX architecture path: " + arch_path + "\n# Commands to run at boot:\nHOME=/root\nUSER=root";
@@ -416,13 +416,13 @@ public class VNCFragment extends Fragment {
                             "cat > " + kex_init + " <<s0133717hur75\n" + fileContents + "\ns0133717hur75\n",
                             "chmod 700 " + kex_init
                     });
-                }
-                else {
-                    logToast( "Please setup local server first!");
+                } else {
+                    logToast("Please setup local server first!");
                     vnc_serviceCheckBox.setChecked(false);
                 }
-            } else
+            } else {
                 exe.RunAsRoot(new String[]{"rm -rf " + kex_init});
+            }
         });
 
         // Delay
@@ -516,10 +516,9 @@ public class VNCFragment extends Fragment {
                 } else run_cmd("echo -ne \"\\033]0;Setting up Server\\007\" && clear;chmod +x ~/.vnc/xstartup && clear;echo $'\n'\"Please enter your new VNC server password\"$'\n' && " + "if [ \"" + selected_user + "\" == \"root\" ]; then " + "  if [ ! -d /root/.config/tigervnc ]; then mkdir -p -m 0777 /root/.config/tigervnc; fi; " + "  sudo -u root vncpasswd; " + "  if [ ! -f ~/.vnc/passwd ]; then cp -rf ~/.config/tigervnc/passwd ~/.vnc/; fi; " + "else " + " user_uid=$(id -u " + selected_user + "); " + " if [ \"$user_uid\" -eq 100000 ] || [ \"$user_uid\" -eq 9000 ]; then " + " if [ ! -d /home/" + selected_user + "/.config/tigervnc ]; then mkdir -p -m 0777 /home/" + selected_user + "/.config/tigervnc; fi; " + "  sudo -u " + selected_user + " vncpasswd; " + "  if [ ! -f /home/" + selected_user + "/.vnc/passwd ]; then cp -rf /home/" + selected_user + "/.config/tigervnc/passwd /home/" + selected_user + "/.vnc/; fi; " + " fi; " + "fi && sleep 2 && exit"); // since is a kali command we can send it as is
             }
         });
-	final TextView VNCstatus = rootView.findViewById(R.id.KeXstatus);
         addClickListener(StartVNCButton, v -> {
 	    /* ── NEW: bail out when the server is already running ── */
-            if (VNCstatus.getText().toString().equals("RUNNING")) {
+            if (KexStatus.getText().toString().equals("RUNNING")) {
                 Toast.makeText(requireActivity().getApplicationContext(), "VNC server is already running", Toast.LENGTH_SHORT).show();
                 return; //  nothing else is executed
             }
