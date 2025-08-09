@@ -5,6 +5,8 @@
 *.dex
 # Java class files
 *.class
+# Java heap log
+*.hprof
 # Generated files
 bin/
 gen/
