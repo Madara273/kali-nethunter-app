@@ -293,7 +293,6 @@
     <string name="drawertitlesearchsploit">SearchSploit</string>
     <string name="drawertitlepineapple">Pineapple Connector</string>
     <string name="drawertitlegps">Wardriving</string>
-    <string name="drawertitledeauth">DeAuth</string>
     <string name="drawertitlecan">CARsenal</string>
     <string name="drawertitlesettings">Settings</string>
     <string name="drawertitlekernel">Kernel</string>
@@ -445,13 +444,6 @@
     <string name="loading_file">Loading…  FILE: %s</string>
     <string name="scanButtonText">Scan</string>
     <string name="advancedOptionsSwitchText">Advanced Options</string>
-    <string name="edit_whitelist_file">Edit whitelist file.</string>
-    <string name="type_wlan_interface">Type wlan interface</string>
-    <string name="scan_networks">Scan Networks</string>
-    <string name="channel">Channel</string>
-    <string name="whitelist">Whitelist</string>
-    <string name="deauthenticate_anyone_besides_me">Deauthenticate anyone besides me</string>
-    <string name="start_deauthentication">Start Deauthentication :)</string>
     <string name="objects_to_inject">Objects to Inject</string>
     <string name="inject_characteristics">Inject Characteristics</string>
     <string name="shellshock_command">Shellshock command</string>
