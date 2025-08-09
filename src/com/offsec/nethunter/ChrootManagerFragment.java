@@ -899,7 +899,7 @@ public class ChrootManagerFragment extends Fragment {
     }
 
     private void broadcastBackPressedIntent(Boolean isEnabled){
-        backPressedintent.setAction(AppNavHomeActivity.NethunterReceiver.BACKPRESSED);
+        backPressedintent.setAction(BuildConfig.APPLICATION_ID + ".BACKPRESSED");
         backPressedintent.putExtra("isEnable", isEnabled);
         context.sendBroadcast(backPressedintent);
         setHasOptionsMenu(isEnabled);

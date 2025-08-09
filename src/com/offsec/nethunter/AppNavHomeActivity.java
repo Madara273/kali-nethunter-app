@@ -42,10 +42,8 @@ import com.offsec.nethunter.utils.SharePrefTag;
 import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.io.File;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
@@ -158,9 +156,9 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         // Register the NetHunter receiver with intent actions.
         nethunterReceiver = new NethunterReceiver();
         IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(NethunterReceiver.CHECKCOMPAT);
-        intentFilter.addAction(NethunterReceiver.BACKPRESSED);
-        intentFilter.addAction(NethunterReceiver.CHECKCHROOT);
+        intentFilter.addAction(BuildConfig.APPLICATION_ID + ".CHECKCOMPAT");
+        intentFilter.addAction(BuildConfig.APPLICATION_ID + ".BACKPRESSED");
+        intentFilter.addAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT");
         intentFilter.addAction("ChrootManager");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             this.registerReceiver(nethunterReceiver, intentFilter, Context.RECEIVER_NOT_EXPORTED);
@@ -714,8 +712,9 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
                                 navigationView.getMenu().setGroupEnabled(R.id.chrootDependentGroup, true);
                             } else {
                                 navigationView.getMenu().setGroupEnabled(R.id.chrootDependentGroup, false);
-                                if (lastSelectedMenuItem.getItemId() != R.id.nethunter_item &&
-                                        lastSelectedMenuItem.getItemId() != R.id.createchroot_item) {
+                                if (lastSelectedMenuItem != null &&
+                                    lastSelectedMenuItem.getItemId() != R.id.nethunter_item &&
+                                    lastSelectedMenuItem.getItemId() != R.id.createchroot_item) {
                                     FragmentManager fragmentManager = getSupportFragmentManager();
                                     changeFragment(fragmentManager, NetHunterFragment.newInstance(R.id.nethunter_item));
                                 }
