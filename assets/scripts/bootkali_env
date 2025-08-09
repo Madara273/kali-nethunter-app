@@ -37,4 +37,9 @@ if [ -z "$MNT" ]; then
 fi
 
 ## Define the path of xz tool
-XZ=/data/data/$APP_PGK_NAME/scripts/bin/xz
+if [ -n "$BUSYBOX" ]; then
+    XZ="$BUSYBOX xz"
+else
+    echo "Error: busybox_nh not found, cannot run xz"
+    XZ="xz"  # fallback if busybox_nh missing
+fi
