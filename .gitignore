@@ -23,6 +23,9 @@ proguard/
 # Debug folder
 debug/
 
+# CMake files
+.cxx/
+
 *.pydevproject
 .project
 .metadata
