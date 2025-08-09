@@ -53,9 +53,7 @@ import java.util.ArrayList;
 import java.util.Objects;
 
 public class BTFragment extends Fragment {
-    private ViewPager mViewPager;
     private SharedPreferences sharedpreferences;
-    private Context context;
     private Activity activity;
     private final ShellExecuter exe = new ShellExecuter(); // Fixed issue with undefined 'exe'
     private static final String ARG_SECTION_NUMBER = "section_number";
@@ -71,7 +69,7 @@ public class BTFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        context = getContext();
+        Context context = getContext();
         activity = getActivity();
     }
 
@@ -80,7 +78,7 @@ public class BTFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.bt, container, false);
         BTFragment.TabsPagerAdapter tabsPagerAdapter = new TabsPagerAdapter(getChildFragmentManager());
 
-        mViewPager = rootView.findViewById(R.id.pagerBt);
+        ViewPager mViewPager = rootView.findViewById(R.id.pagerBt);
         mViewPager.setAdapter(tabsPagerAdapter);
         mViewPager.setOffscreenPageLimit(4);
         mViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
@@ -269,7 +267,6 @@ public class BTFragment extends Fragment {
         private Context context;
         final ShellExecuter exe = new ShellExecuter();
         private String selected_iface;
-        private Boolean iswatch;
         String selected_addr;
         String selected_class;
         String selected_name;
@@ -297,7 +294,7 @@ public class BTFragment extends Fragment {
             final TextView BTIface = rootView.findViewById(R.id.bt_if);
             final TextView BTService = rootView.findViewById(R.id.bt_service);
 
-            iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
+            Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
             if (iswatch) {
                 BTMainDesc.setVisibility(View.GONE);
                 BTIface.setText(R.string.bt_interface);
@@ -819,7 +816,6 @@ public class BTFragment extends Fragment {
         private Context context;
         private String selected_mode;
         final ShellExecuter exe = new ShellExecuter();
-        private Boolean iswatch;
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -835,7 +831,7 @@ public class BTFragment extends Fragment {
             SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
             final TextView CWdesc = rootView.findViewById(R.id.carwhisp_desc);
-            iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
+            Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
             if (iswatch) {
                 CWdesc.setVisibility(View.GONE);
             }

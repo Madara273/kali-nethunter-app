@@ -23,12 +23,6 @@ if [ -z "$BUSYBOX" ] || [ ! -x "$BUSYBOX" ]; then
     exit 1
 fi
 
-## Define the nethunter xz executable path.
-if [ -z "$XZ" ] || [ ! -x "$XZ" ]; then
-    bklog "[-] XZ executable is not found or not granted execute permission."
-    unset XZ
-fi
-
 ##########################
 #### DEFINE FUNCTIONS ####
 ##########################
