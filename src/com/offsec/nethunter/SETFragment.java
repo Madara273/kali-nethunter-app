@@ -2,7 +2,6 @@ package com.offsec.nethunter;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -84,15 +83,15 @@ public class SETFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.setup:
-                RunSetup();
-                return true;
-            case R.id.update:
-                RunUpdate();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        int id = item.getItemId();
+        if (id == R.id.setup) {
+            RunSetup();
+            return true;
+        } else if (id == R.id.update) {
+            RunUpdate();
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
         }
     }
 
@@ -101,11 +100,9 @@ public class SETFragment extends Fragment {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         builder.setTitle("Welcome to SET!");
         builder.setMessage("In order to make sure everything is working, an initial setup needs to be done.");
-        builder.setPositiveButton("Check & Install", new DialogInterface.OnClickListener(){
-            public void onClick(DialogInterface dialog, int which) {
-                RunSetup();
-                sharedpreferences.edit().putBoolean("set_setup_done", true).apply();
-            }
+        builder.setPositiveButton("Check & Install", (dialog, which) -> {
+            RunSetup();
+            sharedpreferences.edit().putBoolean("set_setup_done", true).apply();
         });
         builder.show();
     }
