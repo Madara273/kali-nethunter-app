@@ -1,19 +1,20 @@
 apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.android'
 
 buildscript {
     repositories {
-        mavenCentral()
         google()
+        mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.android.tools.build:gradle:8.4.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.9.10"
     }
 }
 
 repositories {
     google()
     mavenCentral()
-    maven { url "https://maven.google.com" }
     maven { url "https://repo.grails.org/grails/plugins" }
     // Snowfall
     maven { url 'https://jitpack.io' }
@@ -21,28 +22,63 @@ repositories {
 
 android {
     namespace "com.offsec.nethunter"
-    compileSdk 33
+    //noinspection GradleDependency
+    compileSdk 34
+
+    defaultConfig {
+        //noinspection HighAppVersionCode
+        versionCode 2025020200
+        versionName "2025.2"
+        multiDexEnabled true
+        buildConfigField "int", "VERSION_CODE", "${versionCode}"
+        buildConfigField "String", "VERSION_NAME", "\"${versionName}\""
+        applicationId "com.offsec.nethunter"
+    }
 
     buildFeatures {
         dataBinding true
+        aidl true
+        buildConfig true
+        //compose true
         // for view binding:
         // viewBinding true
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+        coreLibraryDesugaringEnabled true
+    }
+    kotlinOptions {
+        jvmTarget = "17"
     }
 
-    defaultConfig {
-        minSdk 21
-        //noinspection ExpiredTargetSdkVersion
-        targetSdk 28
-        //noinspection HighAppVersionCode
-        versionCode 2025020200
-        versionName "2025.2"
-        multiDexEnabled true
-        applicationId "com.offsec.nethunter"
+    // Declare flavor dimension
+    flavorDimensions "render_backend"
+
+    // Build flavors
+    productFlavors {
+        renderscript {
+            dimension "render_backend"
+            renderscriptSupportModeEnabled true
+            renderscriptTargetApi 21
+            minSdk 21
+            maxSdk 23
+            externalNativeBuild {
+                cmake {
+                    arguments "-DUSE_VULKAN=OFF"
+                }
+            }
+        }
+        vulkan {
+            dimension "render_backend"
+            minSdk 24
+            externalNativeBuild {
+                cmake {
+                    arguments "-DUSE_VULKAN=ON"
+                }
+            }
+        }
     }
 
     signingConfigs {
@@ -68,18 +104,17 @@ android {
     buildTypes {
         debug {
             minifyEnabled false
-            buildConfigField "java.util.Date", "BUILD_TIME", "new java.util.Date(" + System.currentTimeMillis() + "L)"
-            buildConfigField "String", "BUILD_NAME", "\"" + System.getenv("USER") + "\""
+            buildConfigField "String", "BUILD_TIME", "\"${new Date(System.currentTimeMillis())}\""
+            buildConfigField "String", "BUILD_NAME", "\"${System.getenv("USER") ?: "Unknown"}\""
         }
 
         release {
-            //signingConfig signingConfigs.release
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt')
             debuggable false
             jniDebuggable false
-            buildConfigField "java.util.Date", "BUILD_TIME", "new java.util.Date(" + System.currentTimeMillis() + "L)"
+            buildConfigField "String", "BUILD_TIME", "\"${new Date(System.currentTimeMillis())}\""
             buildConfigField "String", "BUILD_NAME", "\"" + System.getenv("USER") + "\""
         }
     }
@@ -88,22 +123,24 @@ android {
 dependencies {
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     implementation 'org.thoughtcrime.ssl.pinning:AndroidPinning:1.0.0'
     implementation 'com.google.android.gms:play-services-location:21.3.0'
     implementation 'joda-time:joda-time:2.14.0'
-    implementation 'com.google.guava:guava:33.1.0-android'
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.6.1'
+    implementation 'com.google.guava:guava:33.4.8-android'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.9.2'
+    implementation 'androidx.lifecycle:lifecycle-livedata:2.9.2'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'com.google.android.material:material:1.12.0'
     implementation 'androidx.preference:preference:1.2.1'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:1.9.10'
     // Snowfall
     implementation 'com.github.jetradarmobile:android-snowfall:1.2.1'
-    // debugImplementation because LeakCanary should only run in debug builds.
     //debugImplementation 'com.squareup.leakcanary:leakcanary-android:3.0-alpha-8'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }

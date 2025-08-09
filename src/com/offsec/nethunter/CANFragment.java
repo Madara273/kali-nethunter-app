@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -47,6 +48,7 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import com.google.android.material.textfield.TextInputLayout;
 import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.BootKali;
 import com.offsec.nethunter.utils.NhPaths;
@@ -54,10 +56,10 @@ import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.Map;
-import java.util.HashMap;
 
 public class CANFragment extends Fragment {
     private static final String TAG = "CANFragment";
@@ -72,6 +74,121 @@ public class CANFragment extends Fragment {
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         fragment.setArguments(args);
         return fragment;
+    }
+
+    public static class SpinnerUtils {
+
+        public interface SelectionCallback {
+            void onInterfaceSelected(String iface);
+        }
+
+        public static void setupDeviceInterfaceSpinner(
+                Context context,
+                ExecutorService executorService,
+                ShellExecuter exe,
+                Spinner spinner,
+                View refreshButton,
+                SharedPreferences sharedPreferences,
+                String sharedPrefKey,
+                boolean onlyUsbDevices,
+                SelectionCallback callback
+        ) {
+            Runnable loadInterfaces = () -> {
+                String command = onlyUsbDevices
+                        ? "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
+                        : "ip -o link show | awk -F': ' '{print $2}' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
+                        "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'";
+
+                String result = exe.RunAsChrootOutput(command);
+
+                ArrayList<String> deviceIfaces = new ArrayList<>();
+                if (onlyUsbDevices) {
+                    deviceIfaces.add("USB Devices");
+                } else {
+                    deviceIfaces.add("Interfaces");
+                }
+
+                if (result != null && !result.trim().isEmpty()) {
+                    deviceIfaces.addAll(Arrays.asList(result.split("\n")));
+                }
+
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(context, android.R.layout.simple_list_item_1, deviceIfaces) {
+                        @Override
+                        public boolean isEnabled(int position) {
+                            return position != 0; // disable first item
+                        }
+
+                        @Override
+                        public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                            View view = super.getDropDownView(position, convertView, parent);
+                            TextView tv = (TextView) view;
+                            tv.setTextColor(position == 0 ? Color.GRAY : Color.WHITE);
+                            return view;
+                        }
+                    };
+
+                    spinner.setAdapter(adapter);
+
+                    // Try to restore previous selection
+                    String prevIface = sharedPreferences.getString(sharedPrefKey + "_name", null);
+                    int selectionIndex = 0; // default to "Interface (None)"
+                    if (prevIface != null && deviceIfaces.contains(prevIface)) {
+                        selectionIndex = deviceIfaces.indexOf(prevIface);
+                    } else if (deviceIfaces.size() > 1) {
+                        selectionIndex = 1; // first real interface
+                    }
+
+                    spinner.setSelection(selectionIndex);
+                    callback.onInterfaceSelected(deviceIfaces.get(selectionIndex));
+
+                    spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                            if (pos != 0) { // skip placeholder (first item)
+                                String selected = parentView.getItemAtPosition(pos).toString();
+                                sharedPreferences.edit()
+                                        .putString(sharedPrefKey + "_name", selected)
+                                        .apply();
+                                callback.onInterfaceSelected(selected);
+                            }
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> parentView) {
+                            callback.onInterfaceSelected(deviceIfaces.get(0));
+                        }
+                    });
+
+                    if (!onlyUsbDevices && deviceIfaces.size() > 1) {
+                        String detected = exe.RunAsChrootOutput(
+                                "dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'"
+                        );
+                        if (detected != null && !detected.isEmpty() && !detected.matches("^(can|vcan|slcan)\\d+$")) {
+                            Toast.makeText(context, detected, Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                });
+            };
+
+            if (refreshButton != null) {
+                refreshButton.setOnClickListener(v -> {
+                    Toast.makeText(context, "Refreshing Devices...", Toast.LENGTH_SHORT).show();
+                    executorService.submit(loadInterfaces);
+
+                    Activity activity = (Activity) context;
+                    WebView icsimView = activity.findViewById(R.id.icsim);
+                    WebView controlsView = activity.findViewById(R.id.controls);
+                    if (icsimView != null && controlsView != null) {
+                        icsimView.reload();
+                        controlsView.reload();
+                        Toast.makeText(context, "Refreshing ICSim display...", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            }
+
+            executorService.submit(loadInterfaces);
+        }
     }
 
     @Override
@@ -91,7 +208,7 @@ public class CANFragment extends Fragment {
 
         ViewPager2 mViewPager = rootView.findViewById(R.id.pagerCAN);
         mViewPager.setAdapter(tabsPagerAdapter);
-        mViewPager.setOffscreenPageLimit(6);
+        mViewPager.setOffscreenPageLimit(7);
 
         TabLayout tabLayout = rootView.findViewById(R.id.tabLayoutCAN);
         new TabLayoutMediator(tabLayout, mViewPager,
@@ -102,6 +219,7 @@ public class CANFragment extends Fragment {
                         case 2: tab.setText("CAN-USB"); break;
                         case 3: tab.setText("Caribou"); break;
                         case 4: tab.setText("ICSim"); break;
+                        case 5: tab.setText("MSF"); break;
                         default: tab.setText("Tab " + (position + 1));
                     }
                 }
@@ -180,7 +298,7 @@ public class CANFragment extends Fragment {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
         Log.i(TAG, "Running setup commands");
-        String setupCommand = "curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup";
+        String setupCommand = "echo -ne \"\\033]0;CARsenal Setup\\007\" && clear;curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup";
         String setupResult = run_cmd(setupCommand);
         Log.d("SetupResult",setupResult);
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
@@ -193,7 +311,7 @@ public class CANFragment extends Fragment {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
         Log.i(TAG, "Running update commands");
-        String updateCommand = "curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update";
+        String updateCommand = "echo -ne \"\\033]0;CARsenal Update\\007\" && clear;curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update";
         String updateResult = run_cmd(updateCommand);
         Log.d("UpdateResult",updateResult);
         sharedpreferences.edit().putBoolean("setup_done", true).apply();
@@ -203,7 +321,7 @@ public class CANFragment extends Fragment {
     public void RunAbout() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         MaterialAlertDialogBuilder aboutDialog = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-        aboutDialog.setTitle("About CAN Arsenal");
+        aboutDialog.setTitle("About CARsenal");
 
         TextView message = new TextView(context);
         message.setText(getResources().getText(R.string.about_author));
@@ -233,14 +351,16 @@ public class CANFragment extends Fragment {
                     return new CANUSBFragment();
                 case 3:
                     return new CANFragment.CANCARIBOUFragment();
-                default:
+                case 4:
                     return new CANICSIMFragment();
+                default :
+                    return new CANMSFFragment();
             }
         }
 
         @Override
         public int getItemCount() {
-            return 5;
+            return 6;
         }
     }
 
@@ -264,7 +384,6 @@ public class CANFragment extends Fragment {
             // Common used variables
             SelectedIface = rootView.findViewById(R.id.can_iface);
 
-            final EditText bt_target_mac = rootView.findViewById(R.id.bttarget);
             final EditText selected_vin = rootView.findViewById(R.id.vin_number);
 
             // First run
@@ -275,7 +394,7 @@ public class CANFragment extends Fragment {
 
             // Toggle Advanced Options
             Button btnMtu = rootView.findViewById(R.id.btn_toggle_mtu);
-            EditText SelectedMTU = rootView.findViewById(R.id.mtu_value);
+            TextInputLayout SelectedMTU = rootView.findViewById(R.id.mtu_container);
 
             btnMtu.setOnClickListener(v -> {
                 boolean isVisible = SelectedMTU.getVisibility() == View.VISIBLE;
@@ -286,7 +405,7 @@ public class CANFragment extends Fragment {
             });
 
             Button btnTxqueuelen = rootView.findViewById(R.id.btn_toggle_txqueuelen);
-            EditText SelectedTxqueuelen = rootView.findViewById(R.id.txqueuelen_value);
+            TextInputLayout SelectedTxqueuelen = rootView.findViewById(R.id.txqueuelen_container);
 
             btnTxqueuelen.setOnClickListener(v -> {
                 boolean isVisible = SelectedTxqueuelen.getVisibility() == View.VISIBLE;
@@ -294,6 +413,21 @@ public class CANFragment extends Fragment {
 
                 int color = isVisible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
                 btnTxqueuelen.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
+            });
+
+
+            // Services Toggle
+            Button btnServicesToggle = rootView.findViewById(R.id.btn_toggle_services);
+            LinearLayout servicesLayout = rootView.findViewById(R.id.main_services);
+
+            btnServicesToggle.setOnClickListener(v -> {
+                if (servicesLayout.getVisibility() == View.GONE) {
+                    servicesLayout.setVisibility(View.VISIBLE);
+                    btnServicesToggle.setText("Hide Services");
+                } else {
+                    servicesLayout.setVisibility(View.GONE);
+                    btnServicesToggle.setText("Services");
+                }
             });
 
             // Attach and Daemon
@@ -509,56 +643,201 @@ public class CANFragment extends Fragment {
                 return true; // long click handled
             });
 
-            // Start rfcomm binder
+            // Rfcomm Binder
             Button RfcommBinderButton = rootView.findViewById(R.id.start_rfcommbinder);
 
-            RfcommBinderButton.setOnClickListener(v -> {
-                String selected_caniface = SelectedIface.getText().toString();
-                String bt_target = bt_target_mac.getText().toString();
+            // Access SharedPreferences
+            SharedPreferences rfcommBinder_prefs = requireActivity().getSharedPreferences("rfcommBinder_prefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editorRfcommBinder = rfcommBinder_prefs.edit();
 
-                if (!selected_caniface.isEmpty() && !bt_target.isEmpty()) {
-                    run_cmd("rfcomm bind " + selected_caniface + " " + bt_target);
+            // Load the saved command or use a default
+            String savedCmd_rfcomm_binder = rfcommBinder_prefs.getString("rfcommBinder_cmd", "rfcomm bind vcan0 00:AA:BB:CC:DD:EE:FF");
+            String[] rfcommBinderCmdHolder = { savedCmd_rfcomm_binder };
+
+            RfcommBinderButton.setOnClickListener(v -> {
+                String rfcommBinderRun = rfcommBinderCmdHolder[0];
+
+                if (!rfcommBinderRun.isEmpty()) {
+                    run_cmd(rfcommBinderRun);
+                    showToast("Press CTRL+C to stop.");
                 } else {
-                    showToast("Please ensure your CAN Interface and Target field is set!");
+                    showToast("Please set your rfcomm binder command!");
                 }
             });
 
-            // Start Socketcand
-            Button SocketCandButton = rootView.findViewById(R.id.start_socketcand);
+            // Long click lets user edit the command
+            RfcommBinderButton.setOnLongClickListener(v -> {
+                AlertDialog.Builder builder_rfcommBinder = new AlertDialog.Builder(requireContext());
+                builder_rfcommBinder.setTitle("Edit Command");
 
-            SocketCandButton.setOnClickListener(v -> {
-                String selected_caniface = SelectedIface.getText().toString();
+                final EditText input_rfcomm_binder = new EditText(requireContext());
+                input_rfcomm_binder.setText(rfcommBinderCmdHolder[0]);
+                builder_rfcommBinder.setView(input_rfcomm_binder);
 
-                if (!selected_caniface.isEmpty()) {
-                    run_cmd("socketcand -v -l wlan0 -i " + selected_caniface);
+                builder_rfcommBinder.setPositiveButton("Save", (dialog, which) -> {
+                    String newRfcommBinderCmd = input_rfcomm_binder.getText().toString();
+                    rfcommBinderCmdHolder[0] = newRfcommBinderCmd;
+
+                    // Save to SharedPreferences
+                    editorRfcommBinder.putString("rfcommBinder_cmd", newRfcommBinderCmd);
+                    editorRfcommBinder.apply();
+
+                    showToast("Command updated!");
+                });
+
+                builder_rfcommBinder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+                AlertDialog dialog = builder_rfcommBinder.create();
+                dialog.setOnShowListener(d -> {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                });
+                dialog.show();
+                return true; // long click handled
+            });
+
+            // Rfcomm Connect
+            Button RfcommConnectButton = rootView.findViewById(R.id.start_rfcommconnect);
+
+            // Access SharedPreferences
+            SharedPreferences rfcommConnect_prefs = requireActivity().getSharedPreferences("rfcommConnect_prefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editorRfcommConnect = rfcommConnect_prefs.edit();
+
+            // Load the saved command or use a default
+            String savedCmd_rfcomm_connect = rfcommConnect_prefs.getString("rfcommConnect_cmd", "rfcomm connect /dev/ttyS0 00:AA:BB:CC:DD:EE:FF");
+            String[] rfcommConnectCmdHolder = { savedCmd_rfcomm_connect };
+
+            RfcommConnectButton.setOnClickListener(v -> {
+                String rfcommConnectRun = rfcommConnectCmdHolder[0];
+
+                if (!rfcommConnectRun.isEmpty()) {
+                    run_cmd(rfcommConnectRun);
+                    showToast("Press CTRL+C to stop.");
                 } else {
-                    showToast("Please ensure your CAN Interface field is set!");
+                    showToast("Please set your rfcomm connect command!");
                 }
+            });
+
+            // Long click lets user edit the command
+            RfcommConnectButton.setOnLongClickListener(v -> {
+                AlertDialog.Builder builder_rfcommConnect = new AlertDialog.Builder(requireContext());
+                builder_rfcommConnect.setTitle("Edit Command");
+
+                final EditText input_rfcomm_connect = new EditText(requireContext());
+                input_rfcomm_connect.setText(rfcommConnectCmdHolder[0]);
+                builder_rfcommConnect.setView(input_rfcomm_connect);
+
+                builder_rfcommConnect.setPositiveButton("Save", (dialog, which) -> {
+                    String newRfcommConnectCmd = input_rfcomm_connect.getText().toString();
+                    rfcommConnectCmdHolder[0] = newRfcommConnectCmd;
+
+                    // Save to SharedPreferences
+                    editorRfcommConnect.putString("rfcommConnect_cmd", newRfcommConnectCmd);
+                    editorRfcommConnect.apply();
+
+                    showToast("Command updated!");
+                });
+
+                builder_rfcommConnect.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+                AlertDialog dialog = builder_rfcommConnect.create();
+                dialog.setOnShowListener(d -> {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                });
+                dialog.show();
+                return true; // long click handled
+            });
+
+            // Socketcand
+            Button SocketcandButton = rootView.findViewById(R.id.start_socketcand);
+
+            // Access SharedPreferences
+            SharedPreferences socketcand_prefs = requireActivity().getSharedPreferences("socketcand_prefs", Context.MODE_PRIVATE);
+            SharedPreferences.Editor editorSocketcand = socketcand_prefs.edit();
+
+            // Load the saved command or use a default
+            String savedCmd_socketcand = socketcand_prefs.getString("socketcand_cmd", "socketcand -v -l wlan0 -i vcan0");
+            String[] socketcandCmdHolder = { savedCmd_socketcand };
+
+            SocketcandButton.setOnClickListener(v -> {
+                String socketcandRun = socketcandCmdHolder[0];
+
+                if (!socketcandRun.isEmpty()) {
+                    run_cmd(socketcandRun);
+                    showToast("Press CTRL+C to stop.");
+                } else {
+                    showToast("Please set your rfcomm connect command!");
+                }
+            });
+
+            // Long click lets user edit the command
+            SocketcandButton.setOnLongClickListener(v -> {
+                AlertDialog.Builder builder_socketcand = new AlertDialog.Builder(requireContext());
+                builder_socketcand.setTitle("Edit Command");
+
+                final EditText input_socketcand = new EditText(requireContext());
+                input_socketcand.setText(socketcandCmdHolder[0]);
+                builder_socketcand.setView(input_socketcand);
+
+                builder_socketcand.setPositiveButton("Save", (dialog, which) -> {
+                    String newsocketcandCmd = input_socketcand.getText().toString();
+                    socketcandCmdHolder[0] = newsocketcandCmd;
+
+                    // Save to SharedPreferences
+                    editorSocketcand.putString("socketcand_cmd", newsocketcandCmd);
+                    editorSocketcand.apply();
+
+                    showToast("Command updated!");
+                });
+
+                builder_socketcand.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+                AlertDialog dialog = builder_socketcand.create();
+                dialog.setOnShowListener(d -> {
+                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+                });
+                dialog.show();
+                return true; // long click handled
             });
 
             // Interfaces
-            // Declare SharedPreferences at the class level
-            SharedPreferences preferences = requireActivity().getSharedPreferences("CANInterfaceState", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editor = preferences.edit();
-
-            // Store CAN Interface States
-            Map<String, Boolean> buttonStates = new HashMap<>();
-
-            // Load saved button states from SharedPreferences when fragment/activity is created
-            buttonStates.put("start_caniface", preferences.getBoolean("start_caniface", false));
-
             // Can Type Spinner
-            // Spinner for CAN interfaces
             final Spinner canTypeList = rootView.findViewById(R.id.cantype_spinner);
-            final String[] interfaceTypeOptions = {"can", "vcan", "slcan"};
+            final String[] interfaceTypeOptions = {"Type", "can", "vcan", "slcan"};
 
-            canTypeList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, interfaceTypeOptions));
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, interfaceTypeOptions) {
+                @Override
+                public boolean isEnabled(int position) {
+                    // Disable "Type" item
+                    return position != 0;
+                }
+
+                @Override
+                public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                    View view = super.getDropDownView(position, convertView, parent);
+                    TextView tv = (TextView) view;
+                    if (position == 0) {
+                        tv.setTextColor(Color.GRAY);  // Hint text color
+                    } else {
+                        tv.setTextColor(Color.WHITE); // Normal text
+                    }
+                    return view;
+                }
+            };
+
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            canTypeList.setAdapter(adapter);
+            canTypeList.setSelection(0);  // Set initial selection to "Type"
 
             canTypeList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                    String cantype_selected = parentView.getItemAtPosition(pos).toString();
-                    sharedpreferences.edit().putString("cantype_selected", cantype_selected).apply();
+                    if (pos != 0) { // Ignore "Type" hint
+                        String cantype_selected = parentView.getItemAtPosition(pos).toString();
+                        sharedpreferences.edit().putString("cantype_selected", cantype_selected).apply();
+                    }
                 }
 
                 @Override
@@ -568,65 +847,40 @@ public class CANFragment extends Fragment {
 
             // Start CAN interface
             Button StartCanButton = rootView.findViewById(R.id.start_caniface);
-
-            // Set initial button text based on saved state
-            StartCanButton.setText(Boolean.TRUE.equals(buttonStates.get("start_caniface")) ? "⏹ CAN" : "▶ CAN");
-
             StartCanButton.setOnClickListener(v -> {
                 String selected_caniface = SelectedIface.getText().toString();
-                String selected_mtu = SelectedMTU.getText().toString();
-                String selected_txqueuelen = SelectedTxqueuelen.getText().toString();
+                String selected_mtu = SelectedMTU.getEditText().getText().toString();
+                String selected_txqueuelen = SelectedTxqueuelen.getEditText().getText().toString();
                 String interface_type = sharedpreferences.getString("cantype_selected", "");
-                boolean isStarted = Boolean.TRUE.equals(buttonStates.get("start_caniface"));
 
                 if (!selected_caniface.isEmpty() && selected_caniface.matches("^(can|vcan|slcan)[0-9]$")) {
-                    if (isStarted) {
-                        String stopCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " down && echo Success || echo Failed");
-                        stopCanIface = stopCanIface.trim();
-                        if ("vcan".equals(interface_type)) {
-                            String delVcanIface = exe.RunAsChrootOutput("sudo ip link delete " + selected_caniface + " && echo Success || echo Failed");
-                            if (delVcanIface.contains("FATAL:") || delVcanIface.contains("Failed")) {
-                                showToast("Failed to delete " + selected_caniface + " interface!");
-                            }
-                        }
-                        if (stopCanIface.contains("FATAL:") || stopCanIface.contains("Failed")) {
-                            showToast("Failed to stop " + selected_caniface + " interface!");
-                        } else {
-                            buttonStates.put("start_caniface", false);
-                            StartCanButton.setText("▶ CAN");
-                            showToast("Interface " + selected_caniface + " stopped!");
-                        }
-                    } else {
-                        if ("vcan".equals(interface_type)) {
-                            String addVcanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && echo Success || echo Failed");
-                            if (addVcanIface.contains("FATAL:") || addVcanIface.contains("Failed")) {
-                                showToast("Failed to add " + selected_caniface + " interface! Interface may already existing.");
-                            }
-                        }
-                        if ("can".equals(interface_type) || "slcan".equals(interface_type)) {
-                            String usbDevice = exe.RunAsChrootOutput("ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$'");
-                            if (usbDevice.isEmpty()) {
-                                showToast("No CAN Hardware detected, please connect adapter and try again.");
-                                return;
-                            }
-                        }
-
-                        if (!selected_mtu.isEmpty()) {
-                            exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && echo Success || echo Failed");
-                        }
-                        if (!selected_txqueuelen.isEmpty()) {
-                            exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " txqueuelen " + selected_txqueuelen + " && echo Success || echo Failed");
-                        }
-
-                        String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
-                        if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
-                            showToast("Failed to start " + selected_caniface + " interface!");
+                    if ("vcan".equals(interface_type)) {
+                        String addVcanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && echo Success || echo Failed");
+                        if (addVcanIface.contains("FATAL:") || addVcanIface.contains("Failed")) {
+                            showToast("Failed to add " + selected_caniface + " interface! Interface may already existing.");
                             return;
-                        } else {
-                            buttonStates.put("start_caniface", true);
-                            StartCanButton.setText("⏹ CAN");
-                            showToast("Interface " + selected_caniface + " started!");
                         }
+                    }
+                    if ("can".equals(interface_type) || "slcan".equals(interface_type)) {
+                        String usbDevice = exe.RunAsChrootOutput("ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$'");
+                        if (usbDevice.isEmpty()) {
+                            showToast("No CAN Hardware detected, please connect adapter and try again.");
+                            return;
+                        }
+                    }
+
+                    if (!selected_mtu.isEmpty()) {
+                        exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && echo Success || echo Failed");
+                    }
+                    if (!selected_txqueuelen.isEmpty()) {
+                        exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " txqueuelen " + selected_txqueuelen + " && echo Success || echo Failed");
+                    }
+
+                    String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
+                    if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
+                        showToast("Failed to start " + selected_caniface + " interface!");
+                    } else {
+                        showToast("Interface " + selected_caniface + " started!");
                     }
                 } else {
                     if (selected_caniface.isEmpty()) {
@@ -635,13 +889,8 @@ public class CANFragment extends Fragment {
                     }
                     if (!selected_caniface.matches("^(can|vcan|slcan)[0-9]$")) {
                         showToast("CAN Interface should be named \"^(can|vcan|slcan)[0-9]$\"");
-                        return;
                     }
                 }
-
-                // Save button state to SharedPreferences
-                editor.putBoolean("start_caniface", Boolean.TRUE.equals(buttonStates.get("start_caniface")));
-                editor.apply();
             });
 
             // Button Reset Interface
@@ -649,11 +898,6 @@ public class CANFragment extends Fragment {
 
             ResetIfaceButton.setOnClickListener(v -> {
                 exe.RunAsChrootOutput("/opt/car_hacking/can_reset.sh");
-                buttonStates.put("start_caniface", false);
-                StartCanButton.setText("▶ CAN");
-                // Save button state to SharedPreferences
-                editor.putBoolean("start_caniface", Boolean.TRUE.equals(buttonStates.get("start_caniface")));
-                editor.apply();
                 showToast("Interface reset!");
             });
 
@@ -669,11 +913,11 @@ public class CANFragment extends Fragment {
                     return;
                 }
 
-                String cmd_show = "/opt/car_hacking/car_venv/bin/vininfo show " + vinNumber + " | tr -s [:space:] > /sdcard/nh_files/can_arsenal/output.txt";
+                String cmd_show = "sudo mkdir -p /sdcard/nh_files/carsenal;/opt/car_hacking/car_venv/bin/vininfo show " + vinNumber + " | tr -s [:space:] > /sdcard/nh_files" + "/carsenal/output.txt";
                 new BootKali(cmd_show).run_bg();
                 try {
                     Thread.sleep(SHORT_DELAY);
-                    String output = exe.RunAsRootOutput("cat " + NhPaths.APP_SD_FILES_PATH + "/can_arsenal/output.txt");
+                    String output = exe.RunAsRootOutput("cat " + NhPaths.APP_SD_FILES_PATH + "/carsenal/output.txt");
                     term.setText(output);
                 } catch (Exception e) {
                     Log.e("VINShowError", "Exception while reading VIN info", e);
@@ -691,11 +935,11 @@ public class CANFragment extends Fragment {
                     return;
                 }
 
-                String cmd_check = "/opt/car_hacking/car_venv/bin/vininfo check " + vinNumber + " | tr -s [:space:] > /sdcard/nh_files/can_arsenal/output.txt";
+                String cmd_check = "sudo mkdir -p /sdcard/nh_files/carsenal;/opt/car_hacking/car_venv/bin/vininfo check " + vinNumber + " | tr -s [:space:] > /sdcard/nh_files/carsenal/output.txt";
                 new BootKali(cmd_check).run_bg();
                 try {
                     Thread.sleep(SHORT_DELAY);
-                    String output = exe.RunAsRootOutput("cat " + NhPaths.APP_SD_FILES_PATH + "/can_arsenal/output.txt");
+                    String output = exe.RunAsRootOutput("cat " + NhPaths.APP_SD_FILES_PATH + "/carsenal/output.txt");
                     term.setText(output);
                 } catch (Exception e) {
                     Log.e("VINCheckError", "Exception while reading VIN info", e);
@@ -740,67 +984,35 @@ public class CANFragment extends Fragment {
             final Button outputfilebrowse = rootView.findViewById(R.id.outputfilebrowse);
             final EditText CustomCmd = rootView.findViewById(R.id.customcmd);
 
-            // Interfaces
-            final Spinner deviceList = rootView.findViewById(R.id.device_interface);
+            // Configuration Toggle
+            Button btnConfigurationToggle = rootView.findViewById(R.id.btn_toggle_config_tools);
+            LinearLayout configurationLayout = rootView.findViewById(R.id.tools_config);
 
-            executorService.submit(() -> {
-                String result = exe.RunAsChrootOutput(
-                        "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
-                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$' | sed 's|^|/dev/|'"
-                );
-
-                ArrayList<String> deviceIfaces = new ArrayList<>();
-
-                if (result == null || result.trim().isEmpty()) {
-                    deviceIfaces.add("None");
+            btnConfigurationToggle.setOnClickListener(v -> {
+                if (configurationLayout.getVisibility() == View.GONE) {
+                    configurationLayout.setVisibility(View.VISIBLE);
+                    btnConfigurationToggle.setText("Hide Configuration");
                 } else {
-                    deviceIfaces.addAll(Arrays.asList(result.split("\n")));
+                    configurationLayout.setVisibility(View.GONE);
+                    btnConfigurationToggle.setText("Configuration");
                 }
-
-                // Post UI update back to the main thread
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, deviceIfaces);
-                    deviceList.setAdapter(adapter);
-
-                    // Restore previous selection if saved
-                    int savedPosition = sharedpreferences.getInt("selected_usb", 0);
-                    if (savedPosition < deviceIfaces.size()) {
-                        deviceList.setSelection(savedPosition);
-                        selected_caniface = deviceIfaces.get(savedPosition);
-                    } else {
-                        selected_caniface = "None";
-                    }
-
-                    deviceList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                        @Override
-                        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                            selected_caniface = parentView.getItemAtPosition(pos).toString();
-                            sharedpreferences.edit().putInt("selected_usb", pos).apply();
-                        }
-
-                        @Override
-                        public void onNothingSelected(AdapterView<?> parentView) {
-                            selected_caniface = "None";
-                        }
-                    });
-
-                    // Optional: show toast for newly detected device
-                    if (!deviceIfaces.contains("None")) {
-                        String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
-                        if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
-                            showToast(detected_device);
-                        }
-                    }
-                });
             });
 
-            // Refresh Status
-            ImageButton RefreshUSB = rootView.findViewById(R.id.refreshUSB);
-            RefreshUSB.setOnClickListener(v -> {
-                showToast("Refreshing Devices...");
-                refresh(rootView);
-            });
-            executorService.submit(() -> refresh(rootView));
+            // Interfaces
+            Spinner spinner = rootView.findViewById(R.id.device_interface);
+            ImageButton refreshBtn = rootView.findViewById(R.id.refreshUSB);
+
+            SpinnerUtils.setupDeviceInterfaceSpinner(
+                    requireContext(),
+                    executorService,
+                    exe,
+                    spinner,
+                    refreshBtn,
+                    sharedpreferences,
+                    "selected_usb",
+                    false,
+                    iface -> selected_caniface = iface
+            );
 
             // Advanced Options Toggle
             Button btnToggle = rootView.findViewById(R.id.btn_toggle_advanced);
@@ -893,7 +1105,7 @@ public class CANFragment extends Fragment {
             CanGenButton.setOnClickListener(v -> {
                 String verboseEnabled = isVerboseEnabled ? " -v" : "";
                 String disableLoopbackEnabled = isDisableLoopbackEnabled ? " -x" : "";
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     run_cmd("cangen " + selected_caniface + verboseEnabled + disableLoopbackEnabled);
                 } else {
                     showToast("Please ensure your CAN Interface field is set!");
@@ -905,7 +1117,7 @@ public class CANFragment extends Fragment {
             Button CanSnifferButton = rootView.findViewById(R.id.start_cansniffer);
 
             CanSnifferButton.setOnClickListener(v -> {
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     run_cmd("cansniffer " + selected_caniface);
                 } else {
                     showToast("Please ensure your CAN Interface field is set!");
@@ -920,7 +1132,7 @@ public class CANFragment extends Fragment {
             CanDumpButton.setOnClickListener(v -> {
                 String outputfile = outputfilepath.getText().toString();
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None") && !outputfile.isEmpty()) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !outputfile.isEmpty()) {
                     run_cmd("candump " + selected_caniface + " -f " + outputfile);
                 } else {
                     showToast("Please ensure your CAN Interface and Output File fields is set!");
@@ -935,7 +1147,7 @@ public class CANFragment extends Fragment {
             CanSendButton.setOnClickListener(v -> {
                 String sequence = cansend_sequence.getText().toString();
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None") && !sequence.isEmpty()) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !sequence.isEmpty()) {
                     run_cmd("cansend " + selected_caniface + " " + sequence);
                 } else {
                     showToast("Please ensure your CAN Interface and Sequence fields is set!");
@@ -998,12 +1210,12 @@ public class CANFragment extends Fragment {
             // Cannelloni
             Button CannelloniButton = rootView.findViewById(R.id.start_cannelloni);
 
-            CannelloniButton.setOnClickListener(v ->  {
+            CannelloniButton.setOnClickListener(v -> {
                 String rhost = SelectedRHost.getText().toString();
                 String rport = SelectedRPort.getText().toString();
                 String lport = SelectedLPort.getText().toString();
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None") && !rhost.isEmpty() && !rport.isEmpty() && !lport.isEmpty()) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !rhost.isEmpty() && !rport.isEmpty() && !lport.isEmpty()) {
                     run_cmd("sudo cannelloni -I " + selected_caniface + " -R " + rhost + " -r " + rport + " -l " + lport);
                 } else {
                     showToast("Please ensure your CAN Interface, RHOST, RPORT, LPORT fields is set!");
@@ -1015,7 +1227,7 @@ public class CANFragment extends Fragment {
             // Start Asc2Log
             Button Asc2LogButton = rootView.findViewById(R.id.start_asc2log);
 
-            Asc2LogButton.setOnClickListener(v ->  {
+            Asc2LogButton.setOnClickListener(v -> {
                 String inputfile = inputfilepath.getText().toString();
                 String outputfile = outputfilepath.getText().toString();
 
@@ -1031,11 +1243,11 @@ public class CANFragment extends Fragment {
             // Start Log2asc
             Button Log2AscButton = rootView.findViewById(R.id.start_log2asc);
 
-            Log2AscButton.setOnClickListener(v ->  {
+            Log2AscButton.setOnClickListener(v -> {
                 String inputfile = inputfilepath.getText().toString();
                 String outputfile = outputfilepath.getText().toString();
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None") && !inputfile.isEmpty() && !outputfile.isEmpty()) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !inputfile.isEmpty() && !outputfile.isEmpty()) {
                     run_cmd("log2asc -I " + inputfile + " -O " + outputfile + " " + selected_caniface);
                 } else {
                     showToast("Please ensure your CAN Interface, Input and Output File fields is set!");
@@ -1047,7 +1259,7 @@ public class CANFragment extends Fragment {
             // Start CustomCommand
             Button CustomCmdButton = rootView.findViewById(R.id.start_customcmd);
 
-            CustomCmdButton.setOnClickListener(v ->  {
+            CustomCmdButton.setOnClickListener(v -> {
                 String command = CustomCmd.getText().toString();
 
                 if (!command.isEmpty()) {
@@ -1060,44 +1272,6 @@ public class CANFragment extends Fragment {
             });
 
             return rootView;
-        }
-
-        // Refresh iface
-        private void refresh(View CANFragment) {
-            final Spinner deviceList = CANFragment.findViewById(R.id.device_interface);
-            if (context == null) return;
-
-            executorService.submit(() -> {
-                String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$'");
-                final ArrayList<String> deviceIfaces = new ArrayList<>();
-                if (outputDevice != null && !outputDevice.isEmpty()) {
-                    final String[] deviceifacesArray = outputDevice.split("\n");
-                    Activity activity = getActivity();
-                    if (sharedpreferences != null && activity != null) {
-                        int lastiface = sharedpreferences.getInt("selected_device", 0);
-                        requireActivity().runOnUiThread(() -> {
-                            deviceList.setAdapter(new ArrayAdapter<>(activity, android.R.layout.simple_list_item_1, deviceifacesArray));
-                            deviceList.setSelection(lastiface);
-                        });
-                        String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
-                        if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
-                            showToast(detected_device);
-                        }
-                    }
-                } else {
-                    deviceIfaces.add("None");
-                    Activity activity = getActivity();
-                    if (sharedpreferences != null && activity != null) {
-                        requireActivity().runOnUiThread(() -> {
-                            deviceList.setAdapter(new ArrayAdapter<>(activity, android.R.layout.simple_list_item_1, deviceIfaces));
-                            sharedpreferences.edit().putInt("selected_device", deviceList.getSelectedItemPosition()).apply();
-                        });
-                    }
-                }
-            });
-
-            String message = "Device list refreshed!";
-            showToast(message);
         }
     }
 
@@ -1126,65 +1300,20 @@ public class CANFragment extends Fragment {
             SelectedCanSpeedUSB = rootView.findViewById(R.id.canspeed_usb);
 
             // USB interfaces
-            final Spinner deviceList = rootView.findViewById(R.id.device_interface);
+            Spinner spinner = rootView.findViewById(R.id.device_interface);
+            ImageButton refreshBtn = rootView.findViewById(R.id.refreshUSB);
 
-            executorService.submit(() -> {
-                String result = exe.RunAsChrootOutput(
-                        "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
-                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$' | sed 's|^|/dev/|'"
-                );
-
-                ArrayList<String> deviceIfaces = new ArrayList<>();
-
-                if (result == null || result.trim().isEmpty()) {
-                    deviceIfaces.add("None");
-                } else {
-                    deviceIfaces.addAll(Arrays.asList(result.split("\n")));
-                }
-
-                // Post UI update back to the main thread
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, deviceIfaces);
-                    deviceList.setAdapter(adapter);
-
-                    // Restore previous selection if saved
-                    int savedPosition = sharedpreferences.getInt("selected_usb", 0);
-                    if (savedPosition < deviceIfaces.size()) {
-                        deviceList.setSelection(savedPosition);
-                        selected_usb = deviceIfaces.get(savedPosition);
-                    } else {
-                        selected_usb = "None";
-                    }
-
-                    deviceList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                        @Override
-                        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                            selected_usb = parentView.getItemAtPosition(pos).toString();
-                            sharedpreferences.edit().putInt("selected_usb", pos).apply();
-                        }
-
-                        @Override
-                        public void onNothingSelected(AdapterView<?> parentView) {
-                            selected_usb = "None";
-                        }
-                    });
-
-                    if (!deviceIfaces.contains("None")) {
-                        String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
-                        if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
-                            showToast(detected_device);
-                        }
-                    }
-                });
-            });
-
-            // Refresh Status
-            ImageButton RefreshUSB = rootView.findViewById(R.id.refreshUSB);
-            RefreshUSB.setOnClickListener(v -> {
-                showToast("Refreshing Devices...");
-                refresh(rootView);
-            });
-            executorService.submit(() -> refresh(rootView));
+            SpinnerUtils.setupDeviceInterfaceSpinner(
+                    requireContext(),
+                    executorService,
+                    exe,
+                    spinner,
+                    refreshBtn,
+                    sharedpreferences,
+                    "selected_usb",
+                    true,
+                    iface -> selected_usb = iface
+            );
 
             // Can-Usb Mode Spinner
             final Spinner canusbModeList = rootView.findViewById(R.id.usb_mode_spinner);
@@ -1311,7 +1440,7 @@ public class CANFragment extends Fragment {
                 String sleepValue = getVisibleParam(selectedSleep, " -g ");
                 String modeValue = getVisibleParam(canusbModeList, " -m ");
 
-                if (!selected_usb.isEmpty() && !selected_usb.equals("None") && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
+                if (!selected_usb.isEmpty() && !selected_usb.equals("USB Device (None)") && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
                     run_cmd("canusb -d " + selected_usb + " -s " + USBCANSpeed + " -b " + USBBaudrate + debugEnabled + idValue + dataValue + sleepValue + countValue + modeValue);
                 } else {
                     showToast("Please ensure your USB Device and USB CAN Speed, Baudrate, Data fields is set!");
@@ -1338,44 +1467,6 @@ public class CANFragment extends Fragment {
                 }
             }
             return "";
-        }
-
-        // Refresh main
-        private void refresh(View CANFragment) {
-            final Spinner deviceList = CANFragment.findViewById(R.id.device_interface);
-            if (context == null) return;
-
-            executorService.submit(() -> {
-                String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$' | sed 's|^|/dev/|'");
-                final ArrayList<String> deviceIfaces = new ArrayList<>();
-                if (outputDevice != null && !outputDevice.isEmpty()) {
-                    final String[] deviceifacesArray = outputDevice.split("\n");
-                    Activity activity = getActivity();
-                    if (sharedpreferences != null && activity != null) {
-                        int lastiface = sharedpreferences.getInt("selected_device", 0);
-                        requireActivity().runOnUiThread(() -> {
-                            deviceList.setAdapter(new ArrayAdapter<>(activity, android.R.layout.simple_list_item_1, deviceifacesArray));
-                            deviceList.setSelection(lastiface);
-                        });
-                        String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
-                        if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
-                            showToast(detected_device);
-                        }
-                    }
-                } else {
-                    deviceIfaces.add("None");
-                    Activity activity = getActivity();
-                    if (sharedpreferences != null && activity != null) {
-                        requireActivity().runOnUiThread(() -> {
-                            deviceList.setAdapter(new ArrayAdapter<>(activity, android.R.layout.simple_list_item_1, deviceIfaces));
-                            sharedpreferences.edit().putInt("selected_device", deviceList.getSelectedItemPosition()).apply();
-                        });
-                    }
-                }
-            });
-
-            String message = "Device list refreshed!";
-            showToast(message);
         }
     }
 
@@ -1409,66 +1500,20 @@ public class CANFragment extends Fragment {
             SelectedMessage = rootView.findViewById(R.id.caribou_message);
 
             // Interfaces
-            final Spinner deviceList = rootView.findViewById(R.id.device_interface);
+            Spinner spinner = rootView.findViewById(R.id.device_interface);
+            ImageButton refreshBtn = rootView.findViewById(R.id.refreshUSB);
 
-            executorService.submit(() -> {
-                String result = exe.RunAsChrootOutput(
-                        "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
-                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$' | sed 's|^|/dev/|'"
-                );
-
-                ArrayList<String> deviceIfaces = new ArrayList<>();
-
-                if (result == null || result.trim().isEmpty()) {
-                    deviceIfaces.add("None");
-                } else {
-                    deviceIfaces.addAll(Arrays.asList(result.split("\n")));
-                }
-
-                // Post UI update back to the main thread
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, deviceIfaces);
-                    deviceList.setAdapter(adapter);
-
-                    // Restore previous selection if saved
-                    int savedPosition = sharedpreferences.getInt("selected_usb", 0);
-                    if (savedPosition < deviceIfaces.size()) {
-                        deviceList.setSelection(savedPosition);
-                        selected_caniface = deviceIfaces.get(savedPosition);
-                    } else {
-                        selected_caniface = "None";
-                    }
-
-                    deviceList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                        @Override
-                        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                            selected_caniface = parentView.getItemAtPosition(pos).toString();
-                            sharedpreferences.edit().putInt("selected_usb", pos).apply();
-                        }
-
-                        @Override
-                        public void onNothingSelected(AdapterView<?> parentView) {
-                            selected_caniface = "None";
-                        }
-                    });
-
-                    // Optional: show toast for newly detected device
-                    if (!deviceIfaces.contains("None")) {
-                        String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
-                        if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
-                            showToast(detected_device);
-                        }
-                    }
-                });
-            });
-
-            // Refresh Status
-            ImageButton RefreshUSB = rootView.findViewById(R.id.refreshUSB);
-            RefreshUSB.setOnClickListener(v -> {
-                showToast("Refreshing Devices...");
-                refresh(rootView);
-            });
-            executorService.submit(() -> refresh(rootView));
+            SpinnerUtils.setupDeviceInterfaceSpinner(
+                    requireContext(),
+                    executorService,
+                    exe,
+                    spinner,
+                    refreshBtn,
+                    sharedpreferences,
+                    "selected_usb",
+                    false,
+                    iface -> selected_caniface = iface
+            );
 
             // File
             final ActivityResultLauncher<Intent> inputFileLauncher = registerForActivityResult(
@@ -1684,7 +1729,7 @@ public class CANFragment extends Fragment {
                 String candumpFormat = isCandumpEnabled ? " -t" : "";
                 String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
                 String separateLineValue = getVisibleParam(selectedLine, " -s ");
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " dump" + separateLineValue + candumpFormat + outputEnabled);
                 } else {
                     showToast("Please chose a CAN Interface!");
@@ -1698,7 +1743,7 @@ public class CANFragment extends Fragment {
 
             CaribouListenerButton.setOnClickListener(v -> {
                 String reverseEnabled = isReverseEnabled ? " -r" : "";
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " listener" + reverseEnabled);
                 } else {
                     showToast("Please chose a CAN Interface!");
@@ -1709,7 +1754,7 @@ public class CANFragment extends Fragment {
 
             // FUZZER Spinner
             final Spinner FUZZERList = rootView.findViewById(R.id.fuzzer_spinner);
-            final String[] FUZZEROptions = {"brute","identify","mutate","random","replay"};
+            final String[] FUZZEROptions = {"brute", "identify", "mutate", "random", "replay"};
 
             FUZZERList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, FUZZEROptions));
 
@@ -1730,12 +1775,12 @@ public class CANFragment extends Fragment {
 
             CaribouFUZZERButton.setOnClickListener(v -> {
                 String fuzzer_module = sharedpreferences.getString("fuzzer_selected", "");
-                String idValue           = getVisibleParam(selectedID, " ");
-                String minValue          = getVisibleParam(selectedMin, " -min ");
+                String idValue = getVisibleParam(selectedID, " ");
+                String minValue = getVisibleParam(selectedMin, " -min ");
                 String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
-                String seedValue         = getVisibleParam(selectedSeed, " --seed ");
+                String seedValue = getVisibleParam(selectedSeed, " --seed ");
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     if ("brute".equals(fuzzer_module)) {
                         run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer brute" + idValue);
                     }
@@ -1760,7 +1805,7 @@ public class CANFragment extends Fragment {
 
             // SEND Spinner
             final Spinner SENDList = rootView.findViewById(R.id.send_spinner);
-            final String[] SENDTypeOptions = {"file","message"};
+            final String[] SENDTypeOptions = {"file", "message"};
 
             SENDList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, SENDTypeOptions));
 
@@ -1781,13 +1826,13 @@ public class CANFragment extends Fragment {
 
             CaribouSENDButton.setOnClickListener(v -> {
                 String selected_message = SelectedMessage.getText().toString();
-                String selected_file    = SelectedFile.getText().toString();
-                String delayValue       = getVisibleParam(selectedDelay, " -d ");
-                String loopEnabled      = isLoopEnabled ? " -l" : "";
-                String padEnabled       = isPadEnabled ? " -p" : "";
-                String send_module      = sharedpreferences.getString("send_selected", "");
+                String selected_file = SelectedFile.getText().toString();
+                String delayValue = getVisibleParam(selectedDelay, " -d ");
+                String loopEnabled = isLoopEnabled ? " -l" : "";
+                String padEnabled = isPadEnabled ? " -p" : "";
+                String send_module = sharedpreferences.getString("send_selected", "");
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     if ("file".equals(send_module)) {
                         run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " send file" + delayValue + loopEnabled + " " + selected_file);
                     }
@@ -1803,7 +1848,7 @@ public class CANFragment extends Fragment {
 
             // UDS Spinner
             final Spinner UDSList = rootView.findViewById(R.id.uds_spinner);
-            final String[] UDSTypeOptions = {"discovery","services"};
+            final String[] UDSTypeOptions = {"discovery", "services"};
 
             UDSList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, UDSTypeOptions));
 
@@ -1823,14 +1868,14 @@ public class CANFragment extends Fragment {
             Button CaribouUDSButton = rootView.findViewById(R.id.start_uds);
 
             CaribouUDSButton.setOnClickListener(v -> {
-                String srcValue          = getVisibleParam(selectedSrc, " ");
-                String dstValue          = getVisibleParam(selectedDst, " ");
-                String minValue          = getVisibleParam(selectedMin, " -min ");
-                String maxValue          = getVisibleParam(selectedMax, " -max ");
-                String delayValue        = getVisibleParam(selectedDelay, " -d ");
-                String uds_module        = sharedpreferences.getString("uds_selected", "");
+                String srcValue = getVisibleParam(selectedSrc, " ");
+                String dstValue = getVisibleParam(selectedDst, " ");
+                String minValue = getVisibleParam(selectedMin, " -min ");
+                String maxValue = getVisibleParam(selectedMax, " -max ");
+                String delayValue = getVisibleParam(selectedDelay, " -d ");
+                String uds_module = sharedpreferences.getString("uds_selected", "");
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     if ("discovery".equals(uds_module)) {
                         run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds discovery" + minValue + maxValue + delayValue);
                     }
@@ -1846,7 +1891,7 @@ public class CANFragment extends Fragment {
 
             // XCP Spinner
             final Spinner XCPList = rootView.findViewById(R.id.xcp_spinner);
-            final String[] XCPOptions = {"discovery","info","dump"};
+            final String[] XCPOptions = {"discovery", "info", "dump"};
 
             XCPList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, XCPOptions));
 
@@ -1866,16 +1911,16 @@ public class CANFragment extends Fragment {
             Button CaribouXCPButton = rootView.findViewById(R.id.start_xcp);
 
             CaribouXCPButton.setOnClickListener(v -> {
-                String addrValue         = getVisibleParam(selectedAddr, " ");
-                String lengthValue       = getVisibleParam(selectedLength, " ");
+                String addrValue = getVisibleParam(selectedAddr, " ");
+                String lengthValue = getVisibleParam(selectedLength, " ");
                 String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
-                String srcValue          = getVisibleParam(selectedSrc, " ");
-                String dstValue          = getVisibleParam(selectedDst, " ");
-                String minValue          = getVisibleParam(selectedMin, " -min ");
-                String maxValue          = getVisibleParam(selectedMax, " -max ");
+                String srcValue = getVisibleParam(selectedSrc, " ");
+                String dstValue = getVisibleParam(selectedDst, " ");
+                String minValue = getVisibleParam(selectedMin, " -min ");
+                String maxValue = getVisibleParam(selectedMax, " -max ");
                 String xcp_module = sharedpreferences.getString("xcp_selected", "");
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     if ("discovery".equals(xcp_module)) {
                         run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp discovery" + minValue + maxValue);
                     }
@@ -1901,7 +1946,7 @@ public class CANFragment extends Fragment {
             if (context == null) return;
 
             executorService.submit(() -> {
-                String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$'");
+                String outputDevice = exe.RunAsChrootOutput("ip -o link show | awk -F': ' '{print $2}' | grep -E '^(can|vcan|slcan)[0-9]+$'");
                 final ArrayList<String> deviceIfaces = new ArrayList<>();
                 if (outputDevice != null && !outputDevice.isEmpty()) {
                     final String[] deviceifacesArray = outputDevice.split("\n");
@@ -1918,7 +1963,7 @@ public class CANFragment extends Fragment {
                         }
                     }
                 } else {
-                    deviceIfaces.add("None");
+                    deviceIfaces.add("Interface (None)");
                     Activity activity = getActivity();
                     if (sharedpreferences != null && activity != null) {
                         requireActivity().runOnUiThread(() -> {
@@ -1967,64 +2012,40 @@ public class CANFragment extends Fragment {
             View rootView = inflater.inflate(R.layout.can_icsim, container, false);
 
             // Interfaces
-            final Spinner deviceList = rootView.findViewById(R.id.device_interface);
+            Spinner spinner = rootView.findViewById(R.id.device_interface);
+            ImageButton refreshBtn = rootView.findViewById(R.id.refreshUSB);
 
-            executorService.submit(() -> {
-                String result = exe.RunAsChrootOutput(
-                        "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
-                                "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM)[0-9]+$' | sed 's|^|/dev/|'"
-                );
+            SpinnerUtils.setupDeviceInterfaceSpinner(
+                    requireContext(),
+                    executorService,
+                    exe,
+                    spinner,
+                    refreshBtn,
+                    sharedpreferences,
+                    "selected_usb",
+                    false,  // ✅ Yes, only show /dev devices
+                    iface -> selected_caniface = iface
+            );
 
-                ArrayList<String> deviceIfaces = new ArrayList<>();
+            // Configuration Toggle
+            Button btnConfigurationToggle = rootView.findViewById(R.id.btn_toggle_config_icsim);
+            LinearLayout configurationLayout = rootView.findViewById(R.id.icsim_configuration);
 
-                if (result == null || result.trim().isEmpty()) {
-                    deviceIfaces.add("None");
+            btnConfigurationToggle.setOnClickListener(v -> {
+                if (configurationLayout.getVisibility() == View.GONE) {
+                    configurationLayout.setVisibility(View.VISIBLE);
+                    btnConfigurationToggle.setText("Hide Configuration");
                 } else {
-                    deviceIfaces.addAll(Arrays.asList(result.split("\n")));
+                    configurationLayout.setVisibility(View.GONE);
+                    btnConfigurationToggle.setText("Configuration");
                 }
-
-                // Post UI update back to the main thread
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, deviceIfaces);
-                    deviceList.setAdapter(adapter);
-
-                    // Restore previous selection if saved
-                    int savedPosition = sharedpreferences.getInt("selected_usb", 0);
-                    if (savedPosition < deviceIfaces.size()) {
-                        deviceList.setSelection(savedPosition);
-                        selected_caniface = deviceIfaces.get(savedPosition);
-                    } else {
-                        selected_caniface = "None";
-                    }
-
-                    deviceList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                        @Override
-                        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                            selected_caniface = parentView.getItemAtPosition(pos).toString();
-                            sharedpreferences.edit().putInt("selected_usb", pos).apply();
-                        }
-
-                        @Override
-                        public void onNothingSelected(AdapterView<?> parentView) {
-                            selected_caniface = "None";
-                        }
-                    });
-
-                    // Optional: show toast for newly detected device
-                    if (!deviceIfaces.contains("None")) {
-                        String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
-                        if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
-                            showToast(detected_device);
-                        }
-                    }
-                });
             });
 
             // Level Spinner
-            final Spinner levelList = rootView.findViewById(R.id.level_spinner);
             // 0 = No randomization added to the packets other than location and ID
             // 1 = Add NULL padding
             // 2 = Randomize unused bytes
+            final Spinner levelList = rootView.findViewById(R.id.level_spinner);
             final String[] levelOptions = {"Level", "0", "1", "2"};
 
             ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, levelOptions) {
@@ -2065,14 +2086,6 @@ public class CANFragment extends Fragment {
                 }
             });
 
-            // Refresh Status
-            ImageButton RefreshUSB = rootView.findViewById(R.id.refreshUSB);
-            RefreshUSB.setOnClickListener(v -> {
-                showToast("Refreshing Devices...");
-                refresh(rootView);
-            });
-            executorService.submit(() -> refresh(rootView));
-
             // Randomize
             // Button btnRandomize = rootView.findViewById(R.id.btn_toggle_randomize);
 
@@ -2097,7 +2110,7 @@ public class CANFragment extends Fragment {
             // ICSIM
             Button runICSIM = rootView.findViewById(R.id.run_icsim);
             runICSIM.setOnClickListener(v -> {
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     // String randomizeEnabled = isRandomizeEnabled ? " -r" : "";
                     String levelValue = getVisibleParam(levelList, " -l ");
                     run_cmd("su -c 'sh " + ICSIM_SCRIPT_PATH + " " + selected_caniface + levelValue + "'");
@@ -2139,16 +2152,6 @@ public class CANFragment extends Fragment {
                 controlsView.loadUrl("about:blank");
             });
 
-            Button refreshButton = rootView.findViewById(R.id.refresh_icsim);
-            refreshButton.setOnClickListener(v -> {
-                showToast("Refreshing ICSim display...");
-                WebView icsimView = rootView.findViewById(R.id.icsim);
-                WebView controlsView = rootView.findViewById(R.id.controls);
-
-                icsimView.reload();
-                controlsView.reload();
-            });
-
             return rootView;
         }
 
@@ -2168,43 +2171,310 @@ public class CANFragment extends Fragment {
             }
             return "";
         }
+    }
 
-        // Refresh iface
-        private void refresh(View CANFragment) {
-            final Spinner deviceList = CANFragment.findViewById(R.id.device_interface);
-            if (context == null) return;
+    public static class CANMSFFragment extends CANFragment {
+        final ShellExecuter exe = new ShellExecuter();
+        private final ExecutorService executorService = Executors.newCachedThreadPool();
+        private Context context;
+        private String selected_caniface;
+        private String selected_module;
 
-            executorService.submit(() -> {
-                String outputDevice = exe.RunAsChrootOutput("ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$'");
-                final ArrayList<String> deviceIfaces = new ArrayList<>();
-                if (outputDevice != null && !outputDevice.isEmpty()) {
-                    final String[] deviceifacesArray = outputDevice.split("\n");
-                    Activity activity = getActivity();
-                    if (sharedpreferences != null && activity != null) {
-                        int lastiface = sharedpreferences.getInt("selected_device", 0);
-                        requireActivity().runOnUiThread(() -> {
-                            deviceList.setAdapter(new ArrayAdapter<>(activity, android.R.layout.simple_list_item_1, deviceifacesArray));
-                            deviceList.setSelection(lastiface);
-                        });
-                        String detected_device = exe.RunAsChrootOutput("dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'");
-                        if (detected_device != null && !detected_device.isEmpty() && !detected_device.matches("^(can|vcan|slcan)\\d+$")) {
-                            showToast(detected_device);
-                        }
-                    }
+        @Override
+        public void onCreate(@Nullable Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            context = getContext();
+        }
+
+        @SuppressLint("SetJavaScriptEnabled")
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.can_msf, container, false);
+
+            final EditText selected_baud = rootView.findViewById(R.id.baud_speed);
+
+            // Interfaces
+            Spinner spinner = rootView.findViewById(R.id.device_interface);
+            ImageButton refreshBtn = rootView.findViewById(R.id.refreshUSB);
+
+            SpinnerUtils.setupDeviceInterfaceSpinner(
+                    requireContext(),
+                    executorService,
+                    exe,
+                    spinner,
+                    refreshBtn,
+                    sharedpreferences,
+                    "selected_usb",
+                    false,
+                    iface -> selected_caniface = iface
+            );
+
+            // ELM327 Configuration Toggle
+            Button btnConfigurationToggle = rootView.findViewById(R.id.btn_toggle_relay);
+            LinearLayout configurationLayout = rootView.findViewById(R.id.msf_elmconfig);
+
+            btnConfigurationToggle.setOnClickListener(v -> {
+                if (configurationLayout.getVisibility() == View.GONE) {
+                    configurationLayout.setVisibility(View.VISIBLE);
+                    btnConfigurationToggle.setText("Hide Configuration");
                 } else {
-                    deviceIfaces.add("None");
-                    Activity activity = getActivity();
-                    if (sharedpreferences != null && activity != null) {
-                        requireActivity().runOnUiThread(() -> {
-                            deviceList.setAdapter(new ArrayAdapter<>(activity, android.R.layout.simple_list_item_1, deviceIfaces));
-                            sharedpreferences.edit().putInt("selected_device", deviceList.getSelectedItemPosition()).apply();
-                        });
-                    }
+                    configurationLayout.setVisibility(View.GONE);
+                    btnConfigurationToggle.setText("ELM327 Relay Configuration");
                 }
             });
 
-            String message = "Device list refreshed!";
-            showToast(message);
+            // ELM327 Relay
+            Button elm327relayButton = rootView.findViewById(R.id.run_relay);
+
+            elm327relayButton.setOnClickListener(v -> {
+                String baudSpeed = selected_baud.getText().toString();
+
+                String baudValue;
+                if (!baudSpeed.isEmpty()) {
+                    baudValue = " -b " + baudSpeed;
+                } else {
+                    baudValue = "";
+                }
+
+                run_cmd("/usr/share/metasploit-framework/tools/hardware/elm327_relay.rb -s " + selected_caniface + baudValue);
+            });
+
+            // Modules
+            final Spinner modulesList = rootView.findViewById(R.id.msf_modules_spinner);
+
+            executorService.submit(() -> {
+                String result = exe.RunAsChrootOutput(
+                        "basename /usr/share/metasploit-framework/modules/auxiliary/server/local_hwbridge.rb && " +
+                                 "basename /usr/share/metasploit-framework/modules/auxiliary/client/hwbridge/connect.rb && " +
+                                 "ls /usr/share/metasploit-framework/modules/post/hardware/automotive/"
+                );
+
+                ArrayList<String> module = new ArrayList<>();
+                module.add("MSF Modules"); // Non-selectable header
+
+                if (result == null || result.trim().isEmpty()) {
+                    module.add("Module (None)");
+                } else {
+                    module.addAll(Arrays.asList(result.split("\n")));
+                }
+
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_list_item_1, module) {
+                        @Override
+                        public boolean isEnabled(int position) {
+                            return position != 0; // Disable the first item
+                        }
+
+                        @Override
+                        public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                            View view = super.getDropDownView(position, convertView, parent);
+                            TextView tv = (TextView) view;
+                            tv.setTextColor(position == 0 ? Color.GRAY : Color.WHITE);
+                            return view;
+                        }
+                    };
+
+                    modulesList.setAdapter(adapter);
+
+                    int savedPosition = sharedpreferences.getInt("selected_module", 1);
+                    if (savedPosition < module.size()) {
+                        modulesList.setSelection(savedPosition);
+                        selected_module = module.get(savedPosition);
+                    } else {
+                        selected_module = "Module (None)";
+                    }
+
+                    modulesList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                        @Override
+                        public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                            if (pos != 0) {
+                                selected_module = parentView.getItemAtPosition(pos).toString();
+                                sharedpreferences.edit().putInt("selected_module", pos).apply();
+                            }
+                        }
+
+                        @Override
+                        public void onNothingSelected(AdapterView<?> parentView) {
+                            selected_module = "Module (None)";
+                        }
+                    });
+                });
+            });
+
+            TextView infoText = rootView.findViewById(R.id.module_info_text);
+            LinearLayout optionsContainer = rootView.findViewById(R.id.module_options_container);
+
+            // Info button
+            Button infoBtn = rootView.findViewById(R.id.info_module);
+            infoBtn.setOnClickListener(v -> {
+                if (selected_module == null || selected_module.equals("Module (None)")) {
+                    showToast("Select a module first");
+                    return;
+                }
+
+                String moduleNameKey = selected_module.replace(".rb", "").toLowerCase();
+                String resourceKey = "module_info_" + moduleNameKey;
+
+                int resId = getResources().getIdentifier(resourceKey, "string", requireContext().getPackageName());
+
+                if (resId == 0) {
+                    showToast("No info available for this module");
+                    return;
+                }
+
+                String moduleInfo = getString(resId);
+
+                // Build popup dialog
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(context);
+                    builder.setTitle("Module Information");
+                    builder.setMessage(moduleInfo);
+                    builder.setPositiveButton("Close", (dialog, which) -> dialog.dismiss());
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+
+                    Button closeButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
+                    if (closeButton != null) {
+                        closeButton.setTextColor(Color.WHITE);
+                    }
+                });
+            });
+
+            // Set button
+            Button setBtn = rootView.findViewById(R.id.set_module);
+            setBtn.setOnClickListener(v -> {
+                if (selected_module == null || selected_module.equals("Module (None)")) {
+                    showToast("Select a module first");
+                    return;
+                }
+
+                infoText.setVisibility(View.GONE);
+
+                int optionsStringId = getResources().getIdentifier(
+                        "module_set_" + selected_module.replace(".rb", "").toLowerCase().trim(),
+                        "string",
+                        requireContext().getPackageName());
+
+                if (optionsStringId == 0) {
+                    infoText.setVisibility(View.VISIBLE);
+                    infoText.setText("No options available for this module.");
+                    return;
+                }
+
+                String optionsText = getString(optionsStringId);
+                String[] optionLines = optionsText.split("\n");
+
+                LinearLayout inputLayout = new LinearLayout(requireContext());
+                inputLayout.setOrientation(LinearLayout.VERTICAL);
+                inputLayout.setPadding(20, 20, 20, 20);
+
+                Map<String, EditText> userInputs = new LinkedHashMap<>();
+
+                for (String line : optionLines) {
+                    line = line.trim();
+                    if (line.isEmpty()) continue;
+
+                    if (!line.contains("|")) {
+                        TextView header = new TextView(requireContext());
+                        header.setText(line);
+                        header.setTextAppearance(requireContext(), android.R.style.TextAppearance_Medium);
+                        header.setTypeface(null, Typeface.BOLD);
+                        header.setPadding(0, 30, 0, 30);
+
+                        inputLayout.addView(header);
+                        continue;
+                    }
+
+                    String[] parts = line.split("\\|");
+                    String name = parts.length > 0 ? parts[0].trim() : "";
+                    String defaultVal = parts.length > 1 ? parts[1].trim() : "";
+                    String required = parts.length > 2 ? parts[2].trim() : "optional";
+
+                    if (name.isEmpty()) continue;
+
+                    TextView label = new TextView(requireContext());
+                    label.setText(name + " (" + required + ")");
+                    label.setTextSize(14);
+                    label.setPadding(0, 10, 0, 4);
+
+                    EditText input = new EditText(requireContext());
+                    input.setHint("Enter " + name);
+                    input.setText(defaultVal);
+                    input.setTag(name);
+                    input.setTextSize(14);
+
+                    inputLayout.addView(label);
+                    inputLayout.addView(input);
+
+                    userInputs.put(name, input);
+                }
+
+                optionsContainer.removeAllViews();
+                optionsContainer.addView(inputLayout);
+                optionsContainer.setVisibility(View.VISIBLE);
+                optionsContainer.setTag(userInputs);
+            });
+
+            Button msfBtn = rootView.findViewById(R.id.msfconsole_start);
+            msfBtn.setOnClickListener(v -> {
+                executorService.submit(() -> {
+                    run_cmd("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n); "
+                            + "if [ -n \"$msfsession\" ]; then "
+                            + "screen -d \"$msfsession\"; screen -r \"$msfsession\"; "
+                            + "else screen -S msf -m msfconsole;exit; fi");
+                });
+            });
+
+            Button runBtn = rootView.findViewById(R.id.run_module);
+            runBtn.setOnClickListener(v -> {
+                if (selected_module == null || selected_module.equals("Module (None)")) {
+                    showToast("Select a module first");
+                    return;
+                }
+
+                @SuppressWarnings("unchecked")
+                Map<String, EditText> userInputs = (Map<String, EditText>) optionsContainer.getTag();
+
+                if (userInputs == null || userInputs.isEmpty()) {
+                    showToast("Please press Set and fill options first.");
+                    return;
+                }
+
+                StringBuilder msfCmd = new StringBuilder();
+                String moduleName = selected_module.replace(".rb", "");
+                if (moduleName.equals("connect")) {
+                    msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use auxiliary/client/hwbridge/")
+                            .append(moduleName)
+                            .append("`echo -ne '\\015'`");
+                } else if (moduleName.equals("local_hwbridge")) {
+                    msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use auxiliary/server/")
+                            .append(moduleName)
+                            .append("`echo -ne '\\015'`");
+                } else {
+                    msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use post/hardware/automotive/")
+                            .append(moduleName)
+                            .append("`echo -ne '\\015'`");
+                }
+
+                for (Map.Entry<String, EditText> entry : userInputs.entrySet()) {
+                    String key = entry.getKey();
+                    String value = entry.getValue().getText().toString().trim();
+
+                    if (!value.isEmpty()) {
+                        String sanitized = value.replace("'", "'\"'\"'");
+                        msfCmd.append("set ").append(key.toUpperCase()).append(" '").append(sanitized).append("'`echo -ne '\\015'`");
+                    }
+                }
+
+                msfCmd.append("run\"`echo -ne '\\015'`;screen -d -r $msfsession;exit" +
+                        "");
+
+                executorService.submit(() -> {
+                    run_cmd(msfCmd.toString());
+                });
+            });
+
+            return rootView;
         }
     }
 

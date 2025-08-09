@@ -88,8 +88,6 @@
     <!-- Bad USB -->
     <string name="badusb_label">BadUSB MITM Attack</string>
     <string name="badusb_description">This is our implementation of the BadUSB attack as demonstrated at Black Hat USA 2014. Enabling this USB gadget mode will allow your device to act as a USB network interface when plugged into a target computer. Connecting the USB cable to a PC will force all traffic from that PC (Windows or Linux) through the NetHunter device, where the traffic can be MITM\'ed.</string>
-
-
     <string name="wifipumpkin_description">Start an Evil-Twin Access Point and intercept HTTP traffic. Custom captive portals, featuring mobile network upstream (rmnet_data2), internal wlan0 upstream, internal wlan0/wlan1 AP mode, and external adapters. Custom portals are also supported. Testing version. Preview will be added soon.</string>
     <string name="mana_hostapd_wpe">The hostapd configuration file used for 802.1x/EAP authentication attack (hostapd-wpe)  This is not used with MANA.</string>
     <string name="mana_hostapd_wpe_certs">Generate certificates (1st time only)</string>
@@ -100,8 +98,6 @@
     <string name="mana_nat_simple_bdf">The Mana script that does full NAT &amp; BDFProxy HTTP routing to port 8080.</string>
     <string name="bdfproxy_cfg">The configuration file for BDFProxy.</string>
     <string name="mana_bettercap_description">Route traffic to bettercap proxy with Mana-toolkit</string>
-
-
     <string name="hostapd_private_key">Private Key Password</string>
 
     <string name="select_language">Language</string>
@@ -135,8 +131,8 @@
 
 
     <string name="update">Update</string>
-    <string name="load">Load from SDCARD</string>
-    <string name="save">Save to SDCARD</string>
+    <string name="load">Load SDCARD</string>
+    <string name="save">Save SDCARD</string>
     <string name="execute_attack">Execute Attack</string>
 
     <string name="stop_mana">Stop mana</string>
@@ -216,7 +212,7 @@
     <string name="kex_description">Welcome to the Kali NetHunter Desktop Experience.\nEnjoy the full potential of Kali Linux, straight from your pocket, even on HDMI output. Audio supported, Use the Audio Manager to stream sound through KeX. Delay has been added to avoid soft reboot on some devices.</string>
 
     <!-- BT Attacks -->
-    <string name="bt_description">Welcome to Bluetooth Arsenal! Internal bluetooth support is now available for devices with RFCOMM, UART H4, VHCI and BINDER_IPC enabled in kernel, or devices with bt_smd driver.</string>
+    <string name="bt_description">Welcome to BT Arsenal! Internal BT support is now available for devices with RFCOMM, UART H4, VHCI and BINDER_IPC enabled in kernel, or devices with bt_smd driver.</string>
     <string name="bt_carwhisperer">Carwhisperer script from the way back. Listen to, or inject audio to various devices like speakers, headsets, watches or even cars. Carwshisperer is not supported by internal bluetooth (VHCI or bt_smd) yet.</string>
     <string name="bt_spoof">Spoof your BT adapters address, class, and name.</string>
     <string name="bt_tools">Brute force BT device addresses, ping, and discover their services.</string>
@@ -297,7 +293,6 @@
     <string name="drawertitlesearchsploit">SearchSploit</string>
     <string name="drawertitlepineapple">Pineapple Connector</string>
     <string name="drawertitlegps">Wardriving</string>
-    <string name="drawertitledeauth">DeAuth</string>
     <string name="drawertitlecan">CARsenal</string>
     <string name="drawertitlesettings">Settings</string>
     <string name="drawertitlekernel">Kernel</string>
@@ -423,7 +418,6 @@
     <string name="nmap_udpscan">UDP Scan</string>
     <!-- End NMAP -->
 
-
     <!-- Start PineappleFragment -->
     <string name="pineapple_description">The pineapple connector is used in conjunction with the Hak5 Pineapple Nano and a USB OTG cable.   This helper will connect the Pineapple Nano over ethernet and upstream your wifi connection.</string>
     <string name="pineapple_gateway">Pineapple Gateway/Web Interface IP</string>
@@ -445,18 +439,11 @@
     <string name="switch_gpsd">gpsd in chroot</string>
     <string name="gps_button_launch_app">Launch %s in NH Terminal</string>
     <string name="gps_description">Converts your GPS to NMEA then provides to Kali chroot. Perfect for wardriving with Kismet or just a generic GPS server for Kali. Select your desired datasources. Make sure your wireless interface is in monitor mode before starting Kismet. Internal wireless interfaces can also be used thanks to the monitor mode by QCACLD-3.0 driver.</string>
-    <string name="gps_help">You may need to give Nethunter permissions to GPS. Go to Settings > Apps > Nethunter > Permissions.</string>
+    <string name="gps_help">You may need to give NetHunter permissions to GPS. Go to Settings > Apps > NetHunter > Permissions.</string>
     <string name="loading_wait">Loading wait…</string>
     <string name="loading_file">Loading…  FILE: %s</string>
     <string name="scanButtonText">Scan</string>
     <string name="advancedOptionsSwitchText">Advanced Options</string>
-    <string name="edit_whitelist_file">Edit whitelist file.</string>
-    <string name="type_wlan_interface">Type wlan interface</string>
-    <string name="scan_networks">Scan Networks</string>
-    <string name="channel">Channel</string>
-    <string name="whitelist">Whitelist</string>
-    <string name="deauthenticate_anyone_besides_me">Deauthenticate anyone besides me</string>
-    <string name="start_deauthentication">Start Deauthentication :)</string>
     <string name="objects_to_inject">Objects to Inject</string>
     <string name="inject_characteristics">Inject Characteristics</string>
     <string name="shellshock_command">Shellshock command</string>
@@ -467,8 +454,6 @@
     <string name="gps_notification_source">"Source: "</string>
     <string name="gps_notification_age">"Age: "</string>
     <string name="gps_notification_sats">"Sats: "</string>
-
-    <!-- End GPSFragment -->
 
     <!--Notification Channel-->
     <string name="boot_notification_channel">Boot</string>
@@ -518,7 +503,7 @@
     <string name="kali_arm64">kali-arm64</string>
     <string name="loading_dot_dot_dot">Loading ...</string>
     <string name="chroot_manager_install">Install</string>
-    <string name="chroot_manager_add_metapackage">Add Metapackge</string>
+    <string name="chroot_manager_add_metapackage">Add Metapackage</string>
     <string name="chroot_manager_backup">Backup</string>
     <string name="chroot_manager_start">Start</string>
     <string name="chroot_manager_stop">Stop</string>
@@ -683,6 +668,7 @@
     <string name="can_canusb_desc">Use your CAN Analyzer USB by Dumping and Sending signals using usb-can tool!</string>
     <string name="can_caribou_desc">A friendly automotive security exploration tool.</string>
     <string name="can_icsim_desc">Instrument Cluster Simulator for SocketCAN</string>
+    <string name="can_msf_desc">Use Metasploit Automotive modules!</string>
     <string name="can_app_name">MyApp</string>
     <string name="can_settings">Settings</string>
     <string name="can_refresh_button">Refresh</string>
@@ -702,6 +688,541 @@
         - zombieCraig! For ICSim tool.\nhttps://github.com/zombieCraig\n\n
         - idlesign! For VIN Info tool.\nhttps://github.com/idlesign\n\n
     </string>
+
+    <!-- CARsenal MSF Modules -->
+    <string name="module_info_local_hwbridge">
+        Module Info:\n\n
+        Name: Hardware Bridge Server\n
+        Module: auxiliary/server/local_hwbridge\n
+        License: Metasploit Framework License (BSD)\n
+        Rank: Normal\n\n
+
+        Provided by:\n
+            Craig Smith\n\n
+
+        Available actions:\n
+            WebServer - Run HWBridge web server\n\n
+
+        Check supported:\n
+            No\n\n
+
+        Basic Options:\n
+            SRVHOST       (required)   - The local host or network interface to listen on. This must be an address on the local machine or 0.0.0.0 to listen on all addresses.\n
+            SRVPORT       (required)   - The local port to listen on.\n
+            SSL           (optional)   - Negotiate SSL for incoming connections\n
+            SSLCert       (optional)   - Path to a custom SSL certificate (default is randomly generated)\n
+            URIPATH       (optional)   - The URI to use for this exploit (default is random)\n
+
+        Description:\n
+            This module sets up a web server to bridge communications between
+            Metasploit and physically attached hardware.
+            Currently this module supports: automotive
+    </string>
+
+    <string name="module_info_connect">
+        Module Info:\n\n
+        Name: Hardware Bridge Session Connector\n
+        Module: auxiliary/client/hwbridge/connect\n
+        License: Metasploit Framework License (BSD)\n
+        Rank: Normal\n\n
+
+        Provided by:\n
+            Craig Smith\n\n
+
+        Module stability:\n
+            crash-safe\n\n
+
+        Check supported:\n
+            No\n\n
+
+        Basic Options:\n
+            DEBUGJSON     (optional)   - Additional debugging out for JSON requests to HW Bridge\n
+            Proxies       (optional)   - A proxy chain of format type:host:port[,type:host:port][..]\n
+            RHOSTS        (required)   - The target host(s), see https://docs.metasploit.com/docs/using-metasploit/basics/using-metasploit.html\n
+            RPORT         (required)   - The target port (TCP)\n
+            SSL           (optional)   - Negotiate SSL/TLS for outgoing connections\n
+            TARGETURI     (required)   - The path to the hwbridge API\n
+            VHOST         (optional)   - HTTP server virtual host\n\n
+
+        Description:\n
+            The Hardware Bridge (HWBridge) is a standardized method for
+            Metasploit to interact with Hardware Devices.  This extends
+            the normal exploit capabilities to the non-ethernet realm and
+            enables direct hardware and alternative bus manipulations.  You
+            must have compatible bridging hardware attached to this machine or
+            reachable on your network to use any HWBridge exploits.
+
+            Use this exploit module to connect the physical HWBridge which
+            will start an interactive hwbridge session.  You can launch a hwbridge
+            server locally by using compliant hardware and executing the local_hwbridge
+            module.  After that module has started, pass the HWBRIDGE_BASE_URL
+            options to this connector module.\n\n
+
+        References:\n
+            https://web.archive.org/web/20170206145056/http://opengarages.org/hwbridge/
+    </string>
+
+    <string name="module_info_can_flood">
+        Module Info:\n\n
+        Name: CAN Flood\n
+        Module: post/hardware/automotive/can_flood\n
+        Platform: Hardware\n
+        Arch: \n
+        Rank: Normal\n\n
+
+        Provided by:\n
+            Pietro Biondi\n\n
+
+        Module side effects:\n
+            physical-effects\n\n
+
+        Module stability:\n
+            crash-service-down\n\n
+
+        Compatible session types:\n
+            Hwbridge\n\n
+
+        Basic Options:\n
+            CANBUS     (required)   - CAN interface\n
+            FRAMELIST  (required)   - Path to frame list file\n
+            ROUNDS     (required)   - Number of executed rounds\n
+            SESSION    (required)   - The session to run this module on\n\n
+
+        Description:\n
+            This module floods a CAN interface with supplied frames.
+    </string>
+    <string name="module_info_canprobe">
+        Module Info:\n\n
+        Name: Module to Probe Different Data Points in a CAN Packet\n
+        Module: post/hardware/automotive/canprobe\n
+        Platform: Hardware\n
+        Arch: \n
+        Rank: Normal\n\n
+
+        Provided by:\n
+            Craig Smith\n\n
+
+        Module side effects:\n
+            physical-effects\n\n
+
+        Module stability:\n
+            crash-service-down\n\n
+
+        Compatible session types:\n
+            Hwbridge\n\n
+
+        Basic Options:\n
+            CANBUS     (optional)   - CAN Bus to perform scan on, defaults to connected bus\n
+            FUZZ       (optional)   - If true interates through all possible values for each data position\n
+            PADDING    (optional)   - If a value is given a full 8 bytes will be used and padded with this value\n
+            PROBEVALUE (opitonal)   - Value to inject in the data stream\n
+            SESSION    (required)   - The session to run this module on\n
+            STARTID    (optional)   - CAN ID to start scan\n
+            STOPID     (optional)   - CAN ID to stop scan\n\n
+
+        Description:\n
+            Scans between two CAN IDs and writes data at each byte position. It will
+            either write a set byte value (Default 0xFF) or iterate through all possible values
+            of that byte position (takes much longer). Does not check for responses and is
+            basically a simple blind fuzzer.
+    </string>
+    <string name="module_info_diagnostic_state">
+        Module Info:\n\n
+        Name: Diagnostic State\n
+        Module: post/hardware/automotive/diagnostic_state\n
+        Platform: Hardware\n
+        Arch: \n
+        Rank: Normal\n\n
+
+        Provided by:\n
+            Jay Turla\n\n
+
+        Module side effects:\n
+            physical-effects\n\n
+
+        Module stability:\n
+            crash-safe\n\n
+
+        Compatible session types:\n
+            Hwbridge\n\n
+
+        Basic Options:\n
+            ARBID      (optional)   - CAN ID to perform Diagnostic State\n
+            CANBUS     (optional)   - CAN Bus to perform scan on, defaults to connected bus\n
+            ROUNDS     (required)   - Number of executed rounds\n
+            SESSION    (required)   - The session to run this module on\n\n
+
+        Description:\n
+            This module will keep the vehicle in a diagnostic state on rounds by sending tester present packet.
+    </string>
+    <string name="module_info_ecu_hard_reset">
+        Module Info:\n\n
+        Name: ECU Hard Reset\n
+        Module: post/hardware/automotive/ecu_hard_reset\n
+        Platform: Hardware\n
+        Arch: \n
+        Rank: Normal\n\n
+
+        Provided by:\n
+            Jay Turla\n\n
+
+        Module side effects:\n
+            physical-effects\n\n
+
+        Module stability:\n
+            crash-service-restarts\n\n
+
+        Compatible session types:\n
+            Hwbridge\n\n
+
+        Basic Options:\n
+            ARBID      (optional)   - CAN ID to perform ECU Hard Reset\n
+            CANBUS     (optional)   - CAN Bus to perform scan on, defaults to connected bus\n
+            SESSION    (required)   - The session to run this module on\n\n
+
+        Description:\n
+            This module performs hard reset in the ECU Reset Service Identifier (0x11).
+    </string>
+    <string name="module_info_getvinfo">
+        Module Info:\n\n
+        Name: Get the Vehicle Information Such as the VIN from the Target Module\n
+        Module: post/hardware/automotive/getvinfo\n
+        Platform: Hardware\n
+        Arch: \n
+        Rank: Normal\n\n
+
+        Provided by:\n
+            Craig Smith\n\n
+
+        Module stability:\n
+            crash-safe\n\n
+
+        Compatible session types:\n
+            Hwbridge\n\n
+
+        Basic Options:\n
+            CANBUS     (optional)   - CAN Bus to perform scan on, defaults to connected bus\n
+            CLEAR_DTCS (optional)   - Clear any DTCs and reset MIL if errors are present\n
+            DSTID      (optional)   - Expected response ID, defaults to SRCID + 8\n
+            FC         (optional)   - Optinal forces flow control\n
+            PADDING    (optional)   - Optinal end of packet padding\n
+            SESSION    (required)   - The session to run this module on\n
+            SRCID      (required)   - Module ID to query\n\n
+
+        Description:\n
+            This module queries DTCs, some common engine info, and vehicle information.
+
+            It returns such things as engine speed, coolant temp, Diagnostic Trouble
+            Codes, as well as all info stored by Mode $09 Vehicle Info, VIN, etc.
+    </string>
+    <string name="module_info_identifymodules">
+        Module Info:\n\n
+        Name: Scan CAN Bus for Diagnostic Modules\n
+        Module: post/hardware/automotive/identifymodules\n
+        Platform: Hardware\n
+        Arch: \n
+        Rank: Normal\n\n
+
+        Provided by:\n
+            Craig Smith\n\n
+
+        Module stability:\n
+            crash-safe\n\n
+
+        Compatible session types:\n
+            Hwbridge\n\n
+
+        Basic Options:\n
+            CANBUS     (optional)   - CAN Bus to perform scan on, defaults to connected bus\n
+            ENDID      (required)   - End scan at this ID\n
+            SESSION    (required)   - The session to run this module on\n
+            STARTID    (required)   - Start scan from this ID\n\n
+
+        Description:\n
+            Scan the CAN bus for any modules that can respond to UDS DSC queries.
+    </string>
+    <string name="module_info_malibu_overheat">
+        Module Info:\n\n
+        Name: Sample Module to Flood Temp Gauge on 2006 Malibu\n
+        Module: post/hardware/automotive/malibu_overheat\n
+        Platform: Hardware\n
+        Arch: \n
+        Rank: Normal\n\n
+
+        Provided by:\n
+            Craig Smith\n\n
+
+        Module side effects:\n
+            screen-effects\n\n
+
+        Module stability:\n
+            service-resource-loss\n\n
+
+        Compatible session types:\n
+            Hwbridge\n\n
+
+        Basic Options:\n
+            CANBUS        (optional)   - CAN Bus to perform scan on, defaults to connected bus\n
+            PACKET_COUNT  (optional)   - How many packets to send before stopping\n
+            SESSION       (required)   - The session to run this module on\n\n
+
+        Description:\n
+            Simple sample temp flood for the 2006 Malibu.
+    </string>
+    <string name="module_info_mazda_ic_mover">
+        Module Info:\n\n
+        Name: Mazda 2 Instrument Cluster Accelorometer Mover\n
+        Module: post/hardware/automotive/mazda_ic_mover\n
+        Platform: Hardware\n
+        Arch: \n
+        Rank: Normal\n\n
+
+        Provided by:\n
+            Jay Turla\n\n
+
+        Module side effects:\n
+            screen-effects\n\n
+
+        Module stability:\n
+            service-resource-loss\n\n
+
+        Compatible session types:\n
+            Hwbridge\n\n
+
+        Basic Options:\n
+            CANBUS        (optional)   - CAN Bus to perform scan on, defaults to connected bus\n
+            SESSION       (required)   - The session to run this module on\n\n
+
+        Description:\n
+            This module moves the needle of the accelorometer and speedometer of the Mazda 2 instrument cluster.
+
+    </string>
+    <string name="module_info_pdt">
+        Module Info:\n\n
+        Name: Check For and Prep the Pyrotechnic Devices (Airbags, Battery Clamps, etc.)\n
+        Module: post/hardware/automotive/pdt\n
+        Platform: Hardware\n
+        Arch: \n
+        Rank: Normal\n\n
+
+        Provided by:\n
+            Johannes Braun\n
+            Juergen Duerrwang\n
+            Craig Smith\n\n
+
+        Module side effects:\n
+            physical-effects\n\n
+
+        Module stability:\n
+            crash-safe\n\n
+
+        Compatible session types:\n
+            Hwbridge\n\n
+
+        Basic Options:\n
+            CANBUS       (optional)   - CAN Bus to perform scan on, defaults to connected bus\n
+            DSTID        (optional)   - Expected reponse ID, defaults to SRCID + 8\n
+            PADDING      (optional)   - Pad the packet with extra bytes to always be 8 bytes long\n
+            SESSION      (required)   - The session to run this module on\n
+            SRCID        (required)   - Module ID to query\n\n
+
+        Description:\n
+            Acting in the role of a Pyrotechnical Device Deployment Tool (PDT), this module
+            will first query all Pyrotechnic Control Units (PCUs) in the target vehicle
+            to discover how many pyrotechnic devices are present, then attempt to validate
+            the security access token using the default simplified algorithm.  On success,
+            the vehicle will be in a state that is prepped to deploy its pyrotechnic devices
+            (e.g. airbags, battery clamps, etc.) via the service routine. (ISO 26021)
+
+            References:
+                https://nvd.nist.gov/vuln/detail/CVE-2017-14937
+                https://www.researchgate.net/publication/321183727_Security_Evaluation_of_an_Airbag-ECU_by_Reusing_Threat_Modeling_Artefacts
+
+    </string>
+    <string name="module_set_local_hwbridge">
+        \nOptions :\n
+        \nSRVHOST|0.0.0.0|required
+        \nSRVPORT|8080|required
+        \nSSL|false|optional
+        \nSSLCert||optional
+        \nURIPATH||optional
+        \nAdvanced Options :\n
+        \nListenerBindAddress||optional
+        \nListenerBindPort||optional
+        \nListenerComm||optional
+        \nSSLCipher||optional
+        \nSSLCompression|false|optional
+        \nSSLVersion|Auto|optional
+        \nSendRobots|false|optional
+        \nURIHOST||optional
+        \nURIPORT||optional
+        \nVERBOSE|false|optional
+        \nWORKSPACE||optional
+    </string>
+    <string name="module_set_connect">
+        \nOptions :\n
+        \nDEBUGJSON|false|optional
+        \nProxies||optional
+        \nRHOSTS|127.0.0.1|required
+        \nRPORT|8080|required
+        \nSSL|false|optional
+        \nTARGETURI|/|required
+        \nVHOST||optional
+        \nAdvanced Options :\n
+        \nDOMAIN|WORKSTATION|required
+        \nDigestAuthIIS|true|optional
+        \nFingerprintCheck|true|optional
+        \nHttpClientTimeout||optional
+        \nHttpPassword||optional
+        \nHttpRawHeaders||optional
+        \nHttpTrace|false|optional
+        \nHttpTraceColors|red/blu|optional
+        \nHttpTraceHeadersOnly|false|optional
+        \nHttpUsername||optional
+        \nSSLKeyLogFile||optional
+        \nSSLServerNameIndication||optional
+        \nSSLVersion|Auto|required
+        \nUserAgent||optional
+        \nVERBOSE|false|optional
+        \nWORKSPACE||optional
+    </string>
+    <string name="module_set_can_flood">
+        \nOptions :\n
+        \nCANBUS||required
+        \nFRAMELIST|/usr/share/metasploit-framework/data/wordlists/can_flood_frames.txt|required
+        \nROUNDS|200|required
+        \nSESSION||required
+        \nAdvanced Options :\n
+        \nVERBOSE|false|optional
+        \nWORKSPACE||optional
+    </string>
+    <string name="module_set_canprobe">
+        \nOptions :\n
+        \nCANBUS||optional
+        \nFUZZ|false|optional
+        \nPADDING||optional
+        \nPROBEVALUE|255|optional
+        \nSESSION||required
+        \nSTARTID|768|optional
+        \nSTOPID||optional
+        \nAdvanced Options :\n
+        \nVERBOSE|false|optional
+        \nWORKSPACE||optional
+    </string>
+    <string name="module_set_diagnostic_state">
+        \nOptions :\n
+        \nARBID|0x7DF|optional
+        \nCANBUS||optional
+        \nROUNDS|500|required
+        \nSESSION||required
+        \nAdvanced Options :\n
+        \nVERBOSE|false|optional
+        \nWORKSPACE||optional
+    </string>
+    <string name="module_set_ecu_hard_reset">
+        \nOptions :\n
+        \nARBID|0x7DF|optional
+        \nCANBUS||optional
+        \nSESSION||required
+        \nAdvanced Options :\n
+        \nVERBOSE|false|optional
+        \nWORKSPACE||optional
+    </string>
+    <string name="module_set_getvinfo">
+        \nOptions :\n
+        \nCANBUS||optional
+        \nCLEAR_DTCS|false|optional
+        \nDSTID|2024|optional
+        \nFC|false|optional
+        \nPADDING||optional
+        \nSESSION||required
+        \nSRCID|2016|required
+        \nAdvanced Options :\n
+        \nVERBOSE|false|optional
+        \nWORKSPACE||optional
+    </string>
+    <string name="module_set_identifymodules">
+        \nOptions :\n
+        \nCANBUS||optional
+        \nENDID|2039|required
+        \nSESSION||required
+        \nSTARTID|1536|required
+        \nAdvanced Options :\n
+        \nVERBOSE|false|optional
+        \nWORKSPACE||optional
+    </string>
+    <string name="module_set_malibu_overheat">
+        \nOptions :\n
+        \nCANBUS||optional
+        \nPACKET_COUNT|200|optional
+        \nSESSION||required
+        \nAdvanced Options :\n
+        \nVERBOSE|false|optional
+        \nWORKSPACE||optional
+    </string>
+    <string name="module_set_mazda_ic_mover">
+        \nOptions :\n
+        \nCANBUS||optional
+        \nSESSION||required
+        \nAdvanced Options :\n
+        \nVERBOSE|false|optional
+        \nWORKSPACE||optional
+    </string>
+    <string name="module_set_pdt">
+        \nOptions :\n
+        \nCANBUS||optional
+        \nDSTID|2041|optional
+        \nPADDING|0|optional
+        \nSESSION||required
+        \nSRCID|2033|required
+        \nAdvanced Options :\n
+        \nVERBOSE|false|optional
+        \nWORKSPACE||optional
+    </string>
+    <string name="settings_set_to_enforcing">Set to Enforcing</string>
+    <string name="settings_selinux_is_disabled">SELinux is Disabled</string>
+    <string name="settings_set_to_permissive">Set to Permissive</string>
+    <string name="settings_string_enforcing">Enforcing</string>
+    <string name="settings_string_set_to_enforcing">Set to Enforcing</string>
+    <string name="settings_string_permissive">Permissive</string>
+    <string name="settings_bootanimation_path_not_found">Bootanimation path not found</string>
+    <string name="action_debug">kex_debug_title</string>
+    <string name="vnc_apply_button">Apply</string>
+    <string name="vnc_remove_selected_resolution">Remove selected resolution</string>
+    <string name="vnc_new_resolution">New resolution</string>
+    <string name="vnc_reset_button">Reset</string>
+    <string name="vnc_backup_button">Backup</string>
+    <string name="vnc_restore_button">Restore</string>
+    <string name="vnc_device_resolution_for_hdmi">DEVICE RESOLUTION FOR HDMI</string>
+    <string name="vnc_immersive_mode">IMMERSIVE MODE</string>
+    <string name="vnc_remove_selected_kali_user">Remove selected Kali user</string>
+    <string name="vnc_add_new_kali_user">Add new Kali user</string>
+    <string name="vnc_manage_kali_users">MANAGE KALI USERS</string>
+    <string name="vnc_restore_resolutions_button">Restore</string>
+    <string name="vnc_backup_resolutions_button">Backup</string>
+    <string name="vnc_new_resolution_button">New resolution</string>
+    <string name="vnc_remove_selected_resolution_button">Remove selected resolution</string>
+    <string name="vnc_kex_server_resolution_optional">KEX SERVER RESOLUTION (OPTIONAL)</string>
+    <string name="vnc_show_advanced_settings_button">SHOW ADVANCED SETTINGS</string>
+    <string name="vnc_open_kex_client">OPEN KEX CLIENT</string>
+    <string name="vnc_active_sessions">Active Sessions:</string>
+    <string name="vnc_content_description_none">none</string>
+    <string name="vnc_kex_server_status">KeX Server Status:</string>
+    <string name="vnc_stop_server_button">Stop Server</string>
+    <string name="vnc_start_server_button">Start Server</string>
+    <string name="vnc_enable_audio_button">Enable audio</string>
+    <string name="vnc_display_text">DISPLAY:</string>
+    <string name="vnc_user_text">USER:</string>
+    <string name="vnc_delay_time">Delay Time</string>
+    <string name="vnc_start_delay_checkbox">Start Delay</string>
+    <string name="vnc_localhost_only">Localhost Only</string>
+    <string name="vnc_enable_at_boot">Enable at boot</string>
+    <string name="vnc_setup_local_server">Setup Local Server</string>
+    <string name="vnc_delay_start_timer">20</string>
+    <string name="vnc_understood_button">Understood</string>
+    <string name="vnc_information_menu_button">Information</string>
+    <string name="nethunter_full_path_savedb">Full path to where you want to save the database:</string>
+    <string name="nethunter_full_path_restoredb">Full path of the db file from where you want to restore:</string>
 
     <!-- TTS Voice Model-->
     <string-array name="tts_voices">

@@ -97,10 +97,6 @@
             android:icon="@drawable/ic_gps_fixed_black_18dp"
             android:title="@string/drawertitlegps" />
         <item
-            android:id="@+id/deauth_item"
-            android:icon="@drawable/ic_action_network_wifi"
-            android:title="@string/drawertitledeauth" />
-        <item
             android:id="@+id/can_item"
             android:icon="@drawable/ic_action_can"
             android:title="@string/drawertitlecan" />

@@ -1,39 +1,70 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    package="com.offsec.nethunter">
+    xmlns:tools="http://schemas.android.com/tools">
     
     <queries>
         <package android:name="com.offsec.nhterm" />
     </queries>
 
-    <uses-permission android:name="android.permission.WRITE_SETTINGS" />
+    <uses-permission android:name="android.permission.WRITE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_NOTIFICATION_POLICY" />
-    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.BLUETOOTH" />
+    <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.BLUETOOTH_PRIVILEGED"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
+    <uses-permission android:name="android.permission.MANAGE_WIFI_INTERFACES"
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
     <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE"
+        tools:ignore="ScopedStorage" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" tools:ignore="ScopedStorage" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <uses-permission android:name="android.permission.CHANGE_CONFIGURATION"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.VIBRATE" />
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"
+        tools:ignore="BackgroundLocationPolicy" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"
+        tools:ignore="RequestInstallPackagesPolicy" />
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"
+        tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"
+        tools:ignore="ProtectedPermissions" />
+    <!-- For API 33+ (Android 13), add media permissions if needed -->
+    <!-- For API 33+ (Android 13), use READ_MEDIA_* instead of READ_EXTERNAL_STORAGE. -->
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+
+    <uses-permission android:name="android.permission.USB_PERMISSION" />
+    <uses-feature android:name="android.hardware.usb.host"/>
     <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"
         tools:ignore="ProtectedPermissions" />
     <permission-group android:name="${applicationId}.android.permission-group.SYSTEM_TOOLS" />
-
+    <uses-feature
+        android:name="android.hardware.vulkan.version"
+        android:version="4198400"
+        android:required="true"
+        tools:targetApi="24" />
     <supports-screens
         android:anyDensity="true"
         android:largeScreens="true"
@@ -41,7 +72,6 @@
         android:resizeable="true"
         android:smallScreens="true"
         android:xlargeScreens="true" />
-
     <application
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -75,7 +105,6 @@
                 android:minWidth="480dp"
                 tools:targetApi="n" />
         </activity>
-
         <activity
             android:name=".EditSourceActivity"
             android:label="Edit Source"
@@ -85,16 +114,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".EditSourceActivity" />
         </activity>
-        <activity
-            android:name=".DeAuthWhitelistActivity"
-            android:label="Edit whitelist"
-            android:theme="@style/Theme.Nethunter"
-            android:windowSoftInputMode="stateHidden">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".DeAuthWhitelistActivity" />
-        </activity>
-
         <receiver android:name=".receiver.BootCompletedReceiver"
             android:enabled="true"
             android:exported="true">
@@ -108,7 +127,6 @@
                 <action android:name="android.intent.action.ACTION_SHUTDOWN" />
             </intent-filter>
         </receiver>
-
         <service
             android:name=".AudioPlaybackService"
             android:label="@string/playback_service_label" />
@@ -125,6 +143,11 @@
             android:enabled="true"
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE"/>
+        <service
+            android:name=".gps.LocationUpdateService"
+            android:foregroundServiceType="location"
+            android:enabled="true"
+            android:exported="false" />
         <!--service
             android:name=".service.DummyAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
@@ -135,10 +158,5 @@
                 android:name="android.accessibilityservice"
                 android:resource="@xml/dummy_accessibility_service"/>
         </service-->
-        <service
-            android:name=".gps.LocationUpdateService"
-            android:foregroundServiceType="location"
-            android:enabled="true"
-            android:exported="false" />
     </application>
 </manifest>

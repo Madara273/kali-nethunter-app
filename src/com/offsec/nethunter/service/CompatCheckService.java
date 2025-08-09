@@ -42,7 +42,8 @@ public class CompatCheckService extends IntentService {
             String message = "";
             getApplicationContext().sendBroadcast(new Intent()
                     .putExtra("message", message)
-                    .setAction(BuildConfig.APPLICATION_ID + ".CHECKCOMPAT"));
+                    .setAction(BuildConfig.APPLICATION_ID + ".CHECKCOMPAT")
+                    .setPackage(BuildConfig.APPLICATION_ID));
         }
     }
 

@@ -11,6 +11,7 @@ import android.text.TextUtils;
 import com.offsec.nethunter.BuildConfig;
 import com.offsec.nethunter.models.NethunterModel;
 import com.offsec.nethunter.utils.NhPaths;
+import com.offsec.nethunter.utils.VulkanChecker;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -30,11 +31,12 @@ public class NethunterSQL extends SQLiteOpenHelper {
             {"2", "Busybox Version", Environment.getDataDirectory().getAbsolutePath() + "/data/com.offsec.nethunter/scripts/bin/busybox_nh | head -n1", "\\n", "1"},
             {"3", "Root Status", "su -v", "\\n", "1"},
             {"4", "HID Status", "[ -n \"$(ls /dev/hidg* 2>/dev/null)\" ] && ls /dev/hidg* || { echo \"HID interface not found.\"; if [[ $(uname -r | cut -d. -f1) -ge 4 ]]; then echo \"Please enable in USB Arsenal.\"; fi }", "\\n", "1"},
-            {"5", "CAN Status", NhPaths.BUSYBOX + " ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$' || echo \"CAN interface not found.\nPlease enable in CAN Arsenal.\"", "\\n", "1"},
+            {"5", "CAN Status", NhPaths.BUSYBOX + " ip -o link show | awk -F': ' '{print $2}' | grep -E '^(can|vcan|slcan)[0-9]+$' || echo \"CAN interface not found.\nPlease enable in CARsenal.\"", "\\n", "1"},
             {"6", "NetHunter Terminal Status", "[ \"$(pm list packages | grep 'com.offsec.nhterm')\" ] && echo \"NetHunter Terminal is installed.\" || echo \"NetHunter Terminal is NOT yet installed.\"", "\\n", "1"},
             {"7", "Network Interface Status", " ip -o addr show | " + NhPaths.BUSYBOX + " awk '{print $2, $3, $4}'", "\\n", "1"},
-            {"8", "External IP", NhPaths.BUSYBOX + " which wget > /dev/null 2>&1 && " + NhPaths.BUSYBOX + " wget -qO - icanhazip.com || " + NhPaths.BUSYBOX + " curl -s ipv4.icanhazip.com", "\\n", "0"}
+            {"8", "External IP", NhPaths.BUSYBOX + " which wget > /dev/null 2>&1 && " + NhPaths.BUSYBOX + " wget -qO - icanhazip.com || curl -s ipv4.icanhazip.com", "\\n", "0"}
     };
+    private Context context;
 
     public static synchronized NethunterSQL getInstance(Context context){
         if (instance == null) {
@@ -45,6 +47,7 @@ public class NethunterSQL extends SQLiteOpenHelper {
 
     private NethunterSQL(Context context) {
         super(context, DATABASE_NAME, null, 1);
+        this.context = context;
         COLUMNS.add("id");
         COLUMNS.add("TitleName");
         COLUMNS.add("CommandforResult");
@@ -89,6 +92,15 @@ public class NethunterSQL extends SQLiteOpenHelper {
             String columnValue2 = columnIndex2 != -1 ? cursor.getString(columnIndex2) : null;
             String columnValue3 = columnIndex3 != -1 ? cursor.getString(columnIndex3) : null;
             String columnValue4 = columnIndex4 != -1 ? cursor.getString(columnIndex4) : null;
+
+            // Check for GPU Info row
+            if ("GPU Info".equals(columnValue1) && "vulkan_check".equals(columnValue2)) {
+                boolean supported = VulkanChecker.isVulkanSupported(context);
+                columnValue2 = supported ? "Vulkan supported" : "Vulkan NOT supported";
+                columnValue4 = "0"; // Prevent accidental execution as a shell command
+            } else if ("vulkan_check".equals(columnValue2)) {
+                columnValue2 = "Invalid command: vulkan_check";
+            }
 
             nethunterModelArrayList.add(new NethunterModel(
                     columnValue1,
