@@ -117,14 +117,6 @@ public class VNCFragment extends Fragment {
             @Override
             public boolean onMenuItemSelected(@NonNull MenuItem item) {
                 int id = item.getItemId();
-                if (id == R.id.action_debug) {
-                    // Cycle NH_SYSTEM_LOGGING: 0 -> 1 -> 2 -> 3 -> 0
-                    NH_SYSTEM_LOGGING = (NH_SYSTEM_LOGGING + 1) % 4;
-                    String msg = (NH_SYSTEM_LOGGING == 0) ? "Debug OFF" : "Debug level: " + NH_SYSTEM_LOGGING;
-                    logToast(msg);
-                    logDebug(TAG, "Debug level changed: " + NH_SYSTEM_LOGGING);
-                    return true;
-                }
                 if (id == R.id.action_info) {
                     Activity activity = getActivity();
                     if (activity != null) {
