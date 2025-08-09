@@ -2,10 +2,13 @@ package com.offsec.nethunter.Executor;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
+import com.offsec.nethunter.NetHunterFragment;
 import com.offsec.nethunter.SQL.NethunterSQL;
 import com.offsec.nethunter.models.NethunterModel;
 import com.offsec.nethunter.utils.ShellExecuter;
+import com.offsec.nethunter.utils.VulkanChecker;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,7 +28,6 @@ public class NethunterExecutor {
     private NethunterSQL nethunterSQL;
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
-
     public static final int GETITEMRESULTS = 0;
     public static final int RUNCMDFORITEM = 1;
     public static final int EDITDATA = 2;
@@ -71,6 +73,14 @@ public class NethunterExecutor {
         this.nethunterSQL = nethunterSQL;
     }
 
+    public static void checkVulkanSupportOnStart(NetHunterFragment netHunterFragment) {
+        if (VulkanChecker.isVulkanSupported(netHunterFragment.getContext())) {
+            Log.d("NethunterExecutor", "Vulkan is supported on this device.");
+        } else {
+            Log.d("NethunterExecutor", "Vulkan is NOT supported on this device.");
+        }
+    }
+
     public void execute(List<NethunterModel> nethunterModelList) {
         if (listener != null) {
             mainHandler.post(listener::onPrepare);
@@ -100,7 +110,13 @@ public class NethunterExecutor {
                 break;
             case RUNCMDFORITEM:
                 if (nethunterModelList != null) {
-                    nethunterModelList.get(position).setResult(new ShellExecuter().RunAsRootOutput(nethunterModelList.get(position).getCommand()).split("\\n"));
+                    NethunterModel model = nethunterModelList.get(position);
+                    // Prevent running vulkan_check as a shell command
+                    if ("vulkan_check".equals(model.getCommand())) {
+                        model.setResult(new String[]{"Vulkan check is not a shell command."});
+                    } else {
+                        model.setResult(new ShellExecuter().RunAsRootOutput(model.getCommand()).split("\\n"));
+                    }
                 }
                 break;
             case EDITDATA:

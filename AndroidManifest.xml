@@ -60,7 +60,11 @@
     <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"
         tools:ignore="ProtectedPermissions" />
     <permission-group android:name="${applicationId}.android.permission-group.SYSTEM_TOOLS" />
-
+    <uses-feature
+        android:name="android.hardware.vulkan.version"
+        android:version="4198400"
+        android:required="true"
+        tools:targetApi="24" />
     <supports-screens
         android:anyDensity="true"
         android:largeScreens="true"
@@ -110,16 +114,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".EditSourceActivity" />
         </activity>
-        <activity
-            android:name=".DeAuthWhitelistActivity"
-            android:label="Edit whitelist"
-            android:theme="@style/Theme.Nethunter"
-            android:windowSoftInputMode="stateHidden">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".DeAuthWhitelistActivity" />
-        </activity>
-
         <receiver android:name=".receiver.BootCompletedReceiver"
             android:enabled="true"
             android:exported="true">
