@@ -144,9 +144,17 @@ public class CopyBootFilesExecutor {
 
     private void logDebug(String tag, String message, Throwable throwable) {
         if (NH_SYSTEM_LOGGING == 1) {
-            Log.d(tag, message, throwable);
+            if (throwable != null) {
+                Log.d(tag, message, throwable);
+            } else {
+                Log.d(tag, message);
+            }
         } else if (NH_SYSTEM_LOGGING > 1) {
-            Log.e(tag, message, throwable);
+            if (throwable != null) {
+                Log.e(tag, message, throwable);
+            } else {
+                Log.e(tag, message);
+            }
         }
         logToast(message); // Show toast for debug messages
     }
@@ -244,15 +252,13 @@ public class CopyBootFilesExecutor {
             publishProgress("Checking for encrypted /data....");
             CheckEncrypted();
             publishProgress("Checking for bootkali symlinks....");
+            SymlinkScriptsToSystemBin();
             Symlink("bootkali");
             Symlink("bootkali_bash");
             Symlink("bootkali_init");
             Symlink("bootkali_login");
             Symlink("killkali");
-            exe.RunAsRoot(new String[]{
-                    "echo 'export PATH=/data/data/com.offsec.nethunter/scripts/bin:$PATH' >> /system/etc/mkshrc",
-                    String.valueOf(Log.d(TAG, "Added scripts/bin to PATH in /system/etc/mkshrc"))
-            });
+            Symlink("busybox_nh");
             disableMagiskNotification();
             SharedPreferences.Editor ed = prefs.edit();
             ed.putString(TAG, buildTime);
@@ -460,8 +466,8 @@ public class CopyBootFilesExecutor {
     }
 
     private void Symlink(String filename) {
-        // Only symlink files starting with "bootkali" or exactly "killkali"
-        if (!(filename.startsWith("bootkali") || filename.equals("killkali"))) {
+        // Only symlink files starting with "bootkali", exactly "killkali", or exactly "busybox_nh"
+        if (!(filename.startsWith("bootkali") || filename.equals("killkali") || filename.equals("busybox_nh"))) {
             if (NH_SYSTEM_LOGGING == 1) logDebug("Skipping symlink for: " + filename);
             return;
         }
@@ -469,8 +475,14 @@ public class CopyBootFilesExecutor {
         if (NH_SYSTEM_LOGGING == 1) logDebug("Checking for " + filename + " symlink....");
         if (!checkfile.exists()) {
             if (NH_SYSTEM_LOGGING == 1) logDebug("Symlinking " + filename);
-            if (NH_SYSTEM_LOGGING == 1) logDebug("command output: ln -s " + NhPaths.APP_SCRIPTS_PATH + "/" + filename + " /system/bin/" + filename);
-            int result = exe.RunAsRootReturnValue("ln -s " + NhPaths.APP_SCRIPTS_PATH + "/" + filename + " /system/bin/" + filename);
+            String sourcePath;
+            if (filename.equals("busybox_nh")) {
+                sourcePath = "/data/data/com.offsec.nethunter/scripts/bin/busybox_nh";
+            } else {
+                sourcePath = NhPaths.APP_SCRIPTS_PATH + "/" + filename;
+            }
+            if (NH_SYSTEM_LOGGING == 1) logDebug("command output: ln -s " + sourcePath + " /system/bin/" + filename);
+            int result = exe.RunAsRootReturnValue("ln -s " + sourcePath + " /system/bin/" + filename);
             if (result != 0) {
                 if (NH_SYSTEM_LOGGING == 1) logDebug("Failed to create symlink for: " + filename);
             }
