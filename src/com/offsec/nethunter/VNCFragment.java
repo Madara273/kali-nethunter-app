@@ -53,6 +53,7 @@ public class VNCFragment extends Fragment {
     private Activity activity;
     private static final String TAG = "VNCFragment";
     // Debug logging: 0=off, 1=low, 2=medium, 3=high
+    private static final String DEFAULT_RESOLUTION = "1080x1920:300ppi";
     private int NH_SYSTEM_LOGGING = 0;
     private String localhostonly = "";
     private static final String ARG_SECTION_NUMBER = "section_number";
@@ -465,12 +466,12 @@ public class VNCFragment extends Fragment {
                         run_cmd("echo -ne \"\\033]0;Audio Enable\\007\" && clear && audio start;sleep 2 && exit");
                     } else {
                         logDebug("KeXAudio", "Checking permissions for non-root user: " + selected_user);
-                        if (isSuAvailable()) {
+                        if (checkUserPermissions(selected_user)) {
                             logDebug("KeXAudio", "Using su to start audio for non-root user");
                             run_cmd("su -c 'echo -ne \"\\033]0;Audio Enable\\007\" && clear && sudo -u " + selected_user + " audio start;sleep 2 && exit'");
                         } else {
-                            logDebug("KeXAudio", "User lacks necessary permissions or su is unavailable. Permission denied.");
-                            logToast("User lacks necessary permissions or su is unavailable.");
+                            logDebug("KeXAudio", "User lacks necessary permissions. Permission denied.");
+                            logToast("User lacks necessary permissions.");
                             return;
                         }
                     }
@@ -485,12 +486,12 @@ public class VNCFragment extends Fragment {
                         run_cmd("echo -ne \"\\033]0;Audio Disable\\007\" && clear && audio stop;sleep 2 && exit");
                     } else {
                         logDebug("KeXAudio", "Disabling audio for non-root user: " + selected_user);
-                        if (isSuAvailable()) {
+                        if (checkUserPermissions(selected_user)) {
                             logDebug("KeXAudio", "Using su to stop audio for non-root user");
                             run_cmd("su -c 'echo -ne \"\\033]0;Audio Disable\\007\" && clear && sudo -u " + selected_user + " audio stop;sleep 2 && exit'");
                         } else {
-                            logDebug("KeXAudio", "User lacks necessary permissions or su is unavailable. Permission denied.");
-                            logToast("User lacks necessary permissions or su is unavailable.");
+                            logDebug("KeXAudio", "User lacks necessary permissions. Permission denied.");
+                            logToast("User lacks necessary permissions.");
                             return;
                         }
                     }
@@ -504,6 +505,13 @@ public class VNCFragment extends Fragment {
                 logToast("Installing missing audio script in chroot..");
                 run_cmd("echo -ne \"\\033]0;Kali NetHunter Utils\\007\" && clear;apt update && apt install nethunter-utils;sleep 2 && exit");
             }
+        });
+        addClickListener(DelResolutionButton, v -> {
+            if (!selected_res.equals(DEFAULT_RESOLUTION)) {
+                exe.RunAsRoot(new String[]{"sed -i '/^" + selected_res + "$/d' " + hdmiResFile});
+                reload();
+            } else
+                logToast("Can't remove default resolution!");
         });
         addClickListener(SetupVNCButton, v -> {
             String desktop = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd dpkg -l | grep kali-desktop");
