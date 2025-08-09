@@ -11,6 +11,7 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -388,24 +389,23 @@ public class BTFragment extends Fragment {
                         else {
                             File bluebinder = new File(NhPaths.CHROOT_PATH() + "/usr/sbin/bluebinder");
                             if (bluebinder.exists()) {
-                                // TODO - Enable this for only specific devices 1/2
                                 //Ensure all services are disabled before enabling airplane mode for bluebinder
-                                //exe.RunAsRoot(new String[]{
+                                exe.RunAsRoot(new String[]{
                                     //"svc bluetooth disable",
                                     //"svc wifi disable",
-                                    //"settings put global airplane_mode_on 1;am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true",
+                                    "settings put global airplane_mode_on 1",
+                                    "am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true"
                                     //"pm disable com.android.bluetooth"
-                                //});
+                                });
 
                                 // Run the Bluebinder script
                                 run_cmd("echo -ne \"\\033]0;Bluebinder\\007\" && clear;bluebinder || bluebinder;exit");
                                 Toast.makeText(requireActivity().getApplicationContext(), "Starting bluebinder...", Toast.LENGTH_SHORT).show();
 
-                                // TODO - Enable this for only specific devices 2/2
                                 // Delay to disable airplane mode and re-enable Wi-Fi after 9 seconds
-                                /*new Handler().postDelayed(() -> exe.RunAsRoot(new String[]{
-                                    "settings put global airplane_mode_on 0;am broadcast -a android.intent.action.AIRPLANE_MODE --ez state false",
-                                    "svc wifi enable"
+                                new Handler().postDelayed(() -> exe.RunAsRoot(new String[]{
+                                    "settings put global airplane_mode_on 0",
+                                    "am broadcast -a android.intent.action.AIRPLANE_MODE --ez state false"
                                 }), 9000); // 9000 milliseconds delay*/
                             } else {
                                 Toast.makeText(requireActivity().getApplicationContext(), "Bluebinder is not installed. Launching setup..", Toast.LENGTH_SHORT).show();
