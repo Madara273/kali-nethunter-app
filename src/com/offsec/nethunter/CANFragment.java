@@ -239,28 +239,23 @@ public class CANFragment extends Fragment {
                 menuInflater.inflate(R.menu.can, menu);
             }
 
-            @SuppressLint("NonConstantResourceId")
             @Override
             public boolean onMenuItemSelected(@NonNull MenuItem item) {
-                switch (item.getItemId()) {
-                    case R.id.documentation:
-                        sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-                        RunDocumentation();
-                        return true;
-                    case R.id.setup:
-                        sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-                        RunSetup();
-                        return true;
-                    case R.id.update:
-                        sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-                        RunUpdate();
-                        return true;
-                    case R.id.about:
-                        sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-                        RunAbout();
-                        return true;
-                    default:
-                        return false;
+                int id = item.getItemId();
+                if (id == R.id.documentation) {
+                    RunDocumentation();
+                    return true;
+                } else if (id == R.id.setup) {
+                    RunSetup();
+                    return true;
+                } else if (id == R.id.update) {
+                    RunUpdate();
+                    return true;
+                } else if (id == R.id.about) {
+                    RunAbout();
+                    return true;
+                } else {
+                    return false;
                 }
             }
         }, getViewLifecycleOwner());
