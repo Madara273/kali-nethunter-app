@@ -54,7 +54,6 @@ public class VNCFragment extends Fragment {
     private static final String TAG = "VNCFragment";
     // Debug logging: 0=off, 1=low, 2=medium, 3=high
     private static final String DEFAULT_RESOLUTION = "1080x1920:300ppi";
-    private int NH_SYSTEM_LOGGING = 0;
     private String localhostonly = "";
     private static final String ARG_SECTION_NUMBER = "section_number";
     private String selected_res;
@@ -84,6 +83,7 @@ public class VNCFragment extends Fragment {
     //   logDebug(TAG, "Your debug message here");
     //
     private void logDebug(String tag, String message) {
+        int NH_SYSTEM_LOGGING = 0;
         if (NH_SYSTEM_LOGGING > 0) {
             Log.d(tag, "[Level " + NH_SYSTEM_LOGGING + "] " + message);
         }

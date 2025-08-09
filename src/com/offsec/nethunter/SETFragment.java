@@ -35,7 +35,6 @@ import com.offsec.nethunter.utils.ShellExecuter;
 import java.text.MessageFormat;
 
 public class SETFragment extends Fragment {
-    private ViewPager mViewPager;
     private SharedPreferences sharedpreferences;
     private NhPaths nh;
     private Activity activity;
@@ -62,7 +61,7 @@ public class SETFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.set, container, false);
         SETFragment.TabsPagerAdapter tabsPagerAdapter = new TabsPagerAdapter(getChildFragmentManager());
 
-        mViewPager = rootView.findViewById(R.id.pagerBt);
+        ViewPager mViewPager = rootView.findViewById(R.id.pagerBt);
         mViewPager.setAdapter(tabsPagerAdapter);
         mViewPager.setOffscreenPageLimit(3);
         mViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {

@@ -23,9 +23,9 @@ import java.util.Map;
 public class ShellExecuter {
     private final SimpleDateFormat timeStamp = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
     private final static String TAG = "ShellExecuter";
-    private Map<String, String> customEnv = new HashMap<>();
+
     public void setCustomEnv(Map<String, String> env) {
-        this.customEnv = new HashMap<>(env);
+        Map<String, String> customEnv = new HashMap<>(env);
     }
 
     public ShellExecuter() {
