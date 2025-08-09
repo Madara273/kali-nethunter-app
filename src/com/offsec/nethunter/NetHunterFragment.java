@@ -1,6 +1,5 @@
 package com.offsec.nethunter;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -146,7 +145,7 @@ public class NetHunterFragment extends Fragment {
             return false;
         });
 
-        //Snowfall
+        // Snowfall
         snowfallButton = menu.findItem(f_nethunter_action_snowfall);
         if (snowfall) snowfallButton.setIcon(R.drawable.snowflake_trigger);
         else snowfallButton.setIcon(R.drawable.snowflake_trigger_bw);
@@ -165,7 +164,6 @@ public class NetHunterFragment extends Fragment {
         });
     }
 
-    @SuppressLint({"NonConstantResourceId", "SetTextI18n"})
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         final LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -173,60 +171,55 @@ public class NetHunterFragment extends Fragment {
         final TextView titleTextView = promptView.findViewById(R.id.f_nethunter_adb_tv_title1);
         final EditText storedpathEditText = promptView.findViewById(R.id.f_nethunter_adb_et_storedpath);
 
-        switch (item.getItemId()) {
-            case R.id.f_nethunter_menu_backupDB:
-                titleTextView.setText("Full path to where you want to save the database:");
-                storedpathEditText.setText(NhPaths.APP_SD_SQLBACKUP_PATH + "/FragmentNethunter");
-                MaterialAlertDialogBuilder adbBackup = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                adbBackup.setView(promptView);
-                adbBackup.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-                adbBackup.setPositiveButton("OK", (dialog, which) -> { });
-                final androidx.appcompat.app.AlertDialog adBackup = adbBackup.create();
-                adBackup.setOnShowListener(dialog -> {
-                    final Button buttonOK = adBackup.getButton(DialogInterface.BUTTON_POSITIVE);
-                    buttonOK.setOnClickListener(v -> {
-                        String returnedResult = NethunterData.getInstance().backupData(NethunterSQL.getInstance(context), storedpathEditText.getText().toString());
-                        if (returnedResult == null){
-                            NhPaths.showMessage(context, "db is successfully backup to " + storedpathEditText.getText().toString());
-                        } else {
-                            dialog.dismiss();
-                            new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to backup the DB.").setMessage(returnedResult).create().show();
-                        }
+        int id = item.getItemId();
+        if (id == R.id.f_nethunter_menu_backupDB) {
+            titleTextView.setText(R.string.nethunter_full_path_savedb);
+            storedpathEditText.setText(String.format("%s/FragmentNethunter", NhPaths.APP_SD_SQLBACKUP_PATH));
+            MaterialAlertDialogBuilder adbBackup = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
+            adbBackup.setView(promptView);
+            adbBackup.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+            adbBackup.setPositiveButton("OK", (dialog, which) -> { });
+            final androidx.appcompat.app.AlertDialog adBackup = adbBackup.create();
+            adBackup.setOnShowListener(dialog -> {
+                final Button buttonOK = adBackup.getButton(DialogInterface.BUTTON_POSITIVE);
+                buttonOK.setOnClickListener(v -> {
+                    String returnedResult = NethunterData.getInstance().backupData(NethunterSQL.getInstance(context), storedpathEditText.getText().toString());
+                    if (returnedResult == null){
+                        NhPaths.showMessage(context, "db is successfully backup to " + storedpathEditText.getText().toString());
+                    } else {
                         dialog.dismiss();
-                    });
+                        new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to backup the DB.").setMessage(returnedResult).create().show();
+                    }
+                    dialog.dismiss();
                 });
-                adBackup.show();
-                break;
-            case R.id.f_nethunter_menu_restoreDB:
-                titleTextView.setText("Full path of the db file from where you want to restore:");
-                storedpathEditText.setText(NhPaths.APP_SD_SQLBACKUP_PATH + "/FragmentNethunter");
-                MaterialAlertDialogBuilder adbRestore = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                adbRestore.setView(promptView);
-                adbRestore.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-                adbRestore.setPositiveButton("OK", (dialog, which) -> { });
-                final androidx.appcompat.app.AlertDialog adRestore = adbRestore.create();
-                adRestore.setOnShowListener(dialog -> {
-                    final Button buttonOK = adRestore.getButton(DialogInterface.BUTTON_POSITIVE);
-                    buttonOK.setOnClickListener(v -> {
-                        String returnedResult = NethunterData.getInstance().restoreData(NethunterSQL.getInstance(context), storedpathEditText.getText().toString());
-                        if (returnedResult == null) {
-                            NhPaths.showMessage(context, "db is successfully restored to " + storedpathEditText.getText().toString());
-                        } else {
-                            dialog.dismiss();
-                            new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to restore the DB.").setMessage(returnedResult).create().show();
-                        }
+            });
+            adBackup.show();
+        } else if (id == R.id.f_nethunter_menu_restoreDB) {
+            titleTextView.setText(R.string.nethunter_full_path_restoredb);
+            storedpathEditText.setText(String.format("%s/FragmentNethunter", NhPaths.APP_SD_SQLBACKUP_PATH));
+            MaterialAlertDialogBuilder adbRestore = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
+            adbRestore.setView(promptView);
+            adbRestore.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+            adbRestore.setPositiveButton("OK", (dialog, which) -> { });
+            final androidx.appcompat.app.AlertDialog adRestore = adbRestore.create();
+            adRestore.setOnShowListener(dialog -> {
+                final Button buttonOK = adRestore.getButton(DialogInterface.BUTTON_POSITIVE);
+                buttonOK.setOnClickListener(v -> {
+                    String returnedResult = NethunterData.getInstance().restoreData(NethunterSQL.getInstance(context), storedpathEditText.getText().toString());
+                    if (returnedResult == null) {
+                        NhPaths.showMessage(context, "db is successfully restored to " + storedpathEditText.getText().toString());
+                    } else {
                         dialog.dismiss();
-                    });
+                        new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to restore the DB.").setMessage(returnedResult).create().show();
+                    }
+                    dialog.dismiss();
                 });
-                adRestore.show();
-                break;
-            case R.id.f_nethunter_menu_ResetToDefault:
-                NethunterData.getInstance().resetData(NethunterSQL.getInstance(context));
-                break;
-            //Snowfall Trigger
-            case f_nethunter_action_snowfall:
-                trigger_snowfall();
-                break;
+            });
+            adRestore.show();
+        } else if (id == R.id.f_nethunter_menu_ResetToDefault) {
+            NethunterData.getInstance().resetData(NethunterSQL.getInstance(context));
+        } else if (id == f_nethunter_action_snowfall) {
+            trigger_snowfall();
         }
         return super.onOptionsItemSelected(item);
     }
