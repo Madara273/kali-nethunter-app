@@ -172,9 +172,11 @@ public class CopyBootFilesExecutor {
         this.scriptsDir = new File(NhPaths.APP_SCRIPTS_PATH);
         this.etcDir = new File(NhPaths.APP_INITD_PATH);
         this.prefs = context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
-        this.buildTime = BuildConfig.BUILD_TIME;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd KK:mm:ss a zzz", Locale.getDefault());
+        this.buildTime = sdf.format(BuildConfig.BUILD_TIME);
         this.shouldRun = true;
     }
+
 
     public void execute() {
         mainHandler.post(this::onPreExecute);

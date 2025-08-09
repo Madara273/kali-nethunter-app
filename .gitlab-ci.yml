@@ -40,10 +40,8 @@ cache:
   stage: build
   script:
     - ./gradlew assembleDebug
-    - ls ./build/outputs/apk/vulkan/debug/
-    - ls ./build/outputs/apk/renderscript/debug/
-    - mv -v ./build/outputs/apk/vulkan/debug/*-debug.apk ./result/${APK_NAME}-vulkan-debug.apk
-    - mv -v ./build/outputs/apk/renderscript/debug/*-debug.apk ./result/${APK_NAME}-renderscript-debug.apk
+    - ls ./build/outputs/apk/debug/
+    - mv -v ./build/outputs/apk/debug/*-debug.apk ./result/${APK_NAME}-debug.apk
   artifacts:
     name: "$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA-$CI_JOB_NAME"
     paths:
@@ -54,10 +52,9 @@ cache:
   stage: build
   script:
     - ./gradlew assembleRelease
-    - ls ./build/outputs/apk/vulkan/release/
-    - ls ./build/outputs/apk/renderscript/release/
-    - mv -v ./build/outputs/apk/vulkan/release/*-release-unsigned.apk ./result/${APK_NAME}-vulkan.apk
-    - mv -v ./build/outputs/apk/renderscript/release/*-release-unsigned.apk ./result/${APK_NAME}-renderscript.apk
+    - ls ./build/outputs/apk/release/
+    - mv -v ./build/outputs/apk/release/*-release-unsigned.apk ./result/${APK_NAME}.apk
+
   artifacts:
     name: "$CI_COMMIT_REF_NAME-$CI_COMMIT_SHORT_SHA-$CI_JOB_NAME"
     paths:

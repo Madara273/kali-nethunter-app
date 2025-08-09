@@ -447,17 +447,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         readmeButton.setOnClickListener(v -> showLicense());
 
         // Moved build info to the menu
-        String buildTime;
-        try {
-            SimpleDateFormat inputFormat = new SimpleDateFormat("EEE MMM dd HH:mm:ss zzz yyyy", Locale.ENGLISH);
-            buildTime = BuildConfig.BUILD_TIME;
-            Object date = inputFormat.parse(buildTime);
-            assert date != null;
-            buildTime = SDF.format(date);
-        } catch (ParseException e) {
-            buildTime = BuildConfig.BUILD_TIME;
-        }
-
+        final String buildTime = SDF.format(BuildConfig.BUILD_TIME);
         TextView buildInfo1 = navigationHeadView.findViewById(R.id.buildinfo1);
         TextView buildInfo2 = navigationHeadView.findViewById(R.id.buildinfo2);
         buildInfo1.setText(String.format("Version: %s (%s)", BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE));
