@@ -249,7 +249,10 @@ public class CopyBootFilesExecutor {
             Symlink("bootkali_init");
             Symlink("bootkali_login");
             Symlink("killkali");
-            SymlinkScriptsToSystemBin();
+            exe.RunAsRoot(new String[]{
+                    "echo 'export PATH=/data/data/com.offsec.nethunter/scripts/bin:$PATH' >> /system/etc/mkshrc",
+                    String.valueOf(Log.d(TAG, "Added scripts/bin to PATH in /system/etc/mkshrc"))
+            });
             disableMagiskNotification();
             SharedPreferences.Editor ed = prefs.edit();
             ed.putString(TAG, buildTime);
@@ -467,9 +470,10 @@ public class CopyBootFilesExecutor {
         if (!checkfile.exists()) {
             if (NH_SYSTEM_LOGGING == 1) logDebug("Symlinking " + filename);
             if (NH_SYSTEM_LOGGING == 1) logDebug("command output: ln -s " + NhPaths.APP_SCRIPTS_PATH + "/" + filename + " /system/bin/" + filename);
-            // Symlink the script 'bootkali' scripts + 'killkali' to /system/bin to make it available globally (Android SU)
-            SymlinkScriptsToSystemBin();
-            exe.RunAsRoot(new String[]{"ln -s " + NhPaths.APP_SCRIPTS_PATH + "/" + filename + " /system/bin/" + filename});
+            int result = exe.RunAsRootReturnValue("ln -s " + NhPaths.APP_SCRIPTS_PATH + "/" + filename + " /system/bin/" + filename);
+            if (result != 0) {
+                if (NH_SYSTEM_LOGGING == 1) logDebug("Failed to create symlink for: " + filename);
+            }
         }
     }
 
