@@ -1,4 +1,4 @@
-package com.offsec.nethunter;
+package com.offsec.nethunter.audio;
 
 import android.media.AudioFormat;
 import android.media.AudioManager;

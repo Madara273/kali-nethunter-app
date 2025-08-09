@@ -1,4 +1,4 @@
-package com.offsec.nethunter;
+package com.offsec.nethunter.audio;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
@@ -26,8 +26,11 @@ import androidx.lifecycle.MutableLiveData;
 
 import android.util.Log;
 
-import static com.offsec.nethunter.AudioPlayState.BUFFERING;
-import static com.offsec.nethunter.AudioPlayState.STARTING;
+import static com.offsec.nethunter.audio.AudioPlayState.BUFFERING;
+import static com.offsec.nethunter.audio.AudioPlayState.STARTING;
+
+import com.offsec.nethunter.AudioFragment;
+import com.offsec.nethunter.R;
 
 public class AudioPlaybackService extends Service implements AudioPlaybackWorker.Listener {
     /**

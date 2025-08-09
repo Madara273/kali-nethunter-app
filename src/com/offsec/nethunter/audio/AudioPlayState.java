@@ -1,4 +1,4 @@
-package com.offsec.nethunter;
+package com.offsec.nethunter.audio;
 
 public enum AudioPlayState {
     STOPPED(false),

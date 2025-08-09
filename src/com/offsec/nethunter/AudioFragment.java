@@ -24,6 +24,9 @@ import android.text.style.ForegroundColorSpan;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import com.offsec.nethunter.audio.AudioPlayState;
+import com.offsec.nethunter.audio.AudioPlaybackService;
+
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Locale;
@@ -349,5 +352,9 @@ public class AudioFragment extends Fragment {
 
     public void setFullScrollView(ScrollView fullScrollView) {
         this.fullScrollView = fullScrollView;
+    }
+
+    public void setError(Throwable error) {
+        this.error = error;
     }
 }
