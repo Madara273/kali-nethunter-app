@@ -169,7 +169,7 @@ public class VNCFragment extends Fragment {
 
         boolean localhost = sharedpreferences.getBoolean("localhost", true);
         localhostCheckBox.setChecked(localhost);
-        AdvancedView.setVisibility(showingAdvanced ? View.VISIBLE : View.INVISIBLE);
+        AdvancedView.setVisibility(showingAdvanced ? View.VISIBLE : View.GONE);
         if (showingAdvanced) {
             Advanced.setText(R.string.vnc_hide_advanced_settings);
         } else {
@@ -181,15 +181,9 @@ public class VNCFragment extends Fragment {
             AdvancedView.setVisibility(View.GONE);
             Advanced.setVisibility(View.GONE);
         }
-        // Check if the device is a phone
-        if (sharedpreferences.getBoolean("running_on_phone", false)) {
-            logDebug(TAG, "onCreateView: detected device type - phone");
-            AdvancedView.setVisibility(View.VISIBLE);
-            Advanced.setVisibility(View.VISIBLE);
-        }
-        // Check if the device is a tablet
-        if (sharedpreferences.getBoolean("running_on_tablet", false)) {
-            logDebug(TAG, "onCreateView: detected device type - tablet");
+        // Check if the device is a phone or an tablet
+        if (sharedpreferences.getBoolean("running_on_phone", false) || sharedpreferences.getBoolean("running_on_tablet", false)) {
+            logDebug(TAG, "onCreateView: detected device type - phone or tablet");
             AdvancedView.setVisibility(View.VISIBLE);
             Advanced.setVisibility(View.VISIBLE);
         }
@@ -250,8 +244,9 @@ public class VNCFragment extends Fragment {
         ShellExecuter exe = new ShellExecuter();
         File vncResFile = new File(NhPaths.APP_SD_FILES_PATH + "/configs/vnc-resolutions");
         String device_res = xwidth + "x" + xheight;
-        if (vncResFile.length() == 0)
+        if (vncResFile.exists() && vncResFile.length() == 0) {
             exe.RunAsRoot(new String[]{"echo \"Auto\"$\"\n\"" + device_res + " > " + vncResFile});
+        }
 
         // HDMI resolution
         File hdmiResFile = new File(NhPaths.APP_SD_FILES_PATH + "/configs/hdmi-resolutions");
