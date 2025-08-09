@@ -109,13 +109,12 @@ android {
         }
 
         release {
-            //signingConfig signingConfigs.release
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android.txt')
             debuggable false
             jniDebuggable false
-            buildConfigField "java.util.Date", "BUILD_TIME", "new java.util.Date(" + System.currentTimeMillis() + "L)"
+            buildConfigField "String", "BUILD_TIME", "\"${new Date(System.currentTimeMillis())}\""
             buildConfigField "String", "BUILD_NAME", "\"" + System.getenv("USER") + "\""
         }
     }
