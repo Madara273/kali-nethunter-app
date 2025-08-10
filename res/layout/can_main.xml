@@ -39,8 +39,9 @@
             <View
                 android:id="@+id/divider1"
                 android:layout_width="match_parent"
-                android:layout_marginBottom="10dp"
                 android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
                 android:background="?android:attr/listDivider" />
 
             <LinearLayout
@@ -65,7 +66,7 @@
                         android:layout_height="wrap_content"
                         android:inputType="text"
                         android:text="can0"
-                        android:textColor="#40FFFFFF"/>
+                        android:textColor="@color/white"/>
 
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -108,45 +109,55 @@
                         android:textColor="@android:color/holo_red_light"/>
                 </LinearLayout>
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/mtu_container"
+                <LinearLayout
+                    android:id="@+id/mtu_txq_row"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:visibility="gone"
-                    app:boxStrokeColor="@color/ifc_box_stroke"
-                    app:boxBackgroundColor="@color/transparent"
-                    app:hintTextColor="@color/ifc_hint_text"
-                    android:hint="MTU Value (e.g., 16)">
+                    android:orientation="horizontal"
+                    android:layout_marginTop="4dp">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/mtu_value"
-                        android:layout_width="match_parent"
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/mtu_container"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:inputType="number"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:textColor="#40FFFFFF" />
-                </com.google.android.material.textfield.TextInputLayout>
+                        android:layout_weight="1"
+                        android:layout_marginEnd="5dp"
+                        android:visibility="gone"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="MTU">
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/txqueuelen_container"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:visibility="gone"
-                    app:boxStrokeColor="@color/ifc_box_stroke"
-                    app:boxBackgroundColor="@color/transparent"
-                    app:hintTextColor="@color/ifc_hint_text"
-                    android:hint="txqueuelen Value (e.g., 1000)">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/mtu_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/txqueuelen_value"
-                        android:layout_width="match_parent"
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/txqueuelen_container"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:inputType="number"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:textColor="#40FFFFFF" />
-                </com.google.android.material.textfield.TextInputLayout>
+                        android:layout_weight="1"
+                        android:layout_marginStart="5dp"
+                        android:visibility="gone"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="txqueuelen">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/txqueuelen_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
             </LinearLayout>
 
 
@@ -334,7 +345,7 @@
                         android:layout_height="wrap_content"
                         android:inputType="text"
                         android:text="4F2CU08102KM50866"
-                        android:textColor="#40FFFFFF"/>
+                        android:textColor="@color/white"/>
 
                 </com.google.android.material.textfield.TextInputLayout>
 
