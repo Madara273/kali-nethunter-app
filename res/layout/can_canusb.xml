@@ -232,41 +232,105 @@
 
                 </LinearLayout>
 
-                <EditText
-                    android:id="@+id/usb_id_value"
+                <LinearLayout
+                    android:id="@+id/usb_row_1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="ID Value (e.g., 2)"
-                    android:visibility="gone"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:layout_marginBottom="5dp"
+                    android:orientation="horizontal">
 
-                <EditText
-                    android:id="@+id/usb_counter_value"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Counter Value (e.g., infinite)"
-                    android:visibility="gone"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/id_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="5dp"
+                        android:visibility="gone"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="ID">
 
-                <EditText
-                    android:id="@+id/usb_sleep_value"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Sleep Value (ms) (e.g., 200)"
-                    android:visibility="gone"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/usb_id_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
 
-                <EditText
-                    android:id="@+id/usb_data_value"
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/counter_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="5dp"
+                        android:visibility="gone"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="counter">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/usb_counter_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/sleep_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="5dp"
+                        android:visibility="gone"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="sleep (ms)">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/usb_sleep_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/usb_row_2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Data (e.g., 0C1A2F3E0C1A2F3)"
-                    android:visibility="gone"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:layout_marginBottom="5dp"
+                    android:orientation="horizontal">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/data_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="5dp"
+                        android:visibility="gone"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Data (e.g., 0C1A2F3E0C1A2F3)S">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/usb_data_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/usb_mode_container"

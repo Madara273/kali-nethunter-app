@@ -1432,11 +1432,11 @@ public class CANFragment extends Fragment {
             // Toggle Buttons
             // Counter
             Button btnCounter = rootView.findViewById(R.id.btn_toggle_usb_counter);
-            EditText selectedCount = rootView.findViewById(R.id.usb_counter_value);
+            View counterContainer = rootView.findViewById(R.id.counter_container);
 
             btnCounter.setOnClickListener(v -> {
-                boolean visible = selectedCount.getVisibility() == View.VISIBLE;
-                selectedCount.setVisibility(visible ? View.GONE : View.VISIBLE);
+                boolean visible = counterContainer.getVisibility() == View.VISIBLE;
+                counterContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
 
                 int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
                 btnCounter.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
@@ -1444,11 +1444,11 @@ public class CANFragment extends Fragment {
 
             // Data
             Button btnData = rootView.findViewById(R.id.btn_toggle_usb_data);
-            EditText selectedData = rootView.findViewById(R.id.usb_data_value);
+            View dataContainer = rootView.findViewById(R.id.data_container);
 
             btnData.setOnClickListener(v -> {
-                boolean visible = selectedData.getVisibility() == View.VISIBLE;
-                selectedData.setVisibility(visible ? View.GONE : View.VISIBLE);
+                boolean visible = dataContainer.getVisibility() == View.VISIBLE;
+                dataContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
 
                 int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
                 btnData.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
@@ -1456,15 +1456,16 @@ public class CANFragment extends Fragment {
 
             // ID
             Button btnID = rootView.findViewById(R.id.btn_toggle_usb_id);
-            EditText selectedID = rootView.findViewById(R.id.usb_id_value);
+            View idContainer = rootView.findViewById(R.id.id_container);
 
             btnID.setOnClickListener(v -> {
-                boolean visible = selectedID.getVisibility() == View.VISIBLE;
-                selectedID.setVisibility(visible ? View.GONE : View.VISIBLE);
+                boolean visible = idContainer.getVisibility() == View.VISIBLE;
+                idContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
 
                 int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
                 btnID.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
             });
+
 
             // Mode
             Button btnMode = rootView.findViewById(R.id.btn_toggle_usb_mode);
@@ -1480,11 +1481,11 @@ public class CANFragment extends Fragment {
 
             // Sleep
             Button btnSleep = rootView.findViewById(R.id.btn_toggle_usb_sleep);
-            EditText selectedSleep = rootView.findViewById(R.id.usb_sleep_value);
+            View sleepContainer = rootView.findViewById(R.id.sleep_container);
 
             btnSleep.setOnClickListener(v -> {
-                boolean visible = selectedSleep.getVisibility() == View.VISIBLE;
-                selectedSleep.setVisibility(visible ? View.GONE : View.VISIBLE);
+                boolean visible = sleepContainer.getVisibility() == View.VISIBLE;
+                sleepContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
 
                 int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
                 btnSleep.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
@@ -1507,10 +1508,10 @@ public class CANFragment extends Fragment {
                 String USBCANSpeed = SelectedCanSpeedUSB.getText().toString();
                 String USBBaudrate = SelectedBaudrateUSB.getText().toString();
                 String debugEnabled = isDebugEnabled ? " -t" : "";
-                String countValue = getVisibleParam(selectedCount, " -n ");
-                String idValue = getVisibleParam(selectedID, " -i ");
-                String dataValue = getVisibleParam(selectedData, " -j ");
-                String sleepValue = getVisibleParam(selectedSleep, " -g ");
+                String countValue = getVisibleParam(counterContainer, " -n ");
+                String idValue = getVisibleParam(idContainer, " -i ");
+                String dataValue = getVisibleParam(dataContainer, " -j ");
+                String sleepValue = getVisibleParam(sleepContainer, " -g ");
                 String modeValue = getVisibleParam(canusbModeList, " -m ");
 
                 if (!selected_usb.isEmpty() && !selected_usb.equals("USB Device (None)") && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
