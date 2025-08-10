@@ -1124,7 +1124,7 @@ public class CANFragment extends Fragment {
             SharedPreferences cangen_prefs = requireActivity().getSharedPreferences("cangen_prefs", Context.MODE_PRIVATE);
             SharedPreferences.Editor editorCangen = cangen_prefs.edit();
 
-            String savedCmd_cangen = cangen_prefs.getString("cangen_cmd", "cangen can0 -v -x");
+            String savedCmd_cangen = cangen_prefs.getString("cangen_cmd", "cangen");
             String[] cangenCmdHolder = { savedCmd_cangen };
 
             CanGenButton.setOnClickListener(v -> {
@@ -1172,7 +1172,7 @@ public class CANFragment extends Fragment {
             SharedPreferences cansniffer_prefs = requireActivity().getSharedPreferences("cansniffer_prefs", Context.MODE_PRIVATE);
             SharedPreferences.Editor editorCansniffer = cansniffer_prefs.edit();
 
-            String savedCmd_cansniffer = cangen_prefs.getString("cansniffer_cmd", "cansniffer can0");
+            String savedCmd_cansniffer = cangen_prefs.getString("cansniffer_cmd", "cansniffer");
             String[] cansnifferCmdHolder = { savedCmd_cansniffer };
 
             CanSnifferButton.setOnClickListener(v -> {
