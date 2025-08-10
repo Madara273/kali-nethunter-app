@@ -663,7 +663,7 @@
     <string name="nethunter_full_path_db_restore">Full path of the db file from where you want to restore:</string>
 
     <!-- CARsenal -->
-    <string name="can_description">This module allow you to use CAN Bus with various tools. Kernel device should have CAN support enabled, for more information look at the documentation in the menu.</string>
+    <string name="can_description">Configure your CAN interfaces and decode your VIN identification number.</string>
     <string name="can_tools_desc">Unleash the power of can-utils suite by managing logs and Generate, Dump, Sniff or Replay signals! You may also run car diagnosis using Freediag and transfert CAN frames between two machines using Cannelloni tool!</string>
     <string name="can_canusb_desc">Use your CAN Analyzer USB by Dumping and Sending signals using usb-can tool!</string>
     <string name="can_caribou_desc">A friendly automotive security exploration tool.</string>
