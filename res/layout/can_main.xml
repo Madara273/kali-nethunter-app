@@ -163,29 +163,41 @@
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="48dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp">
 
-                <Spinner
-                    android:id="@+id/cantype_spinner"
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/spinner_card"
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:dropDownWidth="wrap_content"
-                    android:saveEnabled="false"
+                    android:layout_height="48dp"
+                    app:strokeColor="@color/nh_box_stroke_spinner"
+                    app:strokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp"
+                    android:layout_margin="8dp"
+                    android:padding="4dp"
+                    app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    tools:ignore="MissingConstraints" />
+                    app:layout_constraintBottom_toBottomOf="parent">
+
+                    <Spinner
+                        android:id="@+id/cantype_spinner"
+                        android:layout_width="wrap_content"
+                        android:layout_height="48dp"
+                        android:spinnerMode="dropdown"/>
+
+                </com.google.android.material.card.MaterialCardView>
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    app:layout_constraintStart_toEndOf="@id/cantype_spinner"
+                    app:layout_constraintStart_toEndOf="@id/spinner_card"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    android:gravity="end">
+                    app:layout_constraintTop_toTopOf="@id/spinner_card"
+                    app:layout_constraintBottom_toBottomOf="@id/spinner_card"
+                    android:gravity="end"
+                    android:layout_marginStart="8dp">
 
                     <Button
                         android:id="@+id/start_caniface"
@@ -201,13 +213,15 @@
                         android:layout_height="wrap_content"
                         android:text="Stop"
                         android:layout_weight="1"
-                        android:minWidth="100dp"/>
+                        android:minWidth="100dp" />
                 </LinearLayout>
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
+
             <Button
                 android:id="@+id/btn_toggle_services"
+                android:layout_marginTop="5dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
                 android:layout_width="match_parent"
