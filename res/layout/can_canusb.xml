@@ -20,9 +20,8 @@
                 android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginTop="5dp"
-                android:layout_marginBottom="5dp"
-                android:text="CAN-USB"
+                android:layout_marginTop="10dp"
+                android:text="@string/CanUSB"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textStyle="bold"/>
 
@@ -32,7 +31,6 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal|center"
                 android:gravity="center"
-                android:padding="10dp"
                 android:text="@string/can_canusb_desc"
                 tools:ignore="VisualLintLongText" />
 
@@ -56,13 +54,12 @@
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/spinner_iface_card"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
                     app:strokeColor="@color/nh_box_stroke_spinner"
                     app:strokeWidth="2dp"
                     app:boxStrokeWidthFocused="3dp"
-                    android:layout_margin="8dp"
                     android:padding="4dp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
@@ -76,18 +73,29 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <ImageButton
-                    android:id="@+id/refreshUSB"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:layout_marginStart="8dp"
-                    android:src="@drawable/ic_action_refresh"
-                    android:contentDescription="Refresh USB"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    app:strokeColor="@color/nh_box_stroke_refresh"
+                    app:strokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp"
+                    android:padding="4dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageButton
+                        android:id="@+id/refreshUSB"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/ic_action_refresh"
+                        android:contentDescription="@string/Refresh"
+                        android:background="?attr/selectableItemBackgroundBorderless" />
+                </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
             <LinearLayout
+                android:baselineAligned="false"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp"
@@ -102,14 +110,14 @@
                     app:boxStrokeColor="@color/ifc_box_stroke"
                     app:boxBackgroundColor="@color/transparent"
                     app:hintTextColor="@color/ifc_hint_text"
-                    android:hint="Baudrate">
+                    android:hint="@string/Baudrate">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/baudrate_usb"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="number"
-                        android:text="200000"
+                        android:text="@string/BaudrateValue"
                         android:textColor="@color/white"/>
 
                 </com.google.android.material.textfield.TextInputLayout>
@@ -117,6 +125,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:baselineAligned="false"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="5dp"
@@ -131,14 +140,14 @@
                     app:boxStrokeColor="@color/ifc_box_stroke"
                     app:boxBackgroundColor="@color/transparent"
                     app:hintTextColor="@color/ifc_hint_text"
-                    android:hint="CAN Speed">
+                    android:hint="@string/CanSpeed">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/canspeed_usb"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="number"
-                        android:text="500000"
+                        android:text="@string/CanSpeedValue"
                         android:textColor="@color/white"/>
 
                 </com.google.android.material.textfield.TextInputLayout>
@@ -166,30 +175,30 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="ID"
+                        android:text="@string/ID"
                         android:textAppearance="?android:attr/textAppearanceSmall"
                         android:textColor="@android:color/holo_red_light"
-                        tools:ignore="TextContrastCheck" />
+                        tools:ignore="ButtonStyle,TextContrastCheck" />
 
                     <Button
                         android:id="@+id/btn_toggle_usb_counter"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Counter"
+                        android:text="@string/Counter"
                         android:textAppearance="?android:attr/textAppearanceSmall"
                         android:textColor="@android:color/holo_red_light"
-                        tools:ignore="TextContrastCheck" />
+                        tools:ignore="ButtonStyle,TextContrastCheck" />
 
                     <Button
                         android:id="@+id/btn_toggle_usb_sleep"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Sleep"
+                        android:text="@string/Sleep"
                         android:textAppearance="?android:attr/textAppearanceSmall"
                         android:textColor="@android:color/holo_red_light"
-                        tools:ignore="TextContrastCheck" />
+                        tools:ignore="ButtonStyle,TextContrastCheck" />
 
                 </LinearLayout>
 
@@ -197,6 +206,7 @@
                     android:id="@+id/button_row2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
                     android:orientation="horizontal"
                     android:gravity="center">
 
@@ -205,17 +215,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Data"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:textColor="@android:color/holo_red_light"
-                        tools:ignore="TextContrastCheck" />
-
-                    <Button
-                        android:id="@+id/btn_toggle_usb_ttyOutput"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="TTY Output"
+                        android:text="@string/Data"
                         android:textAppearance="?android:attr/textAppearanceSmall"
                         android:textColor="@android:color/holo_red_light"
                         tools:ignore="TextContrastCheck" />
@@ -225,15 +225,25 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Mode"
+                        android:text="@string/Mode"
                         android:textAppearance="?android:attr/textAppearanceSmall"
                         android:textColor="@android:color/holo_red_light"
                         tools:ignore="TextContrastCheck" />
 
+                    <androidx.appcompat.widget.SwitchCompat
+                        android:id="@+id/btn_toggle_usb_ttyOutput"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/Debug"
+                        android:checked="false"
+                        android:paddingStart="12dp"
+                        tools:ignore="RtlSymmetry" />
                 </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/usb_row_1"
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="5dp"
@@ -244,12 +254,11 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginEnd="5dp"
                         android:visibility="gone"
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="ID">
+                        android:hint="@string/ID">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/usb_id_value"
@@ -265,12 +274,12 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginStart="5dp"
+                        android:layout_marginStart="3dp"
                         android:visibility="gone"
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="counter">
+                        android:hint="@string/Counter">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/usb_counter_value"
@@ -286,12 +295,12 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginStart="5dp"
+                        android:layout_marginStart="3dp"
                         android:visibility="gone"
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="sleep (ms)">
+                        android:hint="@string/SleepMS">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/usb_sleep_value"
@@ -305,6 +314,7 @@
 
                 <LinearLayout
                     android:id="@+id/usb_row_2"
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="5dp"
@@ -315,12 +325,11 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:layout_marginEnd="5dp"
                         android:visibility="gone"
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="Data (e.g., 0C1A2F3E0C1A2F3)S">
+                        android:hint="@string/DataValue">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/usb_data_value"
@@ -334,9 +343,9 @@
 
                 <androidx.constraintlayout.widget.ConstraintLayout
                     android:id="@+id/usb_mode_container"
+                    android:layout_marginTop="5dp"
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
-                    android:layout_marginTop="5dp"
                     android:visibility="gone">
 
                     <com.google.android.material.card.MaterialCardView
@@ -346,7 +355,6 @@
                         app:strokeColor="@color/nh_box_stroke_spinner"
                         app:strokeWidth="2dp"
                         app:boxStrokeWidthFocused="3dp"
-                        android:layout_margin="8dp"
                         android:padding="4dp"
                         app:layout_constraintStart_toStartOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
@@ -370,6 +378,7 @@
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
                 android:layout_marginTop="5dp"
+                android:layout_marginBottom="5dp"
                 android:layout_gravity="center"
                 android:gravity="center"
                 android:orientation="horizontal">
@@ -378,7 +387,7 @@
                     android:id="@+id/start_canusb_send"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Run" />
+                    android:text="@string/run" />
 
             </LinearLayout>
 

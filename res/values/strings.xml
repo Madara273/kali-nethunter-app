@@ -672,6 +672,24 @@
     <string name="can_app_name">MyApp</string>
     <string name="can_settings">Settings</string>
     <string name="can_refresh_button">Refresh</string>
+    <!-- Hardcoded String Trash Can -->
+    <!-- CAN-USB -->
+   <string name="CanUSB">CAN-USB</string>
+   <string name="run">Run</string>
+   <string name="ID">ID</string>
+   <string name="Data">Data</string>
+   <string name="Counter">Counter</string>
+   <string name="Sleep">Sleep</string>
+   <string name="Mode">Mode</string>
+   <string name="Debug">Debug</string>
+   <string name="DataValue">Data (e.g., 0C1A2F3E0C1A2F3)</string>
+   <string name="Baudrate">Baudrate</string>
+   <string name="BaudrateValue">200000</string>
+   <string name="Refresh">Refresh USB</string>
+   <string name="CanSpeed">CAN Speed</string>
+   <string name="CanSpeedValue">500000</string>
+   <string name="SleepMS">Sleep (ms)</string>
+
     <!-- CARsenal About menu -->
     <string name="about_author">
         ABOUT:\n\n

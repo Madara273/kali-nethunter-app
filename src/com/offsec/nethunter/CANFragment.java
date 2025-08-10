@@ -38,6 +38,7 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
@@ -120,7 +121,7 @@ public class CANFragment extends Fragment {
                         }
 
                         @Override
-                        public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                        public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
                             View view = super.getDropDownView(position, convertView, parent);
                             TextView tv = (TextView) view;
                             tv.setTextColor(position == 0 ? Color.GRAY : Color.WHITE);
@@ -1432,7 +1433,7 @@ public class CANFragment extends Fragment {
             // Toggle Buttons
             // Counter
             Button btnCounter = rootView.findViewById(R.id.btn_toggle_usb_counter);
-            View counterContainer = rootView.findViewById(R.id.counter_container);
+            TextInputLayout counterContainer = rootView.findViewById(R.id.counter_container);
 
             btnCounter.setOnClickListener(v -> {
                 boolean visible = counterContainer.getVisibility() == View.VISIBLE;
@@ -1444,7 +1445,7 @@ public class CANFragment extends Fragment {
 
             // Data
             Button btnData = rootView.findViewById(R.id.btn_toggle_usb_data);
-            View dataContainer = rootView.findViewById(R.id.data_container);
+            TextInputLayout dataContainer = rootView.findViewById(R.id.data_container);
 
             btnData.setOnClickListener(v -> {
                 boolean visible = dataContainer.getVisibility() == View.VISIBLE;
@@ -1456,7 +1457,7 @@ public class CANFragment extends Fragment {
 
             // ID
             Button btnID = rootView.findViewById(R.id.btn_toggle_usb_id);
-            View idContainer = rootView.findViewById(R.id.id_container);
+            TextInputLayout idContainer = rootView.findViewById(R.id.id_container);
 
             btnID.setOnClickListener(v -> {
                 boolean visible = idContainer.getVisibility() == View.VISIBLE;
@@ -1481,7 +1482,7 @@ public class CANFragment extends Fragment {
 
             // Sleep
             Button btnSleep = rootView.findViewById(R.id.btn_toggle_usb_sleep);
-            View sleepContainer = rootView.findViewById(R.id.sleep_container);
+            TextInputLayout sleepContainer = rootView.findViewById(R.id.sleep_container);
 
             btnSleep.setOnClickListener(v -> {
                 boolean visible = sleepContainer.getVisibility() == View.VISIBLE;
@@ -1491,14 +1492,18 @@ public class CANFragment extends Fragment {
                 btnSleep.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
             });
 
-            // Debug (TTY Output)
-            Button btnDebug = rootView.findViewById(R.id.btn_toggle_usb_ttyOutput);
+            // Debug (TTY Output) Switch
+            SwitchCompat btnDebug = rootView.findViewById(R.id.btn_toggle_usb_ttyOutput);
 
-            btnDebug.setOnClickListener(v -> {
-                isDebugEnabled = !isDebugEnabled;
+            btnDebug.setChecked(isDebugEnabled);
+            btnDebug.setTextColor(ContextCompat.getColor(requireContext(),
+                    isDebugEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light));
 
-                int color = isDebugEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnDebug.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
+            btnDebug.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                isDebugEnabled = isChecked;
+
+                int colorRes = isDebugEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
+                btnDebug.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
             });
 
             // Start USB-CAN
@@ -1508,11 +1513,18 @@ public class CANFragment extends Fragment {
                 String USBCANSpeed = SelectedCanSpeedUSB.getText().toString();
                 String USBBaudrate = SelectedBaudrateUSB.getText().toString();
                 String debugEnabled = isDebugEnabled ? " -t" : "";
-                String countValue = getVisibleParam(counterContainer, " -n ");
-                String idValue = getVisibleParam(idContainer, " -i ");
-                String dataValue = getVisibleParam(dataContainer, " -j ");
-                String sleepValue = getVisibleParam(sleepContainer, " -g ");
-                String modeValue = getVisibleParam(canusbModeList, " -m ");
+                String countValue = getVisibleParam(counterContainer.getEditText(), " -n ");
+                String idValue = getVisibleParam(idContainer.getEditText(), " -i ");
+                String dataValue = getVisibleParam(dataContainer.getEditText(), " -j ");
+                String sleepValue = getVisibleParam(sleepContainer.getEditText(), " -g ");
+
+                String modeValue = "";
+                if (modeContainer.getVisibility() == View.VISIBLE) {
+                    String selected = canusbModeList.getSelectedItem().toString().trim();
+                    if (!selected.isEmpty() && !selected.equals("Mode")) {
+                        modeValue = " -m " + selected;
+                    }
+                }
 
                 if (!selected_usb.isEmpty() && !selected_usb.equals("USB Device (None)") && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
                     run_cmd("canusb -d " + selected_usb + " -s " + USBCANSpeed + " -b " + USBBaudrate + debugEnabled + idValue + dataValue + sleepValue + countValue + modeValue);
@@ -1555,7 +1567,7 @@ public class CANFragment extends Fragment {
         }
 
         private String getVisibleParam(View view, String prefix) {
-            if (view.getVisibility() == View.VISIBLE) {
+            if (view != null && view.getVisibility() == View.VISIBLE) {
                 if (view instanceof EditText) {
                     String input = ((EditText) view).getText().toString().trim();
                     if (!input.isEmpty()) {
