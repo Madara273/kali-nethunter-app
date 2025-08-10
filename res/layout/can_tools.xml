@@ -49,20 +49,37 @@
             <LinearLayout
                 android:id="@+id/linearLayout2"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="48dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
                 android:layout_marginBottom="5dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
-                <Spinner
-                    android:id="@+id/device_interface"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                <com.google.android.material.textfield.TextInputLayout
+                    android:id="@+id/interface_input_layout"
+                    android:layout_width="wrap_content"
+                    android:layout_height="48dp"
                     android:layout_weight="1"
-                    android:spinnerMode="dropdown"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    android:hint="Interface"
+                    app:boxStrokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp"
+                    app:boxStrokeColor="@color/nh_box_stroke_spinner"
+                    app:boxBackgroundColor="@color/transparent"
+                    app:hintTextColor="@color/ifc_hint_text"
+                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+
+                    <AutoCompleteTextView
+                        android:id="@+id/device_interface_dropdown"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:paddingStart="10dp"
+                        android:inputType="none"
+                        android:focusable="false"
+                        android:clickable="true"
+                        android:textColor="@color/white"
+                        android:imeOptions="actionDone" />
+                </com.google.android.material.textfield.TextInputLayout>
 
                 <ImageButton
                     android:id="@+id/refreshUSB"
@@ -114,7 +131,7 @@
                             android:layout_height="wrap_content"
                             android:inputType="number"
                             android:text="192.168.1.10"
-                            android:textColor="#40FFFFFF" />
+                            android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                 </LinearLayout>
@@ -144,7 +161,7 @@
                             android:layout_height="wrap_content"
                             android:inputType="number"
                             android:text="1234"
-                            android:textColor="#40FFFFFF" />
+                            android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.textfield.TextInputLayout
@@ -163,7 +180,7 @@
                             android:layout_height="wrap_content"
                             android:inputType="number"
                             android:text="1234"
-                            android:textColor="#40FFFFFF" />
+                            android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                 </LinearLayout>
@@ -191,7 +208,7 @@
                             android:layout_height="wrap_content"
                             android:inputType="text"
                             android:text="01a#11223344AABBCCDD"
-                            android:textColor="#40FFFFFF"/>
+                            android:textColor="@color/white"/>
 
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -221,7 +238,7 @@
                             android:layout_height="wrap_content"
                             android:inputType="text"
                             android:text="/root/candump/dump.log"
-                            android:textColor="#40FFFFFF" />
+                            android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.button.MaterialButton
@@ -258,7 +275,7 @@
                             android:layout_height="wrap_content"
                             android:inputType="text"
                             android:text="/root/candump/dump.log"
-                            android:textColor="#40FFFFFF" />
+                            android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.button.MaterialButton
@@ -355,14 +372,16 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="CanGen" />
+                    android:text="CanGen"
+                    android:textColor="@android:color/holo_orange_dark"/>
 
                 <Button
                     android:id="@+id/start_cansniffer"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="CanSniffer" />
+                    android:text="CanSniffer"
+                    android:textColor="@android:color/holo_orange_dark"/>
 
                 <Button
                     android:id="@+id/start_candump"
@@ -476,6 +495,8 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    app:boxStrokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp"
                     app:boxStrokeColor="@color/ifc_box_stroke"
                     app:boxBackgroundColor="@color/transparent"
                     app:hintTextColor="@color/ifc_hint_text"
@@ -487,7 +508,7 @@
                         android:layout_height="wrap_content"
                         android:inputType="text"
                         android:text="canbusload can0@100000 -r -t -b -c"
-                        android:textColor="#40FFFFFF"/>
+                        android:textColor="@color/white"/>
 
                     <com.google.android.material.button.MaterialButton
                         android:id="@+id/start_customcmd"
