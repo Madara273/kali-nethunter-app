@@ -712,6 +712,11 @@
     <string name="CanSpeed">CAN Speed</string>
     <string name="CanSpeedValue">500000</string>
     <string name="SleepMS">Sleep (ms)</string>
+    <!-- MSF Automotive -->
+    <string name="msfautomotive">MSF Automotive</string>
+    <string name="elmrelay">ELM327 Relay Configuration</string>
+    <string name="baudspeed">Baud Speed</string>
+    <string name="baudspeedValue">115200</string>
 
     <!-- CARsenal About menu -->
     <string name="about_author">

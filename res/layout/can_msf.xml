@@ -22,7 +22,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginTop="10dp"
-                android:text="Metasploit Automotive"
+                android:text="@string/msfautomotive"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textStyle="bold"/>
 
@@ -100,7 +100,7 @@
                 android:layout_marginEnd="20dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="ELM327 Relay Configuration" />
+                android:text="@string/elmrelay" />
 
             <LinearLayout
                 android:id="@+id/msf_elmconfig"
@@ -110,6 +110,7 @@
                 android:visibility="gone">
 
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
@@ -125,14 +126,14 @@
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="Baud Speed">
+                        android:hint="@string/baudspeed">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/baud_speed"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="number"
-                            android:text="115200"
+                            android:text="@string/baudspeedValue"
                             android:textColor="@color/white"/>
 
                     </com.google.android.material.textfield.TextInputLayout>
