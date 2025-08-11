@@ -169,9 +169,9 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="Browse"
-                        android:textColor="#ffffffff"
-                        tools:ignore="DuplicateSpeakableTextCheck"
+                        android:textColor="#FFFFFFFF"
                         android:layout_marginStart="8dp" />
+
                 </LinearLayout>
 
                 <LinearLayout

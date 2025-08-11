@@ -45,10 +45,12 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.BootKali;
@@ -189,6 +191,92 @@ public class CANFragment extends Fragment {
             }
 
             executorService.submit(loadInterfaces);
+        }
+    }
+
+    public static class RootFileBrowserDialog {
+
+        private final Context context;
+        private String currentPath = "/";
+        private final ShellExecuter exe = new ShellExecuter();
+        private final OnFileSelectedListener listener;
+
+        public interface OnFileSelectedListener {
+            void onFileSelected(String filePath);
+        }
+
+        public RootFileBrowserDialog(Context context, OnFileSelectedListener listener) {
+            this.context = context;
+            this.listener = listener;
+        }
+
+        public void show() {
+            showDirectory(currentPath);
+        }
+
+        private void showDirectory(String path) {
+            ArrayList<String> items = loadDirectory(path);
+
+            if (!path.equals("/")) {
+                items.add(0, "..");
+            }
+
+            String[] itemArray = items.toArray(new String[0]);
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setTitle("Select File");
+            builder.setItems(itemArray, (dialog, which) -> {
+                String selectedItem = itemArray[which];
+                if (selectedItem.equals("..")) {
+                    String parentPath = goUp(path);
+                    showDirectory(parentPath);
+                } else if (selectedItem.endsWith("/")) {
+                    showDirectory(path + selectedItem);
+                } else {
+                    listener.onFileSelected(path + selectedItem);
+                }
+            });
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+            AlertDialog dialog = builder.create();
+
+            dialog.setOnShowListener(d -> {
+                Button cancelButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+                if (cancelButton != null) {
+                    cancelButton.setTextColor(Color.WHITE);
+                }
+            });
+
+            dialog.show();
+        }
+
+        private ArrayList<String> loadDirectory(String path) {
+            ArrayList<String> result = new ArrayList<>();
+            String output = exe.RunAsChrootOutput("ls -p " + path);
+
+            if (output != null && !output.isEmpty()) {
+                String[] lines = output.split("\n");
+                for (String line : lines) {
+                    line = line.trim();
+                    if (!line.isEmpty()) {
+                        result.add(line);
+                    }
+                }
+            }
+            return result;
+        }
+
+        private String goUp(String path) {
+            if (path.equals("/")) return path;
+
+            String newPath = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+            int lastSlash = newPath.lastIndexOf('/');
+            if (lastSlash >= 0) {
+                newPath = newPath.substring(0, lastSlash + 1);
+            } else {
+                newPath = "/";
+            }
+            return newPath;
         }
     }
 
@@ -398,6 +486,7 @@ public class CANFragment extends Fragment {
             super.onCreate(savedInstanceState);
             context = getContext();
         }
+
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -1007,10 +1096,6 @@ public class CANFragment extends Fragment {
             final EditText SelectedRHost = rootView.findViewById(R.id.cannelloni_rhost);
             final EditText SelectedRPort = rootView.findViewById(R.id.cannelloni_rport);
             final EditText SelectedLPort = rootView.findViewById(R.id.cannelloni_lport);
-            final EditText inputfilepath = rootView.findViewById(R.id.inputfilepath);
-            final Button inputfilebrowse = rootView.findViewById(R.id.inputfilebrowse);
-            final EditText outputfilepath = rootView.findViewById(R.id.outputfilepath);
-            final Button outputfilebrowse = rootView.findViewById(R.id.outputfilebrowse);
             final EditText CustomCmd = rootView.findViewById(R.id.customcmd);
 
             // Configuration Toggle
@@ -1091,45 +1176,28 @@ public class CANFragment extends Fragment {
             });
 
 
-            // Input File
-            final ActivityResultLauncher<Intent> inputFileLauncher = registerForActivityResult(
-                    new ActivityResultContracts.StartActivityForResult(),
-                    result -> {
-                        if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                            Uri uri = result.getData().getData();
-                            assert uri != null;
-                            inputfilepath.setText(uri.getPath());
-                        }
-                    }
-            );
+            // Input File browse button
+            MaterialButton inputfilebrowse = rootView.findViewById(R.id.inputfilebrowse);
+            TextInputEditText inputfilepath = rootView.findViewById(R.id.inputfilepath);
 
             inputfilebrowse.setOnClickListener(v -> {
-                Intent intent = new Intent();
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("log/*");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                inputFileLauncher.launch(Intent.createChooser(intent, "Select input file"));
+                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), selectedPath -> {
+                    inputfilepath.setText(selectedPath);
+                });
+                dialog.show();
             });
 
-            // Output File
-            final ActivityResultLauncher<Intent> outputFileLauncher = registerForActivityResult(
-                    new ActivityResultContracts.StartActivityForResult(),
-                    result -> {
-                        if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                            Uri uri = result.getData().getData();
-                            assert uri != null;
-                            outputfilepath.setText(uri.getPath());
-                        }
-                    }
-            );
+            // Output File browse button
+            MaterialButton outputfilebrowse = rootView.findViewById(R.id.outputfilebrowse);
+            TextInputEditText outputfilepath = rootView.findViewById(R.id.outputfilepath);
 
             outputfilebrowse.setOnClickListener(v -> {
-                Intent intent = new Intent();
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("log/*");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                outputFileLauncher.launch(Intent.createChooser(intent, "Select output file"));
+                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), selectedPath -> {
+                    outputfilepath.setText(selectedPath);
+                });
+                dialog.show();
             });
+
 
             // Tools
             // Start CanGen
@@ -1579,24 +1647,12 @@ public class CANFragment extends Fragment {
             );
 
             // File
-            final ActivityResultLauncher<Intent> inputFileLauncher = registerForActivityResult(
-                    new ActivityResultContracts.StartActivityForResult(),
-                    result -> {
-                        if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                            Uri uri = result.getData().getData();
-                            assert uri != null;
-                            SelectedFile.setText(uri.getPath());
-                        }
-                    }
-            );
+            MaterialButton browseButton = rootView.findViewById(R.id.cariboufilebrowse);
+            TextInputEditText fileEditText = rootView.findViewById(R.id.caribou_file);
 
-            final Button cariboufilebrowse = rootView.findViewById(R.id.cariboufilebrowse);
-            cariboufilebrowse.setOnClickListener(v -> {
-                Intent intent = new Intent();
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("*/*");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                inputFileLauncher.launch(Intent.createChooser(intent, "Select input file"));
+            browseButton.setOnClickListener(v -> {
+                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), fileEditText::setText);
+                dialog.show();
             });
 
             // Advanced Options Toggle
