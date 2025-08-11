@@ -22,7 +22,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginTop="10dp"
-                android:text="Instrument Cluster Simulator"
+                android:text="@string/icsim"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textStyle="bold"/>
 
@@ -101,7 +101,7 @@
                 android:layout_marginBottom="5dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Configuration" />
+                android:text="@string/Configuration" />
 
             <LinearLayout
                 android:id="@+id/icsim_configuration"

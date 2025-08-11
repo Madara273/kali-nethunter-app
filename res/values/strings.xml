@@ -712,6 +712,9 @@
     <string name="CanSpeed">CAN Speed</string>
     <string name="CanSpeedValue">500000</string>
     <string name="SleepMS">Sleep (ms)</string>
+    <!-- ICSim -->
+    <string name="icsim">Instrument Cluster Simulator</string>
+    <string name="Configuration">Configuration</string>
     <!-- MSF Automotive -->
     <string name="msfautomotive">MSF Automotive</string>
     <string name="elmrelay">ELM327 Relay Configuration</string>
