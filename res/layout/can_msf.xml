@@ -180,7 +180,6 @@
                     app:strokeColor="@color/nh_box_stroke_spinner"
                     app:strokeWidth="2dp"
                     app:boxStrokeWidthFocused="3dp"
-                    android:layout_margin="8dp"
                     android:padding="4dp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"

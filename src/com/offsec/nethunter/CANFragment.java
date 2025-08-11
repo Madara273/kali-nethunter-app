@@ -2279,13 +2279,7 @@ public class CANFragment extends Fragment {
 
                     modulesList.setAdapter(adapter);
 
-                    int savedPosition = sharedpreferences.getInt("selected_module", 1);
-                    if (savedPosition < module.size()) {
-                        modulesList.setSelection(savedPosition);
-                        selected_module = module.get(savedPosition);
-                    } else {
-                        selected_module = "Module (None)";
-                    }
+                    modulesList.setSelection(0);  // Set initial selection to "MSF Modules"
 
                     modulesList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                         @Override
