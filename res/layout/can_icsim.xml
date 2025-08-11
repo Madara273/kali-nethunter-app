@@ -13,16 +13,15 @@
 
         <LinearLayout
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="10dp"
-            tools:ignore="WebViewLayout">
+            android:layout_height="match_parent"
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/textView1"
                 android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
                 android:text="Instrument Cluster Simulator"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textStyle="bold"/>
@@ -31,11 +30,12 @@
                 android:id="@+id/can_desc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|center"
                 android:gravity="center"
                 android:text="@string/can_icsim_desc" />
 
             <View
-                android:id="@+id/divider2"
+                android:id="@+id/divider1"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginTop="10dp"
@@ -54,13 +54,12 @@
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/spinner_iface_card"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
                     app:strokeColor="@color/nh_box_stroke_spinner"
                     app:strokeWidth="2dp"
                     app:boxStrokeWidthFocused="3dp"
-                    android:layout_margin="8dp"
                     android:padding="4dp"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent"
@@ -74,15 +73,25 @@
 
                 </com.google.android.material.card.MaterialCardView>
 
-                <ImageButton
-                    android:id="@+id/refreshUSB"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:layout_marginStart="8dp"
-                    android:src="@drawable/ic_action_refresh"
-                    android:contentDescription="Refresh USB"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    app:strokeColor="@color/nh_box_stroke_refresh"
+                    app:strokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp"
+                    android:padding="4dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageButton
+                        android:id="@+id/refreshUSB"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/ic_action_refresh"
+                        android:contentDescription="@string/Refresh"
+                        android:background="?attr/selectableItemBackgroundBorderless" />
+                </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
             <Button
@@ -203,6 +212,7 @@
                 android:layout_width="match_parent"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
+                android:layout_marginBottom="10dp"
                 android:layout_height="200dp" />
 
         </LinearLayout>
