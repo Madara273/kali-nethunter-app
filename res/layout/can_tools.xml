@@ -6,7 +6,6 @@
     android:layout_margin="16dp"
     app:cardElevation="4dp"
     app:cardCornerRadius="12dp">
-
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -21,8 +20,7 @@
                 android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginTop="5dp"
-                android:layout_marginBottom="5dp"
+                android:layout_marginTop="10dp"
                 android:text="Basic Tools"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textStyle="bold"/>
@@ -31,19 +29,16 @@
                 android:id="@+id/can_desc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                android:layout_marginBottom="5dp"
                 android:layout_gravity="center_horizontal|center"
                 android:gravity="center"
-                android:text="@string/can_tools_desc"
-                tools:ignore="VisualLintLongText" />
+                android:text="@string/can_tools_desc" />
 
             <View
                 android:id="@+id/divider1"
                 android:layout_width="match_parent"
-                android:layout_marginBottom="10dp"
                 android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
                 android:background="?android:attr/listDivider" />
 
             <LinearLayout
@@ -56,40 +51,46 @@
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/interface_input_layout"
-                    android:layout_width="wrap_content"
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/spinner_iface_card"
+                    android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
-                    android:hint="Interface"
-                    app:boxStrokeWidth="2dp"
+                    app:strokeColor="@color/nh_box_stroke_spinner"
+                    app:strokeWidth="2dp"
                     app:boxStrokeWidthFocused="3dp"
-                    app:boxStrokeColor="@color/nh_box_stroke_spinner"
-                    app:boxBackgroundColor="@color/transparent"
-                    app:hintTextColor="@color/ifc_hint_text"
-                    style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
+                    android:padding="4dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent">
 
-                    <AutoCompleteTextView
-                        android:id="@+id/device_interface_dropdown"
+                    <Spinner
+                        android:id="@+id/device_interface"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:spinnerMode="dropdown"/>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="8dp"
+                    app:strokeColor="@color/nh_box_stroke_refresh"
+                    app:strokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp"
+                    android:padding="4dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageButton
+                        android:id="@+id/refreshUSB"
                         android:layout_width="match_parent"
                         android:layout_height="match_parent"
-                        android:paddingStart="10dp"
-                        android:inputType="none"
-                        android:focusable="false"
-                        android:clickable="true"
-                        android:textColor="@color/white"
-                        android:imeOptions="actionDone" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-                <ImageButton
-                    android:id="@+id/refreshUSB"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
-                    android:src="@drawable/ic_action_refresh"
-                    android:contentDescription="Refresh USB"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    tools:ignore="TouchTargetSizeCheck" />
+                        android:src="@drawable/ic_action_refresh"
+                        android:contentDescription="@string/Refresh"
+                        android:background="?attr/selectableItemBackgroundBorderless" />
+                </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
             <Button
@@ -372,16 +373,14 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="CanGen"
-                    android:textColor="@android:color/holo_orange_dark"/>
+                    android:text="CanGen"/>
 
                 <Button
                     android:id="@+id/start_cansniffer"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="CanSniffer"
-                    android:textColor="@android:color/holo_orange_dark"/>
+                    android:text="CanSniffer"/>
 
                 <Button
                     android:id="@+id/start_candump"
