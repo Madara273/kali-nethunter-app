@@ -56,7 +56,7 @@
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
-                    app:strokeColor="@color/nh_box_stroke_spinner"
+                    app:strokeColor="@color/nh_box_stroke_iface"
                     app:strokeWidth="2dp"
                     app:boxStrokeWidthFocused="3dp"
                     android:padding="4dp"
@@ -76,7 +76,7 @@
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:layout_marginStart="8dp"
-                    app:strokeColor="@color/nh_box_stroke_refresh"
+                    app:strokeColor="@color/nh_box_stroke_iface"
                     app:strokeWidth="2dp"
                     app:boxStrokeWidthFocused="3dp"
                     android:padding="4dp"
@@ -123,6 +123,8 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:hint="@string/RHOST"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text">
@@ -142,6 +144,8 @@
                         android:layout_height="wrap_content"
                         android:layout_marginStart="8dp"
                         android:hint="@string/RPORT"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text">
@@ -162,6 +166,8 @@
                         android:layout_marginStart="8dp"
                         android:hint="@string/LPORT"
                         app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text">
 
@@ -190,6 +196,8 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
@@ -221,6 +229,8 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:hint="@string/Input"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text">
@@ -258,6 +268,8 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:hint="@string/Output"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text">
