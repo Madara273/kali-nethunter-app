@@ -1128,98 +1128,31 @@ public class CANFragment extends Fragment {
             });
 
             // Tools
-            // CanGen
+            // Start CanGen
             Button CanGenButton = rootView.findViewById(R.id.start_cangen);
-
-            SharedPreferences cangen_prefs = requireActivity().getSharedPreferences("cangen_prefs", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editorCangen = cangen_prefs.edit();
-
-            String savedCmd_cangen = cangen_prefs.getString("cangen_cmd", "cangen");
-            String[] cangenCmdHolder = { savedCmd_cangen };
 
             CanGenButton.setOnClickListener(v -> {
                 String verboseEnabled = isVerboseEnabled ? " -v" : "";
                 String disableLoopbackEnabled = isDisableLoopbackEnabled ? " -x" : "";
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
-                    String fullCmd = cangenCmdHolder[0] + " " + selected_caniface + verboseEnabled + disableLoopbackEnabled;
-                    run_cmd(fullCmd);
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                    run_cmd("cangen " + selected_caniface + verboseEnabled + disableLoopbackEnabled);
                 } else {
                     showToast("Please ensure your CAN Interface field is set!");
                 }
                 activity.invalidateOptionsMenu();
             });
 
-            CanGenButton.setOnLongClickListener(v -> {
-                AlertDialog.Builder builder_cangen = new AlertDialog.Builder(requireContext());
-                builder_cangen.setTitle("Edit Command");
-
-                final EditText input_cangen = new EditText(requireContext());
-                input_cangen.setText(cangenCmdHolder[0]);
-                builder_cangen.setView(input_cangen);
-
-                builder_cangen.setPositiveButton("Save", (dialog, which) -> {
-                    String newCangenCmd = input_cangen.getText().toString();
-                    cangenCmdHolder[0] = newCangenCmd;
-                    editorCangen.putString("cangen_cmd", newCangenCmd);
-                    editorCangen.apply();
-                    showToast("Command updated!");
-                });
-
-                builder_cangen.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-
-                AlertDialog dialog = builder_cangen.create();
-                dialog.setOnShowListener(d -> {
-                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
-                });
-                dialog.show();
-                return true;
-            });
-
-            // CanSniffer
+            // Start CanSniffer
             Button CanSnifferButton = rootView.findViewById(R.id.start_cansniffer);
 
-            SharedPreferences cansniffer_prefs = requireActivity().getSharedPreferences("cansniffer_prefs", Context.MODE_PRIVATE);
-            SharedPreferences.Editor editorCansniffer = cansniffer_prefs.edit();
-
-            String savedCmd_cansniffer = cangen_prefs.getString("cansniffer_cmd", "cansniffer");
-            String[] cansnifferCmdHolder = { savedCmd_cansniffer };
-
             CanSnifferButton.setOnClickListener(v -> {
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
-                    String fullCmd = cansnifferCmdHolder[0] + " " + selected_caniface;
-                    run_cmd(fullCmd);
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                    run_cmd("cansniffer " + selected_caniface);
                 } else {
                     showToast("Please ensure your CAN Interface field is set!");
                 }
+
                 activity.invalidateOptionsMenu();
-            });
-
-            CanSnifferButton.setOnLongClickListener(v -> {
-                AlertDialog.Builder builder_cansniffer = new AlertDialog.Builder(requireContext());
-                builder_cansniffer.setTitle("Edit Command");
-
-                final EditText input_cansniffer = new EditText(requireContext());
-                input_cansniffer.setText(cansnifferCmdHolder[0]);
-                builder_cansniffer.setView(input_cansniffer);
-
-                builder_cansniffer.setPositiveButton("Save", (dialog, which) -> {
-                    String newCansnifferCmd = input_cansniffer.getText().toString();
-                    cansnifferCmdHolder[0] = newCansnifferCmd;
-                    editorCansniffer.putString("cansniffer_cmd", newCansnifferCmd);
-                    editorCansniffer.apply();
-                    showToast("Command updated!");
-                });
-
-                builder_cansniffer.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-
-                AlertDialog dialog = builder_cansniffer.create();
-                dialog.setOnShowListener(d -> {
-                    dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
-                    dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
-                });
-                dialog.show();
-                return true;
             });
 
             // Start CanDump
