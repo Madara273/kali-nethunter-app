@@ -412,6 +412,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/CanGen"
+                    android:textColor="@android:color/holo_orange_dark"
                     tools:ignore="ButtonStyle" />
 
                 <Button
@@ -420,6 +421,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/CanSniffer"
+                    android:textColor="@android:color/holo_orange_dark"
                     tools:ignore="ButtonStyle" />
 
                 <Button
@@ -428,6 +430,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/CanDump"
+                    android:textColor="@android:color/holo_orange_dark"
                     tools:ignore="ButtonStyle" />
 
             </LinearLayout>
@@ -445,6 +448,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/CanSend"
+                    android:textColor="@android:color/holo_orange_dark"
                     tools:ignore="ButtonStyle" />
 
                 <Button
@@ -453,6 +457,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/CanPlayer"
+                    android:textColor="@android:color/holo_orange_dark"
                     tools:ignore="ButtonStyle" />
 
                 <Button
@@ -461,6 +466,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/SequenceFinder"
+                    android:textColor="@android:color/holo_orange_dark"
                     tools:ignore="ButtonStyle" />
 
             </LinearLayout>
@@ -478,6 +484,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/Asc2Log"
+                    android:textColor="@android:color/holo_orange_dark"
                     tools:ignore="ButtonStyle" />
 
                 <Button
@@ -486,6 +493,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/Log2Asc"
+                    android:textColor="@android:color/holo_orange_dark"
                     tools:ignore="ButtonStyle" />
 
                 <Button
@@ -494,6 +502,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/Cannelloni"
+                    android:textColor="@android:color/holo_orange_dark"
                     tools:ignore="ButtonStyle" />
 
             </LinearLayout>
@@ -511,6 +520,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/Freediag"
+                    android:textColor="@android:color/holo_orange_dark"
                     tools:ignore="ButtonStyle" />
 
                 <Button
@@ -519,10 +529,19 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/DiagTest"
+                    android:textColor="@android:color/holo_orange_dark"
                     tools:ignore="ButtonStyle" />
 
             </LinearLayout>
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:gravity="center"
+                android:text="@string/LongPress"
+                android:textAppearance="?android:attr/textAppearanceSmall" />
 
             <View
                 android:id="@+id/divider4"

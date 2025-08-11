@@ -42,6 +42,7 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
@@ -1081,6 +1082,19 @@ public class CANFragment extends Fragment {
         private boolean isVerboseEnabled = false;
         private boolean isDisableLoopbackEnabled = false;
         private String selected_caniface;
+        private SharedPreferences prefs;
+        private final String[] canGenCmd = {""};
+        private final String[] canSnifferCmd = {""};
+        private final String[] canDumpCmd = {""};
+        private final String[] canSendCmd = {""};
+        private final String[] canPlayerCmd = {""};
+        private final String[] sequenceFinderCmd = {""};
+        private final String[] freediagCmd = {""};
+        private final String[] diagTestCmd = {""};
+        private final String[] cannelloniCmd = {""};
+        private final String[] asc2logCmd = {""};
+        private final String[] log2ascCmd = {""};
+
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -1097,6 +1111,22 @@ public class CANFragment extends Fragment {
             final EditText SelectedRPort = rootView.findViewById(R.id.cannelloni_rport);
             final EditText SelectedLPort = rootView.findViewById(R.id.cannelloni_lport);
             final EditText CustomCmd = rootView.findViewById(R.id.customcmd);
+
+            prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
+            activity = getActivity();
+
+            // Load saved commands or empty strings
+            canGenCmd[0] = prefs.getString("canGen_cmd", "");
+            canSnifferCmd[0] = prefs.getString("canSniffer_cmd", "");
+            canDumpCmd[0] = prefs.getString("canDump_cmd", "");
+            canSendCmd[0] = prefs.getString("canSend_cmd", "");
+            canPlayerCmd[0] = prefs.getString("canPlayer_cmd", "");
+            sequenceFinderCmd[0] = prefs.getString("sequenceFinder_cmd", "");
+            freediagCmd[0] = prefs.getString("freediag_cmd", "");
+            diagTestCmd[0] = prefs.getString("diagTest_cmd", "");
+            cannelloniCmd[0] = prefs.getString("cannelloni_cmd", "");
+            asc2logCmd[0] = prefs.getString("asc2log_cmd", "");
+            log2ascCmd[0] = prefs.getString("log2asc_cmd", "");
 
             // Configuration Toggle
             Button btnConfigurationToggle = rootView.findViewById(R.id.btn_toggle_config_tools);
@@ -1200,40 +1230,54 @@ public class CANFragment extends Fragment {
 
 
             // Tools
-            // Start CanGen
+            // CanGen
             Button CanGenButton = rootView.findViewById(R.id.start_cangen);
-
             CanGenButton.setOnClickListener(v -> {
                 String verboseEnabled = isVerboseEnabled ? " -v" : "";
                 String disableLoopbackEnabled = isDisableLoopbackEnabled ? " -x" : "";
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+
+                if (!canGenCmd[0].isEmpty()) {
+                    run_cmd(canGenCmd[0]);
+                } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
                     run_cmd("cangen " + selected_caniface + verboseEnabled + disableLoopbackEnabled);
                 } else {
                     showToast("Please ensure your CAN Interface field is set!");
                 }
+
                 activity.invalidateOptionsMenu();
             });
+            CanGenButton.setOnLongClickListener(v -> {
+                String defaultCmd = "cangen " + selected_caniface + (isVerboseEnabled ? " -v" : "") + (isDisableLoopbackEnabled ? " -x" : "");
+                showEditCommandDialog("Edit CanGen Command", canGenCmd, "canGen_cmd", defaultCmd);
+                return true;
+            });
 
-            // Start CanSniffer
+            // CanSniffer
             Button CanSnifferButton = rootView.findViewById(R.id.start_cansniffer);
-
             CanSnifferButton.setOnClickListener(v -> {
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!canSnifferCmd[0].isEmpty()) {
+                    run_cmd(canSnifferCmd[0]);
+                } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
                     run_cmd("cansniffer " + selected_caniface);
                 } else {
                     showToast("Please ensure your CAN Interface field is set!");
                 }
-
                 activity.invalidateOptionsMenu();
             });
+            CanSnifferButton.setOnLongClickListener(v -> {
+                String defaultCmd = "cansniffer " + selected_caniface;
+                showEditCommandDialog("Edit CanSniffer Command", canSnifferCmd, "canSniffer_cmd", defaultCmd);
+                return true;
+            });
 
-            // Start CanDump
+            // CanDump
             Button CanDumpButton = rootView.findViewById(R.id.start_candump);
-
             CanDumpButton.setOnClickListener(v -> {
                 String outputfile = outputfilepath.getText().toString();
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !outputfile.isEmpty()) {
+                if (!canDumpCmd[0].isEmpty()) {
+                    run_cmd(canDumpCmd[0]);
+                } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !outputfile.isEmpty()) {
                     run_cmd("candump " + selected_caniface + " -f " + outputfile);
                 } else {
                     showToast("Please ensure your CAN Interface and Output File fields is set!");
@@ -1241,14 +1285,20 @@ public class CANFragment extends Fragment {
 
                 activity.invalidateOptionsMenu();
             });
+            CanDumpButton.setOnLongClickListener(v -> {
+                String defaultCmd = "candump " + selected_caniface + " -f " + outputfilepath.getText().toString();
+                showEditCommandDialog("Edit CanDump Command", canDumpCmd, "canDump_cmd", defaultCmd);
+                return true;
+            });
 
-            // Start CanSend
+            // CanSend
             Button CanSendButton = rootView.findViewById(R.id.start_cansend);
-
             CanSendButton.setOnClickListener(v -> {
                 String sequence = cansend_sequence.getText().toString();
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !sequence.isEmpty()) {
+                if (!canSendCmd[0].isEmpty()) {
+                    run_cmd(canSendCmd[0]);
+                } else if (!selected_caniface.equals("Interfaces") && !sequence.isEmpty()) {
                     run_cmd("cansend " + selected_caniface + " " + sequence);
                 } else {
                     showToast("Please ensure your CAN Interface and Sequence fields is set!");
@@ -1256,17 +1306,23 @@ public class CANFragment extends Fragment {
 
                 activity.invalidateOptionsMenu();
             });
+            CanSendButton.setOnLongClickListener(v -> {
+                String defaultCmd = "cansend " + selected_caniface + " " + cansend_sequence.getText().toString();
+                showEditCommandDialog("Edit CanSend Command", canSendCmd, "canSend_cmd", defaultCmd);
+                return true;
+            });
 
-            // Start CanPlayer
+            // CanPlayer
             Button CanPlayerButton = rootView.findViewById(R.id.start_canplayer);
-
             CanPlayerButton.setOnClickListener(v -> {
                 String interactiveEnabled = isInteractiveEnabled ? " -i" : "";
                 String verboseEnabled = isVerboseEnabled ? " -v" : "";
                 String disableLoopbackEnabled = isDisableLoopbackEnabled ? " -x" : "";
                 String inputfile = inputfilepath.getText().toString();
 
-                if (!inputfile.isEmpty()) {
+                if (!canPlayerCmd[0].isEmpty()) {
+                    run_cmd(canPlayerCmd[0]);
+                } else if (!inputfile.isEmpty()) {
                     run_cmd("canplayer -I " + inputfile + interactiveEnabled + verboseEnabled + disableLoopbackEnabled);
                 } else {
                     showToast("Please ensure your Input File field is set!");
@@ -1274,14 +1330,20 @@ public class CANFragment extends Fragment {
 
                 activity.invalidateOptionsMenu();
             });
+            CanPlayerButton.setOnLongClickListener(v -> {
+                String defaultCmd = "canplayer -I " + inputfilepath.getText().toString() + (isInteractiveEnabled ? " -i" : "") + (isVerboseEnabled ? " -v" : "") + (isDisableLoopbackEnabled ? " -x" : "");
+                showEditCommandDialog("Edit CanPlayer Command", canPlayerCmd, "canPlayer_cmd", defaultCmd);
+                return true;
+            });
 
-            // Start SequenceFinder
-            final Button SequenceFinderButton = rootView.findViewById(R.id.start_sequencefinder);
-
+            // SequenceFinder
+            Button SequenceFinderButton = rootView.findViewById(R.id.start_sequencefinder);
             SequenceFinderButton.setOnClickListener(v -> {
                 String inputfile = inputfilepath.getText().toString();
 
-                if (!inputfile.isEmpty()) {
+                if (!sequenceFinderCmd[0].isEmpty()) {
+                    run_cmd(sequenceFinderCmd[0]);
+                } else if (!inputfile.isEmpty()) {
                     run_cmd("/opt/car_hacking/sequence_finder.sh " + inputfile);
                 } else {
                     showToast("Please ensure your Input File field is set!");
@@ -1289,65 +1351,96 @@ public class CANFragment extends Fragment {
 
                 activity.invalidateOptionsMenu();
             });
-
-            // Start Freediag
-            Button FreediagButton = rootView.findViewById(R.id.start_freediag);
-
-            FreediagButton.setOnClickListener(v -> {
-                run_cmd("sudo -u kali freediag");
-
-                activity.invalidateOptionsMenu();
+            SequenceFinderButton.setOnLongClickListener(v -> {
+                String defaultCmd = "/opt/car_hacking/sequence_finder.sh " + inputfilepath.getText().toString();
+                showEditCommandDialog("Edit SequenceFinder Command", sequenceFinderCmd, "sequenceFinder_cmd", defaultCmd);
+                return true;
             });
 
-            // Start diag_test
-            Button diagTestButton = rootView.findViewById(R.id.start_diagtest);
-
-            diagTestButton.setOnClickListener(v -> {
-                run_cmd("sudo -u kali diag_test");
-
+            // Freediag
+            Button FreediagButton = rootView.findViewById(R.id.start_freediag);
+            FreediagButton.setOnClickListener(v -> {
+                if (!freediagCmd[0].isEmpty()) {
+                    run_cmd(freediagCmd[0]);
+                } else {
+                    run_cmd("sudo -u kali freediag");
+                }
                 activity.invalidateOptionsMenu();
+            });
+            FreediagButton.setOnLongClickListener(v -> {
+                String defaultCmd = "sudo -u kali freediag";
+                showEditCommandDialog("Edit Freediag Command", freediagCmd, "freediag_cmd", defaultCmd);
+                return true;
+            });
+
+            // diag_test
+            Button diagTestButton = rootView.findViewById(R.id.start_diagtest);
+            diagTestButton.setOnClickListener(v -> {
+                if (!diagTestCmd[0].isEmpty()) {
+                    run_cmd(diagTestCmd[0]);
+                } else {
+                    run_cmd("sudo -u kali diag_test");
+                }
+                activity.invalidateOptionsMenu();
+            });
+            diagTestButton.setOnLongClickListener(v -> {
+                String defaultCmd = "sudo -u kali diag_test";
+                showEditCommandDialog("Edit diag_test Command", diagTestCmd, "diagTest_cmd", defaultCmd);
+                return true;
             });
 
             // Cannelloni
             Button CannelloniButton = rootView.findViewById(R.id.start_cannelloni);
-
             CannelloniButton.setOnClickListener(v -> {
+                if (!cannelloniCmd[0].isEmpty()) {
+                    run_cmd(cannelloniCmd[0]);
+                } else {
+                    String rhost = SelectedRHost.getText().toString().trim();
+                    String rport = SelectedRPort.getText().toString().trim();
+                    String lport = SelectedLPort.getText().toString().trim();
+
+                    if (selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
+                        showToast("Please select a CAN Interface!");
+                        return;
+                    }
+
+                    if (rhost.length() != 15) {
+                        showToast("RHOST must be exactly 15 characters (e.g., 192.168.111.111)");
+                        return;
+                    }
+
+                    if (rport.length() != 6 || !rport.matches("\\d+")) {
+                        showToast("RPORT must be exactly 6 digits");
+                        return;
+                    }
+
+                    if (lport.length() != 6 || !lport.matches("\\d+")) {
+                        showToast("LPORT must be exactly 6 digits");
+                        return;
+                    }
+
+                    run_cmd("sudo cannelloni -I " + selected_caniface + " -R " + rhost + " -r " + rport + " -l " + lport);
+                }
+                activity.invalidateOptionsMenu();
+            });
+            CannelloniButton.setOnLongClickListener(v -> {
                 String rhost = SelectedRHost.getText().toString().trim();
                 String rport = SelectedRPort.getText().toString().trim();
                 String lport = SelectedLPort.getText().toString().trim();
-
-                if (selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
-                    showToast("Please select a CAN Interface!");
-                    return;
-                }
-
-                if (rhost.length() != 15) {
-                    showToast("RHOST must be exactly 15 characters (e.g., 192.168.111.111)");
-                    return;
-                }
-
-                if (rport.length() != 6 || !rport.matches("\\d+")) {
-                    showToast("RPORT must be exactly 6 digits");
-                    return;
-                }
-
-                if (lport.length() != 6 || !lport.matches("\\d+")) {
-                    showToast("LPORT must be exactly 6 digits");
-                    return;
-                }
-
-                run_cmd("sudo cannelloni -I " + selected_caniface + " -R " + rhost + " -r " + rport + " -l " + lport);
-                activity.invalidateOptionsMenu();
+                String defaultCmd = "sudo cannelloni -I " + selected_caniface + " -R " + rhost + " -r " + rport + " -l " + lport;
+                showEditCommandDialog("Edit Cannelloni Command", cannelloniCmd, "cannelloni_cmd", defaultCmd);
+                return true;
             });
 
-            // Start Asc2Log
+            // Asc2Log
             Button Asc2LogButton = rootView.findViewById(R.id.start_asc2log);
-
             Asc2LogButton.setOnClickListener(v -> {
                 String inputfile = inputfilepath.getText().toString();
                 String outputfile = outputfilepath.getText().toString();
 
-                if (!inputfile.isEmpty() && !outputfile.isEmpty()) {
+                if (!asc2logCmd[0].isEmpty()) {
+                    run_cmd(asc2logCmd[0]);
+                } else if (!inputfile.isEmpty() && !outputfile.isEmpty()) {
                     run_cmd("asc2log -I " + inputfile + " -O " + outputfile);
                 } else {
                     showToast("Please ensure your Input and Output File fields is set!");
@@ -1355,15 +1448,21 @@ public class CANFragment extends Fragment {
 
                 activity.invalidateOptionsMenu();
             });
+            Asc2LogButton.setOnLongClickListener(v -> {
+                String defaultCmd = "asc2log -I " + inputfilepath.getText().toString() + " -O " + outputfilepath.getText().toString();
+                showEditCommandDialog("Edit Asc2Log Command", asc2logCmd, "asc2log_cmd", defaultCmd);
+                return true;
+            });
 
-            // Start Log2asc
+            // Log2asc
             Button Log2AscButton = rootView.findViewById(R.id.start_log2asc);
-
             Log2AscButton.setOnClickListener(v -> {
                 String inputfile = inputfilepath.getText().toString();
                 String outputfile = outputfilepath.getText().toString();
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !inputfile.isEmpty() && !outputfile.isEmpty()) {
+                if (!log2ascCmd[0].isEmpty()) {
+                    run_cmd(log2ascCmd[0]);
+                } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !inputfile.isEmpty() && !outputfile.isEmpty()) {
                     run_cmd("log2asc -I " + inputfile + " -O " + outputfile + " " + selected_caniface);
                 } else {
                     showToast("Please ensure your CAN Interface, Input and Output File fields is set!");
@@ -1371,6 +1470,12 @@ public class CANFragment extends Fragment {
 
                 activity.invalidateOptionsMenu();
             });
+            Log2AscButton.setOnLongClickListener(v -> {
+                String defaultCmd = "log2asc -I " + inputfilepath.getText().toString() + " -O " + outputfilepath.getText().toString() + " " + selected_caniface;
+                showEditCommandDialog("Edit Log2asc Command", log2ascCmd, "log2asc_cmd", defaultCmd);
+                return true;
+            });
+
 
             // Start CustomCommand
             Button CustomCmdButton = rootView.findViewById(R.id.start_customcmd);
@@ -1388,6 +1493,36 @@ public class CANFragment extends Fragment {
             });
 
             return rootView;
+        }
+        private void showEditCommandDialog(String title, String[] cmdHolder, String prefKey, String defaultCmd) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+            builder.setTitle(title);
+
+            final EditText input = new EditText(requireContext());
+            String textToShow = cmdHolder[0].isEmpty() ? defaultCmd : cmdHolder[0];
+            input.setText(textToShow);
+            builder.setView(input);
+
+            builder.setPositiveButton("Save", (dialog, which) -> {
+                String newCmd = input.getText().toString();
+                cmdHolder[0] = newCmd;
+
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString(prefKey, newCmd);
+                editor.apply();
+
+                showToast("Command updated!");
+            });
+
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+            AlertDialog dialog = builder.create();
+            dialog.setOnShowListener(d -> {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+            });
+            dialog.show();
         }
     }
 
