@@ -696,6 +696,36 @@
     <string name="VinNumber">4F2CU08102KM50866</string>
     <string name="Check">Check</string>
     <string name="Show">Show</string>
+    <!-- Basic Tools -->
+    <string name="BasicTools">Basic Tools</string>
+    <string name="RHOST">RHOST</string>
+    <string name="RHOSTValue">192.168.1.42</string>
+    <string name="LPORT">LPORT</string>
+    <string name="RPORT">RPORT</string>
+    <string name="PORTValue">1234</string>
+    <string name="Sequence">Sequence</string>
+    <string name="SequenceValue">01a#11223344AABBCCDD</string>
+    <string name="CanLogPath">/root/candump/dump.log</string>
+    <string name="CanGen">CanGen</string>
+    <string name="CanDump">CanDump</string>
+    <string name="CanSniffer">CanSniffer</string>
+    <string name="CanSend">CanSend</string>
+    <string name="CanPlayer">CanPlayer</string>
+    <string name="SequenceFinder">Seq.Finder</string>
+    <string name="Asc2Log">Asc2Log</string>
+    <string name="Log2Asc">Log2Asc</string>
+    <string name="Freediag">Freediag</string>
+    <string name="DiagTest">DiagTest</string>
+    <string name="Cannelloni">Cannelloni</string>
+    <string name="Input">Input</string>
+    <string name="Browse">Browse</string>
+    <string name="AdvancedOptions">Advanced Options</string>
+    <string name="Interactive">Interactive</string>
+    <string name="Verbose">Verbose</string>
+    <string name="DisableLoopback">Disable Local Loopback</string>
+    <string name="CustomCommand">Custom Command</string>
+    <string name="CustomCommandValue">canbusload can0@100000 -r -t -b -c</string>
+    <string name="Run">Run</string>
     <!-- CAN-USB -->
     <string name="CanUSB">CAN-USB</string>
     <string name="run">Run</string>

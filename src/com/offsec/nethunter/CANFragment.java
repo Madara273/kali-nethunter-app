@@ -1240,16 +1240,31 @@ public class CANFragment extends Fragment {
             Button CannelloniButton = rootView.findViewById(R.id.start_cannelloni);
 
             CannelloniButton.setOnClickListener(v -> {
-                String rhost = SelectedRHost.getText().toString();
-                String rport = SelectedRPort.getText().toString();
-                String lport = SelectedLPort.getText().toString();
+                String rhost = SelectedRHost.getText().toString().trim();
+                String rport = SelectedRPort.getText().toString().trim();
+                String lport = SelectedLPort.getText().toString().trim();
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !rhost.isEmpty() && !rport.isEmpty() && !lport.isEmpty()) {
-                    run_cmd("sudo cannelloni -I " + selected_caniface + " -R " + rhost + " -r " + rport + " -l " + lport);
-                } else {
-                    showToast("Please ensure your CAN Interface, RHOST, RPORT, LPORT fields is set!");
+                if (selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
+                    showToast("Please select a CAN Interface!");
+                    return;
                 }
 
+                if (rhost.length() != 15) {
+                    showToast("RHOST must be exactly 15 characters (e.g., 192.168.111.111)");
+                    return;
+                }
+
+                if (rport.length() != 6 || !rport.matches("\\d+")) {
+                    showToast("RPORT must be exactly 6 digits");
+                    return;
+                }
+
+                if (lport.length() != 6 || !lport.matches("\\d+")) {
+                    showToast("LPORT must be exactly 6 digits");
+                    return;
+                }
+
+                run_cmd("sudo cannelloni -I " + selected_caniface + " -R " + rhost + " -r " + rport + " -l " + lport);
                 activity.invalidateOptionsMenu();
             });
 
