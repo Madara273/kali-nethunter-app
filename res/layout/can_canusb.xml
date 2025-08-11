@@ -31,8 +31,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal|center"
                 android:gravity="center"
-                android:text="@string/can_canusb_desc"
-                tools:ignore="VisualLintLongText" />
+                android:text="@string/can_canusb_desc" />
 
             <View
                 android:id="@+id/divider1"
