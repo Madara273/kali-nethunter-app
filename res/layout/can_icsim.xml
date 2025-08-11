@@ -198,22 +198,43 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <WebView
-                android:id="@+id/icsim"
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
-                android:layout_marginTop="5dp"
+                android:layout_height="match_parent"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
-                android:layout_height="200dp"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="8dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="4dp"
+                app:strokeColor="@color/ifc_box_stroke"
+                app:strokeWidth="1dp">
 
-            <WebView
-                android:id="@+id/controls"
+                <WebView
+                    android:id="@+id/icsim"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
                 android:layout_marginBottom="10dp"
-                android:layout_height="200dp" />
+                app:cardCornerRadius="8dp"
+                app:cardElevation="4dp"
+                app:strokeColor="@color/ifc_box_stroke"
+                app:strokeWidth="1dp">
+
+                <WebView
+                    android:id="@+id/controls"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp" />
+
+            </com.google.android.material.card.MaterialCardView>
+
 
         </LinearLayout>
 
