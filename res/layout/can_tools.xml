@@ -307,44 +307,76 @@
                         android:layout_marginTop="8dp"
                         android:gravity="center">
 
-                        <Button
-                            android:id="@+id/btn_toggle_interactive"
+                        <com.google.android.material.card.MaterialCardView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="@string/Interactive"
-                            android:textColor="@android:color/holo_red_light"
-                            android:textAppearance="?android:attr/textAppearanceSmall"
-                            tools:ignore="ButtonStyle" />
+                            app:cardCornerRadius="4dp"
+                            android:padding="8dp">
 
-                        <Button
-                            android:id="@+id/btn_toggle_verbose"
+                            <androidx.appcompat.widget.SwitchCompat
+                                android:id="@+id/btn_toggle_interactive"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/Interactive"
+                                android:textColor="@android:color/holo_red_light"
+                                android:textAppearance="?android:attr/textAppearanceSmall"
+                                android:paddingStart="12dp"
+                                android:gravity="center_vertical" />
+
+                        </com.google.android.material.card.MaterialCardView>
+
+                        <com.google.android.material.card.MaterialCardView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="@string/Verbose"
-                            android:textColor="@android:color/holo_red_light"
-                            android:textAppearance="?android:attr/textAppearanceSmall"
-                            tools:ignore="ButtonStyle" />
+                            app:cardCornerRadius="4dp"
+                            android:layout_marginStart="5dp"
+                            android:padding="8dp">
+
+                            <androidx.appcompat.widget.SwitchCompat
+                                android:id="@+id/btn_toggle_verbose"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/Verbose"
+                                android:textColor="@android:color/holo_red_light"
+                                android:textAppearance="?android:attr/textAppearanceSmall"
+                                android:paddingStart="12dp"
+                                android:gravity="center_vertical" />
+
+                        </com.google.android.material.card.MaterialCardView>
 
                     </LinearLayout>
-
                     <LinearLayout
                         android:id="@+id/button_row2"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
+                        android:layout_marginTop="8dp"
                         android:gravity="center">
 
-                        <Button
-                            android:id="@+id/btn_toggle_loopback"
+                        <com.google.android.material.card.MaterialCardView
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:text="@string/DisableLoopback"
-                            android:textColor="@android:color/holo_red_light"
-                            android:textAppearance="?android:attr/textAppearanceSmall" />
+                            app:cardCornerRadius="4dp"
+                            android:padding="8dp">
+
+                            <androidx.appcompat.widget.SwitchCompat
+                                android:id="@+id/btn_toggle_loopback"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/LocalLoopback"
+                                android:textColor="@android:color/holo_green_light"
+                                android:textAppearance="?android:attr/textAppearanceSmall"
+                                android:gravity="center_vertical"
+                                android:paddingStart="12dp"
+                                android:checked="true" /> <!-- Start checked, meaning loopback disabled -->
+
+                        </com.google.android.material.card.MaterialCardView>
+
                     </LinearLayout>
+
                 </LinearLayout>
             </LinearLayout>
             <View

@@ -1057,35 +1057,39 @@ public class CANFragment extends Fragment {
                 }
             });
 
-            // Interactive
-            Button btnInteractive = rootView.findViewById(R.id.btn_toggle_interactive);
+            // Interactive Switch
+            SwitchCompat switchInteractive = rootView.findViewById(R.id.btn_toggle_interactive);
+            switchInteractive.setChecked(isInteractiveEnabled);
 
-            btnInteractive.setOnClickListener(v -> {
-                isInteractiveEnabled = !isInteractiveEnabled;
+            switchInteractive.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                isInteractiveEnabled = isChecked;
 
                 int color = isInteractiveEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnInteractive.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
+                switchInteractive.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
             });
 
-            // Verbose
-            Button btnVerbose = rootView.findViewById(R.id.btn_toggle_verbose);
+            // Verbose Switch
+            SwitchCompat switchVerbose = rootView.findViewById(R.id.btn_toggle_verbose);
+            switchVerbose.setChecked(isVerboseEnabled);
 
-            btnVerbose.setOnClickListener(v -> {
-                isVerboseEnabled = !isVerboseEnabled;
+            switchVerbose.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                isVerboseEnabled = isChecked;
 
                 int color = isVerboseEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnVerbose.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
+                switchVerbose.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
             });
 
-            // Disable Local Loopback
-            Button btnLoopback = rootView.findViewById(R.id.btn_toggle_loopback);
+            // Loopback Switch (inverted logic)
+            SwitchCompat switchLoopback = rootView.findViewById(R.id.btn_toggle_loopback);
+            switchLoopback.setChecked(!isDisableLoopbackEnabled);
 
-            btnLoopback.setOnClickListener(v -> {
-                isDisableLoopbackEnabled = !isDisableLoopbackEnabled;
+            switchLoopback.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                isDisableLoopbackEnabled = !isChecked; // invert logic here
 
-                int color = isDisableLoopbackEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnLoopback.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
+                int color = isDisableLoopbackEnabled ? android.R.color.holo_red_light : android.R.color.holo_green_light; //invert color
+                switchLoopback.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
             });
+
 
             // Input File
             final ActivityResultLauncher<Intent> inputFileLauncher = registerForActivityResult(

@@ -229,15 +229,22 @@
                         android:textColor="@android:color/holo_red_light"
                         tools:ignore="TextContrastCheck" />
 
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/btn_toggle_usb_ttyOutput"
+                    <com.google.android.material.card.MaterialCardView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/Debug"
-                        android:checked="false"
-                        android:paddingStart="12dp"
-                        tools:ignore="RtlSymmetry" />
+                        app:cardCornerRadius="8dp">
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/btn_toggle_usb_ttyOutput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/Debug"
+                            android:paddingStart="12dp"
+                            android:gravity="center_vertical" />
+
+                    </com.google.android.material.card.MaterialCardView>
+
                 </LinearLayout>
 
                 <LinearLayout

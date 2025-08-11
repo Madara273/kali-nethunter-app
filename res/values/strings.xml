@@ -722,7 +722,7 @@
     <string name="AdvancedOptions">Advanced Options</string>
     <string name="Interactive">Interactive</string>
     <string name="Verbose">Verbose</string>
-    <string name="DisableLoopback">Disable Local Loopback</string>
+    <string name="LocalLoopback">Local Loopback</string>
     <string name="CustomCommand">Custom Command</string>
     <string name="CustomCommandValue">canbusload can0@100000 -r -t -b -c</string>
     <string name="Run">Run</string>
