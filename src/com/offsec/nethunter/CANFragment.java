@@ -2539,8 +2539,8 @@ public class CANFragment extends Fragment {
             msfBtn.setOnClickListener(v -> executorService.submit(() -> {
                 run_cmd("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n); "
                         + "if [ -n \"$msfsession\" ]; then "
-                        + "screen -d \"$msfsession\"; screen -r \"$msfsession\"; "
-                        + "else screen -S msf -m msfconsole;exit; fi");
+                        + "screen -wipe; screen -d \"$msfsession\"; screen -r \"$msfsession\"; "
+                        + "else screen -wipe; screen -S msf -m msfconsole;exit; fi");
             }));
 
             Button runBtn = rootView.findViewById(R.id.run_module);
