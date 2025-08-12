@@ -61,6 +61,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.Map;
@@ -1268,7 +1269,7 @@ public class CANFragment extends Fragment {
             // CanDump
             Button CanDumpButton = rootView.findViewById(R.id.start_candump);
             CanDumpButton.setOnClickListener(v -> {
-                String outputfile = outputfilepath.getText().toString();
+                String outputfile = Objects.requireNonNull(outputfilepath.getText()).toString();
 
                 if (!canDumpCmd[0].isEmpty()) {
                     run_cmd(canDumpCmd[0]);
@@ -1281,7 +1282,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             CanDumpButton.setOnLongClickListener(v -> {
-                String defaultCmd = "candump " + selected_caniface + " -f " + outputfilepath.getText().toString();
+                String defaultCmd = "candump " + selected_caniface + " -f " + Objects.requireNonNull(outputfilepath.getText());
                 showEditCommandDialog("Edit CanDump Command", canDumpCmd, "canDump_cmd", defaultCmd);
                 return true;
             });
@@ -1313,7 +1314,7 @@ public class CANFragment extends Fragment {
                 String interactiveEnabled = isInteractiveEnabled ? " -i" : "";
                 String verboseEnabled = isVerboseEnabled ? " -v" : "";
                 String disableLoopbackEnabled = isDisableLoopbackEnabled ? " -x" : "";
-                String inputfile = inputfilepath.getText().toString();
+                String inputfile = Objects.requireNonNull(inputfilepath.getText()).toString();
 
                 if (!canPlayerCmd[0].isEmpty()) {
                     run_cmd(canPlayerCmd[0]);
@@ -1326,7 +1327,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             CanPlayerButton.setOnLongClickListener(v -> {
-                String defaultCmd = "canplayer -I " + inputfilepath.getText().toString() + (isInteractiveEnabled ? " -i" : "") + (isVerboseEnabled ? " -v" : "") + (isDisableLoopbackEnabled ? " -x" : "");
+                String defaultCmd = "canplayer -I " + Objects.requireNonNull(inputfilepath.getText()) + (isInteractiveEnabled ? " -i" : "") + (isVerboseEnabled ? " -v" : "") + (isDisableLoopbackEnabled ? " -x" : "");
                 showEditCommandDialog("Edit CanPlayer Command", canPlayerCmd, "canPlayer_cmd", defaultCmd);
                 return true;
             });
@@ -1334,7 +1335,7 @@ public class CANFragment extends Fragment {
             // SequenceFinder
             Button SequenceFinderButton = rootView.findViewById(R.id.start_sequencefinder);
             SequenceFinderButton.setOnClickListener(v -> {
-                String inputfile = inputfilepath.getText().toString();
+                String inputfile = Objects.requireNonNull(inputfilepath.getText()).toString();
 
                 if (!sequenceFinderCmd[0].isEmpty()) {
                     run_cmd(sequenceFinderCmd[0]);
@@ -1347,7 +1348,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             SequenceFinderButton.setOnLongClickListener(v -> {
-                String defaultCmd = "/opt/car_hacking/sequence_finder.sh " + inputfilepath.getText().toString();
+                String defaultCmd = "/opt/car_hacking/sequence_finder.sh " + Objects.requireNonNull(inputfilepath.getText());
                 showEditCommandDialog("Edit SequenceFinder Command", sequenceFinderCmd, "sequenceFinder_cmd", defaultCmd);
                 return true;
             });
@@ -1430,8 +1431,8 @@ public class CANFragment extends Fragment {
             // Asc2Log
             Button Asc2LogButton = rootView.findViewById(R.id.start_asc2log);
             Asc2LogButton.setOnClickListener(v -> {
-                String inputfile = inputfilepath.getText().toString();
-                String outputfile = outputfilepath.getText().toString();
+                String inputfile = Objects.requireNonNull(inputfilepath.getText()).toString();
+                String outputfile = Objects.requireNonNull(outputfilepath.getText()).toString();
 
                 if (!asc2logCmd[0].isEmpty()) {
                     run_cmd(asc2logCmd[0]);
@@ -1444,17 +1445,17 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             Asc2LogButton.setOnLongClickListener(v -> {
-                String defaultCmd = "asc2log -I " + inputfilepath.getText().toString() + " -O " + outputfilepath.getText().toString();
+                String defaultCmd = "asc2log -I " + Objects.requireNonNull(inputfilepath.getText()) + " -O " + Objects.requireNonNull(outputfilepath.getText());
                 showEditCommandDialog("Edit Asc2Log Command", asc2logCmd, "asc2log_cmd", defaultCmd);
                 return true;
             });
 
             // Log2asc
             Button Log2AscButton = rootView.findViewById(R.id.start_log2asc);
-            Log2AscButton.setOnClickListener(v -> {
-                String inputfile = inputfilepath.getText().toString();
-                String outputfile = outputfilepath.getText().toString();
+            String inputfile = Objects.requireNonNull(inputfilepath.getText()).toString();
+            String outputfile = Objects.requireNonNull(outputfilepath.getText()).toString();
 
+            Log2AscButton.setOnClickListener(v -> {
                 if (!log2ascCmd[0].isEmpty()) {
                     run_cmd(log2ascCmd[0]);
                 } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !inputfile.isEmpty() && !outputfile.isEmpty()) {
@@ -1466,7 +1467,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             Log2AscButton.setOnLongClickListener(v -> {
-                String defaultCmd = "log2asc -I " + inputfilepath.getText().toString() + " -O " + outputfilepath.getText().toString() + " " + selected_caniface;
+                String defaultCmd = "log2asc -I " + Objects.requireNonNull(inputfilepath.getText()) + " -O " + Objects.requireNonNull(outputfilepath.getText()) + " " + selected_caniface;
                 showEditCommandDialog("Edit Log2asc Command", log2ascCmd, "log2asc_cmd", defaultCmd);
                 return true;
             });
@@ -1767,7 +1768,7 @@ public class CANFragment extends Fragment {
                 }
 
                 @Override
-                public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
                     View view = super.getDropDownView(position, convertView, parent);
                     TextView tv = (TextView) view;
                     if (position == 0) {
