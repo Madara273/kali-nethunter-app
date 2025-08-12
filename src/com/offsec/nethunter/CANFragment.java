@@ -73,6 +73,10 @@ public class CANFragment extends Fragment {
     private static final String TAG = "CANFragment";
     private static SharedPreferences sharedpreferences;
     private Activity activity;
+    private Toast currentToast;
+    private long lastResetTime = 0;
+    private static final long CLICK_TIMEOUT = 2000;  // 2 seconds between clicks
+    private static final long RESET_COOLDOWN = 10000; // 10 seconds after final reset
     private static final String ARG_SECTION_NUMBER = "section_number";
 
     public static CANFragment newInstance(int sectionNumber) {
@@ -405,6 +409,19 @@ public class CANFragment extends Fragment {
         Log.i(TAG, "Update completed");
     }
 
+    private void safeReleaseMediaPlayer(MediaPlayer player) {
+        if (player != null) {
+            try {
+                if (player.isPlaying()) {
+                    player.stop();
+                }
+            } catch (IllegalStateException ignored) {
+                // Player not in valid state, ignore
+            }
+            player.release();
+        }
+    }
+
     public void RunAbout() {
         LayoutInflater inflater = LayoutInflater.from(activity);
         View dialogView = inflater.inflate(R.layout.can_about_dialog, null);
@@ -422,17 +439,55 @@ public class CANFragment extends Fragment {
 
         // Easter egg button setup
         ImageView easterEggButton = dialogView.findViewById(R.id.easter_egg_button);
-        MediaPlayer mediaPlayer = MediaPlayer.create(activity, R.raw.secret_vroom);
+
+        // Create media players
+        MediaPlayer mediaPlayerVroom = MediaPlayer.create(activity, R.raw.secret_vroom);
+        MediaPlayer mediaPlayerAngry = MediaPlayer.create(activity, R.raw.secret_angry);
+
         final int[] clickCount = {0};
+        final long[] lastClickTime = {0};
+        final long CLICK_TIMEOUT = 2000; // 2 seconds
 
         easterEggButton.setOnClickListener(v -> {
-            clickCount[0]++;
-            if (clickCount[0] == 3) {
-                showToast("Hum??? What's up?");
+            long now = System.currentTimeMillis();
+
+            // Ignore clicks during cooldown after reset
+            if (now - lastResetTime < RESET_COOLDOWN) {
+                return;
             }
-            if (clickCount[0] == 7) {
-                mediaPlayer.start();
-                clickCount[0] = 0; // reset after playing sound
+
+            // Reset click sequence if too much time passed
+            if (now - lastClickTime[0] > CLICK_TIMEOUT) {
+                clickCount[0] = 0;
+            }
+
+            lastClickTime[0] = now;
+            clickCount[0]++;
+
+            switch (clickCount[0]) {
+                case 3:
+                    showToast("Hum??? What's up?");
+                    break;
+                case 6:
+                    try {
+                        if (mediaPlayerVroom.isPlaying()) mediaPlayerVroom.seekTo(0);
+                        mediaPlayerVroom.start();
+                    } catch (IllegalStateException ignored) {}
+                    break;
+                case 15:
+                    showToast("Ok. It was funny, but don't make me angry...");
+                    break;
+                case 25:
+                    showToast("GRMBLBLBL... This is your LAST warning!");
+                    break;
+                case 30:
+                    try {
+                        if (mediaPlayerAngry.isPlaying()) mediaPlayerAngry.seekTo(0);
+                        mediaPlayerAngry.start();
+                    } catch (IllegalStateException ignored) {}
+                    clickCount[0] = 0; // reset after final sound
+                    lastResetTime = now; // start cooldown
+                    break;
             }
         });
 
@@ -445,15 +500,33 @@ public class CANFragment extends Fragment {
         int padding = (int) (16 * activity.getResources().getDisplayMetrics().density);
         titleView.setPadding(0, padding, 0, padding);
 
-        new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+        // Build the dialog
+        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
                 .setCustomTitle(titleView)
                 .setView(dialogView)
-                .setNegativeButton("Close", (dialog, id) -> {
-                    if (mediaPlayer.isPlaying()) mediaPlayer.stop();
-                    mediaPlayer.release();
-                    dialog.dismiss();
+                .setNegativeButton("Close", (d, id) -> {
+                    safeReleaseMediaPlayer(mediaPlayerVroom);
+                    safeReleaseMediaPlayer(mediaPlayerAngry);
                 })
-                .show();
+                .create();
+
+        dialog.setOnDismissListener(d -> {
+            clickCount[0] = 0;
+            lastClickTime[0] = 0;
+            safeReleaseMediaPlayer(mediaPlayerVroom);
+            safeReleaseMediaPlayer(mediaPlayerAngry);
+        });
+
+        dialog.show();
+    }
+
+    private void releaseMediaPlayers(MediaPlayer... players) {
+        for (MediaPlayer mp : players) {
+            if (mp != null) {
+                if (mp.isPlaying()) mp.stop();
+                mp.release();
+            }
+        }
     }
 
     public static class TabsPagerAdapter extends FragmentStateAdapter {
@@ -2632,7 +2705,11 @@ public class CANFragment extends Fragment {
 
     // Simplified Toast function
     public void showToast(String message) {
-        Toast.makeText(requireActivity().getApplicationContext(), message, Toast.LENGTH_LONG).show();
+        if (currentToast != null) {
+            currentToast.cancel();
+        }
+        currentToast = Toast.makeText(requireActivity().getApplicationContext(), message, Toast.LENGTH_LONG);
+        currentToast.show();
     }
 
     ////
