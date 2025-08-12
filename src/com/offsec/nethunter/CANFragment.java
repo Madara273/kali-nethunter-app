@@ -1853,17 +1853,18 @@ public class CANFragment extends Fragment {
                 }
             });
 
+
             // Advanced Options Buttons
-            setupParamToggle(rootView, R.id.btn_toggle_start_addr, selectedAddr);
-            setupParamToggle(rootView, R.id.btn_toggle_length, selectedLength);
-            setupParamToggle(rootView, R.id.btn_toggle_separateLine, selectedSeparateLine);
-            setupParamToggle(rootView, R.id.btn_toggle_seed, selectedSeed);
-            setupParamToggle(rootView, R.id.btn_toggle_id, selectedID);
-            setupParamToggle(rootView, R.id.btn_toggle_src, selectedSrc);
-            setupParamToggle(rootView, R.id.btn_toggle_dst, selectedDst);
-            setupParamToggle(rootView, R.id.btn_toggle_min, selectedMin);
-            setupParamToggle(rootView, R.id.btn_toggle_max, selectedMax);
-            setupParamToggle(rootView, R.id.btn_toggle_delay, selectedDelay);
+            setupParamToggle(rootView, R.id.btn_toggle_start_addr, R.id.start_addr_container);
+            setupParamToggle(rootView, R.id.btn_toggle_length, R.id.length_container);
+            setupParamToggle(rootView, R.id.btn_toggle_separateLine, R.id.separate_line_container);
+            setupParamToggle(rootView, R.id.btn_toggle_seed, R.id.seed_container);
+            setupParamToggle(rootView, R.id.btn_toggle_id, R.id.id_container);
+            setupParamToggle(rootView, R.id.btn_toggle_src, R.id.src_container);
+            setupParamToggle(rootView, R.id.btn_toggle_dst, R.id.dst_container);
+            setupParamToggle(rootView, R.id.btn_toggle_min, R.id.min_container);
+            setupParamToggle(rootView, R.id.btn_toggle_max, R.id.max_container);
+            setupParamToggle(rootView, R.id.btn_toggle_delay, R.id.delay_container);
 
             // Dump
             rootView.findViewById(R.id.start_dump).setOnClickListener(v -> {
@@ -1965,13 +1966,16 @@ public class CANFragment extends Fragment {
             return rootView;
         }
 
-        private void setupParamToggle(View rootView, int btnId, EditText field) {
-            Button btn = rootView.findViewById(btnId);
-            btn.setOnClickListener(v -> {
-                boolean visible = field.getVisibility() == View.VISIBLE;
-                field.setVisibility(visible ? View.GONE : View.VISIBLE);
+        private void setupParamToggle(View rootView, int toggleButtonId, int containerLayoutId) {
+            Button toggleBtn = rootView.findViewById(toggleButtonId);
+            TextInputLayout container = rootView.findViewById(containerLayoutId);
+
+            toggleBtn.setOnClickListener(v -> {
+                boolean visible = container.getVisibility() == View.VISIBLE;
+                container.setVisibility(visible ? View.GONE : View.VISIBLE);
+
                 int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btn.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
+                toggleBtn.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
             });
         }
 

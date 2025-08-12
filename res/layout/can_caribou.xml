@@ -402,6 +402,7 @@
                     android:id="@+id/button_row7"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="5dp"
                     android:orientation="horizontal">
 
                     <Button
@@ -414,96 +415,268 @@
                         android:textAppearance="?android:attr/textAppearanceSmall" />
                 </LinearLayout>
 
-                <EditText
-                    android:id="@+id/start_addr_value"
+                <LinearLayout
+                    android:id="@+id/advanced_row_1"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Start Address Value (e.g., 0x1fffb000)"
-                    android:visibility="gone"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall" />
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="5dp"
+                    android:baselineAligned="false">
 
-                <EditText
-                    android:id="@+id/length_value"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Length Value (e.g., 0x4800)"
-                    android:visibility="gone"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"
-                    tools:ignore="TextFields" />
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/start_addr_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:visibility="gone"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Start Address">
 
-                <EditText
-                    android:id="@+id/separate_line_value"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Separate Line Value (e.g., 5)"
-                    android:visibility="gone"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"  />
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/start_addr_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:text="0x1fffb000"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
 
-                <EditText
-                    android:id="@+id/seed_value"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Seed Value (e.g., 0xabc123)"
-                    android:visibility="gone"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"  />
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/length_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        android:visibility="gone"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Length">
 
-                <EditText
-                    android:id="@+id/id_value"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="ID Value (e.g., 0x003)"
-                    android:visibility="gone"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"  />
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/length_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:text="0x4800"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
 
-                <EditText
-                    android:id="@+id/src_value"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Source Value (e.g., 0x3e8)"
-                    android:visibility="gone"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"  />
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/separate_line_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        android:visibility="gone"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Separate Line">
 
-                <EditText
-                    android:id="@+id/dst_value"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Destination Value (e.g., 0x3e9)"
-                    android:visibility="gone"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"  />
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/separate_line_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:text="5"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
 
-                <EditText
-                    android:id="@+id/min_value"
+                <LinearLayout
+                    android:id="@+id/advanced_row_2"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Minimum Value (e.g., 2)"
-                    android:visibility="gone"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"  />
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="5dp"
+                    android:baselineAligned="false">
 
-                <EditText
-                    android:id="@+id/max_value"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:hint="Minimum Value (e.g., 5)"
-                    android:visibility="gone"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"  />
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/seed_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:visibility="gone"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Seed">
 
-                <EditText
-                    android:id="@+id/delay_value"
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/seed_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:text="0xabc123"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/id_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        android:visibility="gone"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="ID">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/id_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:text="0x003"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/src_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        android:visibility="gone"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Source">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/src_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:text="0x3e8"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/dst_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        android:visibility="gone"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Dest.">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/dst_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:text="0x3e9"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/advanced_row_3"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="Delay Value (e.g., 1)"
-                    android:visibility="gone"
-                    android:inputType="text"
-                    android:textAppearance="?android:attr/textAppearanceSmall"  />
+                    android:orientation="horizontal"
+                    android:baselineAligned="false">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/min_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:visibility="gone"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Minimum">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/min_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:text="2"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/max_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        android:visibility="gone"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Maximum">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/max_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:text="5"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/delay_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        android:visibility="gone"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Delay">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/delay_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:text="1"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
             </LinearLayout>
 
             <View
