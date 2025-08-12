@@ -198,7 +198,6 @@ public class CANFragment extends Fragment {
     public static class RootFileBrowserDialog {
 
         private final Context context;
-        private final String currentPath = "/";
         private final ShellExecuter exe = new ShellExecuter();
         private final OnFileSelectedListener listener;
 
@@ -212,6 +211,7 @@ public class CANFragment extends Fragment {
         }
 
         public void show() {
+            String currentPath = "/";
             showDirectory(currentPath);
         }
 
@@ -1082,7 +1082,6 @@ public class CANFragment extends Fragment {
         private boolean isVerboseEnabled = false;
         private boolean isDisableLoopbackEnabled = false;
         private String selected_caniface;
-        private SharedPreferences prefs;
         private final String[] canGenCmd = {""};
         private final String[] canSnifferCmd = {""};
         private final String[] canDumpCmd = {""};
@@ -1112,7 +1111,7 @@ public class CANFragment extends Fragment {
             final EditText SelectedLPort = rootView.findViewById(R.id.cannelloni_lport);
             final EditText CustomCmd = rootView.findViewById(R.id.customcmd);
 
-            prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
             activity = getActivity();
 
             // Load saved commands or empty strings
