@@ -40,15 +40,19 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.util.Consumer;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.BootKali;
@@ -57,6 +61,7 @@ import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -189,6 +194,92 @@ public class CANFragment extends Fragment {
             }
 
             executorService.submit(loadInterfaces);
+        }
+    }
+
+    public static class RootFileBrowserDialog {
+
+        private final Context context;
+        private String currentPath = "/";
+        private final ShellExecuter exe = new ShellExecuter();
+        private final OnFileSelectedListener listener;
+
+        public interface OnFileSelectedListener {
+            void onFileSelected(String filePath);
+        }
+
+        public RootFileBrowserDialog(Context context, OnFileSelectedListener listener) {
+            this.context = context;
+            this.listener = listener;
+        }
+
+        public void show() {
+            showDirectory(currentPath);
+        }
+
+        private void showDirectory(String path) {
+            ArrayList<String> items = loadDirectory(path);
+
+            if (!path.equals("/")) {
+                items.add(0, "..");
+            }
+
+            String[] itemArray = items.toArray(new String[0]);
+
+            AlertDialog.Builder builder = new AlertDialog.Builder(context);
+            builder.setTitle("Select File");
+            builder.setItems(itemArray, (dialog, which) -> {
+                String selectedItem = itemArray[which];
+                if (selectedItem.equals("..")) {
+                    String parentPath = goUp(path);
+                    showDirectory(parentPath);
+                } else if (selectedItem.endsWith("/")) {
+                    showDirectory(path + selectedItem);
+                } else {
+                    listener.onFileSelected(path + selectedItem);
+                }
+            });
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
+
+            AlertDialog dialog = builder.create();
+
+            dialog.setOnShowListener(d -> {
+                Button cancelButton = dialog.getButton(AlertDialog.BUTTON_NEGATIVE);
+                if (cancelButton != null) {
+                    cancelButton.setTextColor(Color.WHITE);
+                }
+            });
+
+            dialog.show();
+        }
+
+        private ArrayList<String> loadDirectory(String path) {
+            ArrayList<String> result = new ArrayList<>();
+            String output = exe.RunAsChrootOutput("ls -p " + path);
+
+            if (output != null && !output.isEmpty()) {
+                String[] lines = output.split("\n");
+                for (String line : lines) {
+                    line = line.trim();
+                    if (!line.isEmpty()) {
+                        result.add(line);
+                    }
+                }
+            }
+            return result;
+        }
+
+        private String goUp(String path) {
+            if (path.equals("/")) return path;
+
+            String newPath = path.endsWith("/") ? path.substring(0, path.length() - 1) : path;
+            int lastSlash = newPath.lastIndexOf('/');
+            if (lastSlash >= 0) {
+                newPath = newPath.substring(0, lastSlash + 1);
+            } else {
+                newPath = "/";
+            }
+            return newPath;
         }
     }
 
@@ -398,6 +489,7 @@ public class CANFragment extends Fragment {
             super.onCreate(savedInstanceState);
             context = getContext();
         }
+
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -992,6 +1084,19 @@ public class CANFragment extends Fragment {
         private boolean isVerboseEnabled = false;
         private boolean isDisableLoopbackEnabled = false;
         private String selected_caniface;
+        private SharedPreferences prefs;
+        private final String[] canGenCmd = {""};
+        private final String[] canSnifferCmd = {""};
+        private final String[] canDumpCmd = {""};
+        private final String[] canSendCmd = {""};
+        private final String[] canPlayerCmd = {""};
+        private final String[] sequenceFinderCmd = {""};
+        private final String[] freediagCmd = {""};
+        private final String[] diagTestCmd = {""};
+        private final String[] cannelloniCmd = {""};
+        private final String[] asc2logCmd = {""};
+        private final String[] log2ascCmd = {""};
+
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -1007,11 +1112,23 @@ public class CANFragment extends Fragment {
             final EditText SelectedRHost = rootView.findViewById(R.id.cannelloni_rhost);
             final EditText SelectedRPort = rootView.findViewById(R.id.cannelloni_rport);
             final EditText SelectedLPort = rootView.findViewById(R.id.cannelloni_lport);
-            final EditText inputfilepath = rootView.findViewById(R.id.inputfilepath);
-            final Button inputfilebrowse = rootView.findViewById(R.id.inputfilebrowse);
-            final EditText outputfilepath = rootView.findViewById(R.id.outputfilepath);
-            final Button outputfilebrowse = rootView.findViewById(R.id.outputfilebrowse);
             final EditText CustomCmd = rootView.findViewById(R.id.customcmd);
+
+            prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
+            activity = getActivity();
+
+            // Load saved commands or empty strings
+            canGenCmd[0] = prefs.getString("canGen_cmd", "");
+            canSnifferCmd[0] = prefs.getString("canSniffer_cmd", "");
+            canDumpCmd[0] = prefs.getString("canDump_cmd", "");
+            canSendCmd[0] = prefs.getString("canSend_cmd", "");
+            canPlayerCmd[0] = prefs.getString("canPlayer_cmd", "");
+            sequenceFinderCmd[0] = prefs.getString("sequenceFinder_cmd", "");
+            freediagCmd[0] = prefs.getString("freediag_cmd", "");
+            diagTestCmd[0] = prefs.getString("diagTest_cmd", "");
+            cannelloniCmd[0] = prefs.getString("cannelloni_cmd", "");
+            asc2logCmd[0] = prefs.getString("asc2log_cmd", "");
+            log2ascCmd[0] = prefs.getString("log2asc_cmd", "");
 
             // Configuration Toggle
             Button btnConfigurationToggle = rootView.findViewById(R.id.btn_toggle_config_tools);
@@ -1057,111 +1174,112 @@ public class CANFragment extends Fragment {
                 }
             });
 
-            // Interactive
-            Button btnInteractive = rootView.findViewById(R.id.btn_toggle_interactive);
+            // Interactive Switch
+            SwitchCompat switchInteractive = rootView.findViewById(R.id.btn_toggle_interactive);
+            switchInteractive.setChecked(isInteractiveEnabled);
 
-            btnInteractive.setOnClickListener(v -> {
-                isInteractiveEnabled = !isInteractiveEnabled;
+            switchInteractive.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                isInteractiveEnabled = isChecked;
 
                 int color = isInteractiveEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnInteractive.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
+                switchInteractive.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
             });
 
-            // Verbose
-            Button btnVerbose = rootView.findViewById(R.id.btn_toggle_verbose);
+            // Verbose Switch
+            SwitchCompat switchVerbose = rootView.findViewById(R.id.btn_toggle_verbose);
+            switchVerbose.setChecked(isVerboseEnabled);
 
-            btnVerbose.setOnClickListener(v -> {
-                isVerboseEnabled = !isVerboseEnabled;
+            switchVerbose.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                isVerboseEnabled = isChecked;
 
                 int color = isVerboseEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnVerbose.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
+                switchVerbose.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
             });
 
-            // Disable Local Loopback
-            Button btnLoopback = rootView.findViewById(R.id.btn_toggle_loopback);
+            // Loopback Switch (inverted logic)
+            SwitchCompat switchLoopback = rootView.findViewById(R.id.btn_toggle_loopback);
+            switchLoopback.setChecked(!isDisableLoopbackEnabled);
 
-            btnLoopback.setOnClickListener(v -> {
-                isDisableLoopbackEnabled = !isDisableLoopbackEnabled;
+            switchLoopback.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                isDisableLoopbackEnabled = !isChecked; // invert logic here
 
-                int color = isDisableLoopbackEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnLoopback.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
+                int color = isDisableLoopbackEnabled ? android.R.color.holo_red_light : android.R.color.holo_green_light; //invert color
+                switchLoopback.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
             });
 
-            // Input File
-            final ActivityResultLauncher<Intent> inputFileLauncher = registerForActivityResult(
-                    new ActivityResultContracts.StartActivityForResult(),
-                    result -> {
-                        if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                            Uri uri = result.getData().getData();
-                            assert uri != null;
-                            inputfilepath.setText(uri.getPath());
-                        }
-                    }
-            );
+
+            // Input File browse button
+            MaterialButton inputfilebrowse = rootView.findViewById(R.id.inputfilebrowse);
+            TextInputEditText inputfilepath = rootView.findViewById(R.id.inputfilepath);
 
             inputfilebrowse.setOnClickListener(v -> {
-                Intent intent = new Intent();
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("log/*");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                inputFileLauncher.launch(Intent.createChooser(intent, "Select input file"));
+                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), selectedPath -> {
+                    inputfilepath.setText(selectedPath);
+                });
+                dialog.show();
             });
 
-            // Output File
-            final ActivityResultLauncher<Intent> outputFileLauncher = registerForActivityResult(
-                    new ActivityResultContracts.StartActivityForResult(),
-                    result -> {
-                        if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                            Uri uri = result.getData().getData();
-                            assert uri != null;
-                            outputfilepath.setText(uri.getPath());
-                        }
-                    }
-            );
+            // Output File browse button
+            MaterialButton outputfilebrowse = rootView.findViewById(R.id.outputfilebrowse);
+            TextInputEditText outputfilepath = rootView.findViewById(R.id.outputfilepath);
 
             outputfilebrowse.setOnClickListener(v -> {
-                Intent intent = new Intent();
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("log/*");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                outputFileLauncher.launch(Intent.createChooser(intent, "Select output file"));
+                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), selectedPath -> {
+                    outputfilepath.setText(selectedPath);
+                });
+                dialog.show();
             });
 
-            // Tools
-            // Start CanGen
-            Button CanGenButton = rootView.findViewById(R.id.start_cangen);
 
+            // Tools
+            // CanGen
+            Button CanGenButton = rootView.findViewById(R.id.start_cangen);
             CanGenButton.setOnClickListener(v -> {
                 String verboseEnabled = isVerboseEnabled ? " -v" : "";
                 String disableLoopbackEnabled = isDisableLoopbackEnabled ? " -x" : "";
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+
+                if (!canGenCmd[0].isEmpty()) {
+                    run_cmd(canGenCmd[0]);
+                } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
                     run_cmd("cangen " + selected_caniface + verboseEnabled + disableLoopbackEnabled);
                 } else {
                     showToast("Please ensure your CAN Interface field is set!");
                 }
+
                 activity.invalidateOptionsMenu();
             });
+            CanGenButton.setOnLongClickListener(v -> {
+                String defaultCmd = "cangen " + selected_caniface + (isVerboseEnabled ? " -v" : "") + (isDisableLoopbackEnabled ? " -x" : "");
+                showEditCommandDialog("Edit CanGen Command", canGenCmd, "canGen_cmd", defaultCmd);
+                return true;
+            });
 
-            // Start CanSniffer
+            // CanSniffer
             Button CanSnifferButton = rootView.findViewById(R.id.start_cansniffer);
-
             CanSnifferButton.setOnClickListener(v -> {
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
+                if (!canSnifferCmd[0].isEmpty()) {
+                    run_cmd(canSnifferCmd[0]);
+                } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("None")) {
                     run_cmd("cansniffer " + selected_caniface);
                 } else {
                     showToast("Please ensure your CAN Interface field is set!");
                 }
-
                 activity.invalidateOptionsMenu();
             });
+            CanSnifferButton.setOnLongClickListener(v -> {
+                String defaultCmd = "cansniffer " + selected_caniface;
+                showEditCommandDialog("Edit CanSniffer Command", canSnifferCmd, "canSniffer_cmd", defaultCmd);
+                return true;
+            });
 
-            // Start CanDump
+            // CanDump
             Button CanDumpButton = rootView.findViewById(R.id.start_candump);
-
             CanDumpButton.setOnClickListener(v -> {
                 String outputfile = outputfilepath.getText().toString();
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !outputfile.isEmpty()) {
+                if (!canDumpCmd[0].isEmpty()) {
+                    run_cmd(canDumpCmd[0]);
+                } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !outputfile.isEmpty()) {
                     run_cmd("candump " + selected_caniface + " -f " + outputfile);
                 } else {
                     showToast("Please ensure your CAN Interface and Output File fields is set!");
@@ -1169,14 +1287,20 @@ public class CANFragment extends Fragment {
 
                 activity.invalidateOptionsMenu();
             });
+            CanDumpButton.setOnLongClickListener(v -> {
+                String defaultCmd = "candump " + selected_caniface + " -f " + outputfilepath.getText().toString();
+                showEditCommandDialog("Edit CanDump Command", canDumpCmd, "canDump_cmd", defaultCmd);
+                return true;
+            });
 
-            // Start CanSend
+            // CanSend
             Button CanSendButton = rootView.findViewById(R.id.start_cansend);
-
             CanSendButton.setOnClickListener(v -> {
                 String sequence = cansend_sequence.getText().toString();
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !sequence.isEmpty()) {
+                if (!canSendCmd[0].isEmpty()) {
+                    run_cmd(canSendCmd[0]);
+                } else if (!selected_caniface.equals("Interfaces") && !sequence.isEmpty()) {
                     run_cmd("cansend " + selected_caniface + " " + sequence);
                 } else {
                     showToast("Please ensure your CAN Interface and Sequence fields is set!");
@@ -1184,17 +1308,23 @@ public class CANFragment extends Fragment {
 
                 activity.invalidateOptionsMenu();
             });
+            CanSendButton.setOnLongClickListener(v -> {
+                String defaultCmd = "cansend " + selected_caniface + " " + cansend_sequence.getText().toString();
+                showEditCommandDialog("Edit CanSend Command", canSendCmd, "canSend_cmd", defaultCmd);
+                return true;
+            });
 
-            // Start CanPlayer
+            // CanPlayer
             Button CanPlayerButton = rootView.findViewById(R.id.start_canplayer);
-
             CanPlayerButton.setOnClickListener(v -> {
                 String interactiveEnabled = isInteractiveEnabled ? " -i" : "";
                 String verboseEnabled = isVerboseEnabled ? " -v" : "";
                 String disableLoopbackEnabled = isDisableLoopbackEnabled ? " -x" : "";
                 String inputfile = inputfilepath.getText().toString();
 
-                if (!inputfile.isEmpty()) {
+                if (!canPlayerCmd[0].isEmpty()) {
+                    run_cmd(canPlayerCmd[0]);
+                } else if (!inputfile.isEmpty()) {
                     run_cmd("canplayer -I " + inputfile + interactiveEnabled + verboseEnabled + disableLoopbackEnabled);
                 } else {
                     showToast("Please ensure your Input File field is set!");
@@ -1202,14 +1332,20 @@ public class CANFragment extends Fragment {
 
                 activity.invalidateOptionsMenu();
             });
+            CanPlayerButton.setOnLongClickListener(v -> {
+                String defaultCmd = "canplayer -I " + inputfilepath.getText().toString() + (isInteractiveEnabled ? " -i" : "") + (isVerboseEnabled ? " -v" : "") + (isDisableLoopbackEnabled ? " -x" : "");
+                showEditCommandDialog("Edit CanPlayer Command", canPlayerCmd, "canPlayer_cmd", defaultCmd);
+                return true;
+            });
 
-            // Start SequenceFinder
-            final Button SequenceFinderButton = rootView.findViewById(R.id.start_sequencefinder);
-
+            // SequenceFinder
+            Button SequenceFinderButton = rootView.findViewById(R.id.start_sequencefinder);
             SequenceFinderButton.setOnClickListener(v -> {
                 String inputfile = inputfilepath.getText().toString();
 
-                if (!inputfile.isEmpty()) {
+                if (!sequenceFinderCmd[0].isEmpty()) {
+                    run_cmd(sequenceFinderCmd[0]);
+                } else if (!inputfile.isEmpty()) {
                     run_cmd("/opt/car_hacking/sequence_finder.sh " + inputfile);
                 } else {
                     showToast("Please ensure your Input File field is set!");
@@ -1217,50 +1353,96 @@ public class CANFragment extends Fragment {
 
                 activity.invalidateOptionsMenu();
             });
-
-            // Start Freediag
-            Button FreediagButton = rootView.findViewById(R.id.start_freediag);
-
-            FreediagButton.setOnClickListener(v -> {
-                run_cmd("sudo -u kali freediag");
-
-                activity.invalidateOptionsMenu();
+            SequenceFinderButton.setOnLongClickListener(v -> {
+                String defaultCmd = "/opt/car_hacking/sequence_finder.sh " + inputfilepath.getText().toString();
+                showEditCommandDialog("Edit SequenceFinder Command", sequenceFinderCmd, "sequenceFinder_cmd", defaultCmd);
+                return true;
             });
 
-            // Start diag_test
-            Button diagTestButton = rootView.findViewById(R.id.start_diagtest);
-
-            diagTestButton.setOnClickListener(v -> {
-                run_cmd("sudo -u kali diag_test");
-
+            // Freediag
+            Button FreediagButton = rootView.findViewById(R.id.start_freediag);
+            FreediagButton.setOnClickListener(v -> {
+                if (!freediagCmd[0].isEmpty()) {
+                    run_cmd(freediagCmd[0]);
+                } else {
+                    run_cmd("sudo -u kali freediag");
+                }
                 activity.invalidateOptionsMenu();
+            });
+            FreediagButton.setOnLongClickListener(v -> {
+                String defaultCmd = "sudo -u kali freediag";
+                showEditCommandDialog("Edit Freediag Command", freediagCmd, "freediag_cmd", defaultCmd);
+                return true;
+            });
+
+            // diag_test
+            Button diagTestButton = rootView.findViewById(R.id.start_diagtest);
+            diagTestButton.setOnClickListener(v -> {
+                if (!diagTestCmd[0].isEmpty()) {
+                    run_cmd(diagTestCmd[0]);
+                } else {
+                    run_cmd("sudo -u kali diag_test");
+                }
+                activity.invalidateOptionsMenu();
+            });
+            diagTestButton.setOnLongClickListener(v -> {
+                String defaultCmd = "sudo -u kali diag_test";
+                showEditCommandDialog("Edit diag_test Command", diagTestCmd, "diagTest_cmd", defaultCmd);
+                return true;
             });
 
             // Cannelloni
             Button CannelloniButton = rootView.findViewById(R.id.start_cannelloni);
-
             CannelloniButton.setOnClickListener(v -> {
-                String rhost = SelectedRHost.getText().toString();
-                String rport = SelectedRPort.getText().toString();
-                String lport = SelectedLPort.getText().toString();
-
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !rhost.isEmpty() && !rport.isEmpty() && !lport.isEmpty()) {
-                    run_cmd("sudo cannelloni -I " + selected_caniface + " -R " + rhost + " -r " + rport + " -l " + lport);
+                if (!cannelloniCmd[0].isEmpty()) {
+                    run_cmd(cannelloniCmd[0]);
                 } else {
-                    showToast("Please ensure your CAN Interface, RHOST, RPORT, LPORT fields is set!");
-                }
+                    String rhost = SelectedRHost.getText().toString().trim();
+                    String rport = SelectedRPort.getText().toString().trim();
+                    String lport = SelectedLPort.getText().toString().trim();
 
+                    if (selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
+                        showToast("Please select a CAN Interface!");
+                        return;
+                    }
+
+                    if (rhost.length() != 15) {
+                        showToast("RHOST must be exactly 15 characters (e.g., 192.168.111.111)");
+                        return;
+                    }
+
+                    if (rport.length() != 6 || !rport.matches("\\d+")) {
+                        showToast("RPORT must be exactly 6 digits");
+                        return;
+                    }
+
+                    if (lport.length() != 6 || !lport.matches("\\d+")) {
+                        showToast("LPORT must be exactly 6 digits");
+                        return;
+                    }
+
+                    run_cmd("sudo cannelloni -I " + selected_caniface + " -R " + rhost + " -r " + rport + " -l " + lport);
+                }
                 activity.invalidateOptionsMenu();
             });
+            CannelloniButton.setOnLongClickListener(v -> {
+                String rhost = SelectedRHost.getText().toString().trim();
+                String rport = SelectedRPort.getText().toString().trim();
+                String lport = SelectedLPort.getText().toString().trim();
+                String defaultCmd = "sudo cannelloni -I " + selected_caniface + " -R " + rhost + " -r " + rport + " -l " + lport;
+                showEditCommandDialog("Edit Cannelloni Command", cannelloniCmd, "cannelloni_cmd", defaultCmd);
+                return true;
+            });
 
-            // Start Asc2Log
+            // Asc2Log
             Button Asc2LogButton = rootView.findViewById(R.id.start_asc2log);
-
             Asc2LogButton.setOnClickListener(v -> {
                 String inputfile = inputfilepath.getText().toString();
                 String outputfile = outputfilepath.getText().toString();
 
-                if (!inputfile.isEmpty() && !outputfile.isEmpty()) {
+                if (!asc2logCmd[0].isEmpty()) {
+                    run_cmd(asc2logCmd[0]);
+                } else if (!inputfile.isEmpty() && !outputfile.isEmpty()) {
                     run_cmd("asc2log -I " + inputfile + " -O " + outputfile);
                 } else {
                     showToast("Please ensure your Input and Output File fields is set!");
@@ -1268,15 +1450,21 @@ public class CANFragment extends Fragment {
 
                 activity.invalidateOptionsMenu();
             });
+            Asc2LogButton.setOnLongClickListener(v -> {
+                String defaultCmd = "asc2log -I " + inputfilepath.getText().toString() + " -O " + outputfilepath.getText().toString();
+                showEditCommandDialog("Edit Asc2Log Command", asc2logCmd, "asc2log_cmd", defaultCmd);
+                return true;
+            });
 
-            // Start Log2asc
+            // Log2asc
             Button Log2AscButton = rootView.findViewById(R.id.start_log2asc);
-
             Log2AscButton.setOnClickListener(v -> {
                 String inputfile = inputfilepath.getText().toString();
                 String outputfile = outputfilepath.getText().toString();
 
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !inputfile.isEmpty() && !outputfile.isEmpty()) {
+                if (!log2ascCmd[0].isEmpty()) {
+                    run_cmd(log2ascCmd[0]);
+                } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !inputfile.isEmpty() && !outputfile.isEmpty()) {
                     run_cmd("log2asc -I " + inputfile + " -O " + outputfile + " " + selected_caniface);
                 } else {
                     showToast("Please ensure your CAN Interface, Input and Output File fields is set!");
@@ -1284,6 +1472,12 @@ public class CANFragment extends Fragment {
 
                 activity.invalidateOptionsMenu();
             });
+            Log2AscButton.setOnLongClickListener(v -> {
+                String defaultCmd = "log2asc -I " + inputfilepath.getText().toString() + " -O " + outputfilepath.getText().toString() + " " + selected_caniface;
+                showEditCommandDialog("Edit Log2asc Command", log2ascCmd, "log2asc_cmd", defaultCmd);
+                return true;
+            });
+
 
             // Start CustomCommand
             Button CustomCmdButton = rootView.findViewById(R.id.start_customcmd);
@@ -1301,6 +1495,36 @@ public class CANFragment extends Fragment {
             });
 
             return rootView;
+        }
+        private void showEditCommandDialog(String title, String[] cmdHolder, String prefKey, String defaultCmd) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+            builder.setTitle(title);
+
+            final EditText input = new EditText(requireContext());
+            String textToShow = cmdHolder[0].isEmpty() ? defaultCmd : cmdHolder[0];
+            input.setText(textToShow);
+            builder.setView(input);
+
+            builder.setPositiveButton("Save", (dialog, which) -> {
+                String newCmd = input.getText().toString();
+                cmdHolder[0] = newCmd;
+
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
+                SharedPreferences.Editor editor = prefs.edit();
+                editor.putString(prefKey, newCmd);
+                editor.apply();
+
+                showToast("Command updated!");
+            });
+
+            builder.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+
+            AlertDialog dialog = builder.create();
+            dialog.setOnShowListener(d -> {
+                dialog.getButton(AlertDialog.BUTTON_POSITIVE).setTextColor(Color.WHITE);
+                dialog.getButton(AlertDialog.BUTTON_NEGATIVE).setTextColor(Color.WHITE);
+            });
+            dialog.show();
         }
     }
 
@@ -1521,14 +1745,47 @@ public class CANFragment extends Fragment {
         final ShellExecuter exe = new ShellExecuter();
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private Activity activity;
-        private boolean isCandumpEnabled = false;
-        private boolean isLoopEnabled = false;
-        private boolean isOutputEnabled = false;
-        private boolean isPadEnabled = false;
-        private boolean isReverseEnabled = false;
+
         private EditText SelectedFile;
         private EditText SelectedMessage;
-        private String selected_caniface;
+        private EditText selectedAddr;
+        private EditText selectedLength;
+        private EditText selectedSeed;
+        private EditText selectedID;
+        private EditText selectedSrc;
+        private EditText selectedDst;
+        private EditText selectedMin;
+        private EditText selectedMax;
+        private EditText selectedDelay;
+        private EditText selectedSeparateLine;
+
+        private boolean isPadEnabled = false;
+        private boolean isCandumpEnabled = false;
+        private boolean isOutputEnabled = false;
+        private boolean isLoopEnabled = false;
+        private boolean isReverseEnabled = false;
+        private String selected_caniface = "";
+
+        private ArrayAdapter<String> createDisabledFirstItemAdapter(String[] items) {
+            return new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, items) {
+                @Override
+                public boolean isEnabled(int position) {
+                    return position != 0;
+                }
+
+                @Override
+                public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                    View view = super.getDropDownView(position, convertView, parent);
+                    TextView tv = (TextView) view;
+                    if (position == 0) {
+                        tv.setTextColor(Color.GRAY);
+                    } else {
+                        tv.setTextColor(Color.WHITE);
+                    }
+                    return view;
+                }
+            };
+        }
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -1542,6 +1799,22 @@ public class CANFragment extends Fragment {
 
             SelectedFile = rootView.findViewById(R.id.caribou_file);
             SelectedMessage = rootView.findViewById(R.id.caribou_message);
+            selectedAddr = rootView.findViewById(R.id.start_addr_value);
+            selectedLength = rootView.findViewById(R.id.length_value);
+            selectedSeed = rootView.findViewById(R.id.seed_value);
+            selectedID = rootView.findViewById(R.id.id_value);
+            selectedSrc = rootView.findViewById(R.id.src_value);
+            selectedDst = rootView.findViewById(R.id.dst_value);
+            selectedMin = rootView.findViewById(R.id.min_value);
+            selectedMax = rootView.findViewById(R.id.max_value);
+            selectedDelay = rootView.findViewById(R.id.delay_value);
+            selectedSeparateLine = rootView.findViewById(R.id.separate_line_value);
+
+            setupBooleanToggle(rootView.findViewById(R.id.btn_toggle_pad), val -> isPadEnabled = val, isPadEnabled);
+            setupBooleanToggle(rootView.findViewById(R.id.btn_toggle_candump), val -> isCandumpEnabled = val, isCandumpEnabled);
+            setupBooleanToggle(rootView.findViewById(R.id.btn_toggle_output), val -> isOutputEnabled = val, isOutputEnabled);
+            setupBooleanToggle(rootView.findViewById(R.id.btn_toggle_loop), val -> isLoopEnabled = val, isLoopEnabled);
+            setupBooleanToggle(rootView.findViewById(R.id.btn_toggle_reverse), val -> isReverseEnabled = val, isReverseEnabled);
 
             // Interfaces
             Spinner spinner = rootView.findViewById(R.id.device_interface);
@@ -1559,31 +1832,17 @@ public class CANFragment extends Fragment {
                     iface -> selected_caniface = iface
             );
 
-            // File
-            final ActivityResultLauncher<Intent> inputFileLauncher = registerForActivityResult(
-                    new ActivityResultContracts.StartActivityForResult(),
-                    result -> {
-                        if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                            Uri uri = result.getData().getData();
-                            assert uri != null;
-                            SelectedFile.setText(uri.getPath());
-                        }
-                    }
-            );
-
-            final Button cariboufilebrowse = rootView.findViewById(R.id.cariboufilebrowse);
-            cariboufilebrowse.setOnClickListener(v -> {
-                Intent intent = new Intent();
-                intent.addCategory(Intent.CATEGORY_OPENABLE);
-                intent.setType("*/*");
-                intent.setAction(Intent.ACTION_GET_CONTENT);
-                inputFileLauncher.launch(Intent.createChooser(intent, "Select input file"));
+            // Browse File
+            MaterialButton browseButton = rootView.findViewById(R.id.cariboufilebrowse);
+            TextInputEditText fileEditText = rootView.findViewById(R.id.caribou_file);
+            browseButton.setOnClickListener(v -> {
+                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), fileEditText::setText);
+                dialog.show();
             });
 
             // Advanced Options Toggle
             Button btnToggle = rootView.findViewById(R.id.btn_toggle_advanced);
             LinearLayout advancedOptionsLayout = rootView.findViewById(R.id.caribou_advanced_options);
-
             btnToggle.setOnClickListener(v -> {
                 if (advancedOptionsLayout.getVisibility() == View.GONE) {
                     advancedOptionsLayout.setVisibility(View.VISIBLE);
@@ -1594,408 +1853,272 @@ public class CANFragment extends Fragment {
                 }
             });
 
-            // Advanced Options - Options
-            // Start Address
-            Button btnStartAddr = rootView.findViewById(R.id.btn_toggle_start_addr);
-            EditText selectedAddr = rootView.findViewById(R.id.start_addr_value);
 
-            btnStartAddr.setOnClickListener(v -> {
-                boolean visible = selectedAddr.getVisibility() == View.VISIBLE;
-                selectedAddr.setVisibility(visible ? View.GONE : View.VISIBLE);
+            // Advanced Options Buttons
+            setupParamToggle(rootView, R.id.btn_toggle_start_addr, R.id.start_addr_container);
+            setupParamToggle(rootView, R.id.btn_toggle_length, R.id.length_container);
+            setupParamToggle(rootView, R.id.btn_toggle_separateLine, R.id.separate_line_container);
+            setupParamToggle(rootView, R.id.btn_toggle_seed, R.id.seed_container);
+            setupParamToggle(rootView, R.id.btn_toggle_id, R.id.id_container);
+            setupParamToggle(rootView, R.id.btn_toggle_src, R.id.src_container);
+            setupParamToggle(rootView, R.id.btn_toggle_dst, R.id.dst_container);
+            setupParamToggle(rootView, R.id.btn_toggle_min, R.id.min_container);
+            setupParamToggle(rootView, R.id.btn_toggle_max, R.id.max_container);
+            setupParamToggle(rootView, R.id.btn_toggle_delay, R.id.delay_container);
 
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnStartAddr.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Length
-            Button btnLength = rootView.findViewById(R.id.btn_toggle_length);
-            EditText selectedLength = rootView.findViewById(R.id.length_value);
-
-            btnLength.setOnClickListener(v -> {
-                boolean visible = selectedLength.getVisibility() == View.VISIBLE;
-                selectedLength.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnLength.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Separate Line
-            Button btnLine = rootView.findViewById(R.id.btn_toggle_separateLine);
-            EditText selectedLine = rootView.findViewById(R.id.separate_line_value);
-
-            btnLine.setOnClickListener(v -> {
-                boolean visible = selectedLine.getVisibility() == View.VISIBLE;
-                selectedLine.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnLine.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Seed
-            Button btnSeed = rootView.findViewById(R.id.btn_toggle_seed);
-            EditText selectedSeed = rootView.findViewById(R.id.seed_value);
-
-            btnSeed.setOnClickListener(v -> {
-                boolean visible = selectedSeed.getVisibility() == View.VISIBLE;
-                selectedSeed.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnSeed.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // ID
-            Button btnID = rootView.findViewById(R.id.btn_toggle_id);
-            EditText selectedID = rootView.findViewById(R.id.id_value);
-
-            btnID.setOnClickListener(v -> {
-                boolean visible = selectedID.getVisibility() == View.VISIBLE;
-                selectedID.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnID.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Src
-            Button btnSrc = rootView.findViewById(R.id.btn_toggle_src);
-            EditText selectedSrc = rootView.findViewById(R.id.src_value);
-
-            btnSrc.setOnClickListener(v -> {
-                boolean visible = selectedSrc.getVisibility() == View.VISIBLE;
-                selectedSrc.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnSrc.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Dst
-            Button btnDst = rootView.findViewById(R.id.btn_toggle_dst);
-            EditText selectedDst = rootView.findViewById(R.id.dst_value);
-
-            btnDst.setOnClickListener(v -> {
-                boolean visible = selectedDst.getVisibility() == View.VISIBLE;
-                selectedDst.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnDst.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Min
-            Button btnMin = rootView.findViewById(R.id.btn_toggle_min);
-            EditText selectedMin = rootView.findViewById(R.id.min_value);
-
-            btnMin.setOnClickListener(v -> {
-                boolean visible = selectedMin.getVisibility() == View.VISIBLE;
-                selectedMin.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnMin.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Max
-            Button btnMax = rootView.findViewById(R.id.btn_toggle_max);
-            EditText selectedMax = rootView.findViewById(R.id.max_value);
-
-            btnMax.setOnClickListener(v -> {
-                boolean visible = selectedMax.getVisibility() == View.VISIBLE;
-                selectedMax.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnMax.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Delay
-            Button btnDelay = rootView.findViewById(R.id.btn_toggle_delay);
-            EditText selectedDelay = rootView.findViewById(R.id.delay_value);
-
-            btnDelay.setOnClickListener(v -> {
-                boolean visible = selectedDelay.getVisibility() == View.VISIBLE;
-                selectedDelay.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnDelay.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Pad
-            Button btnPad = rootView.findViewById(R.id.btn_toggle_pad);
-
-            btnPad.setOnClickListener(v -> {
-                isPadEnabled = !isPadEnabled;
-
-                int color = isPadEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnPad.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Candump Format
-            Button btnCandump = rootView.findViewById(R.id.btn_toggle_candump);
-
-            btnCandump.setOnClickListener(v -> {
-                isCandumpEnabled = !isCandumpEnabled;
-
-                int color = isCandumpEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnCandump.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Save Output
-            Button btnOutput = rootView.findViewById(R.id.btn_toggle_output);
-
-            btnOutput.setOnClickListener(v -> {
-                isOutputEnabled = !isOutputEnabled;
-
-                int color = isOutputEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnOutput.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Loop
-            Button btnLoop = rootView.findViewById(R.id.btn_toggle_loop);
-
-            btnLoop.setOnClickListener(v -> {
-                isLoopEnabled = !isLoopEnabled;
-
-                int color = isLoopEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnLoop.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Reverse
-            Button btnReverse = rootView.findViewById(R.id.btn_toggle_reverse);
-
-            btnReverse.setOnClickListener(v -> {
-                isReverseEnabled = !isReverseEnabled;
-
-                int color = isReverseEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnReverse.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Start Dump
-            Button CaribouDumpButton = rootView.findViewById(R.id.start_dump);
-
-            CaribouDumpButton.setOnClickListener(v -> {
+            // Dump
+            rootView.findViewById(R.id.start_dump).setOnClickListener(v -> {
                 String candumpFormat = isCandumpEnabled ? " -t" : "";
                 String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
-                String separateLineValue = getVisibleParam(selectedLine, " -s ");
+                String separateLineValue = getVisibleParam(selectedSeparateLine, " -s ");
                 if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " dump" + separateLineValue + candumpFormat + outputEnabled);
                 } else {
-                    showToast("Please chose a CAN Interface!");
+                    showToast("Please choose a CAN Interface!");
                 }
-
                 activity.invalidateOptionsMenu();
             });
 
-            // Start Listener
-            Button CaribouListenerButton = rootView.findViewById(R.id.start_listener);
-
-            CaribouListenerButton.setOnClickListener(v -> {
+            // Listener
+            rootView.findViewById(R.id.start_listener).setOnClickListener(v -> {
                 String reverseEnabled = isReverseEnabled ? " -r" : "";
                 if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
                     run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " listener" + reverseEnabled);
                 } else {
-                    showToast("Please chose a CAN Interface!");
+                    showToast("Please choose a CAN Interface!");
                 }
-
                 activity.invalidateOptionsMenu();
             });
 
-            // FUZZER Spinner
-            final Spinner FUZZERList = rootView.findViewById(R.id.fuzzer_spinner);
-            final String[] FUZZEROptions = {"brute", "identify", "mutate", "random", "replay"};
+            // Module and SubModule spinners
+            final Spinner moduleSpinner = rootView.findViewById(R.id.module_spinner);
+            final Spinner subModuleSpinner = rootView.findViewById(R.id.submodule_spinner);
+            final Button startButton = rootView.findViewById(R.id.start_button);
 
-            FUZZERList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, FUZZEROptions));
+            final String[] modules = {"Modules", "Fuzz", "Send", "UDS", "XCP"};
+            final Map<String, String[]> subModulesMap = new HashMap<>();
+            subModulesMap.put("Fuzz", new String[]{"Sub-Modules", "brute", "identify", "mutate", "random", "replay"});
+            subModulesMap.put("Send", new String[]{"Sub-Modules", "file", "message"});
+            subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services"});
+            subModulesMap.put("XCP", new String[]{"Sub-Modules", "discovery", "info", "dump"});
 
-            FUZZERList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            ArrayAdapter<String> moduleAdapter = createDisabledFirstItemAdapter(modules);
+            moduleAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            moduleSpinner.setAdapter(moduleAdapter);
+
+            ArrayAdapter<String> emptySubModuleAdapter = createDisabledFirstItemAdapter(new String[]{"Sub-Modules"});
+            emptySubModuleAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            subModuleSpinner.setAdapter(emptySubModuleAdapter);
+
+            moduleSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
-                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                    String fuzzer_selected = parentView.getItemAtPosition(pos).toString();
-                    sharedpreferences.edit().putString("fuzzer_selected", fuzzer_selected).apply();
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    String selectedModule = modules[position];
+                    if (subModulesMap.containsKey(selectedModule)) {
+                        ArrayAdapter<String> subAdapter = createDisabledFirstItemAdapter(subModulesMap.get(selectedModule));
+                        subAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                        subModuleSpinner.setAdapter(subAdapter);
+                        if (subAdapter.getCount() > 1) {
+                            subModuleSpinner.setSelection(1);
+                        } else {
+                            subModuleSpinner.setSelection(0);
+                        }
+                    } else {
+                        subModuleSpinner.setAdapter(emptySubModuleAdapter);
+                        if (emptySubModuleAdapter.getCount() > 1) {
+                            subModuleSpinner.setSelection(1);
+                        } else {
+                            subModuleSpinner.setSelection(0);
+                        }
+                    }
                 }
 
-                @Override
-                public void onNothingSelected(AdapterView<?> parentView) {
-                    // Do nothing
-                }
+                @Override public void onNothingSelected(AdapterView<?> parent) {}
             });
 
-            // Start FUZZER
-            Button CaribouFUZZERButton = rootView.findViewById(R.id.start_fuzzer);
+            startButton.setOnClickListener(v -> {
+                String module = (String) moduleSpinner.getSelectedItem();
+                String subModule = (String) subModuleSpinner.getSelectedItem();
 
-            CaribouFUZZERButton.setOnClickListener(v -> {
-                String fuzzer_module = sharedpreferences.getString("fuzzer_selected", "");
-                String idValue = getVisibleParam(selectedID, " ");
-                String minValue = getVisibleParam(selectedMin, " -min ");
-                String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
-                String seedValue = getVisibleParam(selectedSeed, " --seed ");
-
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
-                    if ("brute".equals(fuzzer_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer brute" + idValue);
-                    }
-                    if ("identify".equals(fuzzer_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer identify" + outputEnabled);
-                    }
-                    if ("mutate".equals(fuzzer_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer mutate" + idValue);
-                    }
-                    if ("random".equals(fuzzer_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer random" + minValue + seedValue + outputEnabled);
-                    }
-                    if ("replay".equals(fuzzer_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer replay" + outputEnabled);
-                    }
-                } else {
-                    showToast("Please chose a CAN Interface!");
+                if ("Modules".equals(module) || "Sub-Modules".equals(subModule)) {
+                    showToast("Please select a Module and Sub-Module.");
+                    return;
                 }
 
-                activity.invalidateOptionsMenu();
-            });
-
-            // SEND Spinner
-            final Spinner SENDList = rootView.findViewById(R.id.send_spinner);
-            final String[] SENDTypeOptions = {"file", "message"};
-
-            SENDList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, SENDTypeOptions));
-
-            SENDList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                    String send_selected = parentView.getItemAtPosition(pos).toString();
-                    sharedpreferences.edit().putString("send_selected", send_selected).apply();
+                switch (module) {
+                    case "Fuzz":
+                        runFuzzer(subModule);
+                        break;
+                    case "Send":
+                        runSend(subModule);
+                        break;
+                    case "UDS":
+                        runUDS(subModule);
+                        break;
+                    case "XCP":
+                        runXCP(subModule);
+                        break;
+                    default:
+                        showToast("Unknown module selected.");
                 }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> parentView) {
-                    // Do nothing
-                }
-            });
-
-            // Start SEND
-            Button CaribouSENDButton = rootView.findViewById(R.id.start_send);
-
-            CaribouSENDButton.setOnClickListener(v -> {
-                String selected_message = SelectedMessage.getText().toString();
-                String selected_file = SelectedFile.getText().toString();
-                String delayValue = getVisibleParam(selectedDelay, " -d ");
-                String loopEnabled = isLoopEnabled ? " -l" : "";
-                String padEnabled = isPadEnabled ? " -p" : "";
-                String send_module = sharedpreferences.getString("send_selected", "");
-
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
-                    if ("file".equals(send_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " send file" + delayValue + loopEnabled + " " + selected_file);
-                    }
-                    if ("message".equals(send_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " send message" + padEnabled + delayValue + loopEnabled + " " + selected_message);
-                    }
-                } else {
-                    showToast("Please chose a CAN Interface!");
-                }
-
-                activity.invalidateOptionsMenu();
-            });
-
-            // UDS Spinner
-            final Spinner UDSList = rootView.findViewById(R.id.uds_spinner);
-            final String[] UDSTypeOptions = {"discovery", "services"};
-
-            UDSList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, UDSTypeOptions));
-
-            UDSList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                    String uds_selected = parentView.getItemAtPosition(pos).toString();
-                    sharedpreferences.edit().putString("uds_selected", uds_selected).apply();
-                }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> parentView) {
-                }
-            });
-
-            // Start UDS
-            Button CaribouUDSButton = rootView.findViewById(R.id.start_uds);
-
-            CaribouUDSButton.setOnClickListener(v -> {
-                String srcValue = getVisibleParam(selectedSrc, " ");
-                String dstValue = getVisibleParam(selectedDst, " ");
-                String minValue = getVisibleParam(selectedMin, " -min ");
-                String maxValue = getVisibleParam(selectedMax, " -max ");
-                String delayValue = getVisibleParam(selectedDelay, " -d ");
-                String uds_module = sharedpreferences.getString("uds_selected", "");
-
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
-                    if ("discovery".equals(uds_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds discovery" + minValue + maxValue + delayValue);
-                    }
-                    if ("services".equals(uds_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds services" + srcValue + dstValue);
-                    }
-                } else {
-                    showToast("Please chose a CAN Interface!");
-                }
-
-                activity.invalidateOptionsMenu();
-            });
-
-            // XCP Spinner
-            final Spinner XCPList = rootView.findViewById(R.id.xcp_spinner);
-            final String[] XCPOptions = {"discovery", "info", "dump"};
-
-            XCPList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, XCPOptions));
-
-            XCPList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                    String xcp_selected = parentView.getItemAtPosition(pos).toString();
-                    sharedpreferences.edit().putString("xcp_selected", xcp_selected).apply();
-                }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> parentView) {
-                    // Do nothing
-                }
-            });
-
-            // Start XCP
-            Button CaribouXCPButton = rootView.findViewById(R.id.start_xcp);
-
-            CaribouXCPButton.setOnClickListener(v -> {
-                String addrValue = getVisibleParam(selectedAddr, " ");
-                String lengthValue = getVisibleParam(selectedLength, " ");
-                String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
-                String srcValue = getVisibleParam(selectedSrc, " ");
-                String dstValue = getVisibleParam(selectedDst, " ");
-                String minValue = getVisibleParam(selectedMin, " -min ");
-                String maxValue = getVisibleParam(selectedMax, " -max ");
-                String xcp_module = sharedpreferences.getString("xcp_selected", "");
-
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
-                    if ("discovery".equals(xcp_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp discovery" + minValue + maxValue);
-                    }
-                    if ("info".equals(xcp_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp info" + srcValue + dstValue);
-                    }
-                    if ("dump".equals(xcp_module)) {
-                        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp dump" + srcValue + dstValue + addrValue + lengthValue + outputEnabled);
-                    }
-                } else {
-                    showToast("Please chose a CAN Interface!");
-                }
-
-                activity.invalidateOptionsMenu();
             });
 
             return rootView;
         }
 
-        private String getVisibleParam(EditText field, String prefix) {
-            if (field.getVisibility() == View.VISIBLE) {
-                String input = field.getText().toString().trim();
-                if (!input.isEmpty()) {
-                    return prefix + input;
+        private void setupParamToggle(View rootView, int toggleButtonId, int containerLayoutId) {
+            Button toggleBtn = rootView.findViewById(toggleButtonId);
+            TextInputLayout container = rootView.findViewById(containerLayoutId);
+
+            toggleBtn.setOnClickListener(v -> {
+                boolean visible = container.getVisibility() == View.VISIBLE;
+                container.setVisibility(visible ? View.GONE : View.VISIBLE);
+
+                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
+                toggleBtn.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
+            });
+        }
+
+        private String getVisibleParam(EditText editText, String prefix) {
+            if (editText.getVisibility() == View.VISIBLE) {
+                String val = editText.getText().toString().trim();
+                if (!val.isEmpty()) {
+                    return prefix + val;
                 }
             }
             return "";
         }
+
+        private void setupBooleanToggle(SwitchCompat toggleSwitch, Consumer<Boolean> flagSetter, boolean initialValue) {
+            toggleSwitch.setChecked(initialValue);
+            int initialColorRes = initialValue ? android.R.color.holo_green_light : android.R.color.holo_red_light;
+            toggleSwitch.setTextColor(ContextCompat.getColor(requireContext(), initialColorRes));
+
+            toggleSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
+                flagSetter.accept(isChecked);
+                int colorRes = isChecked ? android.R.color.holo_green_light : android.R.color.holo_red_light;
+                toggleSwitch.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
+            });
+        }
+
+        private void runFuzzer(String fuzzer_module) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
+                showToast("Please choose a CAN Interface!");
+                return;
+            }
+
+            String idValue = getVisibleParam(selectedID, " ");
+            String minValue = getVisibleParam(selectedMin, " -min ");
+            String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
+            String seedValue = getVisibleParam(selectedSeed, " --seed ");
+
+            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer ";
+
+            switch (fuzzer_module) {
+                case "brute":
+                    run_cmd(cmdBase + "brute" + idValue);
+                    break;
+                case "identify":
+                    run_cmd(cmdBase + "identify" + outputEnabled);
+                    break;
+                case "mutate":
+                    run_cmd(cmdBase + "mutate" + idValue);
+                    break;
+                case "random":
+                    run_cmd(cmdBase + "random" + minValue + seedValue + outputEnabled);
+                    break;
+                case "replay":
+                    run_cmd(cmdBase + "replay" + outputEnabled);
+                    break;
+                default:
+                    showToast("Unknown fuzzer submodule: " + fuzzer_module);
+            }
+        }
+
+        private void runSend(String send_module) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
+                showToast("Please choose a CAN Interface!");
+                return;
+            }
+
+            String selected_message = SelectedMessage.getText().toString();
+            String selected_file = SelectedFile.getText().toString();
+            String delayValue = getVisibleParam(selectedDelay, " -d ");
+            String loopEnabled = isLoopEnabled ? " -l" : "";
+            String padEnabled = isPadEnabled ? " -p" : "";
+
+            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " send ";
+
+            switch (send_module) {
+                case "file":
+                    run_cmd(cmdBase + "file" + delayValue + loopEnabled + " " + selected_file);
+                    break;
+                case "message":
+                    run_cmd(cmdBase + "message" + padEnabled + delayValue + loopEnabled + " " + selected_message);
+                    break;
+                default:
+                    showToast("Unknown send submodule: " + send_module);
+            }
+        }
+
+        private void runUDS(String uds_module) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
+                showToast("Please choose a CAN Interface!");
+                return;
+            }
+
+            String srcValue = getVisibleParam(selectedSrc, " ");
+            String dstValue = getVisibleParam(selectedDst, " ");
+            String minValue = getVisibleParam(selectedMin, " -min ");
+            String maxValue = getVisibleParam(selectedMax, " -max ");
+            String delayValue = getVisibleParam(selectedDelay, " -d ");
+
+            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds ";
+
+            switch (uds_module) {
+                case "discovery":
+                    run_cmd(cmdBase + "discovery" + minValue + maxValue + delayValue);
+                    break;
+                case "services":
+                    run_cmd(cmdBase + "services" + srcValue + dstValue);
+                    break;
+                default:
+                    showToast("Unknown UDS submodule: " + uds_module);
+            }
+        }
+
+        private void runXCP(String xcp_module) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
+                showToast("Please choose a CAN Interface!");
+                return;
+            }
+
+            String addrValue = getVisibleParam(selectedAddr, " ");
+            String lengthValue = getVisibleParam(selectedLength, " ");
+            String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
+            String srcValue = getVisibleParam(selectedSrc, " ");
+            String dstValue = getVisibleParam(selectedDst, " ");
+            String minValue = getVisibleParam(selectedMin, " -min ");
+            String maxValue = getVisibleParam(selectedMax, " -max ");
+
+            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp ";
+
+            switch (xcp_module) {
+                case "discovery":
+                    run_cmd(cmdBase + "discovery" + outputEnabled + srcValue + dstValue);
+                    break;
+                case "info":
+                    run_cmd(cmdBase + "info" + addrValue + lengthValue);
+                    break;
+                case "dump":
+                    run_cmd(cmdBase + "dump" + addrValue + lengthValue + minValue + maxValue + outputEnabled);
+                    break;
+                default:
+                    showToast("Unknown XCP submodule: " + xcp_module);
+            }
+        }
     }
+
 
     public static class CANICSIMFragment extends CANFragment {
         final ShellExecuter exe = new ShellExecuter();
@@ -2416,8 +2539,8 @@ public class CANFragment extends Fragment {
             msfBtn.setOnClickListener(v -> executorService.submit(() -> {
                 run_cmd("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n); "
                         + "if [ -n \"$msfsession\" ]; then "
-                        + "screen -d \"$msfsession\"; screen -r \"$msfsession\"; "
-                        + "else screen -S msf -m msfconsole;exit; fi");
+                        + "screen -wipe; screen -d \"$msfsession\"; screen -r \"$msfsession\"; "
+                        + "else screen -wipe; screen -S msf -m msfconsole;exit; fi");
             }));
 
             Button runBtn = rootView.findViewById(R.id.run_module);

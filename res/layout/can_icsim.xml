@@ -22,7 +22,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginTop="10dp"
-                android:text="Instrument Cluster Simulator"
+                android:text="@string/icsim"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textStyle="bold"/>
 
@@ -57,7 +57,7 @@
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
-                    app:strokeColor="@color/nh_box_stroke_spinner"
+                    app:strokeColor="@color/nh_box_stroke_iface"
                     app:strokeWidth="2dp"
                     app:boxStrokeWidthFocused="3dp"
                     android:padding="4dp"
@@ -77,7 +77,7 @@
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:layout_marginStart="8dp"
-                    app:strokeColor="@color/nh_box_stroke_refresh"
+                    app:strokeColor="@color/nh_box_stroke_iface"
                     app:strokeWidth="2dp"
                     app:boxStrokeWidthFocused="3dp"
                     android:padding="4dp"
@@ -101,7 +101,7 @@
                 android:layout_marginBottom="5dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Configuration" />
+                android:text="@string/Configuration" />
 
             <LinearLayout
                 android:id="@+id/icsim_configuration"
@@ -198,22 +198,45 @@
                 </LinearLayout>
             </LinearLayout>
 
-            <WebView
-                android:id="@+id/icsim"
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
-                android:layout_marginTop="5dp"
+                android:layout_height="match_parent"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
-                android:layout_height="200dp"
-                android:layout_marginBottom="8dp"/>
+                android:layout_marginTop="5dp"
+                android:layout_marginBottom="8dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="4dp"
+                app:strokeColor="@color/ifc_box_stroke"
+                app:strokeWidth="2dp"
+                app:boxStrokeWidthFocused="3dp">
 
-            <WebView
-                android:id="@+id/controls"
+                <WebView
+                    android:id="@+id/icsim"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp" />
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
                 android:layout_marginBottom="10dp"
-                android:layout_height="200dp" />
+                app:cardCornerRadius="8dp"
+                app:cardElevation="4dp"
+                app:strokeColor="@color/ifc_box_stroke"
+                app:strokeWidth="2dp"
+                app:boxStrokeWidthFocused="3dp">
+
+                <WebView
+                    android:id="@+id/controls"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp" />
+
+            </com.google.android.material.card.MaterialCardView>
+
 
         </LinearLayout>
 

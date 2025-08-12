@@ -696,6 +696,36 @@
     <string name="VinNumber">4F2CU08102KM50866</string>
     <string name="Check">Check</string>
     <string name="Show">Show</string>
+    <!-- Basic Tools -->
+    <string name="BasicTools">Basic Tools</string>
+    <string name="RHOST">RHOST</string>
+    <string name="RHOSTValue">192.168.1.42</string>
+    <string name="LPORT">LPORT</string>
+    <string name="RPORT">RPORT</string>
+    <string name="PORTValue">1234</string>
+    <string name="Sequence">Sequence</string>
+    <string name="SequenceValue">01a#11223344AABBCCDD</string>
+    <string name="CanLogPath">/root/candump/dump.log</string>
+    <string name="CanGen">CanGen</string>
+    <string name="CanDump">CanDump</string>
+    <string name="CanSniffer">CanSniffer</string>
+    <string name="CanSend">CanSend</string>
+    <string name="CanPlayer">CanPlayer</string>
+    <string name="SequenceFinder">Seq.Finder</string>
+    <string name="Asc2Log">Asc2Log</string>
+    <string name="Log2Asc">Log2Asc</string>
+    <string name="Freediag">Freediag</string>
+    <string name="DiagTest">DiagTest</string>
+    <string name="Cannelloni">Cannelloni</string>
+    <string name="Input">Input</string>
+    <string name="Browse">Browse</string>
+    <string name="AdvancedOptions">Advanced Options</string>
+    <string name="Interactive">Interactive</string>
+    <string name="Verbose">Verbose</string>
+    <string name="LocalLoopback">Local Loopback</string>
+    <string name="CustomCommand">Custom Command</string>
+    <string name="CustomCommandValue">canbusload can0@100000 -r -t -b -c</string>
+    <string name="Run">Run</string>
     <!-- CAN-USB -->
     <string name="CanUSB">CAN-USB</string>
     <string name="run">Run</string>
@@ -712,6 +742,47 @@
     <string name="CanSpeed">CAN Speed</string>
     <string name="CanSpeedValue">500000</string>
     <string name="SleepMS">Sleep (ms)</string>
+    <!-- Caring Caribou -->
+    <string name="CaringCaribou">Caring Caribou</string>
+    <string name="Message">Message</string>
+    <string name="MessageValue">0x7a0#c0.ff.ee.00.11.22.33.44</string>
+    <string name="File">File</string>
+    <string name="Loop">Loop</string>
+    <string name="Reverse">Reverse</string>
+    <string name="Pad">Pad</string>
+    <string name="CandumpFormat">CanDump Format</string>
+    <string name="Length">Length</string>
+    <string name="LengthValue">0x4800</string>
+    <string name="SeparateLine">Separate Line</string>
+    <string name="SeparateLineValue">5</string>
+    <string name="Src">Src.</string>
+    <string name="SrcValue">0x3e8</string>
+    <string name="Dst">Dst.</string>
+    <string name="DstValue">0x3e9</string>
+    <string name="Minimum">Minimum</string>
+    <string name="MinimumValue">2</string>
+    <string name="Maximum">Maximum</string>
+    <string name="MaximumValue">5</string>
+    <string name="Listener">Listener</string>
+    <string name="Dump">Dump</string>
+    <string name="Modules">Modules</string>
+    <string name="Seed">Seed</string>
+    <string name="SeedValue">0xabc123</string>
+    <string name="Min">Min.</string>
+    <string name="Max">Max.</string>
+    <string name="StartAddress">Start Address</string>
+    <string name="StartAddressValue">0x1fffb000</string>
+    <string name="Delay">Delay</string>
+    <string name="DelayValue">1</string>
+    <string name="IDValue">0x003</string>
+    <!-- ICSim -->
+    <string name="icsim">Instrument Cluster Simulator</string>
+    <string name="Configuration">Configuration</string>
+    <!-- MSF Automotive -->
+    <string name="msfautomotive">MSF Automotive</string>
+    <string name="elmrelay">ELM327 Relay Configuration</string>
+    <string name="baudspeed">Baud Speed</string>
+    <string name="baudspeedValue">115200</string>
 
     <!-- CARsenal About menu -->
     <string name="about_author">

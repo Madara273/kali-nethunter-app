@@ -54,7 +54,9 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    app:boxStrokeColor="@color/nh_box_stroke_spinner"
+                    app:boxStrokeColor="@color/nh_box_stroke_iface"
+                    app:boxStrokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp"
                     app:boxBackgroundColor="@color/transparent"
                     app:hintTextColor="@color/ifc_hint_text"
                     android:hint="@string/Interface">
@@ -73,7 +75,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="match_parent"
                     android:layout_marginStart="10dp"
-                    app:strokeColor="@color/nh_box_stroke_spinner"
+                    app:strokeColor="@color/nh_box_stroke_iface"
                     app:strokeWidth="2dp"
                     app:boxStrokeWidthFocused="3dp">
 
@@ -141,6 +143,8 @@
                         android:layout_marginEnd="5dp"
                         android:visibility="gone"
                         app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
                         android:hint="@string/MTU">
@@ -162,6 +166,8 @@
                         android:layout_marginStart="5dp"
                         android:visibility="gone"
                         app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
                         android:hint="@string/txqueuelen">
@@ -336,6 +342,8 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     app:boxStrokeColor="@color/ifc_box_stroke"
+                    app:strokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp"
                     app:boxBackgroundColor="@color/transparent"
                     app:hintTextColor="@color/ifc_hint_text"
                     android:hint="@string/VinInfo">
@@ -398,6 +406,8 @@
                     android:layout_weight="1"
                     android:hint="@string/Output"
                     app:boxStrokeColor="@color/ifc_box_stroke"
+                    app:strokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp"
                     app:boxBackgroundColor="@android:color/black"
                     app:hintEnabled="true">
 

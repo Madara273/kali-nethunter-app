@@ -56,7 +56,7 @@
                     android:layout_width="0dp"
                     android:layout_height="48dp"
                     android:layout_weight="1"
-                    app:strokeColor="@color/nh_box_stroke_spinner"
+                    app:strokeColor="@color/nh_box_stroke_iface"
                     app:strokeWidth="2dp"
                     app:boxStrokeWidthFocused="3dp"
                     android:padding="4dp"
@@ -76,7 +76,7 @@
                     android:layout_width="48dp"
                     android:layout_height="48dp"
                     android:layout_marginStart="8dp"
-                    app:strokeColor="@color/nh_box_stroke_refresh"
+                    app:strokeColor="@color/nh_box_stroke_iface"
                     app:strokeWidth="2dp"
                     app:boxStrokeWidthFocused="3dp"
                     android:padding="4dp"
@@ -106,6 +106,8 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    app:strokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp"
                     app:boxStrokeColor="@color/ifc_box_stroke"
                     app:boxBackgroundColor="@color/transparent"
                     app:hintTextColor="@color/ifc_hint_text"
@@ -136,6 +138,8 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    app:strokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp"
                     app:boxStrokeColor="@color/ifc_box_stroke"
                     app:boxBackgroundColor="@color/transparent"
                     app:hintTextColor="@color/ifc_hint_text"
@@ -229,15 +233,22 @@
                         android:textColor="@android:color/holo_red_light"
                         tools:ignore="TextContrastCheck" />
 
-                    <androidx.appcompat.widget.SwitchCompat
-                        android:id="@+id/btn_toggle_usb_ttyOutput"
+                    <com.google.android.material.card.MaterialCardView
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="@string/Debug"
-                        android:checked="false"
-                        android:paddingStart="12dp"
-                        tools:ignore="RtlSymmetry" />
+                        app:cardCornerRadius="8dp">
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/btn_toggle_usb_ttyOutput"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/Debug"
+                            android:paddingStart="12dp"
+                            android:gravity="center_vertical" />
+
+                    </com.google.android.material.card.MaterialCardView>
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -254,6 +265,8 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:visibility="gone"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
@@ -275,6 +288,8 @@
                         android:layout_weight="1"
                         android:layout_marginStart="3dp"
                         android:visibility="gone"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
@@ -296,6 +311,8 @@
                         android:layout_weight="1"
                         android:layout_marginStart="3dp"
                         android:visibility="gone"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
@@ -325,6 +342,8 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:visibility="gone"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
