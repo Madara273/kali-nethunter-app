@@ -57,7 +57,6 @@
     <style name="DialogStyle" parent="@style/MaterialAlertDialog.Material3">
         <item name="android:windowEnterAnimation">@android:anim/fade_in</item>
         <item name="android:windowExitAnimation">@android:anim/fade_out</item>
-        <item name="android:background">@android:color/black</item>
         <item name="colorPrimary">#547383</item>
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textColorSecondary">@color/textColor</item>
