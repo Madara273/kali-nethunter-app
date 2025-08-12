@@ -22,7 +22,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginTop="10dp"
-                android:text="Caring Caribou"
+                android:text="@string/CaringCaribou"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textStyle="bold"/>
 
@@ -101,7 +101,7 @@
                 android:layout_marginEnd="20dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Advanced Options" />
+                android:text="@string/AdvancedOptions" />
 
             <LinearLayout
                 android:id="@+id/caribou_advanced_options"
@@ -113,6 +113,7 @@
                 android:visibility="gone">
 
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
@@ -127,14 +128,14 @@
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="Message">
+                        android:hint="@string/Message">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/caribou_message"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="text"
-                            android:text="0x7a0#c0.ff.ee.00.11.22.33.44"
+                            android:text="@string/MessageValue"
                             android:textColor="@color/white"/>
 
                     </com.google.android.material.textfield.TextInputLayout>
@@ -152,7 +153,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:hint="File"
+                        android:hint="@string/File"
                         app:strokeWidth="2dp"
                         app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
@@ -164,7 +165,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="text"
-                            android:text="/root/candump/dump.log"
+                            android:text="@string/CanLogPath"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -172,7 +173,7 @@
                         android:id="@+id/cariboufilebrowse"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="Browse"
+                        android:text="@string/Browse"
                         android:textColor="#FFFFFFFF"
                         android:layout_marginStart="8dp" />
 
@@ -196,11 +197,12 @@
                             android:id="@+id/btn_toggle_loop"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Loop"
+                            android:text="@string/Loop"
                             android:textColor="@android:color/holo_red_light"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:paddingStart="12dp"
-                            android:gravity="center_vertical" />
+                            android:gravity="center_vertical"
+                            tools:ignore="RtlSymmetry" />
 
                     </com.google.android.material.card.MaterialCardView>
 
@@ -215,11 +217,12 @@
                             android:id="@+id/btn_toggle_reverse"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Reverse"
+                            android:text="@string/Reverse"
                             android:textColor="@android:color/holo_red_light"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:paddingStart="12dp"
-                            android:gravity="center_vertical" />
+                            android:gravity="center_vertical"
+                            tools:ignore="RtlSymmetry" />
 
                     </com.google.android.material.card.MaterialCardView>
 
@@ -234,11 +237,12 @@
                             android:id="@+id/btn_toggle_pad"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Pad"
+                            android:text="@string/Pad"
                             android:textColor="@android:color/holo_red_light"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:paddingStart="12dp"
-                            android:gravity="center_vertical" />
+                            android:gravity="center_vertical"
+                            tools:ignore="RtlSymmetry" />
 
                     </com.google.android.material.card.MaterialCardView>
 
@@ -263,11 +267,12 @@
                             android:id="@+id/btn_toggle_candump"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Candump Format"
+                            android:text="@string/CandumpFormat"
                             android:textColor="@android:color/holo_red_light"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:paddingStart="12dp"
-                            android:gravity="center_vertical" />
+                            android:gravity="center_vertical"
+                            tools:ignore="RtlSymmetry" />
 
                     </com.google.android.material.card.MaterialCardView>
 
@@ -282,11 +287,12 @@
                             android:id="@+id/btn_toggle_output"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="Output"
+                            android:text="@string/Output"
                             android:textColor="@android:color/holo_red_light"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:paddingStart="12dp"
-                            android:gravity="center_vertical" />
+                            android:gravity="center_vertical"
+                            tools:ignore="RtlSymmetry" />
 
                     </com.google.android.material.card.MaterialCardView>
 
@@ -304,27 +310,30 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Start Address"
+                        android:text="@string/StartAddress"
                         android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall" />
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        tools:ignore="ButtonStyle" />
 
                     <Button
                         android:id="@+id/btn_toggle_length"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Length"
+                        android:text="@string/Length"
                         android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall" />
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        tools:ignore="ButtonStyle" />
 
                     <Button
                         android:id="@+id/btn_toggle_separateLine"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Separate Line"
+                        android:text="@string/SeparateLine"
                         android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall" />
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        tools:ignore="ButtonStyle" />
 
                 </LinearLayout>
 
@@ -339,27 +348,30 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="ID"
+                        android:text="@string/ID"
                         android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall" />
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        tools:ignore="ButtonStyle" />
 
                     <Button
                         android:id="@+id/btn_toggle_src"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Src."
+                        android:text="@string/Src"
                         android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall" />
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        tools:ignore="ButtonStyle" />
 
                     <Button
                         android:id="@+id/btn_toggle_dst"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Dst."
+                        android:text="@string/Dst"
                         android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall" />
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        tools:ignore="ButtonStyle" />
 
                 </LinearLayout>
 
@@ -374,27 +386,30 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Seed"
+                        android:text="@string/Seed"
                         android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall" />
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        tools:ignore="ButtonStyle" />
 
                     <Button
                         android:id="@+id/btn_toggle_min"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Min."
+                        android:text="@string/Min"
                         android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall" />
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        tools:ignore="ButtonStyle" />
 
                     <Button
                         android:id="@+id/btn_toggle_max"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Max."
+                        android:text="@string/Max"
                         android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall" />
+                        android:textAppearance="?android:attr/textAppearanceSmall"
+                        tools:ignore="ButtonStyle" />
 
                 </LinearLayout>
 
@@ -410,7 +425,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="Delay"
+                        android:text="@string/Delay"
                         android:textColor="@android:color/holo_red_light"
                         android:textAppearance="?android:attr/textAppearanceSmall" />
                 </LinearLayout>
@@ -434,14 +449,14 @@
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="Start Address">
+                        android:hint="@string/StartAddress">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/start_addr_value"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="text"
-                            android:text="0x1fffb000"
+                            android:text="@string/StartAddressValue"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -458,14 +473,14 @@
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="Length">
+                        android:hint="@string/Length">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/length_value"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="text"
-                            android:text="0x4800"
+                            android:text="@string/LengthValue"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -482,14 +497,14 @@
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="Separate Line">
+                        android:hint="@string/SeparateLine">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/separate_line_value"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="number"
-                            android:text="5"
+                            android:text="@string/SeparateLineValue"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -514,14 +529,14 @@
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="Seed">
+                        android:hint="@string/Seed">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/seed_value"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="text"
-                            android:text="0xabc123"
+                            android:text="@string/SeedValue"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -538,14 +553,14 @@
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="ID">
+                        android:hint="@string/ID">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/id_value"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="text"
-                            android:text="0x003"
+                            android:text="@string/IDValue"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -562,14 +577,14 @@
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="Source">
+                        android:hint="@string/Src">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/src_value"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="text"
-                            android:text="0x3e8"
+                            android:text="@string/SrcValue"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -586,14 +601,14 @@
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="Dest.">
+                        android:hint="@string/Dst">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/dst_value"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="text"
-                            android:text="0x3e9"
+                            android:text="@string/DstValue"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -617,14 +632,14 @@
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="Minimum">
+                        android:hint="@string/Minimum">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/min_value"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="number"
-                            android:text="2"
+                            android:text="@string/MinimumValue"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -641,14 +656,14 @@
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="Maximum">
+                        android:hint="@string/Maximum">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/max_value"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="number"
-                            android:text="5"
+                            android:text="@string/MaximumValue"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -665,14 +680,14 @@
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="Delay">
+                        android:hint="@string/Delay">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/delay_value"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="number"
-                            android:text="1"
+                            android:text="@string/DelayValue"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -696,11 +711,11 @@
 
                 <TextView
                     android:id="@+id/textView3"
-                    android:layout_width="wrap_content"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
                     android:layout_weight="3"
-                    android:text="Modules"
+                    android:text="@string/Modules"
                     android:textAppearance="?android:attr/textAppearanceMedium"
                     android:textStyle="bold" />
 
@@ -721,14 +736,16 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Dump" />
+                    android:text="@string/Dump"
+                    tools:ignore="ButtonStyle" />
 
                 <Button
                     android:id="@+id/start_listener"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="Listener" />
+                    android:text="@string/Listener"
+                    tools:ignore="ButtonStyle" />
 
             </LinearLayout>
 
@@ -770,7 +787,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="48dp"
                     android:layout_marginTop="5dp"
-                    android:layout_marginBottom="10dp">
+                    android:layout_marginBottom="10dp"
+                    tools:ignore="TooManyViews">
 
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/spinner_submodules_card"
@@ -797,7 +815,7 @@
                         android:id="@+id/start_button"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="RUN"
+                        android:text="@string/Run"
                         app:layout_constraintStart_toEndOf="@id/spinner_submodules_card"
                         app:layout_constraintEnd_toEndOf="parent"
                         app:layout_constraintTop_toTopOf="parent"
