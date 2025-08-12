@@ -1827,7 +1827,7 @@ public class CANFragment extends Fragment {
 
             // Browse File
             MaterialButton browseButton = rootView.findViewById(R.id.cariboufilebrowse);
-            TextInputEditText fileEditText = rootView.findViewById(R.id.caribou_file);
+            @SuppressLint("CutPasteId") TextInputEditText fileEditText = rootView.findViewById(R.id.caribou_file);
             browseButton.setOnClickListener(v -> {
                 RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), fileEditText::setText);
                 dialog.show();
