@@ -13,8 +13,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.method.LinkMovementMethod;
-import android.text.util.Linkify;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -38,6 +38,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.text.HtmlCompat;
 import androidx.core.util.Consumer;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
@@ -69,7 +70,6 @@ import java.util.Map;
 public class CANFragment extends Fragment {
     private static final String TAG = "CANFragment";
     private static SharedPreferences sharedpreferences;
-    private Context context;
     private Activity activity;
     private static final String ARG_SECTION_NUMBER = "section_number";
 
@@ -288,7 +288,6 @@ public class CANFragment extends Fragment {
         sharedpreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         super.onCreate(savedInstanceState);
         activity = getActivity();
-        context = getContext();
     }
 
     @Override
@@ -405,19 +404,34 @@ public class CANFragment extends Fragment {
     }
 
     public void RunAbout() {
-        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        MaterialAlertDialogBuilder aboutDialog = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-        aboutDialog.setTitle("About CARsenal");
+        LayoutInflater inflater = LayoutInflater.from(activity);
+        View dialogView = inflater.inflate(R.layout.can_about_dialog, null);
 
-        TextView message = new TextView(context);
-        message.setText(getResources().getText(R.string.about_author));
-        message.setMovementMethod(LinkMovementMethod.getInstance());
-        message.setPadding(50, 40, 50, 0);
-        Linkify.addLinks(message, Linkify.WEB_URLS);
+        TextView aboutText = dialogView.findViewById(R.id.about_text);
+        TextView creditsText = dialogView.findViewById(R.id.credits_text);
 
-        aboutDialog.setView(message);
-        aboutDialog.setNegativeButton("Close", (dialog, id) -> dialog.cancel());
-        aboutDialog.show();
+        aboutText.setText(HtmlCompat.fromHtml(
+                getString(R.string.about_text), HtmlCompat.FROM_HTML_MODE_LEGACY));
+        aboutText.setMovementMethod(LinkMovementMethod.getInstance());
+
+        creditsText.setText(HtmlCompat.fromHtml(
+                getString(R.string.credits_text), HtmlCompat.FROM_HTML_MODE_LEGACY));
+        creditsText.setMovementMethod(LinkMovementMethod.getInstance());
+
+        // Create a centered title TextView
+        TextView titleView = new TextView(activity);
+        titleView.setText("About CARsenal");
+        titleView.setGravity(Gravity.CENTER);
+        titleView.setTextSize(20);
+        titleView.setTypeface(null, Typeface.BOLD);
+        int padding = (int) (16 * activity.getResources().getDisplayMetrics().density);
+        titleView.setPadding(0, padding, 0, padding);
+
+        new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+                .setCustomTitle(titleView) // use custom title
+                .setView(dialogView)
+                .setNegativeButton("Close", (dialog, id) -> dialog.dismiss())
+                .show();
     }
 
     public static class TabsPagerAdapter extends FragmentStateAdapter {
