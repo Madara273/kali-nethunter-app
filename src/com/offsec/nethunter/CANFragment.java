@@ -8,13 +8,14 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.method.LinkMovementMethod;
-import android.text.util.Linkify;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -29,17 +30,17 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.text.HtmlCompat;
 import androidx.core.util.Consumer;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
@@ -63,6 +64,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.Map;
@@ -70,7 +72,6 @@ import java.util.Map;
 public class CANFragment extends Fragment {
     private static final String TAG = "CANFragment";
     private static SharedPreferences sharedpreferences;
-    private Context context;
     private Activity activity;
     private static final String ARG_SECTION_NUMBER = "section_number";
 
@@ -200,7 +201,6 @@ public class CANFragment extends Fragment {
     public static class RootFileBrowserDialog {
 
         private final Context context;
-        private String currentPath = "/";
         private final ShellExecuter exe = new ShellExecuter();
         private final OnFileSelectedListener listener;
 
@@ -214,6 +214,7 @@ public class CANFragment extends Fragment {
         }
 
         public void show() {
+            String currentPath = "/";
             showDirectory(currentPath);
         }
 
@@ -289,7 +290,6 @@ public class CANFragment extends Fragment {
         sharedpreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         super.onCreate(savedInstanceState);
         activity = getActivity();
-        context = getContext();
     }
 
     @Override
@@ -406,19 +406,54 @@ public class CANFragment extends Fragment {
     }
 
     public void RunAbout() {
-        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        MaterialAlertDialogBuilder aboutDialog = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-        aboutDialog.setTitle("About CARsenal");
+        LayoutInflater inflater = LayoutInflater.from(activity);
+        View dialogView = inflater.inflate(R.layout.can_about_dialog, null);
 
-        TextView message = new TextView(context);
-        message.setText(getResources().getText(R.string.about_author));
-        message.setMovementMethod(LinkMovementMethod.getInstance());
-        message.setPadding(50, 40, 50, 0);
-        Linkify.addLinks(message, Linkify.WEB_URLS);
+        TextView aboutText = dialogView.findViewById(R.id.about_text);
+        TextView creditsText = dialogView.findViewById(R.id.credits_text);
 
-        aboutDialog.setView(message);
-        aboutDialog.setNegativeButton("Close", (dialog, id) -> dialog.cancel());
-        aboutDialog.show();
+        aboutText.setText(HtmlCompat.fromHtml(
+                getString(R.string.about_text), HtmlCompat.FROM_HTML_MODE_LEGACY));
+        aboutText.setMovementMethod(LinkMovementMethod.getInstance());
+
+        creditsText.setText(HtmlCompat.fromHtml(
+                getString(R.string.credits_text), HtmlCompat.FROM_HTML_MODE_LEGACY));
+        creditsText.setMovementMethod(LinkMovementMethod.getInstance());
+
+        // Easter egg button setup
+        ImageView easterEggButton = dialogView.findViewById(R.id.easter_egg_button);
+        MediaPlayer mediaPlayer = MediaPlayer.create(activity, R.raw.secret_vroom);
+        final int[] clickCount = {0};
+
+        easterEggButton.setOnClickListener(v -> {
+            clickCount[0]++;
+            if (clickCount[0] == 3) {
+                showToast("Hum??? What's up?");
+            }
+            if (clickCount[0] == 7) {
+                mediaPlayer.start();
+                clickCount[0] = 0; // reset after playing sound
+            }
+        });
+
+        // Create a centered title TextView
+        TextView titleView = new TextView(activity);
+        titleView.setText("About CARsenal");
+        titleView.setGravity(Gravity.CENTER);
+        titleView.setTextSize(20);
+        titleView.setTypeface(null, Typeface.BOLD);
+        int padding = (int) (16 * activity.getResources().getDisplayMetrics().density);
+        titleView.setPadding(0, padding, 0, padding);
+
+        new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+                .setCustomTitle(titleView)
+                .setView(dialogView)
+                .setNegativeButton("Close", (dialog, id) -> {
+                    if (mediaPlayer.isPlaying()) mediaPlayer.stop();
+                    mediaPlayer.release();
+                    dialog.dismiss();
+                })
+                .show();
     }
 
     public static class TabsPagerAdapter extends FragmentStateAdapter {
@@ -1084,7 +1119,6 @@ public class CANFragment extends Fragment {
         private boolean isVerboseEnabled = false;
         private boolean isDisableLoopbackEnabled = false;
         private String selected_caniface;
-        private SharedPreferences prefs;
         private final String[] canGenCmd = {""};
         private final String[] canSnifferCmd = {""};
         private final String[] canDumpCmd = {""};
@@ -1114,7 +1148,7 @@ public class CANFragment extends Fragment {
             final EditText SelectedLPort = rootView.findViewById(R.id.cannelloni_lport);
             final EditText CustomCmd = rootView.findViewById(R.id.customcmd);
 
-            prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
+            SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(requireContext());
             activity = getActivity();
 
             // Load saved commands or empty strings
@@ -1213,9 +1247,7 @@ public class CANFragment extends Fragment {
             TextInputEditText inputfilepath = rootView.findViewById(R.id.inputfilepath);
 
             inputfilebrowse.setOnClickListener(v -> {
-                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), selectedPath -> {
-                    inputfilepath.setText(selectedPath);
-                });
+                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), inputfilepath::setText);
                 dialog.show();
             });
 
@@ -1224,9 +1256,7 @@ public class CANFragment extends Fragment {
             TextInputEditText outputfilepath = rootView.findViewById(R.id.outputfilepath);
 
             outputfilebrowse.setOnClickListener(v -> {
-                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), selectedPath -> {
-                    outputfilepath.setText(selectedPath);
-                });
+                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), outputfilepath::setText);
                 dialog.show();
             });
 
@@ -1275,7 +1305,7 @@ public class CANFragment extends Fragment {
             // CanDump
             Button CanDumpButton = rootView.findViewById(R.id.start_candump);
             CanDumpButton.setOnClickListener(v -> {
-                String outputfile = outputfilepath.getText().toString();
+                String outputfile = Objects.requireNonNull(outputfilepath.getText()).toString();
 
                 if (!canDumpCmd[0].isEmpty()) {
                     run_cmd(canDumpCmd[0]);
@@ -1288,7 +1318,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             CanDumpButton.setOnLongClickListener(v -> {
-                String defaultCmd = "candump " + selected_caniface + " -f " + outputfilepath.getText().toString();
+                String defaultCmd = "candump " + selected_caniface + " -f " + Objects.requireNonNull(outputfilepath.getText());
                 showEditCommandDialog("Edit CanDump Command", canDumpCmd, "canDump_cmd", defaultCmd);
                 return true;
             });
@@ -1320,7 +1350,7 @@ public class CANFragment extends Fragment {
                 String interactiveEnabled = isInteractiveEnabled ? " -i" : "";
                 String verboseEnabled = isVerboseEnabled ? " -v" : "";
                 String disableLoopbackEnabled = isDisableLoopbackEnabled ? " -x" : "";
-                String inputfile = inputfilepath.getText().toString();
+                String inputfile = Objects.requireNonNull(inputfilepath.getText()).toString();
 
                 if (!canPlayerCmd[0].isEmpty()) {
                     run_cmd(canPlayerCmd[0]);
@@ -1333,7 +1363,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             CanPlayerButton.setOnLongClickListener(v -> {
-                String defaultCmd = "canplayer -I " + inputfilepath.getText().toString() + (isInteractiveEnabled ? " -i" : "") + (isVerboseEnabled ? " -v" : "") + (isDisableLoopbackEnabled ? " -x" : "");
+                String defaultCmd = "canplayer -I " + Objects.requireNonNull(inputfilepath.getText()) + (isInteractiveEnabled ? " -i" : "") + (isVerboseEnabled ? " -v" : "") + (isDisableLoopbackEnabled ? " -x" : "");
                 showEditCommandDialog("Edit CanPlayer Command", canPlayerCmd, "canPlayer_cmd", defaultCmd);
                 return true;
             });
@@ -1341,7 +1371,7 @@ public class CANFragment extends Fragment {
             // SequenceFinder
             Button SequenceFinderButton = rootView.findViewById(R.id.start_sequencefinder);
             SequenceFinderButton.setOnClickListener(v -> {
-                String inputfile = inputfilepath.getText().toString();
+                String inputfile = Objects.requireNonNull(inputfilepath.getText()).toString();
 
                 if (!sequenceFinderCmd[0].isEmpty()) {
                     run_cmd(sequenceFinderCmd[0]);
@@ -1354,7 +1384,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             SequenceFinderButton.setOnLongClickListener(v -> {
-                String defaultCmd = "/opt/car_hacking/sequence_finder.sh " + inputfilepath.getText().toString();
+                String defaultCmd = "/opt/car_hacking/sequence_finder.sh " + Objects.requireNonNull(inputfilepath.getText());
                 showEditCommandDialog("Edit SequenceFinder Command", sequenceFinderCmd, "sequenceFinder_cmd", defaultCmd);
                 return true;
             });
@@ -1437,8 +1467,8 @@ public class CANFragment extends Fragment {
             // Asc2Log
             Button Asc2LogButton = rootView.findViewById(R.id.start_asc2log);
             Asc2LogButton.setOnClickListener(v -> {
-                String inputfile = inputfilepath.getText().toString();
-                String outputfile = outputfilepath.getText().toString();
+                String inputfile = Objects.requireNonNull(inputfilepath.getText()).toString();
+                String outputfile = Objects.requireNonNull(outputfilepath.getText()).toString();
 
                 if (!asc2logCmd[0].isEmpty()) {
                     run_cmd(asc2logCmd[0]);
@@ -1451,17 +1481,17 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             Asc2LogButton.setOnLongClickListener(v -> {
-                String defaultCmd = "asc2log -I " + inputfilepath.getText().toString() + " -O " + outputfilepath.getText().toString();
+                String defaultCmd = "asc2log -I " + Objects.requireNonNull(inputfilepath.getText()) + " -O " + Objects.requireNonNull(outputfilepath.getText());
                 showEditCommandDialog("Edit Asc2Log Command", asc2logCmd, "asc2log_cmd", defaultCmd);
                 return true;
             });
 
             // Log2asc
             Button Log2AscButton = rootView.findViewById(R.id.start_log2asc);
-            Log2AscButton.setOnClickListener(v -> {
-                String inputfile = inputfilepath.getText().toString();
-                String outputfile = outputfilepath.getText().toString();
+            String inputfile = Objects.requireNonNull(inputfilepath.getText()).toString();
+            String outputfile = Objects.requireNonNull(outputfilepath.getText()).toString();
 
+            Log2AscButton.setOnClickListener(v -> {
                 if (!log2ascCmd[0].isEmpty()) {
                     run_cmd(log2ascCmd[0]);
                 } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !inputfile.isEmpty() && !outputfile.isEmpty()) {
@@ -1473,7 +1503,7 @@ public class CANFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             Log2AscButton.setOnLongClickListener(v -> {
-                String defaultCmd = "log2asc -I " + inputfilepath.getText().toString() + " -O " + outputfilepath.getText().toString() + " " + selected_caniface;
+                String defaultCmd = "log2asc -I " + Objects.requireNonNull(inputfilepath.getText()) + " -O " + Objects.requireNonNull(outputfilepath.getText()) + " " + selected_caniface;
                 showEditCommandDialog("Edit Log2asc Command", log2ascCmd, "log2asc_cmd", defaultCmd);
                 return true;
             });
@@ -1774,7 +1804,7 @@ public class CANFragment extends Fragment {
                 }
 
                 @Override
-                public View getDropDownView(int position, View convertView, ViewGroup parent) {
+                public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
                     View view = super.getDropDownView(position, convertView, parent);
                     TextView tv = (TextView) view;
                     if (position == 0) {
@@ -1834,7 +1864,7 @@ public class CANFragment extends Fragment {
 
             // Browse File
             MaterialButton browseButton = rootView.findViewById(R.id.cariboufilebrowse);
-            TextInputEditText fileEditText = rootView.findViewById(R.id.caribou_file);
+            @SuppressLint("CutPasteId") TextInputEditText fileEditText = rootView.findViewById(R.id.caribou_file);
             browseButton.setOnClickListener(v -> {
                 RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), fileEditText::setText);
                 dialog.show();

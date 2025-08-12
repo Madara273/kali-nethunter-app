@@ -565,6 +565,7 @@
                     android:layout_weight="1"
                     app:boxStrokeWidth="2dp"
                     app:boxStrokeWidthFocused="3dp"
+                    android:padding="4dp"
                     app:boxStrokeColor="@color/ifc_box_stroke"
                     app:boxBackgroundColor="@color/transparent"
                     app:hintTextColor="@color/ifc_hint_text"

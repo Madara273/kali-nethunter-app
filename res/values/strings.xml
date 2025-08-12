@@ -785,20 +785,25 @@
     <string name="baudspeedValue">115200</string>
 
     <!-- CARsenal About menu -->
-    <string name="about_author">
-        ABOUT:\n\n
-        Found a bug? A suggestion? Follow me on my networks and let me know!\n\n
-        https://linktr.ee/v0lk3n\n\n
-        CREDITS:\n\n
-        Made with ♥ by V0lk3n\n\n
-        - Fenugrec! For freediag tool.\nhttps://github.com/fenugrec\n\n
-        - Kobolt! For can-usb.\nhttps://github.com/kobolt\n\n
-        - Alexmohr! For can-usb fork.\nhttps://github.com/alexmohr\n\n
-        - Linux-Can! For can-utils and socketcand.\nhttps://github.com/linux-can\n\n
-        - Mguentner! For cannelloni.\nhttps://github.com/mguentner\n\n
-        - CaringCaribou!\nhttps://github.com/CaringCaribou\n\n
-        - zombieCraig! For ICSim tool.\nhttps://github.com/zombieCraig\n\n
-        - idlesign! For VIN Info tool.\nhttps://github.com/idlesign\n\n
+    <string name="about_text"><![CDATA[
+        Found a bug? A suggestion? Follow me on my networks and let me know!<br><br>
+        <center><b>Made with ♥️ by <a href="https://linktr.ee/v0lk3n">V0lk3n</b></center></a>
+        ]]>
+    </string>
+
+    <string name="credits_text"><![CDATA[
+        <center><b><u>CREDITS</u></b</center><br><br>
+        <ul>
+            <li><a href="https://github.com/fenugrec">Fenugrec</a> - Freediag tool.</li>
+            <li><a href="https://github.com/kobolt">Kobolt</a> - CAN-USB.</li>
+            <li><a href="https://github.com/alexmohr">Alexmohr</a> - CAN-USB Fork.</li>
+            <li><a href="https://github.com/linux-can">Linux-Can</a> - CAN-utils and Socketcand.</li>
+            <li><a href="https://github.com/mguentner">Mguentner</a> - Cannelloni.</li>
+            <li><a href="https://github.com/CaringCaribou">CaringCaribou Team</a> - CaringCaribou</li>
+            <li><a href="https://github.com/zombieCraig">zombieCraig</a> - ICSim.</li>
+            <li><a href="https://github.com/idlesign">idlesign</a> - VIN Info.</li>
+        </ul>
+        ]]>
     </string>
 
     <!-- CARsenal MSF Modules -->
