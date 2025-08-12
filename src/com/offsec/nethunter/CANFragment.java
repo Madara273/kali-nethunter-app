@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -29,6 +30,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -418,6 +420,22 @@ public class CANFragment extends Fragment {
                 getString(R.string.credits_text), HtmlCompat.FROM_HTML_MODE_LEGACY));
         creditsText.setMovementMethod(LinkMovementMethod.getInstance());
 
+        // Easter egg button setup
+        ImageView easterEggButton = dialogView.findViewById(R.id.easter_egg_button);
+        MediaPlayer mediaPlayer = MediaPlayer.create(activity, R.raw.secret_vroom);
+        final int[] clickCount = {0};
+
+        easterEggButton.setOnClickListener(v -> {
+            clickCount[0]++;
+            if (clickCount[0] == 3) {
+                showToast("Hum??? What's up?");
+            }
+            if (clickCount[0] == 7) {
+                mediaPlayer.start();
+                clickCount[0] = 0; // reset after playing sound
+            }
+        });
+
         // Create a centered title TextView
         TextView titleView = new TextView(activity);
         titleView.setText("About CARsenal");
@@ -428,9 +446,13 @@ public class CANFragment extends Fragment {
         titleView.setPadding(0, padding, 0, padding);
 
         new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
-                .setCustomTitle(titleView) // use custom title
+                .setCustomTitle(titleView)
                 .setView(dialogView)
-                .setNegativeButton("Close", (dialog, id) -> dialog.dismiss())
+                .setNegativeButton("Close", (dialog, id) -> {
+                    if (mediaPlayer.isPlaying()) mediaPlayer.stop();
+                    mediaPlayer.release();
+                    dialog.dismiss();
+                })
                 .show();
     }
 

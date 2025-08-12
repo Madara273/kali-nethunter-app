@@ -786,14 +786,13 @@
 
     <!-- CARsenal About menu -->
     <string name="about_text"><![CDATA[
-        <center><b><u>Author Note</u></b></center><br><br>
         Found a bug? A suggestion? Follow me on my networks and let me know!<br><br>
         <center><b>Made with ♥️ by <a href="https://linktr.ee/v0lk3n">V0lk3n</b></center></a>
         ]]>
     </string>
 
     <string name="credits_text"><![CDATA[
-        <center><b><u>CREDITS</u></b</center>><br><br>
+        <center><b><u>CREDITS</u></b</center><br><br>
         <ul>
             <li><a href="https://github.com/fenugrec">Fenugrec</a> - Freediag tool.</li>
             <li><a href="https://github.com/kobolt">Kobolt</a> - CAN-USB.</li>
