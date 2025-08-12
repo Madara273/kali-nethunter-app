@@ -34,8 +34,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SwitchCompat;
@@ -200,7 +198,7 @@ public class CANFragment extends Fragment {
     public static class RootFileBrowserDialog {
 
         private final Context context;
-        private String currentPath = "/";
+        private final String currentPath = "/";
         private final ShellExecuter exe = new ShellExecuter();
         private final OnFileSelectedListener listener;
 
