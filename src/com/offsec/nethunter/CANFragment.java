@@ -1210,9 +1210,7 @@ public class CANFragment extends Fragment {
             TextInputEditText inputfilepath = rootView.findViewById(R.id.inputfilepath);
 
             inputfilebrowse.setOnClickListener(v -> {
-                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), selectedPath -> {
-                    inputfilepath.setText(selectedPath);
-                });
+                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), inputfilepath::setText);
                 dialog.show();
             });
 
@@ -1221,9 +1219,7 @@ public class CANFragment extends Fragment {
             TextInputEditText outputfilepath = rootView.findViewById(R.id.outputfilepath);
 
             outputfilebrowse.setOnClickListener(v -> {
-                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), selectedPath -> {
-                    outputfilepath.setText(selectedPath);
-                });
+                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), outputfilepath::setText);
                 dialog.show();
             });
 
