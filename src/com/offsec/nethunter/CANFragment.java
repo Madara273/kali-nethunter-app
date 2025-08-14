@@ -363,15 +363,15 @@ public class CANFragment extends Fragment {
     public void SetupDialog() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
-        builder.setTitle("Welcome to CAN Arsenal!");
+        builder.setTitle("Welcome to CARsenal!");
         builder.setMessage("This seems to be the first run. Install the CAN tools?");
         builder.setPositiveButton("Install", (dialog, which) -> {
             RunSetup();
-            sharedpreferences.edit().putBoolean("setup_done", true).apply();
+            sharedpreferences.edit().putBoolean("carsenal_setup_done", true).apply();
         });
         builder.setNegativeButton("Disable message", (dialog, which) -> {
             dialog.dismiss();
-            sharedpreferences.edit().putBoolean("setup_done", true).apply();
+            sharedpreferences.edit().putBoolean("carsenal_setup_done", true).apply();
         });
         builder.show();
     }
@@ -392,7 +392,7 @@ public class CANFragment extends Fragment {
         String setupCommand = "echo -ne \"\\033]0;CARsenal Setup\\007\" && clear;which wget > /dev/null 2>&1 && wget -qO - https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup || curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup";
         String setupResult = run_cmd(setupCommand);
         Log.d("SetupResult",setupResult);
-        sharedpreferences.edit().putBoolean("setup_done", true).apply();
+        sharedpreferences.edit().putBoolean("carsenal_setup_done", true).apply();
         Log.i(TAG, "Setup completed");
     }
 
@@ -405,7 +405,7 @@ public class CANFragment extends Fragment {
         String updateCommand = "echo -ne \"\\033]0;CARsenal Update\\007\" && clear;which wget > /dev/null 2>&1 && wget -qO - https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update || curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update";
         String updateResult = run_cmd(updateCommand);
         Log.d("UpdateResult",updateResult);
-        sharedpreferences.edit().putBoolean("setup_done", true).apply();
+        sharedpreferences.edit().putBoolean("carsenal_setup_done", true).apply();
         Log.i(TAG, "Update completed");
     }
 
@@ -609,7 +609,7 @@ public class CANFragment extends Fragment {
             final EditText selected_vin = rootView.findViewById(R.id.vin_number);
 
             // First run
-            boolean setupdone = sharedpreferences.getBoolean("setup_done", false);
+            boolean setupdone = sharedpreferences.getBoolean("carsenal_setup_done", false);
             if (!setupdone) {
                 SetupDialog();
             }
