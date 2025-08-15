@@ -13,15 +13,15 @@ import java.util.ArrayList;
 
 /**
  * Created by jmingov on 11/15/15.
- *
+ * <p>
  * BootKali
  * *********
- *
+ * <p>
  * This class has 2 main functions:
 
- **********
+ * <p>
  * 1.- Send commands to kali:
- **********
+ * <p>
  *
  *    - new BootKali(CMD).run() and new BootKali(CMD).run_bg()
  * EX:
@@ -30,30 +30,30 @@ import java.util.ArrayList;
  * EX:
  * new BootKali("ls -l;uname -a;id;whoami").run_bg()
  *        // This has no output, is runned in the background
- *
+ * <p>
  **********
  * 2.- Generate commands to pass to the term apk as intent (only generate)
- **********
+ * <p>
  *
  * EX:
  *  OPEN KALI TERMINAL :: GET_KALI_SHELL_CMD()
- *
+ * <p>
  *     String cmd = new BootKali("").GET_KALI_SHELL_CMD() // returns the cmd.
  *     // launck intent
- *
+ * <p>
  * EX:
  *  pass comands to fenerate the terminal equivalent :: GET_KALI_SHELL_CMD()
- *
+ * <p>
  *     String cmd = new BootKali("ls -l;uname -a;id;whoami").GET_TERM_CMD() // returns the cmd.
  *     // launck intent
  *
  *
  */
 public class BootKali {
-    private final String TERM_CMD;
+    public final String TERM_CMD;
     private final String KALI_ENV;
     private final String KALI_COMMAND;
-    private final String FULL_CMD;
+    public final String FULL_CMD;
     private final String SPACE = " ";
     private final String SINGLEQ = "'";
     private final String BOOTKALI;
@@ -67,11 +67,10 @@ public class BootKali {
         // Log all cmd if needed
         //Log.d("BOOTKALI", this.BOOTKALI);
         //Log.d("COMMAND", this.KALI_COMMAND);
-        //GET_KALI_DNS();
     }
 
     private String GET_KALI_ENV() {
-        // add strings here , they will be in the kali env
+        // add strings here, they will be in the kali env
         String[] ENV = {
                 "USER=root",
                 "SHELL=/bin/bash",
@@ -81,6 +80,7 @@ public class BootKali {
                 "HOME=/root",
                 "LOGNAME=root",
                 "SHLVL=1",
+                "TMPDIR=/tmp",
                 "YOU_KNOW_WHAT=THIS_IS_KALI_LINUX_NETHUNTER_FROM_JAVA_BINKY"
         };
         StringBuilder ENV_OUT = new StringBuilder();
@@ -90,7 +90,6 @@ public class BootKali {
         return ENV_OUT.toString();
     }
 
-    //
     private String GEN_BOOTKALI() {
         return "chroot" + SPACE + NhPaths.CHROOT_PATH() + SPACE;
     }
@@ -106,32 +105,8 @@ public class BootKali {
         return "/bin/bash -c" + SPACE + SINGLEQ + KALI_ENV + CLEAR_TERM + cmd + SINGLEQ;
     }
 
-    // is really needed?????
-    private Boolean GET_ANDROID_DNS() {
-        try {
-            Class<?> SystemProperties = Class.forName("android.os.SystemProperties");
-            Method method = SystemProperties.getMethod("get", String.class);
-            ArrayList<String> servers = new ArrayList<>();
-            //String dns_servers = "";
-            for (String name : new String[]{"net.dns1", "net.dns2", "net.dns3", "net.dns4",}) {
-                String value = (String) method.invoke(null, name);
-                if (value != null && !value.isEmpty() && !servers.contains(value)) {
-                    servers.add(value);
-                    Log.d("DNS:", value);
-                }
-            }
-            return true;
-        } catch (ClassNotFoundException | NoSuchMethodException | InvocationTargetException |
-                 IllegalAccessException e) {
-            e.printStackTrace();
-            return false;
-        }
-    }
-
     /*
-    *
     * PUBLIC METHODS
-    *
      */
 
     // blocking with output
@@ -193,19 +168,5 @@ public class BootKali {
                 e.printStackTrace();
             }
         }).start();
-    }
-
-    // these don't seem to be used
-    public String GET_TERM_CMD() {
-        return "su -c \"" + TERM_CMD + "\"";
-    }
-
-    // this string is the command to pop a Kali shell (intent to the terminal, pass this a command)
-    public String GET_KALI_SHELL_CMD() {
-        return "su -c \"clear && " + BOOTKALI + "/bin/login -f root \"";
-    }
-
-    public String GET_CMD() {
-        return FULL_CMD;
     }
 }
