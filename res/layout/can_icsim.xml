@@ -94,22 +94,13 @@
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
-            <Button
-                android:id="@+id/btn_toggle_config_icsim"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                android:layout_marginBottom="5dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/Configuration" />
-
             <LinearLayout
                 android:id="@+id/icsim_configuration"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone">
+                android:orientation="vertical">
 
+                <!-- Yeah i know its ugly i will rework -->
                 <LinearLayout
                     android:id="@+id/button_row"
                     android:layout_width="match_parent"
@@ -118,7 +109,8 @@
                     android:layout_marginEnd="20dp"
                     android:orientation="horizontal"
                     android:layout_marginTop="8dp"
-                    android:gravity="center">
+                    android:gravity="center"
+                    android:visibility="gone">
 
                     <Button
                         android:id="@+id/run_icsim"
@@ -143,35 +135,13 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical">
 
-                    <LinearLayout
-                        android:id="@+id/button_row2"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="20dp"
-                        android:layout_marginEnd="20dp"
-                        android:layout_marginBottom="8dp"
-                        android:orientation="horizontal">
-
-                        <Button
-                            android:id="@+id/btn_toggle_level"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Level"
-                            android:textAppearance="?android:attr/textAppearanceSmall"
-                            android:textColor="@android:color/holo_red_light"
-                            tools:ignore="HardcodedText,TextContrastCheck" />
-
-                    </LinearLayout>
-
                     <androidx.constraintlayout.widget.ConstraintLayout
                         android:id="@+id/level_container"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
                         android:layout_marginBottom="5dp"
                         android:layout_marginStart="20dp"
-                        android:layout_marginEnd="20dp"
-                        android:visibility="gone">
+                        android:layout_marginEnd="20dp">
 
                         <com.google.android.material.card.MaterialCardView
                             android:id="@+id/spinner_level_card"
