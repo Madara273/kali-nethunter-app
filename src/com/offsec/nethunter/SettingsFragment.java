@@ -54,7 +54,6 @@ public class SettingsFragment extends Fragment {
     private static final String TAG = "SettingsFragment";
     private Context context;
     private Activity activity;
-    private static final int REQUEST_STORAGE_PERMISSION = 100;
     private static final String ARG_SECTION_NUMBER = "section_number";
     private String selected_animation;
     private String selected_prompt;
@@ -92,10 +91,22 @@ public class SettingsFragment extends Fragment {
             startActivity(intent);
         } else {
             Log.d(TAG, "Requesting READ/WRITE_EXTERNAL_STORAGE permissions");
-            requestPermissions(new String[]{
+            ActivityResultLauncher<String[]> storagePermissionLauncher = registerForActivityResult(
+                    new ActivityResultContracts.RequestMultiplePermissions(),
+                    result -> {
+                        boolean readGranted = Boolean.TRUE.equals(result.getOrDefault(android.Manifest.permission.READ_EXTERNAL_STORAGE, false));
+                        boolean writeGranted = Boolean.TRUE.equals(result.getOrDefault(android.Manifest.permission.WRITE_EXTERNAL_STORAGE, false));
+                        if (readGranted && writeGranted) {
+                            Log.d(TAG, "READ/WRITE_EXTERNAL_STORAGE permissions granted");
+                        } else {
+                            Log.d(TAG, "READ/WRITE_EXTERNAL_STORAGE permissions denied");
+                            Toast.makeText(requireContext(), "Storage permissions are required for this feature.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+            storagePermissionLauncher.launch(new String[]{
                     android.Manifest.permission.READ_EXTERNAL_STORAGE,
                     android.Manifest.permission.WRITE_EXTERNAL_STORAGE
-            }, REQUEST_STORAGE_PERMISSION);
+            });
         }
     }
 
@@ -586,6 +597,7 @@ public class SettingsFragment extends Fragment {
             }
             @Override
             public void onNothingSelected(AdapterView<?> parentView) {
+                selected_prompt = "oneline"; // Default selection
             }
         });
 
