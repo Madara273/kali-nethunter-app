@@ -134,11 +134,11 @@ public class BTFragment extends Fragment {
         builder.setPositiveButton("Install", (dialog, which) -> {
             if (iswatch) RunSetupWatch();
             else RunSetup();
-            sharedpreferences.edit().putBoolean("setup_done", true).apply();
+            sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
         });
         builder.setNegativeButton("Disable message", (dialog, which) -> {
             dialog.dismiss();
-            sharedpreferences.edit().putBoolean("setup_done", true).apply();
+            sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
         });
         builder.show();
     }
@@ -151,11 +151,11 @@ public class BTFragment extends Fragment {
         builder.setMessage("This seems to be the first run. Install the Bluetooth tools?");
         builder.setPositiveButton("Yes", (dialog, which) -> {
                 RunSetupWatch();
-                sharedpreferences.edit().putBoolean("setup_done", true).apply();
+                sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
         });
         builder.setNegativeButton("No", (dialog, which) -> {
                 dialog.dismiss();
-                sharedpreferences.edit().putBoolean("setup_done", true).apply();
+                sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
         });
         builder.show();
     }
@@ -179,7 +179,7 @@ public class BTFragment extends Fragment {
                 "if [[ ! \"`grep 'noplugin=input' /etc/init.d/bluetooth`\" == \"\" ]]; then echo 'Bluetooth service is patched!'; else echo 'Patching Bluetooth service..' && " +
                 "sed -i -e 's/# NOPLUGIN_OPTION=.*/NOPLUGIN_OPTION=\"--noplugin=input\"/g' /etc/init.d/bluetooth;fi;" +
                 "echo 'Everything is installed! Closing in 3secs..'; sleep 3 && exit ");
-        sharedpreferences.edit().putBoolean("setup_done", true).apply();
+        sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
     }
 
     public void RunSetup() {
@@ -201,7 +201,7 @@ public class BTFragment extends Fragment {
                         "if [[ -f /root/badbt/btk_server.py ]]; then echo 'BadBT is installed!'; else git clone https://github.com/yesimxev/badbt /root/badbt && cp /root/badbt/org.thanhle.btkbservice.conf /etc/dbus-1/system.d/;fi;" +
                         "if [[ ! \"`grep 'noplugin=input' /etc/init.d/bluetooth`\" == \"\" ]]; then echo 'Bluetooth service is patched!'; else echo 'Patching Bluetooth service..' && " +
                         "sed -i -e 's/.*NOPLUGIN_OPTION=\"\"/NOPLUGIN_OPTION=\"--noplugin=input\"/g' /etc/init.d/bluetooth;fi; echo 'Everything is installed!' && echo '\nPress any key to continue...' && read -s -n 1 && exit ");
-                sharedpreferences.edit().putBoolean("setup_done", true).apply();
+                sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
     }
 
     public void RunUpdate() {
@@ -213,7 +213,7 @@ public class BTFragment extends Fragment {
                 "then cd /root/carwhisperer/;git pull && make && make install;cd /root/bluebinder/;git pull && make && make install;cd /root/libgbinder/;git pull && make && " +
                 "make install-dev;cd /root/libglibutil/;git pull && make && make install-dev;cd /root/bt_audit; git pull; cd src && make;" +
                 "cp rfcomm_scan /usr/bin/;cd /root/badbt/;git pull;fi; echo 'Done! Closing in 3secs..'; sleep 3 && exit ");
-        sharedpreferences.edit().putBoolean("setup_done", true).apply();
+        sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
     }
 
     public static class TabsPagerAdapter extends FragmentPagerAdapter {
@@ -308,7 +308,7 @@ public class BTFragment extends Fragment {
             }
 
             // First run
-            Boolean setupdone = sharedpreferences.getBoolean("setup_done", false);
+            Boolean setupdone = sharedpreferences.getBoolean("bt_setup_done", false);
             if (!setupdone.equals(true)) {
                 if (iswatch) SetupDialogWatch();
                 else SetupDialog();
