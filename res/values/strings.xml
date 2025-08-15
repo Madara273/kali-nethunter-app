@@ -1369,6 +1369,11 @@
     <string name="can_no_options_for_module">No options available for this module.</string>
     <string name="customcommands_full_path_db_restore">Full path of the db file from where you want to restore:</string>
     <string name="customcommands_full_path_db_save">Full path to where you want to save the database:</string>
+    <string name="usb_no_usb_function_enabled">No USB function has been enabled</string>
+    <string name="usb_no_image_mounted">No image is mounted.</string>
+    <string name="usb_linux_file_cd_storage_gadget">Linux File-CD/Stor gadget (kernel default)</string>
+    <string name="usb_full_path_db_save">Full path to where you want to save the database:</string>
+    <string name="usb_full_path_db_restore">Full path of the db file from where you want to restore:</string>
 
     <!-- TTS Voice Model-->
     <string-array name="tts_voices">
