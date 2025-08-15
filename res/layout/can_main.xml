@@ -88,104 +88,10 @@
 
             </LinearLayout>
 
-
-
-            <LinearLayout
-                android:id="@+id/can_advanced_options"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                android:orientation="vertical">
-
-                <LinearLayout
-                    android:id="@+id/button_row"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="5dp"
-                    android:gravity="center">
-
-                    <Button
-                        android:id="@+id/btn_toggle_mtu"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/MTU"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:textColor="@android:color/holo_red_light"
-                        tools:ignore="ButtonStyle" />
-
-                    <Button
-                        android:id="@+id/btn_toggle_txqueuelen"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/txqueuelen"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:textColor="@android:color/holo_red_light"
-                        tools:ignore="ButtonStyle" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/mtu_txq_row"
-                    android:baselineAligned="false"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="5dp"
-                    android:orientation="horizontal">
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/mtu_container"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginEnd="5dp"
-                        android:visibility="gone"
-                        app:boxStrokeColor="@color/ifc_box_stroke"
-                        app:strokeWidth="2dp"
-                        app:boxStrokeWidthFocused="3dp"
-                        app:boxBackgroundColor="@color/transparent"
-                        app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="@string/MTU">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/mtu_value"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="number"
-                            android:textAppearance="?android:attr/textAppearanceSmall"
-                            android:textColor="@color/white" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/txqueuelen_container"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="5dp"
-                        android:visibility="gone"
-                        app:boxStrokeColor="@color/ifc_box_stroke"
-                        app:strokeWidth="2dp"
-                        app:boxStrokeWidthFocused="3dp"
-                        app:boxBackgroundColor="@color/transparent"
-                        app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="@string/txqueuelen">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/txqueuelen_value"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="number"
-                            android:textAppearance="?android:attr/textAppearanceSmall"
-                            android:textColor="@color/white" />
-                    </com.google.android.material.textfield.TextInputLayout>
-                </LinearLayout>
-            </LinearLayout>
-
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
                 android:orientation="horizontal">
