@@ -6,7 +6,16 @@
         android:icon="@drawable/ic_settings"
         android:title="Settings"
         app:showAsAction="always" />
-
+    <item
+        android:id="@+id/action_play"
+        android:icon="@drawable/ic_action_play"
+        android:title="Play"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_stop"
+        android:icon="@drawable/ic_action_stop"
+        android:title="Stop"
+        app:showAsAction="always" />
     <item
         android:id="@+id/documentation"
         android:title="Documentation"/>

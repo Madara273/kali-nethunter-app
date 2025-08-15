@@ -133,28 +133,49 @@ public class CANFragment extends Fragment {
             public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
                 menuInflater.inflate(R.menu.can, menu);
 
-                // Add settings button dynamically if not already added
+                // Settings button dynamically for Main tab
                 MenuItem settingsItem = menu.findItem(R.id.action_settings);
                 if (settingsItem == null) {
                     settingsItem = menu.add(Menu.NONE, R.id.action_settings, Menu.NONE, "Settings");
-                    settingsItem.setIcon(R.drawable.ic_settings); // your settings icon
+                    settingsItem.setIcon(R.drawable.ic_settings);
                     settingsItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+                }
+
+                // ICSIM buttons dynamically for ICSIM tab
+                MenuItem playItem = menu.findItem(R.id.action_play);
+                if (playItem == null) {
+                    playItem = menu.add(Menu.NONE, R.id.action_play, Menu.NONE, "Play");
+                    playItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+                }
+
+                MenuItem stopItem = menu.findItem(R.id.action_stop);
+                if (stopItem == null) {
+                    stopItem = menu.add(Menu.NONE, R.id.action_stop, Menu.NONE, "Stop");
+                    stopItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
                 }
             }
 
             @Override
             public void onPrepareMenu(@NonNull Menu menu) {
+                ViewPager2 mViewPager = requireView().findViewById(R.id.pagerCAN);
+                int currentTab = mViewPager.getCurrentItem();
+
+                // Settings visible only on Main tab
                 MenuItem settingsItem = menu.findItem(R.id.action_settings);
-                if (settingsItem != null) {
-                    // Only visible when on Main tab
-                    ViewPager2 mViewPager = requireView().findViewById(R.id.pagerCAN);
-                    settingsItem.setVisible(mViewPager.getCurrentItem() == 0);
-                }
+                if (settingsItem != null) settingsItem.setVisible(currentTab == 0);
+
+                // Play/Stop visible only on ICSIM tab (tab index 4)
+                MenuItem playItem = menu.findItem(R.id.action_play);
+                MenuItem stopItem = menu.findItem(R.id.action_stop);
+                if (playItem != null) playItem.setVisible(currentTab == 4);
+                if (stopItem != null) stopItem.setVisible(currentTab == 4);
             }
 
             @Override
             public boolean onMenuItemSelected(@NonNull MenuItem item) {
                 int id = item.getItemId();
+                View rootView = requireView();
+
                 if (id == R.id.documentation) {
                     RunDocumentation();
                     return true;
@@ -168,8 +189,7 @@ public class CANFragment extends Fragment {
                     RunAbout();
                     return true;
                 } else if (id == R.id.action_settings) {
-                    // Only trigger MainFragment settings if on Main tab
-                    ViewPager2 mViewPager = requireView().findViewById(R.id.pagerCAN);
+                    ViewPager2 mViewPager = rootView.findViewById(R.id.pagerCAN);
                     if (mViewPager.getCurrentItem() == 0) {
                         Fragment current = getChildFragmentManager().getFragments().get(0);
                         if (current instanceof MainFragment) {
@@ -177,10 +197,19 @@ public class CANFragment extends Fragment {
                         }
                     }
                     return true;
+                } else if (id == R.id.action_play) {
+                    Button runICSIM = rootView.findViewById(R.id.run_icsim);
+                    if (runICSIM != null) runICSIM.performClick(); // reuse existing listener
+                    return true;
+                } else if (id == R.id.action_stop) {
+                    Button stopICSIM = rootView.findViewById(R.id.stop_icsim);
+                    if (stopICSIM != null) stopICSIM.performClick(); // reuse existing listener
+                    return true;
                 } else {
                     return false;
                 }
             }
+
         }, getViewLifecycleOwner());
 
         return rootView;
@@ -2245,20 +2274,6 @@ public class CANFragment extends Fragment {
                     iface -> selected_caniface = iface
             );
 
-            // Configuration Toggle
-            Button btnConfigurationToggle = rootView.findViewById(R.id.btn_toggle_config_icsim);
-            LinearLayout configurationLayout = rootView.findViewById(R.id.icsim_configuration);
-
-            btnConfigurationToggle.setOnClickListener(v -> {
-                if (configurationLayout.getVisibility() == View.GONE) {
-                    configurationLayout.setVisibility(View.VISIBLE);
-                    btnConfigurationToggle.setText(R.string.can_hide_configuration);
-                } else {
-                    configurationLayout.setVisibility(View.GONE);
-                    btnConfigurationToggle.setText(R.string.can_configuration);
-                }
-            });
-
             // Level Spinner
             // 0 = No randomization added to the packets other than location and ID
             // 1 = Add NULL padding
@@ -2271,7 +2286,7 @@ public class CANFragment extends Fragment {
             levelList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                    if (pos != 0) { // Ignore "Mode" hint
+                    if (pos != 0) { // Ignore "Level" hint
                         String level_selected = parentView.getItemAtPosition(pos).toString();
                         sharedpreferences.edit().putString("level_selected", level_selected).apply();
                     }
@@ -2283,25 +2298,18 @@ public class CANFragment extends Fragment {
                 }
             });
 
-            // Level
-            Button btnLevel = rootView.findViewById(R.id.btn_toggle_level);
-            View levelContainer = rootView.findViewById(R.id.level_container);
-
-            btnLevel.setOnClickListener(v -> {
-                boolean visible = levelContainer.getVisibility() == View.VISIBLE;
-                levelContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnLevel.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
             // ICSIM
             Button runICSIM = rootView.findViewById(R.id.run_icsim);
             runICSIM.setOnClickListener(v -> {
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces")) {
                     // String randomizeEnabled = isRandomizeEnabled ? " -r" : "";
                     String levelValue = getVisibleParam(levelList);
-                    run_cmd("su -c 'sh " + ICSIM_SCRIPT_PATH + " " + selected_caniface + levelValue + "'");
+                    if (!levelValue.isEmpty()) {
+                        run_cmd("su -c 'sh " + ICSIM_SCRIPT_PATH + " " + selected_caniface + levelValue + "'");
+                    }
+                    else {
+                        run_cmd("su -c 'sh " + ICSIM_SCRIPT_PATH + " " + selected_caniface + "'");
+                    }
                     showToast("Running ICSim...");
                     new Handler().postDelayed(() -> {
                         WebView icsimView = rootView.findViewById(R.id.icsim);
@@ -2380,7 +2388,7 @@ public class CANFragment extends Fragment {
                     }
                 } else if (view instanceof Spinner) {
                     String selected = ((Spinner) view).getSelectedItem().toString().trim();
-                    if (!selected.isEmpty()) {
+                    if (!selected.isEmpty() && !selected.equals("Level")) {
                         return " -l " + selected;
                     }
                 }
