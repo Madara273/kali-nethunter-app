@@ -1,0 +1,27 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="32dp"
+    android:height="32dp"
+    android:viewportWidth="32"
+    android:viewportHeight="32">
+    <!-- Stylized "K" -->
+    <path
+        android:fillColor="#FFB300"
+        android:pathData="M6,6 L10,6 L10,14 L16,6 L21,6 L13,16 L21,26 L16,26 L10,18 L10,26 L6,26 Z"/>
+    <!-- Wireless arcs -->
+    <path
+        android:fillColor="#FFB300"
+        android:fillAlpha="0.7"
+        android:pathData="M23,12
+            a7,7 0 0,1 0,8"
+        android:strokeColor="#FFB300"
+        android:strokeWidth="2"
+        android:strokeLineCap="round" />
+    <path
+        android:fillColor="#FFB300"
+        android:fillAlpha="0.5"
+        android:pathData="M25,10
+            a9,9 0 0,1 0,12"
+        android:strokeColor="#FFB300"
+        android:strokeWidth="1.5"
+        android:strokeLineCap="round" />
+</vector>

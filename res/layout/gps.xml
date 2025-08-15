@@ -1,184 +1,169 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:clickable="false"
-    android:gravity="right"
-    android:orientation="vertical">
-
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|center"
-        android:gravity="center"
-        android:padding="4dp"
-        android:text="@string/gps_description" />
-
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/switch_gps_provider"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:checked="false"
-        android:padding="10dp"
-        android:text="@string/switch_gps_provider"
-        android:textOff="Off"
-        android:textOn="On" />
-
-    <androidx.appcompat.widget.SwitchCompat
-        android:id="@+id/switch_gpsd"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:text="@string/switch_gpsd" />
+    android:layout_height="wrap_content"
+    android:layout_margin="16dp"
+    app:cardCornerRadius="16dp"
+    app:cardElevation="8dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:orientation="horizontal">
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switch_gps_provider"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/switch_gps_provider"
+            android:textOff="@string/gps_off"
+            android:textOn="@string/gps_on"
+            android:paddingBottom="8dp" />
+
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switch_gpsd"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="@string/switch_gpsd"
+            android:paddingBottom="16dp" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/gps_wlan_interface_hint"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            app:boxStrokeColor="@color/box_stroke_color"
+            app:boxBackgroundColor="@color/transparent"
+            app:hintTextColor="@color/ifc_hint_text"
+            android:layout_marginBottom="12dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/wlan_interface"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:autofillHints="none"
+                android:ems="10"
+                android:textColor="@color/ifc_text"
+                android:inputType="text"
+                android:text="@string/gps_wlan_interface_text" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/gps_bluetooth_device_hint"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            app:boxStrokeColor="@color/box_stroke_color"
+            app:boxBackgroundColor="@color/transparent"
+            app:hintTextColor="@color/ifc_hint_text"
+            android:layout_marginBottom="12dp">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/bt_interface"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/ifc_text"
+                android:inputType="text"
+                android:text="@string/gps_bluetooth_device_text" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <com.google.android.material.textfield.TextInputLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/gps_current_satellites_hint"
+            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            app:boxStrokeColor="@color/box_stroke_color"
+            app:boxBackgroundColor="@color/transparent"
+            app:hintTextColor="@color/ifc_hint_text">
+
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/gps_current_satellites"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/orange"
+                android:cursorVisible="false"
+                android:text="@string/gps_current_satellites_null"
+                android:focusable="false"
+                android:inputType="textNoSuggestions" />
+        </com.google.android.material.textfield.TextInputLayout>
+
+        <!-- Satellite Signal Strength Visualization -->
+        <LinearLayout
+            android:id="@+id/satellite_signal_container"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp"
+            android:padding="4dp"/>
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:fillViewport="true"
+            android:background="@android:color/transparent"
+            android:scrollbars="vertical">
+
+            <TextView
+                android:id="@+id/gps_textview"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:minHeight="180dp"
+                android:fontFamily="monospace"
+                android:padding="16dp"
+                android:textColor="@android:color/holo_green_light"
+                android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+                android:scrollbars="vertical"
+                android:focusable="true"
+                android:focusableInTouchMode="true" />
+        </androidx.core.widget.NestedScrollView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="16dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/gps_button_launch_app"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="@string/gps_button_launch_app"
+                android:textColor="@color/white"
+                android:contentDescription="@string/gps_button_launch_app"
+                android:layout_margin="5dp"
+                app:iconPadding="8dp"
+                app:icon="@drawable/ic_kismet"
+                app:iconTint="@color/orange"
+                app:iconSize="32dp"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/gps_button_settings"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:icon="@drawable/ic_action_settings_applications"
+                android:contentDescription="@string/gps_button_settings_description"
+                style="@style/Widget.Material3.Button.Outlined"
+                android:visibility="gone" />
+        </LinearLayout>
 
         <TextView
+            android:id="@+id/gps_help"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Wireless interface"
-            android:padding="10dp"
-            />
-
-        <EditText
-            android:id="@+id/wlan_interface"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text"
-            android:hint="wlan0" />
-
+            android:gravity="center"
+            android:padding="8dp"
+            android:text="@string/gps_help"
+            android:textAppearance="@style/TextAppearance.Material3.BodySmall"
+            tools:visibility="visible" />
     </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:orientation="horizontal">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Bluetooth interface"
-            android:padding="10dp"
-            />
-
-        <EditText
-            android:id="@+id/bt_interface"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="text"
-            android:hint="hci0" />
-
-    </LinearLayout>
-
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:orientation="horizontal">
-
-        <CheckBox
-            android:id="@+id/rtlsdr"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_weight="1"
-            android:text="RTL SDR" />
-
-
-        <CheckBox
-            android:id="@+id/rtlamr"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_weight="1"
-            android:text="RTL AMR" />
-
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:orientation="horizontal">
-
-        <CheckBox
-            android:id="@+id/rtladsb"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_weight="1"
-            android:text="RTL ADSB" />
-
-
-        <CheckBox
-            android:id="@+id/mousejack"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="10dp"
-            android:layout_marginEnd="10dp"
-            android:layout_weight="1"
-            android:text="Mousejack" />
-
-    </LinearLayout>
-
-    <Space
-        android:layout_width="match_parent"
-        android:layout_height="15sp" />
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/gps_button_launch_app"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/gps_button_launch_app" />
-
-        <ImageButton
-            android:id="@+id/gps_button_settings"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:visibility="gone"
-            app:srcCompat="@drawable/ic_action_settings_applications" />
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/gps_help"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal"
-        android:gravity="center"
-        android:padding="4dp"
-        android:text="@string/gps_help"
-        tools:visibility="visible" />
-
-    <ScrollView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true">
-
-        <TextView
-            android:id="@+id/gps_textview"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:background="@android:color/black"
-            android:fontFamily="monospace"
-            android:padding="16sp"
-            android:textColor="@android:color/holo_green_light" />
-    </ScrollView>
-
-</LinearLayout>
+</com.google.android.material.card.MaterialCardView>

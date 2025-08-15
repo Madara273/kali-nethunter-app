@@ -13,5 +13,12 @@
      limitations under the License.
 -->
 <resources>
-     <item name="intent_toggle_service" type="id" />
+    <item name="intent_toggle_service" type="id" />
+    <item name="kernel_description" type="id" />
+    <item name="dialog_kernel_description" type="id" />
+    <item name="nav_host_fragment" type="id" />
+    <item name="rtlsdr_checkbox" type="id" />
+    <item name="rtlamr_checkbox" type="id" />
+    <item name="rtladsb_checkbox" type="id" />
+    <item name="mousejack_checkbox" type="id" />
 </resources>

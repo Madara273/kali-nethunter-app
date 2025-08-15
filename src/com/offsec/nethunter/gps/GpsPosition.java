@@ -6,11 +6,10 @@ import java.util.Locale;
 
 /**
  * Created by Danial on 2/23/2015.
- * https://github.com/danialgoodwin/android-app-samples/blob/master/gps-satellite-nmea-info/app/src/main/java/net/simplyadvanced/gpsandsatelliteinfo/GpsPosition.java
+ * <a href="https://github.com/danialgoodwin/android-app-samples/blob/master/gps-satellite-nmea-info/app/src/main/java/net/simplyadvanced/gpsandsatelliteinfo/GpsPosition.java">...</a>
  */
 public class GpsPosition {
     public final float time = 0.0f;
-
     public void updateIsfixed() {
         boolean isFixed = false;
     }

@@ -1,11 +1,11 @@
 package com.offsec.nethunter;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -14,43 +14,79 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.textfield.TextInputEditText;
 import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.gps.KaliGPSUpdates;
 import com.offsec.nethunter.gps.LocationUpdateService;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import java.io.File;
 
+/**
+ * NOTICE: This code is part of the Kali NetHunter project.
+ * It is designed to run on Android devices and provides GPS functionality.
+ * It allows users to start and stop GPS providers, view satellite signals,
+ * and launch Kismet with the configured settings.
+ * <p>
+ * This code is distributed under the GPLv3 license.
+ * <p>
+ * NOTE:
+ *   - Added icon to show monitor mode support in wlan interfaces.
+ *     TODO: Support switching between Managed, AP and Monitor mode.
+ * <p>
+ *   - Add support to clear output 'terminal' window.
+ *   - Add support to save logs to file.
+ *   - Replace the onOptionsMenu with a more modern approach using Toolbar.
+ * <p>
+ *   - Feature / IDEA; add hcxdumptool support to Kali GPS service, with the NMEA support
+ *     it parses GPS data and passively collects WiFi handshakes in high rate.
+ * <p>
+ *
+ *  -- kimocoder at aircrack-ng.org
+ *
+ */
+
 public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.Receiver {
     private static final String TAG = "KaliGpsServiceFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
+    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private CheckBox sdrcheckbox, sdramrcheckbox, sdradsbcheckbox, mousejackcheckbox;
+    private LinearLayout satelliteSignalContainer;
     private KaliGPSUpdates.Provider gpsProvider = null;
     private TextView gpsTextView;
+    private TextInputEditText satellitesEditText;
     private Context context;
     private boolean wantKismet = false;
     private boolean wantHelpView = true;
     private boolean reattachedToRunningService = false;
     private SwitchCompat switch_gps_provider = null;
     private SwitchCompat switch_gpsd = null;
-    private String rtlsdr = "";
-    private String rtlamr = "";
-    private String rtladsb = "";
-    private String mousejack = "";
+    private final String rtlsdr = "";
+    private final String rtlamr = "";
+    private final String rtladsb = "";
+    private final String mousejack = "";
 
     public KaliGpsServiceFragment() {
+        // Required empty public constructor
     }
 
     public static KaliGpsServiceFragment newInstance(int sectionNumber) {
@@ -65,11 +101,96 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = getContext();
+        setHasOptionsMenu(true);
+
+        ActivityResultLauncher<String> backgroundLocationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    if (!isGranted) {
+                        Toast.makeText(context, "Background location permission denied", Toast.LENGTH_SHORT).show();
+                    }
+                }
+        );
+
+        if (context != null && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q) {
+            if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                backgroundLocationPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
+            }
+        }
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull android.view.Menu menu, @NonNull android.view.MenuInflater inflater) {
+        inflater.inflate(R.menu.gps_menu, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull android.view.MenuItem item) {
+        int id = item.getItemId();
+        if (id == R.id.action_wifi_status) {
+            String msg = isInternalMonitorModeSupported()
+                    ? "WIFI: MONITOR MODE: SUPPORTED"
+                    : "WIFI: MONITOR MODE: NOT SUPPORTED";
+            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+            return true;
+        } else if (id == R.id.action_info) {
+            View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.gps_info_dialog, null, false);
+            AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                    .setView(dialogView)
+                    .create();
+
+            Button closeButton = dialogView.findViewById(R.id.gps_dialog_close_button);
+            closeButton.setOnClickListener(v -> dialog.dismiss());
+
+            dialog.show();
+            return true;
+        } else if (id == R.id.action_settings) {
+            View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.gps_dialog_settings, null, false);
+            AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                    .setView(dialogView)
+                    .create();
+
+            Button closeButton = dialogView.findViewById(R.id.dialog_close_button);
+            closeButton.setOnClickListener(v -> dialog.dismiss());
+
+            dialog.show();
+            return true;
+        } else if (id == R.id.action_rtlsdr || id == R.id.action_rtlamr ||
+                id == R.id.action_rtladsb || id == R.id.action_mousejack) {
+            item.setChecked(!item.isChecked());
+            // Handle the checked state as needed
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.gps, container, false);
+    }
+
+    private boolean isInternalMonitorModeSupported() {
+        try {
+            Process process = Runtime.getRuntime().exec(new String[]{"su", "-c", "ls /sys/module/wlan/parameters/con_mode"});
+            int exitCode = process.waitFor();
+            return exitCode == 0;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
+    public void onPrepareOptionsMenu(@NonNull android.view.Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        android.view.MenuItem wifiItem = menu.findItem(R.id.action_wifi_status);
+        if (wifiItem != null) {
+            if (isInternalMonitorModeSupported()) {
+                wifiItem.setIcon(R.drawable.ic_wifi_enabled);
+            } else {
+                wifiItem.setIcon(R.drawable.ic_wifi_disabled);
+            }
+        }
     }
 
     private void setCheckedQuietly(CompoundButton button, boolean state) {
@@ -78,103 +199,94 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         button.setTag(null);
     }
 
-    @SuppressLint("StaticFieldLeak")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        satellitesEditText = view.findViewById(R.id.gps_current_satellites);
         gpsTextView = view.findViewById(R.id.gps_textview);
+        gpsTextView.setMovementMethod(new android.text.method.ScrollingMovementMethod());
         TextView gpsHelpView = view.findViewById(R.id.gps_help);
         switch_gps_provider = view.findViewById(R.id.switch_gps_provider);
+        satelliteSignalContainer = view.findViewById(R.id.satellite_signal_container);
         switch_gpsd = view.findViewById(R.id.switch_gpsd);
         Button button_launch_app = view.findViewById(R.id.gps_button_launch_app);
         ShellExecuter exe = new ShellExecuter();
         EditText wlan_interface = view.findViewById(R.id.wlan_interface);
         EditText bt_interface = view.findViewById(R.id.bt_interface);
-        CheckBox sdrcheckbox = view.findViewById(R.id.rtlsdr);
-        CheckBox sdramrcheckbox = view.findViewById(R.id.rtlamr);
-        CheckBox sdradsbcheckbox = view.findViewById(R.id.rtladsb);
-        CheckBox mousejackcheckbox = view.findViewById(R.id.mousejack);
 
-        // TODO: make this text dynamic so we can launch other apps besides Kismet
+        // Initialize checkboxes
+        sdrcheckbox = view.findViewById(R.id.rtlsdr_checkbox);
+        sdramrcheckbox = view.findViewById(R.id.rtlamr_checkbox);
+        sdradsbcheckbox = view.findViewById(R.id.rtladsb_checkbox);
+        mousejackcheckbox = view.findViewById(R.id.mousejack_checkbox);
+
         button_launch_app.setText(R.string.launch_kismet);
-        if (!wantHelpView)
+        if (gpsHelpView != null && !wantHelpView) {
             gpsHelpView.setVisibility(View.GONE);
+        }
         Log.d(TAG, "reattachedToRunningService: " + reattachedToRunningService);
         if (reattachedToRunningService) {
-            // gpsTextView.append("Service already running\n");
-            setCheckedQuietly(switch_gps_provider, true);
+            if (switch_gps_provider != null) {
+                setCheckedQuietly(switch_gps_provider, true);
+            }
         }
 
-        // check if gpsd is already running
         check_gpsd();
 
-        switch_gps_provider.setOnCheckedChangeListener((compoundButton, isChecked) -> {
-            if (switch_gps_provider.getTag() != null)
-                return;
-            Log.d(TAG, "switch_gps_provider clicked: " + isChecked);
-            if (isChecked) {
-                startGpsProvider();
-            } else {
-                stopGpsProvider();
-            }
-        });
+        if (switch_gps_provider != null) {
+            switch_gps_provider.setOnCheckedChangeListener((compoundButton, isChecked) -> {
+                if (switch_gps_provider.getTag() != null) return;
+                Log.d(TAG, "switch_gps_provider clicked: " + isChecked);
+                if (isChecked) {
+                    startGpsProvider();
+                } else {
+                    stopGpsProvider();
+                }
+            });
+        }
 
-        switch_gpsd.setOnCheckedChangeListener((compoundButton, isChecked) -> {
-            if (switch_gpsd.getTag() != null)
-                return;
-            Log.d(TAG, "switch_gpsd clicked: " + isChecked);
-            if (isChecked) {
-                startChrootGpsd();
-            } else {
-                stopChrootGpsd();
-            }
-        });
+        if (switch_gpsd != null) {
+            switch_gpsd.setOnCheckedChangeListener((compoundButton, isChecked) -> {
+                if (switch_gpsd.getTag() != null) return;
+                Log.d(TAG, "switch_gpsd clicked: " + isChecked);
+                if (isChecked) {
+                    startChrootGpsd();
+                } else {
+                    stopChrootGpsd();
+                }
+            });
+        }
 
         button_launch_app.setOnClickListener(view1 -> {
-            if (!switch_gps_provider.isChecked()) {
+            if (switch_gps_provider != null && !switch_gps_provider.isChecked()) {
                 gpsTextView.append("Android GPS Provider not running!\n");
                 switch_gps_provider.setChecked(true);
                 startGpsProvider();
             }
-            if (!switch_gpsd.isChecked()) {
+            if (switch_gpsd != null && !switch_gpsd.isChecked()) {
                 gpsTextView.append("chroot gpsd not running!\n");
                 switch_gpsd.setChecked(true);
                 startChrootGpsd();
             }
-            // WLAN interface
-            String wlaniface = wlan_interface.getText().toString() ;
-            if (!wlaniface.isEmpty()) wlaniface = "source=" + wlaniface + "\n";
-            else wlaniface = "";
 
-            // BT interface
-            String btiface = bt_interface.getText().toString();
-            if (!btiface.isEmpty()) btiface = "source=" + btiface + "\n";
-            else btiface = "";
+            String wlaniface = wlan_interface != null ? wlan_interface.getText().toString() : "";
+            wlaniface = !wlaniface.isEmpty() ? "source=" + wlaniface + "\n" : "";
 
-            // SDR sensors interface
-            if (sdrcheckbox.isChecked()) rtlsdr = "source=rtl433-0\n";
-            else rtlsdr = "";
+            String btiface = bt_interface != null ? bt_interface.getText().toString() : "";
+            btiface = !btiface.isEmpty() ? "source=" + btiface + "\n" : "";
 
-            // SDR AMR interface
-            if (sdramrcheckbox.isChecked()) rtlamr = "source=rtlamr-0\n";
-            else rtlamr = "";
+            String conf = "log_template=%p/%n\nlog_prefix=/captures/kismet/\ngps=gpsd:host=localhost,port=2947\n" +
+                    wlaniface +
+                    btiface +
+                    (sdrcheckbox != null && sdrcheckbox.isChecked() ? "source=rtl433-0\n" : "") +
+                    (sdramrcheckbox != null && sdramrcheckbox.isChecked() ? "source=rtlamr-0\n" : "") +
+                    (sdradsbcheckbox != null && sdradsbcheckbox.isChecked() ? "source=rtladsb-0\n" : "") +
+                    (mousejackcheckbox != null && mousejackcheckbox.isChecked() ? "source=mousejack:name=nRF,channel_hoprate=100/sec\n" : "");
 
-            // SDR ADSB interface
-            if (sdradsbcheckbox.isChecked()) rtladsb = "source=rtladsb-0\n";
-            else rtladsb = "";
-
-            // Mousejack interface
-            if (mousejackcheckbox.isChecked()) mousejack = "source=mousejack:name=nRF,channel_hoprate=100/sec\n";
-            else mousejack = "";
-
-            String conf = "log_template=%p/%n\nlog_prefix=/captures/kismet/\ngps=gpsd:host=localhost,port=2947\n" + wlaniface + btiface + rtlsdr + rtlamr + rtladsb + mousejack;
-
-            ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.execute(() -> {
                 exe.RunAsRoot(new String[]{"echo \"" + conf + "\" > " + NhPaths.SD_PATH + "/kismet_site.conf"});
                 exe.RunAsRoot(new String[]{"bootkali custom_cmd mv /sdcard/kismet_site.conf /etc/kismet/"});
             });
-            executor.shutdown();
             Toast.makeText(requireActivity().getApplicationContext(), "Starting Kismet.. Web UI will be available at localhost:2501\"", Toast.LENGTH_LONG).show();
             wantKismet = true;
             gpsTextView.append("Kismet will launch after next position received.  Waiting...\n");
@@ -193,6 +305,10 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         if (gpsProvider != null) {
             gpsTextView.append("Stopping Android GPS Publisher\n");
             gpsProvider.onStopRequested();
+            gpsTextView.post(() -> {
+                int scrollAmount = gpsTextView.getLayout().getLineTop(gpsTextView.getLineCount()) - gpsTextView.getHeight();
+                gpsTextView.scrollTo(0, Math.max(scrollAmount, 0));
+            });
         }
     }
 
@@ -217,6 +333,52 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
             Log.d(TAG, command);
             exe.RunAsRootOutput(command);
         }).start();
+    }
+
+    private List<Integer> extractSatelliteSnrs(String nmeaSentences) {
+        List<Integer> snrs = new ArrayList<>();
+        String[] lines = nmeaSentences.split("\n");
+        for (String line : lines) {
+            if (line.startsWith("$GPGSV") || line.startsWith("$GLGSV")) {
+                String[] parts = line.split(",");
+                // SNR is at index 7, 11, 15, 19 for each satellite in the sentence
+                for (int i = 7; i < parts.length; i += 4) {
+                    if (i < parts.length) {
+                        try {
+                            int snr = Integer.parseInt(parts[i]);
+                            snrs.add(snr);
+                        } catch (NumberFormatException ignored) {}
+                    }
+                }
+            }
+        }
+        return snrs;
+    }
+
+    private void updateSatelliteSignalBars(List<Integer> snrs) {
+        if (satelliteSignalContainer == null) return;
+        satelliteSignalContainer.removeAllViews();
+        if (snrs == null || snrs.isEmpty()) {
+            // For debugging: show placeholder bars
+            for (int i = 0; i < 4; i++) {
+                View bar = new View(getContext());
+                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, 16, 1f);
+                params.setMargins(4, 0, 4, 0);
+                bar.setLayoutParams(params);
+                bar.setBackgroundColor(0xFFBDBDBD); // gray
+                satelliteSignalContainer.addView(bar);
+            }
+            return;
+        }
+        for (int snr : snrs) {
+            View bar = new View(getContext());
+            int barHeight = Math.max(8, snr * 2); // scale for visibility
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, barHeight, 1f);
+            params.setMargins(4, 0, 4, 0);
+            bar.setLayoutParams(params);
+            bar.setBackgroundColor(snr > 30 ? 0xFF4CAF50 : 0xFFFFC107); // green if strong, yellow if weak
+            satelliteSignalContainer.addView(bar);
+        }
     }
 
     @Override
@@ -253,8 +415,8 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
             this.gpsProvider = (KaliGPSUpdates.Provider) context;
             reattachedToRunningService = this.gpsProvider.onReceiverReattach(this);
         }
-        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            // we've already granted permissions, make the nag message go away
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             wantHelpView = false;
         }
         super.onAttach(context);
@@ -263,20 +425,27 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
     @Override
     public void onPositionUpdate(String nmeaSentences) {
         CharSequence charSequence = gpsTextView.getText();
-        int lineCnt = 0;
-        int i;
-        for (i = charSequence.length() - 1; i >= 0; i--) {
-            if (charSequence.charAt(i) == '\n')
-                lineCnt++;
-            if (lineCnt >= 20)
-                break;
-        }
-        // delete anything more than X lines previous so this doesn't get huge
-        if (i > 0) {
-            gpsTextView.getEditableText().delete(0, i);
+        int maxLines = 20;
+        int index = TextUtils.lastIndexOf(charSequence, '\n', charSequence.length() - 1, maxLines);
+        if (index > 0) {
+            gpsTextView.getEditableText().delete(0, index);
         }
 
+        List<Integer> snrs = extractSatelliteSnrs(nmeaSentences);
+        updateSatelliteSignalBars(snrs);
+
         gpsTextView.append(nmeaSentences + "\n");
+        gpsTextView.post(() -> {
+            int scrollAmount = gpsTextView.getLayout().getLineTop(gpsTextView.getLineCount()) - gpsTextView.getHeight();
+            gpsTextView.scrollTo(0, Math.max(scrollAmount, 0));
+        });
+
+        // Extract and display satellite count
+        int satelliteCount = extractSatelliteCount(nmeaSentences);
+        if (satellitesEditText != null) {
+            satellitesEditText.setText(String.valueOf(satelliteCount));
+        }
+
         if (wantKismet) {
             wantKismet = false;
             gpsTextView.append("Launching kismet in NetHunter Terminal\n");
@@ -284,8 +453,20 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         }
     }
 
+    // Helper method to extract satellite count from NMEA
+    private int extractSatelliteCount(String nmeaSentences) {
+        if (nmeaSentences.contains("GPGGA")) {
+            String[] parts = nmeaSentences.split(",");
+            if (parts.length > 7 && parts[7].matches("\\d+")) {
+                return Integer.parseInt(parts[7]);
+            }
+        }
+        return 0;
+    }
+
     @Override
     public void onFirstPositionUpdate() {
+        gpsTextView.append("First position received\n");
     }
 
     private void startKismet() {
@@ -294,6 +475,12 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         } catch (Exception e) {
             NhPaths.showMessage(context, getString(R.string.toast_install_terminal));
         }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        executor.shutdown();
     }
 
     public void run_cmd(String cmd) {

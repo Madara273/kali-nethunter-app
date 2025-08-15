@@ -49,6 +49,20 @@ public class NmapFragment extends Fragment {
     private Context context;
 
     public NmapFragment() {
+        // Required empty public constructor
+        cleanCmd();
+        net_interface = "";
+        time_template = "";
+        searchall = "";
+        OSdetect = "";
+        udpscan = "";
+        ipv6check = "";
+        technique = "";
+        sv = "";
+        MySearch = "";
+        Ports = "";
+        fastmode = "";
+        topports = "";
     }
 
     public static NmapFragment newInstance(int sectionNumber) {
