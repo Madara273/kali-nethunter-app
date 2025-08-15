@@ -14,18 +14,15 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="10dp"
-            tools:ignore="WebViewLayout">
+            android:orientation="vertical">
 
             <TextView
                 android:id="@+id/textView1"
                 android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginTop="5dp"
-                android:layout_marginBottom="5dp"
-                android:text="Metasploit Automotive"
+                android:layout_marginTop="10dp"
+                android:text="@string/msfautomotive"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textStyle="bold"/>
 
@@ -33,11 +30,12 @@
                 android:id="@+id/can_desc"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|center"
                 android:gravity="center"
                 android:text="@string/can_msf_desc" />
 
             <View
-                android:id="@+id/divider2"
+                android:id="@+id/divider1"
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:layout_marginTop="10dp"
@@ -47,30 +45,53 @@
             <LinearLayout
                 android:id="@+id/linearLayout2"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="48dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
                 android:layout_marginBottom="5dp"
                 android:orientation="horizontal"
                 android:gravity="center_vertical">
 
-                <Spinner
-                    android:id="@+id/device_interface"
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/spinner_iface_card"
                     android:layout_width="0dp"
-                    android:layout_height="match_parent"
+                    android:layout_height="48dp"
                     android:layout_weight="1"
-                    android:spinnerMode="dropdown"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    app:strokeColor="@color/nh_box_stroke_iface"
+                    app:strokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp"
+                    android:padding="4dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent">
 
-                <ImageButton
-                    android:id="@+id/refreshUSB"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    <Spinner
+                        android:id="@+id/device_interface"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:spinnerMode="dropdown"/>
+
+                </com.google.android.material.card.MaterialCardView>
+
+                <com.google.android.material.card.MaterialCardView
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:layout_marginStart="8dp"
-                    android:src="@drawable/ic_action_refresh"
-                    android:contentDescription="Refresh USB"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    tools:ignore="TouchTargetSizeCheck" />
+                    app:strokeColor="@color/nh_box_stroke_iface"
+                    app:strokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp"
+                    android:padding="4dp"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <ImageButton
+                        android:id="@+id/refreshUSB"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:src="@drawable/ic_action_refresh"
+                        android:contentDescription="@string/Refresh"
+                        android:background="?attr/selectableItemBackgroundBorderless" />
+                </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
             <Button
@@ -79,7 +100,7 @@
                 android:layout_marginEnd="20dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="ELM327 Relay Configuration" />
+                android:text="@string/elmrelay" />
 
             <LinearLayout
                 android:id="@+id/msf_elmconfig"
@@ -89,6 +110,7 @@
                 android:visibility="gone">
 
                 <LinearLayout
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="20dp"
@@ -101,18 +123,20 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
                         app:boxBackgroundColor="@color/transparent"
                         app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="Baud Speed">
+                        android:hint="@string/baudspeed">
 
                         <com.google.android.material.textfield.TextInputEditText
                             android:id="@+id/baud_speed"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
                             android:inputType="number"
-                            android:text="115200"
-                            android:textColor="#40FFFFFF"/>
+                            android:text="@string/baudspeedValue"
+                            android:textColor="@color/white"/>
 
                     </com.google.android.material.textfield.TextInputLayout>
 
@@ -141,26 +165,38 @@
                 android:layout_height="0dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
+                android:layout_marginBottom="5dp"
                 android:layout_weight="1"
                 android:text="start msfconsole"
                 tools:ignore="ButtonStyle,HardcodedText,VisualLintButtonSize" />
 
-            <LinearLayout
-                android:id="@+id/spinner_layout"
+            <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:layout_marginTop="10dp"
+                android:layout_height="48dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp">
 
-                <Spinner
-                    android:id="@+id/msf_modules_spinner"
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/spinner_modules_card"
                     android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:spinnerMode="dropdown"
-                    tools:ignore="TouchTargetSizeCheck" />
-            </LinearLayout>
+                    android:layout_height="48dp"
+                    app:strokeColor="@color/nh_box_stroke_spinner"
+                    app:strokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp"
+                    android:padding="4dp"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent">
+
+                    <Spinner
+                        android:id="@+id/msf_modules_spinner"
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp"
+                        android:spinnerMode="dropdown"/>
+
+                </com.google.android.material.card.MaterialCardView>
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
 
             <LinearLayout
                 android:id="@+id/button_row"

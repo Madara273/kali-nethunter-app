@@ -21,9 +21,8 @@
                 android:gravity="center"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginTop="5dp"
-                android:layout_marginBottom="5dp"
-                android:text="CAN Interfaces"
+                android:layout_marginTop="10dp"
+                android:text="@string/MainMenu"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textStyle="bold"/>
 
@@ -33,14 +32,14 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="center_horizontal|center"
                 android:gravity="center"
-                android:padding="10dp"
                 android:text="@string/can_description" />
 
             <View
                 android:id="@+id/divider1"
                 android:layout_width="match_parent"
-                android:layout_marginBottom="10dp"
                 android:layout_height="1dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
                 android:background="?android:attr/listDivider" />
 
             <LinearLayout
@@ -48,28 +47,47 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    app:boxStrokeColor="@color/ifc_box_stroke"
+                    app:boxStrokeColor="@color/nh_box_stroke_iface"
+                    app:boxStrokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp"
                     app:boxBackgroundColor="@color/transparent"
                     app:hintTextColor="@color/ifc_hint_text"
-                    android:hint="Interface">
+                    android:hint="@string/Interface">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/can_iface"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text"
-                        android:text="can0"
-                        android:textColor="#40FFFFFF"/>
-
+                        android:text="@string/can0"
+                        android:textColor="@color/white" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <com.google.android.material.card.MaterialCardView
+                    android:id="@+id/spinner_card"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="10dp"
+                    app:strokeColor="@color/nh_box_stroke_iface"
+                    app:strokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp">
+
+                    <Spinner
+                        android:id="@+id/cantype_spinner"
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:spinnerMode="dropdown" />
+                </com.google.android.material.card.MaterialCardView>
+
             </LinearLayout>
+
 
 
             <LinearLayout
@@ -85,8 +103,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_marginTop="8dp"
-                    android:layout_marginBottom="8dp"
+                    android:layout_marginTop="5dp"
                     android:gravity="center">
 
                     <Button
@@ -94,114 +111,114 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="MTU"
+                        android:text="@string/MTU"
                         android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:textColor="@android:color/holo_red_light"/>
+                        android:textColor="@android:color/holo_red_light"
+                        tools:ignore="ButtonStyle" />
 
                     <Button
                         android:id="@+id/btn_toggle_txqueuelen"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="txqueuelen"
+                        android:text="@string/txqueuelen"
                         android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:textColor="@android:color/holo_red_light"/>
+                        android:textColor="@android:color/holo_red_light"
+                        tools:ignore="ButtonStyle" />
                 </LinearLayout>
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/mtu_container"
+                <LinearLayout
+                    android:id="@+id/mtu_txq_row"
+                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:visibility="gone"
-                    app:boxStrokeColor="@color/ifc_box_stroke"
-                    app:boxBackgroundColor="@color/transparent"
-                    app:hintTextColor="@color/ifc_hint_text"
-                    android:hint="MTU Value (e.g., 16)">
+                    android:layout_marginBottom="5dp"
+                    android:orientation="horizontal">
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/mtu_value"
-                        android:layout_width="match_parent"
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/mtu_container"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:inputType="number"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:textColor="#40FFFFFF" />
-                </com.google.android.material.textfield.TextInputLayout>
+                        android:layout_weight="1"
+                        android:layout_marginEnd="5dp"
+                        android:visibility="gone"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="@string/MTU">
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/txqueuelen_container"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:visibility="gone"
-                    app:boxStrokeColor="@color/ifc_box_stroke"
-                    app:boxBackgroundColor="@color/transparent"
-                    app:hintTextColor="@color/ifc_hint_text"
-                    android:hint="txqueuelen Value (e.g., 1000)">
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/mtu_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
 
-                    <com.google.android.material.textfield.TextInputEditText
-                        android:id="@+id/txqueuelen_value"
-                        android:layout_width="match_parent"
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/txqueuelen_container"
+                        android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:inputType="number"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        android:textColor="#40FFFFFF" />
-                </com.google.android.material.textfield.TextInputLayout>
+                        android:layout_weight="1"
+                        android:layout_marginStart="5dp"
+                        android:visibility="gone"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="@string/txqueuelen">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/txqueuelen_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
             </LinearLayout>
 
-
-            <androidx.constraintlayout.widget.ConstraintLayout
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp">
+                android:layout_marginEnd="20dp"
+                android:orientation="horizontal">
 
-                <Spinner
-                    android:id="@+id/cantype_spinner"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:dropDownWidth="wrap_content"
-                    android:saveEnabled="false"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    tools:ignore="MissingConstraints" />
-
-                <LinearLayout
+                <Button
+                    android:id="@+id/start_caniface"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    app:layout_constraintStart_toEndOf="@id/cantype_spinner"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    android:gravity="end">
+                    android:text="@string/Start"
+                    android:textColor="@color/green"
+                    android:layout_weight="1"
+                    android:minWidth="100dp"
+                    tools:ignore="ButtonStyle" />
 
-                    <Button
-                        android:id="@+id/start_caniface"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="Start"
-                        android:layout_weight="1"
-                        android:minWidth="100dp" />
-
-                    <Button
-                        android:id="@+id/reset_iface"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="Stop"
-                        android:layout_weight="1"
-                        android:minWidth="100dp"/>
-                </LinearLayout>
-
-            </androidx.constraintlayout.widget.ConstraintLayout>
+                <Button
+                    android:id="@+id/reset_iface"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/Stop"
+                    android:textColor="@color/red"
+                    android:layout_weight="1"
+                    android:minWidth="100dp"
+                    tools:ignore="ButtonStyle" />
+            </LinearLayout>
 
             <Button
                 android:id="@+id/btn_toggle_services"
+                android:layout_marginTop="5dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Services" />
+                android:text="@string/Services" />
 
             <LinearLayout
                 android:id="@+id/main_services"
@@ -218,8 +235,7 @@
                     android:layout_marginEnd="20dp"
                     android:alignmentMode="alignMargins"
                     android:columnCount="3"
-                    android:rowCount="2"
-                    android:useDefaultMargins="true">
+                    android:rowCount="2">
 
                     <Button
                         android:id="@+id/start_slcand"
@@ -228,7 +244,7 @@
                         android:layout_columnWeight="1"
                         android:layout_row="0"
                         android:layout_column="0"
-                        android:text="slcand"
+                        android:text="@string/slcand"
                         android:textColor="@android:color/holo_orange_dark" />
 
                     <Button
@@ -238,7 +254,7 @@
                         android:layout_columnWeight="1"
                         android:layout_row="0"
                         android:layout_column="1"
-                        android:text="hlcand"
+                        android:text="@string/hlcand"
                         android:textColor="@android:color/holo_orange_dark"/>
 
                     <Button
@@ -248,7 +264,7 @@
                         android:layout_columnWeight="1"
                         android:layout_row="0"
                         android:layout_column="2"
-                        android:text="socketcand"
+                        android:text="@string/socketcand"
                         android:textColor="@android:color/holo_orange_dark"/>
 
                     <Button
@@ -258,7 +274,7 @@
                         android:layout_columnWeight="1"
                         android:layout_row="1"
                         android:layout_column="0"
-                        android:text="slcan_attach"
+                        android:text="@string/slcan_attach"
                         android:textColor="@android:color/holo_orange_dark" />
 
                     <Button
@@ -268,7 +284,7 @@
                         android:layout_columnWeight="1"
                         android:layout_row="1"
                         android:layout_column="1"
-                        android:text="ldattach"
+                        android:text="@string/ldattach"
                         android:textColor="@android:color/holo_orange_dark" />
 
                     <Button
@@ -278,7 +294,7 @@
                         android:layout_columnWeight="1"
                         android:layout_row="1"
                         android:layout_column="2"
-                        android:text="rfcomm bind"
+                        android:text="@string/RfcommBind"
                         android:textColor="@android:color/holo_orange_dark" />
 
                 </GridLayout>
@@ -290,7 +306,7 @@
                     android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
                     android:layout_columnWeight="1"
-                    android:text="rfcomm connect"
+                    android:text="@string/RfcommConnect"
                     android:textColor="@android:color/holo_orange_dark"/>
 
                 <TextView
@@ -299,7 +315,7 @@
                     android:layout_marginStart="20dp"
                     android:layout_marginEnd="20dp"
                     android:gravity="center"
-                    android:text="🟧 = Long press to edit command"
+                    android:text="@string/LongPress"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
 
             </LinearLayout>
@@ -313,10 +329,12 @@
                 android:background="?android:attr/listDivider" />
 
             <LinearLayout
+                android:baselineAligned="false"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
+                android:layout_marginBottom="5dp"
                 android:orientation="horizontal">
 
                 <com.google.android.material.textfield.TextInputLayout
@@ -324,17 +342,19 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     app:boxStrokeColor="@color/ifc_box_stroke"
+                    app:strokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp"
                     app:boxBackgroundColor="@color/transparent"
                     app:hintTextColor="@color/ifc_hint_text"
-                    android:hint="VIN Info">
+                    android:hint="@string/VinInfo">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/vin_number"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:inputType="text"
-                        android:text="4F2CU08102KM50866"
-                        android:textColor="#40FFFFFF"/>
+                        android:text="@string/VinNumber"
+                        android:textColor="@color/white"/>
 
                 </com.google.android.material.textfield.TextInputLayout>
 
@@ -357,7 +377,7 @@
                     android:layout_columnWeight="1"
                     android:layout_row="0"
                     android:layout_column="0"
-                    android:text="show" />
+                    android:text="@string/Show" />
 
                 <Button
                     android:id="@+id/vin_check"
@@ -366,15 +386,17 @@
                     android:layout_columnWeight="1"
                     android:layout_row="0"
                     android:layout_column="1"
-                    android:text="check" />
+                    android:text="@string/Check" />
 
             </GridLayout>
 
             <LinearLayout
+                android:baselineAligned="false"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
+                android:layout_marginTop="5dp"
                 android:layout_marginBottom="10dp"
                 android:orientation="horizontal">
 
@@ -382,9 +404,12 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:hint="@string/Output"
                     app:boxStrokeColor="@color/ifc_box_stroke"
+                    app:strokeWidth="2dp"
+                    app:boxStrokeWidthFocused="3dp"
                     app:boxBackgroundColor="@android:color/black"
-                    app:hintEnabled="false">
+                    app:hintEnabled="true">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/TerminalOutputVINInfo"
@@ -395,6 +420,7 @@
                         android:enabled="false"
                         android:padding="16dp"
                         android:scrollbars="vertical"
+                        android:text="@string/space"
                         android:textColor="@android:color/holo_green_light"
                         android:textSize="14sp"/>
 

@@ -11,6 +11,7 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -133,11 +134,11 @@ public class BTFragment extends Fragment {
         builder.setPositiveButton("Install", (dialog, which) -> {
             if (iswatch) RunSetupWatch();
             else RunSetup();
-            sharedpreferences.edit().putBoolean("setup_done", true).apply();
+            sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
         });
         builder.setNegativeButton("Disable message", (dialog, which) -> {
             dialog.dismiss();
-            sharedpreferences.edit().putBoolean("setup_done", true).apply();
+            sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
         });
         builder.show();
     }
@@ -150,11 +151,11 @@ public class BTFragment extends Fragment {
         builder.setMessage("This seems to be the first run. Install the Bluetooth tools?");
         builder.setPositiveButton("Yes", (dialog, which) -> {
                 RunSetupWatch();
-                sharedpreferences.edit().putBoolean("setup_done", true).apply();
+                sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
         });
         builder.setNegativeButton("No", (dialog, which) -> {
                 dialog.dismiss();
-                sharedpreferences.edit().putBoolean("setup_done", true).apply();
+                sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
         });
         builder.show();
     }
@@ -178,7 +179,7 @@ public class BTFragment extends Fragment {
                 "if [[ ! \"`grep 'noplugin=input' /etc/init.d/bluetooth`\" == \"\" ]]; then echo 'Bluetooth service is patched!'; else echo 'Patching Bluetooth service..' && " +
                 "sed -i -e 's/# NOPLUGIN_OPTION=.*/NOPLUGIN_OPTION=\"--noplugin=input\"/g' /etc/init.d/bluetooth;fi;" +
                 "echo 'Everything is installed! Closing in 3secs..'; sleep 3 && exit ");
-        sharedpreferences.edit().putBoolean("setup_done", true).apply();
+        sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
     }
 
     public void RunSetup() {
@@ -200,7 +201,7 @@ public class BTFragment extends Fragment {
                         "if [[ -f /root/badbt/btk_server.py ]]; then echo 'BadBT is installed!'; else git clone https://github.com/yesimxev/badbt /root/badbt && cp /root/badbt/org.thanhle.btkbservice.conf /etc/dbus-1/system.d/;fi;" +
                         "if [[ ! \"`grep 'noplugin=input' /etc/init.d/bluetooth`\" == \"\" ]]; then echo 'Bluetooth service is patched!'; else echo 'Patching Bluetooth service..' && " +
                         "sed -i -e 's/.*NOPLUGIN_OPTION=\"\"/NOPLUGIN_OPTION=\"--noplugin=input\"/g' /etc/init.d/bluetooth;fi; echo 'Everything is installed!' && echo '\nPress any key to continue...' && read -s -n 1 && exit ");
-                sharedpreferences.edit().putBoolean("setup_done", true).apply();
+                sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
     }
 
     public void RunUpdate() {
@@ -212,7 +213,7 @@ public class BTFragment extends Fragment {
                 "then cd /root/carwhisperer/;git pull && make && make install;cd /root/bluebinder/;git pull && make && make install;cd /root/libgbinder/;git pull && make && " +
                 "make install-dev;cd /root/libglibutil/;git pull && make && make install-dev;cd /root/bt_audit; git pull; cd src && make;" +
                 "cp rfcomm_scan /usr/bin/;cd /root/badbt/;git pull;fi; echo 'Done! Closing in 3secs..'; sleep 3 && exit ");
-        sharedpreferences.edit().putBoolean("setup_done", true).apply();
+        sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
     }
 
     public static class TabsPagerAdapter extends FragmentPagerAdapter {
@@ -307,7 +308,7 @@ public class BTFragment extends Fragment {
             }
 
             // First run
-            Boolean setupdone = sharedpreferences.getBoolean("setup_done", false);
+            Boolean setupdone = sharedpreferences.getBoolean("bt_setup_done", false);
             if (!setupdone.equals(true)) {
                 if (iswatch) SetupDialogWatch();
                 else SetupDialog();
@@ -388,24 +389,29 @@ public class BTFragment extends Fragment {
                         else {
                             File bluebinder = new File(NhPaths.CHROOT_PATH() + "/usr/sbin/bluebinder");
                             if (bluebinder.exists()) {
-                                // TODO - Enable this for only specific devices 1/2
                                 //Ensure all services are disabled before enabling airplane mode for bluebinder
-                                //exe.RunAsRoot(new String[]{
-                                    //"svc bluetooth disable",
-                                    //"svc wifi disable",
-                                    //"settings put global airplane_mode_on 1;am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true",
-                                    //"pm disable com.android.bluetooth"
-                                //});
+                                exe.RunAsRoot(new String[]{
+                                        //"svc bluetooth disable",
+                                        //"svc wifi disable",
+                                        "settings put global bluetooth_on 0",
+                                        // 10 = STATE_OFF | 12 = STATE_TURNING_OFF
+                                        "am broadcast -a android.bluetooth.adapter.action.STATE_CHANGED --ei android.bluetooth.adapter.extra.STATE 10 --ei android.bluetooth.adapter.extra.PREVIOUS_STATE 12",
+                                        "settings put global airplane_mode_on 1",
+                                        "am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true"
+                                        //"pm disable com.android.bluetooth"
+                                });
 
                                 // Run the Bluebinder script
                                 run_cmd("echo -ne \"\\033]0;Bluebinder\\007\" && clear;bluebinder || bluebinder;exit");
                                 Toast.makeText(requireActivity().getApplicationContext(), "Starting bluebinder...", Toast.LENGTH_SHORT).show();
 
-                                // TODO - Enable this for only specific devices 2/2
                                 // Delay to disable airplane mode and re-enable Wi-Fi after 9 seconds
-                                /*new Handler().postDelayed(() -> exe.RunAsRoot(new String[]{
-                                    "settings put global airplane_mode_on 0;am broadcast -a android.intent.action.AIRPLANE_MODE --ez state false",
-                                    "svc wifi enable"
+                                new Handler().postDelayed(() -> exe.RunAsRoot(new String[]{
+                                        "settings put global bluetooth_on 1",
+                                        // 12 = STATE_ON | 10 = STATE_TURNING_ON
+                                        "am broadcast -a android.bluetooth.adapter.action.STATE_CHANGED --ei android.bluetooth.adapter.extra.STATE 12 --ei android.bluetooth.adapter.extra.PREVIOUS_STATE 10",
+                                        "settings put global airplane_mode_on 0",
+                                        "am broadcast -a android.intent.action.AIRPLANE_MODE --ez state false"
                                 }), 9000); // 9000 milliseconds delay*/
                             } else {
                                 Toast.makeText(requireActivity().getApplicationContext(), "Bluebinder is not installed. Launching setup..", Toast.LENGTH_SHORT).show();

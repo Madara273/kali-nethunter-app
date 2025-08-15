@@ -663,7 +663,7 @@
     <string name="nethunter_full_path_db_restore">Full path of the db file from where you want to restore:</string>
 
     <!-- CARsenal -->
-    <string name="can_description">This module allow you to use CAN Bus with various tools. Kernel device should have CAN support enabled, for more information look at the documentation in the menu.</string>
+    <string name="can_description">Configure your CAN interfaces and decode your VIN identification number.</string>
     <string name="can_tools_desc">Unleash the power of can-utils suite by managing logs and Generate, Dump, Sniff or Replay signals! You may also run car diagnosis using Freediag and transfert CAN frames between two machines using Cannelloni tool!</string>
     <string name="can_canusb_desc">Use your CAN Analyzer USB by Dumping and Sending signals using usb-can tool!</string>
     <string name="can_caribou_desc">A friendly automotive security exploration tool.</string>
@@ -672,21 +672,138 @@
     <string name="can_app_name">MyApp</string>
     <string name="can_settings">Settings</string>
     <string name="can_refresh_button">Refresh</string>
+    <!-- Hardcoded String Trash Can -->
+    <!-- MAIN MENU -->
+    <string name="space">" "</string>
+    <string name="MainMenu">Main Menu</string>
+    <string name="Interface">Interface</string>
+    <string name="can0">can0</string>
+    <string name="Start">Start</string>
+    <string name="Stop">Stop</string>
+    <string name="Services">Services</string>
+    <string name="MTU">MTU</string>
+    <string name="txqueuelen">txqueuelen</string>
+    <string name="Output">Output</string>
+    <string name="LongPress">🟧 = Long press to edit command</string>
+    <string name="slcand">slcand</string>
+    <string name="hlcand">hlcand</string>
+    <string name="ldattach">ldattach</string>
+    <string name="slcan_attach">slcan_attach</string>
+    <string name="socketcand">socketcand</string>
+    <string name="RfcommBind">rfcomm bind</string>
+    <string name="RfcommConnect">rfcomm connect</string>
+    <string name="VinInfo">VIN Info</string>
+    <string name="VinNumber">4F2CU08102KM50866</string>
+    <string name="Check">Check</string>
+    <string name="Show">Show</string>
+    <!-- Basic Tools -->
+    <string name="BasicTools">Basic Tools</string>
+    <string name="RHOST">RHOST</string>
+    <string name="RHOSTValue">192.168.1.42</string>
+    <string name="LPORT">LPORT</string>
+    <string name="RPORT">RPORT</string>
+    <string name="PORTValue">1234</string>
+    <string name="Sequence">Sequence</string>
+    <string name="SequenceValue">01a#11223344AABBCCDD</string>
+    <string name="CanLogPath">/root/candump/dump.log</string>
+    <string name="CanGen">CanGen</string>
+    <string name="CanDump">CanDump</string>
+    <string name="CanSniffer">CanSniffer</string>
+    <string name="CanSend">CanSend</string>
+    <string name="CanPlayer">CanPlayer</string>
+    <string name="SequenceFinder">Seq.Finder</string>
+    <string name="Asc2Log">Asc2Log</string>
+    <string name="Log2Asc">Log2Asc</string>
+    <string name="Freediag">Freediag</string>
+    <string name="DiagTest">DiagTest</string>
+    <string name="Cannelloni">Cannelloni</string>
+    <string name="Input">Input</string>
+    <string name="Browse">Browse</string>
+    <string name="AdvancedOptions">Advanced Options</string>
+    <string name="Interactive">Interactive</string>
+    <string name="Verbose">Verbose</string>
+    <string name="LocalLoopback">Local Loopback</string>
+    <string name="CustomCommand">Custom Command</string>
+    <string name="CustomCommandValue">canbusload can0@100000 -r -t -b -c</string>
+    <string name="Run">Run</string>
+    <!-- CAN-USB -->
+    <string name="CanUSB">CAN-USB</string>
+    <string name="run">Run</string>
+    <string name="ID">ID</string>
+    <string name="Data">Data</string>
+    <string name="Counter">Counter</string>
+    <string name="Sleep">Sleep</string>
+    <string name="Mode">Mode</string>
+    <string name="Debug">Debug</string>
+    <string name="DataValue">Data (e.g., 0C1A2F3E0C1A2F3)</string>
+    <string name="Baudrate">Baudrate</string>
+    <string name="BaudrateValue">200000</string>
+    <string name="Refresh">Refresh USB</string>
+    <string name="CanSpeed">CAN Speed</string>
+    <string name="CanSpeedValue">500000</string>
+    <string name="SleepMS">Sleep (ms)</string>
+    <!-- Caring Caribou -->
+    <string name="CaringCaribou">Caring Caribou</string>
+    <string name="Message">Message</string>
+    <string name="MessageValue">0x7a0#c0.ff.ee.00.11.22.33.44</string>
+    <string name="File">File</string>
+    <string name="Loop">Loop</string>
+    <string name="Reverse">Reverse</string>
+    <string name="Pad">Pad</string>
+    <string name="CandumpFormat">CanDump Format</string>
+    <string name="Length">Length</string>
+    <string name="LengthValue">0x4800</string>
+    <string name="SeparateLine">Separate Line</string>
+    <string name="SeparateLineValue">5</string>
+    <string name="Src">Src.</string>
+    <string name="SrcValue">0x3e8</string>
+    <string name="Dst">Dst.</string>
+    <string name="DstValue">0x3e9</string>
+    <string name="Minimum">Minimum</string>
+    <string name="MinimumValue">2</string>
+    <string name="Maximum">Maximum</string>
+    <string name="MaximumValue">5</string>
+    <string name="Listener">Listener</string>
+    <string name="Dump">Dump</string>
+    <string name="Modules">Modules</string>
+    <string name="Seed">Seed</string>
+    <string name="SeedValue">0xabc123</string>
+    <string name="Min">Min.</string>
+    <string name="Max">Max.</string>
+    <string name="StartAddress">Start Address</string>
+    <string name="StartAddressValue">0x1fffb000</string>
+    <string name="Delay">Delay</string>
+    <string name="DelayValue">1</string>
+    <string name="IDValue">0x003</string>
+    <!-- ICSim -->
+    <string name="icsim">Instrument Cluster Simulator</string>
+    <string name="Configuration">Configuration</string>
+    <!-- MSF Automotive -->
+    <string name="msfautomotive">MSF Automotive</string>
+    <string name="elmrelay">ELM327 Relay Configuration</string>
+    <string name="baudspeed">Baud Speed</string>
+    <string name="baudspeedValue">115200</string>
+
     <!-- CARsenal About menu -->
-    <string name="about_author">
-        ABOUT:\n\n
-        Found a bug? A suggestion? Follow me on my networks and let me know!\n\n
-        https://linktr.ee/v0lk3n\n\n
-        CREDITS:\n\n
-        Made with ♥ by V0lk3n\n\n
-        - Fenugrec! For freediag tool.\nhttps://github.com/fenugrec\n\n
-        - Kobolt! For can-usb.\nhttps://github.com/kobolt\n\n
-        - Alexmohr! For can-usb fork.\nhttps://github.com/alexmohr\n\n
-        - Linux-Can! For can-utils and socketcand.\nhttps://github.com/linux-can\n\n
-        - Mguentner! For cannelloni.\nhttps://github.com/mguentner\n\n
-        - CaringCaribou!\nhttps://github.com/CaringCaribou\n\n
-        - zombieCraig! For ICSim tool.\nhttps://github.com/zombieCraig\n\n
-        - idlesign! For VIN Info tool.\nhttps://github.com/idlesign\n\n
+    <string name="about_text"><![CDATA[
+        Found a bug? A suggestion? Follow me on my networks and let me know!<br><br>
+        <b>Made with ♥️ by <a href="https://linktr.ee/v0lk3n">V0lk3n</a></b>
+        ]]>
+    </string>
+
+    <string name="credits_text"><![CDATA[
+        <div style="text-align:center;"><b><u>CREDITS</u></b></div>
+        <ul>
+            <li><a href="https://github.com/fenugrec">Fenugrec</a> - Freediag tool.</li>
+            <li><a href="https://github.com/kobolt">Kobolt</a> - CAN-USB.</li>
+            <li><a href="https://github.com/alexmohr">Alexmohr</a> - CAN-USB Fork.</li>
+            <li><a href="https://github.com/linux-can">Linux-Can</a> - CAN-utils and Socketcand.</li>
+            <li><a href="https://github.com/mguentner">Mguentner</a> - Cannelloni.</li>
+            <li><a href="https://github.com/CaringCaribou">CaringCaribou Team</a> - CaringCaribou</li>
+            <li><a href="https://github.com/zombieCraig">zombieCraig</a> - ICSim.</li>
+            <li><a href="https://github.com/idlesign">idlesign</a> - VIN Info.</li>
+        </ul>
+        ]]>
     </string>
 
     <!-- CARsenal MSF Modules -->
