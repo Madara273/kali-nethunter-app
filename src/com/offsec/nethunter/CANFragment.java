@@ -43,11 +43,13 @@ import androidx.core.content.ContextCompat;
 import androidx.core.text.HtmlCompat;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Lifecycle;
 import androidx.preference.PreferenceManager;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
@@ -130,6 +132,24 @@ public class CANFragment extends Fragment {
             @Override
             public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
                 menuInflater.inflate(R.menu.can, menu);
+
+                // Add settings button dynamically if not already added
+                MenuItem settingsItem = menu.findItem(R.id.action_settings);
+                if (settingsItem == null) {
+                    settingsItem = menu.add(Menu.NONE, R.id.action_settings, Menu.NONE, "Settings");
+                    settingsItem.setIcon(R.drawable.ic_settings); // your settings icon
+                    settingsItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+                }
+            }
+
+            @Override
+            public void onPrepareMenu(@NonNull Menu menu) {
+                MenuItem settingsItem = menu.findItem(R.id.action_settings);
+                if (settingsItem != null) {
+                    // Only visible when on Main tab
+                    ViewPager2 mViewPager = requireView().findViewById(R.id.pagerCAN);
+                    settingsItem.setVisible(mViewPager.getCurrentItem() == 0);
+                }
             }
 
             @Override
@@ -146,6 +166,16 @@ public class CANFragment extends Fragment {
                     return true;
                 } else if (id == R.id.about) {
                     RunAbout();
+                    return true;
+                } else if (id == R.id.action_settings) {
+                    // Only trigger MainFragment settings if on Main tab
+                    ViewPager2 mViewPager = requireView().findViewById(R.id.pagerCAN);
+                    if (mViewPager.getCurrentItem() == 0) {
+                        Fragment current = getChildFragmentManager().getFragments().get(0);
+                        if (current instanceof MainFragment) {
+                            ((MainFragment) current).showMainConfig();
+                        }
+                    }
                     return true;
                 } else {
                     return false;
@@ -374,32 +404,6 @@ public class CANFragment extends Fragment {
                 SetupDialog();
             }
 
-            // Toggle Advanced Options
-            Button btnMtu = rootView.findViewById(R.id.btn_toggle_mtu);
-            TextInputLayout SelectedMTU = rootView.findViewById(R.id.mtu_container);
-            Button btnTxqueuelen = rootView.findViewById(R.id.btn_toggle_txqueuelen);
-            TextInputLayout SelectedTxqueuelen = rootView.findViewById(R.id.txqueuelen_container);
-
-            btnMtu.setOnClickListener(v -> {
-                boolean isVisible = SelectedMTU.getVisibility() == View.VISIBLE;
-                SelectedMTU.setVisibility(isVisible ? View.GONE : View.VISIBLE);
-
-                int color = isVisible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnMtu.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-
-                updateFieldLayout(SelectedMTU, SelectedTxqueuelen);
-            });
-
-            btnTxqueuelen.setOnClickListener(v -> {
-                boolean isVisible = SelectedTxqueuelen.getVisibility() == View.VISIBLE;
-                SelectedTxqueuelen.setVisibility(isVisible ? View.GONE : View.VISIBLE);
-
-                int color = isVisible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnTxqueuelen.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-
-                updateFieldLayout(SelectedMTU, SelectedTxqueuelen);
-            });
-
             // Services Toggle
             Button btnServicesToggle = rootView.findViewById(R.id.btn_toggle_services);
             LinearLayout servicesLayout = rootView.findViewById(R.id.main_services);
@@ -424,7 +428,7 @@ public class CANFragment extends Fragment {
 
             // Load the saved command or use a default
             String savedCmd_ldAttach = ldAttach_prefs.getString("ldAttach_cmd", "ldattach --debug --speed 38400 --eightbits --noparity --onestopbit --iflag -ICRNL,INLCR,-IXOFF 29 /dev/rfcomm0");
-            String[] ldAttachCmdHolder = { savedCmd_ldAttach };
+            String[] ldAttachCmdHolder = {savedCmd_ldAttach};
 
             LdAttachButton.setOnClickListener(v -> {
                 String ldAttachRun = ldAttachCmdHolder[0];
@@ -433,7 +437,7 @@ public class CANFragment extends Fragment {
                     run_cmd(ldAttachRun);
                     showToast("Press CTRL+C to stop.");
                 } else {
-                    showToast( "Please set your ldattach command!");
+                    showToast("Please set your ldattach command!");
                 }
             });
 
@@ -477,7 +481,7 @@ public class CANFragment extends Fragment {
 
             // Load the saved command or use a default
             String savedCmd_slcand = slcand_prefs.getString("slcand_cmd", "slcand -s6 -t sw -S 200000 /dev/ttyUSB0");
-            String[] slcandCmdHolder = { savedCmd_slcand };
+            String[] slcandCmdHolder = {savedCmd_slcand};
 
             SlcandButton.setOnClickListener(v -> {
                 String slcandRun = slcandCmdHolder[0];
@@ -530,7 +534,7 @@ public class CANFragment extends Fragment {
 
             // Load the saved command or use a default
             String savedCmd_slcanAttach = slcanAttach_prefs.getString("slcanAttach_cmd", "slcan_attach -s6 -o /dev/ttyUSB0");
-            String[] slcanAttachCmdHolder = { savedCmd_slcanAttach };
+            String[] slcanAttachCmdHolder = {savedCmd_slcanAttach};
 
             SlcanAttachButton.setOnClickListener(v -> {
                 String slcanAttachRun = slcanAttachCmdHolder[0];
@@ -583,7 +587,7 @@ public class CANFragment extends Fragment {
 
             // Load the saved command or use a default
             String savedCmd_hlcand = hlcand_prefs.getString("hlcand_cmd", "hlcand -F -s 500000 /dev/ttyUSB0");
-            String[] hlcandCmdHolder = { savedCmd_hlcand };
+            String[] hlcandCmdHolder = {savedCmd_hlcand};
 
             hlcandButton.setOnClickListener(v -> {
                 String hlcandRun = hlcandCmdHolder[0];
@@ -636,7 +640,7 @@ public class CANFragment extends Fragment {
 
             // Load the saved command or use a default
             String savedCmd_rfcomm_binder = rfcommBinder_prefs.getString("rfcommBinder_cmd", "rfcomm bind vcan0 00:AA:BB:CC:DD:EE:FF");
-            String[] rfcommBinderCmdHolder = { savedCmd_rfcomm_binder };
+            String[] rfcommBinderCmdHolder = {savedCmd_rfcomm_binder};
 
             RfcommBinderButton.setOnClickListener(v -> {
                 String rfcommBinderRun = rfcommBinderCmdHolder[0];
@@ -689,7 +693,7 @@ public class CANFragment extends Fragment {
 
             // Load the saved command or use a default
             String savedCmd_rfcomm_connect = rfcommConnect_prefs.getString("rfcommConnect_cmd", "rfcomm connect /dev/ttyS0 00:AA:BB:CC:DD:EE:FF");
-            String[] rfcommConnectCmdHolder = { savedCmd_rfcomm_connect };
+            String[] rfcommConnectCmdHolder = {savedCmd_rfcomm_connect};
 
             RfcommConnectButton.setOnClickListener(v -> {
                 String rfcommConnectRun = rfcommConnectCmdHolder[0];
@@ -742,7 +746,7 @@ public class CANFragment extends Fragment {
 
             // Load the saved command or use a default
             String savedCmd_socketcand = socketcand_prefs.getString("socketcand_cmd", "socketcand -v -l wlan0 -i vcan0");
-            String[] socketcandCmdHolder = { savedCmd_socketcand };
+            String[] socketcandCmdHolder = {savedCmd_socketcand};
 
             SocketcandButton.setOnClickListener(v -> {
                 String socketcandRun = socketcandCmdHolder[0];
@@ -812,13 +816,15 @@ public class CANFragment extends Fragment {
             Button StartCanButton = rootView.findViewById(R.id.start_caniface);
             StartCanButton.setOnClickListener(v -> {
                 String selected_caniface = SelectedIface.getText().toString();
-                assert SelectedMTU.getEditText() != null;
-                String selected_mtu = SelectedMTU.getEditText().getText().toString();
-                assert SelectedTxqueuelen.getEditText() != null;
-                String selected_txqueuelen = SelectedTxqueuelen.getEditText().getText().toString();
                 String interface_type = sharedpreferences.getString("cantype_selected", "");
 
-                if (!selected_caniface.isEmpty() && selected_caniface.matches("^(can|vcan|slcan)[0-9]$")) {
+                // Read MTU and Txqueuelen values from SharedPreferences
+                boolean mtuEnabled = sharedpreferences.getBoolean("mtu_enabled", false);
+                boolean txqEnabled = sharedpreferences.getBoolean("txq_enabled", false);
+                String selected_mtu = mtuEnabled ? sharedpreferences.getString("mtu_value", "") : "";
+                String selected_txqueuelen = txqEnabled ? sharedpreferences.getString("txq_value", "") : "";
+
+                if (!selected_caniface.isEmpty() && !interface_type.matches("Type") && selected_caniface.matches("^(can|vcan|slcan)[0-9]$")) {
                     if ("vcan".equals(interface_type)) {
                         String addVcanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && echo Success || echo Failed");
                         if (addVcanIface.contains("FATAL:") || addVcanIface.contains("Failed")) {
@@ -834,10 +840,10 @@ public class CANFragment extends Fragment {
                         }
                     }
 
-                    if (!selected_mtu.isEmpty()) {
+                    if (mtuEnabled && !selected_mtu.isEmpty()) {
                         exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && echo Success || echo Failed");
                     }
-                    if (!selected_txqueuelen.isEmpty()) {
+                    if (txqEnabled && !selected_txqueuelen.isEmpty()) {
                         exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " txqueuelen " + selected_txqueuelen + " && echo Success || echo Failed");
                     }
 
@@ -944,32 +950,46 @@ public class CANFragment extends Fragment {
             return adapter;
         }
 
-        // MTU + txqueuelen
-        private void updateFieldLayout(TextInputLayout mtu, TextInputLayout txq) {
-            boolean mtuVisible = mtu.getVisibility() == View.VISIBLE;
-            boolean txqVisible = txq.getVisibility() == View.VISIBLE;
+        private void showMainConfig() {
+            // Inflate the dialog layout
+            LayoutInflater inflater = LayoutInflater.from(requireContext());
+            View dialogView = inflater.inflate(R.layout.carsenal_main_dialog, null);
 
-            if (mtuVisible && txqVisible) {
-                LinearLayout.LayoutParams mtuParams =
-                        new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-                mtuParams.setMarginEnd(dpToPx());
+            // Find views
+            MaterialCheckBox mtuCheckBox = dialogView.findViewById(R.id.mtu_checkbox);
+            MaterialCheckBox txqCheckBox = dialogView.findViewById(R.id.txq_checkbox);
+            TextInputEditText mtuEditText = dialogView.findViewById(R.id.mtu_value);
+            TextInputEditText txqEditText = dialogView.findViewById(R.id.txq_value);
 
-                LinearLayout.LayoutParams txqParams =
-                        new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
-                txqParams.setMarginStart(dpToPx());
+            // Load saved values
+            SharedPreferences prefs = requireContext().getSharedPreferences("carsenal_prefs", Context.MODE_PRIVATE);
+            mtuCheckBox.setChecked(prefs.getBoolean("mtu_enabled", false));
+            txqCheckBox.setChecked(prefs.getBoolean("txq_enabled", false));
+            mtuEditText.setText(prefs.getString("mtu_value", ""));
+            txqEditText.setText(prefs.getString("txq_value", ""));
 
-                mtu.setLayoutParams(mtuParams);
-                txq.setLayoutParams(txqParams);
-            } else {
-                LinearLayout.LayoutParams fullParams =
-                        new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-                mtu.setLayoutParams(fullParams);
-                txq.setLayoutParams(fullParams);
-            }
-        }
+            // Enable/disable fields based on checkbox
+            mtuEditText.setEnabled(mtuCheckBox.isChecked());
+            txqEditText.setEnabled(txqCheckBox.isChecked());
 
-        private int dpToPx() {
-            return (int) (5 * getResources().getDisplayMetrics().density);
+            mtuCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> mtuEditText.setEnabled(isChecked));
+            txqCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> txqEditText.setEnabled(isChecked));
+
+            // Build dialog
+            new MaterialAlertDialogBuilder(requireContext())
+                    .setTitle("Interface Settings")
+                    .setView(dialogView)
+                    .setPositiveButton("Apply", (dialog, which) -> {
+                        // Save values
+                        prefs.edit()
+                                .putBoolean("mtu_enabled", mtuCheckBox.isChecked())
+                                .putString("mtu_value", mtuEditText.getText().toString())
+                                .putBoolean("txq_enabled", txqCheckBox.isChecked())
+                                .putString("txq_value", txqEditText.getText().toString())
+                                .apply();
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
         }
     }
 
