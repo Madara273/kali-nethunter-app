@@ -1,7 +1,6 @@
 package com.offsec.nethunter.gps;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -35,7 +34,6 @@ import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.offsec.nethunter.AppNavHomeActivity;
-import com.offsec.nethunter.KaliGpsServiceFragment;
 import com.offsec.nethunter.R;
 import com.offsec.nethunter.utils.NhPaths;
 
@@ -51,6 +49,7 @@ import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.net.InetAddress;
 import java.util.Date;
+import java.util.Locale;
 
 public class LocationUpdateService extends Service {
     private FusedLocationProviderClient fusedLocationClient;
@@ -138,7 +137,7 @@ public class LocationUpdateService extends Service {
     public String formatAltitude(Location location) {
         StringBuilder s = new StringBuilder();
         if (location.hasAltitude())
-            s.append(String.format("%.4f,M", location.getAltitude()));
+            s.append(String.format(Locale.getDefault(), "%.4f,M", location.getAltitude()));
         else
             s.append(",");
         return s.toString();
@@ -163,7 +162,6 @@ public class LocationUpdateService extends Service {
     /**
      * Formats the time from the #Location into a string.
      */
-    @SuppressLint("DefaultLocale")
     public static String formatTime(Location location) {
         DateTimeFormatter dtf = DateTimeFormat.forPattern("HHmmss");
         return dtf.print(new DateTime(location.getTime()));
@@ -181,12 +179,12 @@ public class LocationUpdateService extends Service {
         double longitude = location.getLongitude();
         char ewSuffix = longitude < 0 ? 'W' : 'E';
         longitude = Math.abs(longitude);
-        @SuppressLint("DefaultLocale") String lat = String.format("%02d%02d.%04d,%c",
+        String lat = String.format(Locale.getDefault(),"%02d%02d.%04d,%c",
                 (int) latitude,
                 (int) (latitude * 60) % 60,
                 (int) (latitude * 60 * 10000) % 10000,
                 nsSuffix);
-        @SuppressLint("DefaultLocale") String lon = String.format("%03d%02d.%04d,%c",
+        String lon = String.format(Locale.getDefault(),"%03d%02d.%04d,%c",
                 (int) longitude,
                 (int) (longitude * 60) % 60,
                 (int) (longitude * 60 * 10000) % 10000,
@@ -229,7 +227,8 @@ public class LocationUpdateService extends Service {
         locationUpdatesStarted = true;
         Log.d(TAG, "In startLocationUpdates");
 
-        final LocationRequest lr = new LocationRequest.Builder(LocationRequest.PRIORITY_HIGH_ACCURACY, 1000L / 2L)
+        final LocationRequest lr = new LocationRequest.Builder(1000L / 2L)
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
                 .setMinUpdateIntervalMillis(100L)
                 .setMaxUpdateDelayMillis(600L)
                 .setDurationMillis(1000 * 3600 * 2)
@@ -343,7 +342,7 @@ public class LocationUpdateService extends Service {
             ageStr = (age / 60) + "m";
         else
             ageStr = (age / 3600) + "h";
-        String updatedText = String.format("Latitude: %1.5f  Longitude: %1.5f  +/- %1.1fm  Source: %s  Age: %s  Satellites: %d",
+        String updatedText = String.format(Locale.getDefault(),"Latitude: %1.5f  Longitude: %1.5f  +/- %1.1fm  Source: %s  Age: %s  Satellites: %d",
                 lastLocationLatitude, lastLocationLongitude, lastLocationAccuracy,
                 lastLocationSourcePublished, ageStr, lastLocationSats);
 
@@ -359,13 +358,13 @@ public class LocationUpdateService extends Service {
         PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.gps_notification);
-        contentView.setTextViewText(R.id.gps_notification_latitude, String.format("%1.5f", lastLocationLatitude));
-        contentView.setTextViewText(R.id.gps_notification_longitude, String.format("%1.5f", lastLocationLongitude));
-        contentView.setTextViewText(R.id.gps_notification_accuracy, String.format("%1.1fm", lastLocationAccuracy));
+        contentView.setTextViewText(R.id.gps_notification_latitude, String.format(Locale.getDefault(),"%1.5f", lastLocationLatitude));
+        contentView.setTextViewText(R.id.gps_notification_longitude, String.format(Locale.getDefault(),"%1.5f", lastLocationLongitude));
+        contentView.setTextViewText(R.id.gps_notification_accuracy, String.format(Locale.getDefault(),"%1.1fm", lastLocationAccuracy));
         contentView.setTextViewText(R.id.gps_notification_source, lastLocationSourcePublished);
         contentView.setTextViewText(R.id.gps_notification_age, ageStr);
         if (lastLocationSourcePublished.equals("GPS"))
-            contentView.setTextViewText(R.id.gps_notification_sats, String.format("%d", lastLocationSats));
+            contentView.setTextViewText(R.id.gps_notification_sats, String.format(Locale.getDefault(),"%d", lastLocationSats));
         else
             contentView.setTextViewText(R.id.gps_notification_sats, "-");
 
@@ -510,7 +509,7 @@ public class LocationUpdateService extends Service {
         // from: https://github.com/ya-isakov/blue-nmea-mirror/blob/master/src/Source.java
         String time = formatTime(location);
         String position = formatPosition(location);
-        String accuracy = String.format("%.4f", location.getAccuracy()/19.0); // why 19.0?  see https://gitlab.com/gpsd/gpsd/-/blob/master/libgpsd_core.c, P_UERE_NO_DGPS
+        String accuracy = String.format(Locale.getDefault(),"%.4f", location.getAccuracy()/19.0); // why 19.0?  see https://gitlab.com/gpsd/gpsd/-/blob/master/libgpsd_core.c, P_UERE_NO_DGPS
         String innerSentence = String.format("GPGGA,%s,%s,1,%s,%s,%s,,,,", time, position, formatSatellites(location),
                 accuracy, formatAltitude(location));
 
