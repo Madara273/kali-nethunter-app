@@ -850,10 +850,16 @@ public class CANFragment extends Fragment {
                             return;
                         }
 
-                        // Set MTU (txqueuelen ignored for vcan)
+                        // Set MTU
                         if (mtuEnabled && !selected_mtu.isEmpty()) {
                             int mtuValue = Integer.parseInt(selected_mtu);
                             exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + mtuValue + " && echo Success || echo Failed");
+                        }
+
+                        // Set TX queue length if requested
+                        if (txqEnabled && !selected_txqueuelen.isEmpty()) {
+                            int txqValue = Integer.parseInt(selected_txqueuelen);
+                            exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " txqueuelen " + txqValue + " && echo Success || echo Failed");
                         }
 
                         // Bring up interface
