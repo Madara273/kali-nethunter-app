@@ -608,6 +608,9 @@
     <string name="wps_launch_attack">Launch attack</string>
 
     <!-- KERNEL -->
+    <string name="kernel_flash_warning">
+    ⚠️ WARNING: Flashing a custom kernel may make your device unbootable or in worst case scenario; permanently brick your device if not done correctly. Always ensure you have a full backup of your current kernel and system before proceeding. Proceed at your own risk.
+    </string>
     <string name="kernel_device_details">Device details</string>
     <string name="kernel_device">Device:</string>
     <string name="kernel_loading">Loading ..</string>
@@ -620,6 +623,7 @@
     <string name="kernel_kernel_nethunter_zip">/sdcard/kernel_nethunter.zip</string>
     <string name="kernel_dots">...</string>
     <string name="kernel_flash_kernel">Flash kernel</string>
+    <string name="wifi_status">wifi_status</string>
 
     <!-- CHROOTMGR -->
     <string name="chrootmgr_download_latest">DOWNLOAD LATEST KALI CHROOT</string>
@@ -653,12 +657,27 @@
 
     <!-- GPS -->
     <string name="gps_permissions">gps_permissions</string>
+    <string name="gps_button_settings_description">gps_button_settings_description</string>
+    <string name="gps_current_satellites_hint">Current Satellites</string>
+    <string name="gps_bluetooth_device_text">hci0</string>
+    <string name="gps_bluetooth_device_hint">Bluetooth interface</string>
+    <string name="gps_wlan_interface_text">wlan0</string>
+    <string name="gps_wlan_interface_hint">Wireless interface</string>
+    <string name="gps_on">On</string>
+    <string name="gps_off">Off</string>
+    <string name="gps_current_satellites_null">0</string>
+    <string name="gps_rtl_sdr">RTL SDR</string>
+    <string name="gps_rtl_amr">RTL AMR</string>
+    <string name="gps_rtl_adsb">RTL ADSB</string>
+    <string name="gps_mousejack">Mousejack</string>
+    <string name="gps_settings">GPS Settings</string>
 
     <!-- WIFI PUMPKIN3 -->
     <string name="wp3_supported">Supported</string>
     <string name="wp3_not_supported">Not supported</string>
 
     <!-- NETHUNTER FRAGMENT / APPNAVHOME -->
+    <string name="info">Information</string>
     <string name="nethunter_full_path_save_db">Full path to where you want to save the database:</string>
     <string name="nethunter_full_path_db_restore">Full path of the db file from where you want to restore:</string>
 
@@ -1138,7 +1157,7 @@
 
         Basic Options:\n
             CANBUS       (optional)   - CAN Bus to perform scan on, defaults to connected bus\n
-            DSTID        (optional)   - Expected reponse ID, defaults to SRCID + 8\n
+            DSTID        (optional)   - Expected response ID, defaults to SRCID + 8\n
             PADDING      (optional)   - Pad the packet with extra bytes to always be 8 bytes long\n
             SESSION      (required)   - The session to run this module on\n
             SRCID        (required)   - Module ID to query\n\n

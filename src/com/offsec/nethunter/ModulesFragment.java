@@ -1,9 +1,11 @@
 package com.offsec.nethunter;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
@@ -22,8 +24,12 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.MenuProvider;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.SearchView;
@@ -41,9 +47,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicReference;
 
-public class ModulesFragment extends Fragment {
+public class ModulesFragment extends Fragment implements MenuProvider {
     public static final String TAG = "ModulesFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
     private Activity activity;
@@ -60,138 +65,222 @@ public class ModulesFragment extends Fragment {
         return fragment;
     }
 
-    private void showModuleInfo(String moduleName) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
-            String modulesPath = modules_path != null ? modules_path.getText().toString() : "";
-            String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
-            String kernelVersion = System.getProperty("os.version");
-            String pathWithKernelVersion = sanitizedModulesPath + "/" + kernelVersion;
-
-            // Find the full path of the module
-            String findCommand = "find " + sanitizedModulesPath + " " + pathWithKernelVersion + " -name " + moduleName + ".ko -print -quit";
-            String moduleFilePath = exe.RunAsRootOutput(findCommand).trim();
-
-            String info;
-            if (moduleFilePath.isEmpty()) {
-                info = "Module not found: " + moduleName;
-            } else {
-                info = exe.RunAsRootOutput("modinfo " + moduleFilePath);
-                if (info == null || info.trim().isEmpty()) {
-                    info = "No information available for " + moduleName;
+    private final ActivityResultLauncher<String[]> permissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+                for (Map.Entry<String, Boolean> entry : result.entrySet()) {
+                    Log.d(TAG, "Permission " + entry.getKey() + ": " + (entry.getValue() ? "granted" : "denied"));
                 }
-            }
+            });
 
-            Activity currentActivity = getActivity();
-            if (currentActivity != null) {
-                String finalInfo = info;
-                currentActivity.runOnUiThread(() -> new AlertDialog.Builder(currentActivity)
-                        .setTitle("Module Info: " + moduleName)
-                        .setMessage(finalInfo)
-                        .setPositiveButton("OK", null)
-                        .show());
-            }
-        });
-    }
+    @Override
+    public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
+        menuInflater.inflate(R.menu.modules_menu, menu);
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        SearchView searchView = (SearchView) searchItem.getActionView();
 
-    private void showModuleDependencies(String moduleName) {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
-            String modulesPath = modules_path != null ? modules_path.getText().toString() : "";
-            String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
-            String kernelVersion = System.getProperty("os.version");
-            String pathWithKernelVersion = sanitizedModulesPath + "/" + kernelVersion;
-
-            // Find the full path of the module
-            String findCommand = "find " + sanitizedModulesPath + " " + pathWithKernelVersion + " -name " + moduleName + ".ko -print -quit";
-            String moduleFilePath = exe.RunAsRootOutput(findCommand).trim();
-
-            String dependencies;
-            if (moduleFilePath.isEmpty()) {
-                dependencies = "Module not found: " + moduleName;
-            } else {
-                dependencies = exe.RunAsRootOutput("modinfo " + moduleFilePath + " | grep depends");
-                if (dependencies == null || dependencies.trim().isEmpty()) {
-                    dependencies = "No dependencies found for " + moduleName;
-                }
-            }
-
-            Activity currentActivity = getActivity();
-            if (currentActivity != null) {
-                String finalDependencies = dependencies;
-                currentActivity.runOnUiThread(() -> new AlertDialog.Builder(currentActivity)
-                        .setTitle("Module Dependencies: " + moduleName)
-                        .setMessage(finalDependencies)
-                        .setPositiveButton("OK", null)
-                        .show());
-            }
-        });
-    }
-
-    private void showLoadedModules(View rootView) {
-        final ListView modules = rootView.findViewById(R.id.modulesList);
-        ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
-            String loadedModulesRaw = exe.RunAsRootOutput("lsmod | cut -d' ' -f1");
-            String[] loadedModules = loadedModulesRaw.split("\n");
-            // Remove header if present
-            if (loadedModules.length > 0 && loadedModules[0].trim().equals("Module")) {
-                loadedModules = Arrays.copyOfRange(loadedModules, 1, loadedModules.length);
-            }
-            // Build moduleStates: all loaded modules are true
-            Map<String, Boolean> moduleStates = new HashMap<>();
-            for (String module : loadedModules) {
-                if (!module.trim().isEmpty()) {
-                    moduleStates.put(module, true);
-                }
-            }
-            List<String> moduleList = new ArrayList<>(Arrays.asList(loadedModules));
-            // Remove empty entries
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                moduleList.removeIf(String::isEmpty);
-            }
-
-            Activity currentActivity = getActivity();
-            if (currentActivity != null) {
-                currentActivity.runOnUiThread(() -> {
-                    if (moduleList.isEmpty()) {
-                        modules.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, Collections.singletonList("No modules loaded")));
-                    } else {
-                        modules.setAdapter(new ModuleListAdapter(requireContext(), moduleList, moduleStates));
+        ListView modules = requireView().findViewById(R.id.modulesList);
+        if (searchView != null) {
+            searchView.setQueryHint("Search modules");
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) { return false; }
+                @Override
+                public boolean onQueryTextChange(String newText) {
+                    if (modules.getAdapter() instanceof ArrayAdapter) {
+                        ((ArrayAdapter<?>) modules.getAdapter()).getFilter().filter(newText);
                     }
-                });
-            }
-        });
+                    return true;
+                }
+            });
+        }
+    }
+
+    public boolean onMenuItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.action_sort:
+                if (isAdded() && getView() != null) {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                    builder.setTitle("Sort Modules")
+                            .setItems(new String[]{"Alphabetical", "Reverse"}, (dialog, which) -> {
+                                currentSortOrder = which;
+                                refreshModules(requireView());
+                            })
+                            .show();
+                }
+                return true;
+            case R.id.action_enable_faulty_check:
+                if (isAdded()) {
+                    boolean isChecked = !item.isChecked();
+                    item.setChecked(isChecked);
+                    SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+                    SharedPreferences.Editor editor = sharedPreferences.edit();
+                    editor.putBoolean("enable_faulty_check", isChecked).apply();
+                }
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        requireActivity().addMenuProvider(this, getViewLifecycleOwner());
+        // Show lsmod output when fragment opens
+        showLoadedModules(view);
     }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         activity = getActivity();
-        setHasOptionsMenu(true);
+        logMissingPermissions();
     }
 
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        inflater.inflate(R.menu.modules_menu, menu);
-        MenuItem searchItem = menu.findItem(R.id.action_search);
-        SearchView searchView = (SearchView) searchItem.getActionView();
+    private void showModuleInfo(String moduleName) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            executor.execute(() -> {
+                String modulesPath = modules_path != null ? modules_path.getText().toString() : "";
+                String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
+                String kernelVersion = System.getProperty("os.version");
+                String pathWithKernelVersion = sanitizedModulesPath + "/" + kernelVersion;
 
-        ListView modules = requireView().findViewById(R.id.modulesList);
-        assert searchView != null;
-        searchView.setQueryHint("Search modules");
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) { return false; }
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                if (modules.getAdapter() instanceof ArrayAdapter) {
-                    ((ArrayAdapter<?>) modules.getAdapter()).getFilter().filter(newText);
+                // Find the full path of the module
+                String findCommand = "find " + sanitizedModulesPath + " " + pathWithKernelVersion + " -name " + moduleName + ".ko -print -quit";
+                String moduleFilePath = exe.RunAsRootOutput(findCommand);
+                String info;
+                if (moduleFilePath == null || moduleFilePath.trim().isEmpty()) {
+                    info = "Module not found: " + moduleName;
+                } else {
+                    moduleFilePath = moduleFilePath.trim();
+                    info = exe.RunAsRootOutput("modinfo " + moduleFilePath);
+                    if (info == null || info.trim().isEmpty()) {
+                        info = "No information available for " + moduleName;
+                    }
                 }
-                return true;
+
+                Activity currentActivity = getActivity();
+                if (currentActivity != null) {
+                    String finalInfo = info;
+                    currentActivity.runOnUiThread(() -> new AlertDialog.Builder(currentActivity)
+                            .setTitle("Module Info: " + moduleName)
+                            .setMessage(finalInfo)
+                            .setPositiveButton("OK", null)
+                            .show());
+                }
+            });
+        } finally {
+            executor.shutdown();
+        }
+    }
+
+    private void showModuleDependencies(String moduleName) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            executor.execute(() -> {
+                String modulesPath = modules_path != null ? modules_path.getText().toString() : "";
+                String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
+                String kernelVersion = System.getProperty("os.version");
+                String pathWithKernelVersion = sanitizedModulesPath + "/" + kernelVersion;
+
+                // Find the full path of the module
+                String findCommand = "find " + sanitizedModulesPath + " " + pathWithKernelVersion + " -name " + moduleName + ".ko -print -quit";
+                String moduleFilePath = exe.RunAsRootOutput(findCommand);
+                String info;
+                if (moduleFilePath == null || moduleFilePath.trim().isEmpty()) {
+                    info = "Module not found: " + moduleName;
+                } else {
+                    moduleFilePath = moduleFilePath.trim();
+                    info = exe.RunAsRootOutput("modinfo " + moduleFilePath);
+                    if (info == null || info.trim().isEmpty()) {
+                        info = "No information available for " + moduleName;
+                    }
+                }
+
+                String dependencies;
+                assert moduleFilePath != null;
+                if (moduleFilePath.isEmpty()) {
+                    dependencies = "Module not found: " + moduleName;
+                } else {
+                    dependencies = exe.RunAsRootOutput("modinfo " + moduleFilePath + " | grep depends");
+                    if (dependencies == null || dependencies.trim().isEmpty()) {
+                        dependencies = "No dependencies found for " + moduleName;
+                    }
+                }
+
+                Activity currentActivity = getActivity();
+                if (currentActivity != null) {
+                    String finalDependencies = dependencies;
+                    currentActivity.runOnUiThread(() -> new AlertDialog.Builder(currentActivity)
+                            .setTitle("Module Dependencies: " + moduleName)
+                            .setMessage(finalDependencies)
+                            .setPositiveButton("OK", null)
+                            .show());
+                }
+            });
+        } finally {
+            executor.shutdown();
+            try {
+                if (!executor.awaitTermination(60, java.util.concurrent.TimeUnit.SECONDS)) {
+                    executor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executor.shutdownNow();
+                Thread.currentThread().interrupt();
             }
-        });
-        super.onCreateOptionsMenu(menu, inflater);
+        }
+    }
+
+    private void showLoadedModules(View rootView) {
+        final ListView modules = rootView.findViewById(R.id.modulesList);
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        try {
+            executor.execute(() -> {
+                String loadedModulesRaw = exe.RunAsRootOutput("lsmod | cut -d' ' -f1");
+                if (loadedModulesRaw == null || loadedModulesRaw.trim().isEmpty()) {
+                    loadedModulesRaw = "";
+                }
+                String[] loadedModules = loadedModulesRaw.split("\n");
+                // Remove header if present
+                if (loadedModules.length > 0 && loadedModules[0].trim().equals("Module")) {
+                    loadedModules = Arrays.copyOfRange(loadedModules, 1, loadedModules.length);
+                }
+                // Build moduleStates: all loaded modules are true
+                Map<String, Boolean> moduleStates = new HashMap<>();
+                for (String module : loadedModules) {
+                    if (!module.trim().isEmpty()) {
+                        moduleStates.put(module, true);
+                    }
+                }
+                List<String> moduleList = new ArrayList<>(Arrays.asList(loadedModules));
+                // Remove empty entries
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    moduleList.removeIf(String::isEmpty);
+                }
+
+                Activity currentActivity = getActivity();
+                if (currentActivity != null) {
+                    currentActivity.runOnUiThread(() -> {
+                        if (moduleList.isEmpty()) {
+                            modules.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, Collections.singletonList("No modules loaded")));
+                        } else {
+                            modules.setAdapter(new ModuleListAdapter(requireContext(), moduleList, moduleStates));
+                        }
+                    });
+                }
+            });
+        } finally {
+            executor.shutdown();
+            try {
+                if (!executor.awaitTermination(60, java.util.concurrent.TimeUnit.SECONDS)) {
+                    executor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executor.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
     }
 
     @Override
@@ -294,9 +383,59 @@ public class ModulesFragment extends Fragment {
         return rootView;
     }
 
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
+    private void toggleModule(String selectedModule, ImageView statusIcon) {
+        String modulesPath = modules_path != null ? modules_path.getText().toString() : "";
+        String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_-]", "");
+        String kernelVersion = System.getProperty("os.version");
+        String pathWithKernelVersion = sanitizedModulesPath + "/" + kernelVersion;
+
+        String isModuleLoaded = exe.RunAsRootOutput("lsmod | cut -d' ' -f1 | grep " + selectedModule);
+
+        if (isModuleLoaded != null && isModuleLoaded.trim().equals(selectedModule)) {
+            String disableModule = exe.RunAsRootOutput("rmmod " + selectedModule + " && echo Success || echo Failed");
+            if (disableModule.contains("Success")) {
+                Log.d(TAG, "Module disabled: " + selectedModule);
+                Toast.makeText(requireActivity().getApplicationContext(), "Module Disabled: " + selectedModule, Toast.LENGTH_LONG).show();
+                if (statusIcon != null) {
+                    statusIcon.setImageResource(R.drawable.ic_module_not_loaded);
+                }
+            } else {
+                Toast.makeText(requireActivity().getApplicationContext(), "Failed - rmmod " + selectedModule, Toast.LENGTH_LONG).show();
+            }
+        } else {
+            String findCommand = "find " + sanitizedModulesPath + " " + pathWithKernelVersion + " -name " + selectedModule + ".ko -print -quit";
+            String foundModulePath = exe.RunAsRootOutput(findCommand);
+
+            if (foundModulePath == null || foundModulePath.trim().isEmpty()) {
+                Toast.makeText(requireActivity().getApplicationContext(), "Module not found in the directory structure", Toast.LENGTH_LONG).show();
+                return;
+            }
+            String modulePath = foundModulePath.trim();
+
+            String toggleModule = exe.RunAsRootOutput("insmod " + modulePath + " && echo Success || echo Failed");
+            if (toggleModule.contains("Success")) {
+                Log.d(TAG, "Module enabled: " + selectedModule + " from path: " + modulePath);
+                Toast.makeText(requireActivity().getApplicationContext(), "Module Enabled: " + selectedModule + " from path: " + modulePath, Toast.LENGTH_LONG).show();
+                if (statusIcon != null) {
+                    statusIcon.setImageResource(R.drawable.ic_module_loaded);
+                }
+            } else {
+                toggleModule = exe.RunAsRootOutput("modprobe -d " + sanitizedModulesPath + " " + selectedModule + " && echo Success || echo Failed");
+                if (toggleModule.contains("Success")) {
+                    Log.d(TAG, "Module enabled: " + selectedModule + " from path: " + sanitizedModulesPath);
+                    Toast.makeText(requireActivity().getApplicationContext(), "Module Enabled: " + selectedModule + " from path: " + sanitizedModulesPath, Toast.LENGTH_LONG).show();
+                    if (statusIcon != null) {
+                        statusIcon.setImageResource(R.drawable.ic_module_loaded);
+                    }
+                } else {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Failed - modprobe -d " + sanitizedModulesPath + " " + selectedModule, Toast.LENGTH_LONG).show();
+                    SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+                    if (sharedPreferences.getBoolean("enable_faulty_check", true)) {
+                        checkFaultyModule(sanitizedModulesPath, selectedModule);
+                    }
+                }
+            }
+        }
     }
 
     private void refreshModules(View rootView) {
@@ -311,121 +450,106 @@ public class ModulesFragment extends Fragment {
         if (modules_path != null) {
             modulesPath = modules_path.getText().toString();
         }
-        AtomicReference<String> sanitizedModulesPath = new AtomicReference<>(modulesPath.replaceAll("[^a-zA-Z0-9/_-]", ""));
+        String sanitizedModulesPath = modulesPath.replaceAll("[^a-zA-Z0-9/_\\-]", "");
+        if ("/proc".equals(sanitizedModulesPath) || "/".equals(sanitizedModulesPath)) {
+            Activity currentActivity = getActivity();
+            if (currentActivity != null) {
+                currentActivity.runOnUiThread(() ->
+                        Toast.makeText(currentActivity.getApplicationContext(), "Searching in /proc or / is not allowed", Toast.LENGTH_SHORT).show()
+                );
+            }
+            return;
+        }
         if (sharedpreferences != null) {
             sharedpreferences.edit().putString("last_modulespath", modulesPath).apply();
         }
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
-            // Check if the directory exists
-            String kernelVersion = System.getProperty("os.version");
-            String pathWithKernelVersion = sanitizedModulesPath + "/" + kernelVersion;
-
-            String pathCheck = exe.RunAsRootOutput("test -d " + pathWithKernelVersion + " && echo exists || echo not_exists");
-            final String finalSanitizedModulesPath;
-            if ("not_exists".equals(pathCheck.trim())) {
-                pathCheck = exe.RunAsRootOutput("test -d " + sanitizedModulesPath + " && echo exists || echo not_exists");
-                if ("not_exists".equals(pathCheck.trim())) {
+        try {
+            executor.execute(() -> {
+                // Check if the directory exists
+                String pathCheck = exe.RunAsRootOutput("test -d " + sanitizedModulesPath + " && echo exists || echo not_exists");
+                if (pathCheck == null || pathCheck.trim().isEmpty() || "not_exists".equals(pathCheck.trim())) {
                     Activity currentActivity = getActivity();
                     if (currentActivity != null) {
-                        finalSanitizedModulesPath = sanitizedModulesPath.get();
                         currentActivity.runOnUiThread(() ->
-                                Toast.makeText(currentActivity.getApplicationContext(), finalSanitizedModulesPath + " does not exist", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(currentActivity.getApplicationContext(), sanitizedModulesPath + " does not exist", Toast.LENGTH_SHORT).show()
                         );
                     }
                     return;
                 }
-            } else {
-                sanitizedModulesPath.set(pathWithKernelVersion);
-            }
-            finalSanitizedModulesPath = sanitizedModulesPath.get();
 
-            // Execute `find` command once
-            String modulesRaw = exe.RunAsRootOutput("find " + finalSanitizedModulesPath + " -name *.ko -printf \"%f\\n\" | sed 's/\\.ko$//1'");
-            if (modulesRaw.isEmpty()) {
+                // List all *.ko files in the user-specified path
+                String modulesRaw = exe.RunAsRootOutput("find " + sanitizedModulesPath + " -type f -name '*.ko' -printf '%f\\n' | sed 's/\\.ko$//1'");
+                if (modulesRaw == null || modulesRaw.trim().isEmpty()) {
+                    Activity currentActivity = getActivity();
+                    if (currentActivity != null) {
+                        currentActivity.runOnUiThread(() ->
+                                modules.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, Collections.singletonList("No modules found")))
+                        );
+                    }
+                    return;
+                }
+                final String[] modulesArray = modulesRaw.split("\n");
+
+                // Execute `lsmod` once and cache results
+                String loadedModulesRaw = exe.RunAsRootOutput("lsmod | cut -d' ' -f1");
+                List<String> loadedModules = loadedModulesRaw == null || loadedModulesRaw.trim().isEmpty()
+                        ? Collections.emptyList()
+                        : Arrays.asList(loadedModulesRaw.split("\n"));
+
+                // Prepare module states
+                Map<String, Boolean> moduleStates = new HashMap<>();
+                for (String module : modulesArray) {
+                    moduleStates.put(module, loadedModules.contains(module));
+                }
+
+                // Sort module list according to currentSortOrder
+                List<String> moduleList = new ArrayList<>(Arrays.asList(modulesArray));
+                if (currentSortOrder == 0) {
+                    Collections.sort(moduleList, String.CASE_INSENSITIVE_ORDER);
+                } else if (currentSortOrder == 1) {
+                    Collections.sort(moduleList, Collections.reverseOrder(String.CASE_INSENSITIVE_ORDER));
+                }
+
                 Activity currentActivity = getActivity();
                 if (currentActivity != null) {
-                    currentActivity.runOnUiThread(() ->
-                            modules.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, Collections.singletonList("No modules found")))
-                    );
+                    currentActivity.runOnUiThread(() -> {
+                        ModuleListAdapter adapter = new ModuleListAdapter(requireContext(), moduleList, moduleStates);
+                        modules.setAdapter(adapter);
+                    });
                 }
-                return;
-            }
-            final String[] modulesArray = modulesRaw.split("\n");
-
-            // Execute `lsmod` once and cache results
-            String loadedModulesRaw = exe.RunAsRootOutput("lsmod | cut -d' ' -f1");
-            List<String> loadedModules = Arrays.asList(loadedModulesRaw.split("\n"));
-
-            // Prepare module states
-            Map<String, Boolean> moduleStates = new HashMap<>();
-            for (String module : modulesArray) {
-                moduleStates.put(module, loadedModules.contains(module));
-            }
-
-            // Sort module list according to currentSortOrder
-            List<String> moduleList = new ArrayList<>(Arrays.asList(modulesArray));
-            if (currentSortOrder == 0) {
-                Collections.sort(moduleList);
-            } else if (currentSortOrder == 1) {
-                Collections.sort(moduleList, Collections.reverseOrder());
-            }
-
-            Activity currentActivity = getActivity();
-            if (currentActivity != null) {
-                currentActivity.runOnUiThread(() -> {
-                    ModuleListAdapter adapter = new ModuleListAdapter(requireContext(), moduleList, moduleStates);
-                    modules.setAdapter(adapter);
-                });
-            }
-        });
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        switch (item.getItemId()) {
-            case R.id.action_sort:
-                AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-                builder.setTitle("Sort Modules")
-                        .setItems(new String[]{"Alphabetical", "Reverse"}, (dialog, which) -> {
-                            currentSortOrder = which;
-                            refreshModules(requireView());
-                        })
-                        .show();
-                return true;
-            case R.id.action_enable_faulty_check:
-                boolean isChecked = !item.isChecked();
-                item.setChecked(isChecked);
-                sharedPreferences.edit().putBoolean("enable_faulty_check", isChecked).apply();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+            });
+        } finally {
+            executor.shutdown();
         }
     }
 
     private void checkFaultyModule(String modulePath, String moduleName) {
         ExecutorService executor = Executors.newSingleThreadExecutor();
-        executor.execute(() -> {
-            // Retrieve kernel logs
-            String kernelLogs = exe.RunAsRootOutput("dmesg | tail -n 20");
-            Activity currentActivity = getActivity();
-            if (currentActivity != null) {
-                String finalKernelLogs = kernelLogs.trim().isEmpty() ? "No kernel logs available" : kernelLogs;
-                currentActivity.runOnUiThread(() -> {
-                    // Show a Toast with the error
-                    Toast.makeText(currentActivity.getApplicationContext(), "Error loading module: " + moduleName, Toast.LENGTH_LONG).show();
+        try {
+            executor.execute(() -> {
+                // Retrieve kernel logs
+                String kernelLogs = exe.RunAsRootOutput("dmesg | tail -n 20");
+                Activity currentActivity = getActivity();
+                if (currentActivity != null) {
+                    String finalKernelLogs = kernelLogs.trim().isEmpty() ? "No kernel logs available" : kernelLogs;
+                    currentActivity.runOnUiThread(() -> {
+                        // Show a Toast with the error
+                        Toast.makeText(currentActivity.getApplicationContext(), "Error loading module: " + moduleName, Toast.LENGTH_LONG).show();
 
-                    // Show an AlertDialog with detailed logs
-                    new AlertDialog.Builder(currentActivity)
-                            .setTitle("Module Load Failed: " + moduleName)
-                            .setMessage("Kernel Logs:\n" + finalKernelLogs)
-                            .setPositiveButton("OK", null)
-                            .show();
-                });
-            }
-        });
+                        // Show an AlertDialog with detailed logs
+                        new AlertDialog.Builder(currentActivity)
+                                .setTitle("Module Load Failed: " + moduleName)
+                                .setMessage("Kernel Logs:\n" + finalKernelLogs)
+                                .setPositiveButton("OK", null)
+                                .show();
+                    });
+                }
+            });
+        } finally {
+            executor.shutdown();
+        }
     }
 
     static class ModuleListAdapter extends ArrayAdapter<String> {
@@ -475,10 +599,11 @@ public class ModulesFragment extends Fragment {
 
             // Handle auto-load checkbox
             SharedPreferences preferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+            holder.autoLoadCheckBox.setOnCheckedChangeListener(null);
             holder.autoLoadCheckBox.setChecked(preferences.getBoolean("autoload_" + moduleName, false));
-            holder.autoLoadCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                preferences.edit().putBoolean("autoload_" + moduleName, isChecked).apply();
-            });
+            holder.autoLoadCheckBox.setOnCheckedChangeListener((buttonView, isChecked) ->
+                    preferences.edit().putBoolean("autoload_" + moduleName, isChecked).apply()
+            );
 
             return convertView;
         }
@@ -497,6 +622,34 @@ public class ModulesFragment extends Fragment {
                     ShellExecuter exe = new ShellExecuter();
                     exe.RunAsRootOutput("insmod " + modulePath);
                 }
+            }
+        }
+    }
+
+    // Check for missing permissions
+    // This method should be called in the onCreate method of the fragment, add 'logMissingPermissions()' to the onCreate method
+    // And add import 'androidx.core.content.ContextCompat;'
+    private void logMissingPermissions() {
+        List<String> requiredPermissions = new ArrayList<>();
+        requiredPermissions.add(Manifest.permission.INTERNET);
+        requiredPermissions.add(Manifest.permission.ACCESS_NETWORK_STATE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            requiredPermissions.add(Manifest.permission.MANAGE_EXTERNAL_STORAGE);
+        }
+        requiredPermissions.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+        requiredPermissions.add(Manifest.permission.WRITE_EXTERNAL_STORAGE);
+        List<String> missingPermissions = new ArrayList<>();
+        for (String perm : requiredPermissions) {
+            if (ContextCompat.checkSelfPermission(requireContext(), perm) != PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Missing permission: " + perm);
+                missingPermissions.add(perm);
+            } else {
+                Log.d(TAG, "Granted permission: " + perm);
+            }
+        }
+        if (!missingPermissions.isEmpty()) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                permissionLauncher.launch(missingPermissions.toArray(new String[0]));
             }
         }
     }
