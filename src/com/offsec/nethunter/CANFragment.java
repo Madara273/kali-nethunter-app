@@ -815,52 +815,88 @@ public class CANFragment extends Fragment {
             // Start CAN interface
             Button StartCanButton = rootView.findViewById(R.id.start_caniface);
             StartCanButton.setOnClickListener(v -> {
-                String selected_caniface = SelectedIface.getText().toString();
-                String interface_type = sharedpreferences.getString("cantype_selected", "");
+                String selected_caniface = SelectedIface.getText().toString().trim();
+                String interface_type = sharedpreferences.getString("cantype_selected", "").trim();
 
                 // Read MTU and Txqueuelen values from SharedPreferences
-                boolean mtuEnabled = sharedpreferences.getBoolean("mtu_enabled", false);
-                boolean txqEnabled = sharedpreferences.getBoolean("txq_enabled", false);
-                String selected_mtu = mtuEnabled ? sharedpreferences.getString("mtu_value", "") : "";
-                String selected_txqueuelen = txqEnabled ? sharedpreferences.getString("txq_value", "") : "";
+                SharedPreferences prefs = requireContext().getSharedPreferences("carsenal_prefs", Context.MODE_PRIVATE);
+                boolean mtuEnabled = prefs.getBoolean("mtu_enabled", false);
+                boolean txqEnabled = prefs.getBoolean("txq_enabled", false);
+                String selected_mtu = mtuEnabled ? prefs.getString("mtu_value", "").trim() : "";
+                String selected_txqueuelen = txqEnabled ? prefs.getString("txq_value", "").trim() : "";
 
-                if (!selected_caniface.isEmpty() && !interface_type.matches("Type") && selected_caniface.matches("^(can|vcan|slcan)[0-9]$")) {
+                // Basic validation
+                if (selected_caniface.isEmpty()) {
+                    showToast("Please set a CAN interface!");
+                    return;
+                }
+                if (!selected_caniface.matches("^(can|vcan|slcan)[0-9]$")) {
+                    showToast("CAN Interface should be named \"^(can|vcan|slcan)[0-9]$\"");
+                    return;
+                }
+                if (interface_type.isEmpty()) {
+                    showToast("Please, set interface type!");
+                    return;
+                }
+
+                try {
+                    // ----------- vcan -----------
                     if ("vcan".equals(interface_type)) {
-                        String addVcanIface = exe.RunAsChrootOutput("sudo ip link add dev " + selected_caniface + " type " + interface_type + " && echo Success || echo Failed");
+                        String addVcanIface = exe.RunAsChrootOutput(
+                                "sudo ip link add dev " + selected_caniface + " type vcan && echo Success || echo Failed"
+                        );
                         if (addVcanIface.contains("FATAL:") || addVcanIface.contains("Failed")) {
-                            showToast("Failed to add " + selected_caniface + " interface! Interface may already existing.");
+                            showToast("Failed to add " + selected_caniface + "! Interface may already exist.");
                             return;
                         }
+
+                        // Set MTU (txqueuelen ignored for vcan)
+                        if (mtuEnabled && !selected_mtu.isEmpty()) {
+                            int mtuValue = Integer.parseInt(selected_mtu);
+                            exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + mtuValue + " && echo Success || echo Failed");
+                        }
+
+                        // Bring up interface
+                        exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
+
+                        showToast("Interface " + selected_caniface + " (vcan) started!");
+                        return;
                     }
+
+                    // ----------- can / slcan -----------
                     if ("can".equals(interface_type) || "slcan".equals(interface_type)) {
                         String usbDevice = exe.RunAsChrootOutput("ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$'");
                         if (usbDevice.isEmpty()) {
-                            showToast("No CAN Hardware detected, please connect adapter and try again.");
+                            showToast("No CAN hardware detected, please connect adapter and try again.");
                             return;
                         }
-                    }
 
-                    if (mtuEnabled && !selected_mtu.isEmpty()) {
-                        exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + selected_mtu + " && echo Success || echo Failed");
-                    }
-                    if (txqEnabled && !selected_txqueuelen.isEmpty()) {
-                        exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " txqueuelen " + selected_txqueuelen + " && echo Success || echo Failed");
-                    }
+                        // Set MTU if requested
+                        if (mtuEnabled && !selected_mtu.isEmpty()) {
+                            int mtuValue = Integer.parseInt(selected_mtu);
+                            exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + mtuValue + " && echo Success || echo Failed");
+                        }
 
-                    String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
-                    if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
-                        showToast("Failed to start " + selected_caniface + " interface!");
-                    } else {
-                        showToast("Interface " + selected_caniface + " started!");
-                    }
-                } else {
-                    if (selected_caniface.isEmpty()) {
-                        showToast("Please set a CAN interface!");
+                        // Set TX queue length if requested
+                        if (txqEnabled && !selected_txqueuelen.isEmpty()) {
+                            int txqValue = Integer.parseInt(selected_txqueuelen);
+                            exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " txqueuelen " + txqValue + " && echo Success || echo Failed");
+                        }
+
+                        // Bring up interface
+                        String startCanIface = exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " up && echo Success || echo Failed");
+                        if (startCanIface.contains("FATAL:") || startCanIface.contains("Failed")) {
+                            showToast("Failed to start " + selected_caniface + " interface!");
+                        } else {
+                            showToast("Interface " + selected_caniface + " (" + interface_type + ") started!");
+                        }
                         return;
                     }
-                    if (!selected_caniface.matches("^(can|vcan|slcan)[0-9]$")) {
-                        showToast("CAN Interface should be named \"^(can|vcan|slcan)[0-9]$\"");
-                    }
+
+                } catch (NumberFormatException e) {
+                    showToast("Invalid numeric value for MTU or TX queue length.");
+                } catch (Exception e) {
+                    showToast("Error starting interface: " + e.getMessage());
                 }
             });
 
