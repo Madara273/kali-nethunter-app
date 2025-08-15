@@ -1,6 +1,5 @@
 package com.offsec.nethunter.audio;
 
-import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -45,10 +44,8 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
     private NotificationManager notifManager;
     private PowerManager.WakeLock wakeLock;
     private PendingIntent togglePendingIntent;
-
     @Nullable
     private AudioPlaybackWorker playWorker = null;
-
     @Nullable
     private Thread playWorkerThread;
     private long headroomUsec = 125000;
@@ -141,7 +138,6 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
         Log.d("AudioFragment", "AudioPlaybackService destroyed and cleaned up.");
     }
 
-    @SuppressLint("InlinedApi")
     @Override
     public void onPlaybackError(@NonNull AudioPlaybackWorker worker, @NonNull Throwable t) {
         if (worker == playWorker) {
