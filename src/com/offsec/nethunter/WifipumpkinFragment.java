@@ -100,7 +100,7 @@ public class WifipumpkinFragment extends Fragment {
         CheckBox PreviewCheckbox = rootView.findViewById(R.id.preview_checkbox);
 
         // First run
-        Boolean setupwp3done = sharedpreferences.getBoolean("set_setup_done", false);
+        Boolean setupwp3done = sharedpreferences.getBoolean("wp3_setup_done", false);
         String packages = exe.RunAsChrootOutput("if [[ -f /usr/bin/wifipumpkin3 || -f /usr/bin/dnschef ]];then echo Good;else echo Nope;fi");
 
         // if (!setupwp3done.equals(true))
@@ -301,7 +301,7 @@ public class WifipumpkinFragment extends Fragment {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         run_cmd("echo -ne \"\\033]0;Wifipumpkin3 Setup\\007\" && clear;apt update && apt install wifipumpkin3 dnschef -y;" +
                 "echo 'Done!'; echo 'Closing in 3secs..'; sleep 3 && exit ");
-        sharedpreferences.edit().putBoolean("set_setup_done", true).apply();
+        sharedpreferences.edit().putBoolean("wp3_setup_done", true).apply();
     }
 
     // Refresh templates
@@ -383,7 +383,7 @@ public class WifipumpkinFragment extends Fragment {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         run_cmd("echo -ne \"\\033]0;Mana first setup\\007\"" +
                 "apt update && apt install mana-toolkit hostapd hostapd-wpe");
-        sharedpreferences.edit().putBoolean("setup_done", true).apply();
+        sharedpreferences.edit().putBoolean("wp3_setup_done", true).apply();
     }
 
     /* private void stopWP3() {
