@@ -32,6 +32,8 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -58,6 +60,15 @@ public class HidFragment extends Fragment {
         return fragment;
     }
     private boolean isHIDenable = false;
+    protected final ActivityResultLauncher<Intent> filePickerLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null && getView() != null) {
+                    String filePath = Objects.requireNonNull(result.getData().getData()).getPath();
+                    EditText source = getView().findViewById(R.id.windowsCmdSource);
+                    exe.ReadFile_ASYNC(filePath, source);
+                    NhPaths.showMessage(context, "Script loaded");
+                }
+            });
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -109,36 +120,36 @@ public class HidFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.start_service:
-                if (isHIDenable) {
-                    start();
-                } else {
-                    if (new File("/config/usb_gadget/g1").exists())
-                        NhPaths.showMessage_long(context,"HID interfaces are not enabled! Please enable in USB Arsenal.");
-                    else if (new File("/dev/hidg0").exists()) {
-                        NhPaths.showMessage_long(context, "Fixing HID interface permissions..");
-                        exe.RunAsRoot(new String[]{"chmod 666 /dev/hidg*"});
-                    }
-                    else NhPaths.showMessage_long(context,"HID interfaces are not patched or enabled, please check your kernel configuration.");
+        int id = item.getItemId();
+        if (id == R.id.start_service) {
+            if (isHIDenable) {
+                start();
+            } else {
+                if (new File("/config/usb_gadget/g1").exists())
+                    NhPaths.showMessage_long(context,"HID interfaces are not enabled! Please enable in USB Arsenal.");
+                else if (new File("/dev/hidg0").exists()) {
+                    NhPaths.showMessage_long(context, "Fixing HID interface permissions..");
+                    exe.RunAsRoot(new String[]{"chmod 666 /dev/hidg*"});
                 }
-                return true;
-            case R.id.stop_service:
-                reset();
-                return true;
-            case R.id.admin:
-                openDialog();
-                return true;
-            case R.id.chooseLanguage:
-                openLanguageDialog();
-                return true;
-            case R.id.source_button:
-                Intent i = new Intent(activity, EditSourceActivity.class);
-                i.putExtra("path", configFilePath);
-                startActivity(i);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+                else NhPaths.showMessage_long(context,"HID interfaces are not patched or enabled, please check your kernel configuration.");
+            }
+            return true;
+        } else if (id == R.id.stop_service) {
+            reset();
+            return true;
+        } else if (id == R.id.admin) {
+            openDialog();
+            return true;
+        } else if (id == R.id.chooseLanguage) {
+            openLanguageDialog();
+            return true;
+        } else if (id == R.id.source_button) {
+            Intent i = new Intent(activity, EditSourceActivity.class);
+            i.putExtra("path", configFilePath);
+            startActivity(i);
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
         }
     }
 
@@ -464,85 +475,86 @@ public class HidFragment extends Fragment {
         private static final int PICKFILE_RESULT_CODE = 1;
 
         public void onClick(View v) {
-            switch (v.getId()) {
-                case R.id.windowsCmdUpdate:
-                    if (getView() == null) {
-                        return;
-                    }
-                    EditText source = getView().findViewById(R.id.windowsCmdSource);
-                    String text = source.getText().toString();
-                    boolean isSaved = exe.SaveFileContents(text, configFilePath);
-                    if (isSaved) {
-                        NhPaths.showMessage(context, "Source updated");
-                    }
-
-                    break;
-                case R.id.windowsCmdLoad:
-                    try {
-                        File scriptsDir = new File(NhPaths.APP_SD_FILES_PATH, loadFilePath);
-                        if (!scriptsDir.exists()) scriptsDir.mkdirs();
-                    } catch (Exception e) {
-                        NhPaths.showMessage(context, e.getMessage());
-                    }
-                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                    Uri selectedUri = Uri.parse(NhPaths.APP_SD_FILES_PATH + loadFilePath);
-                    intent.setDataAndType(selectedUri, "file/*");
-                    startActivityForResult(intent, PICKFILE_RESULT_CODE);
-                    break;
-                case R.id.windowsCmdSave:
-                    try {
-                        File scriptsDir = new File(NhPaths.APP_SD_FILES_PATH, loadFilePath);
-                        if (!scriptsDir.exists()) scriptsDir.mkdirs();
-                    } catch (Exception e) {
-                        NhPaths.showMessage(context, e.getMessage());
-                    }
-                    MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-
-                    alert.setTitle("Name");
-                    alert.setMessage("Please enter a name for your script.");
-
-                    // Set an EditText view to get user input
-                    final EditText input = new EditText(activity);
-                    alert.setView(input);
-
-                    alert.setPositiveButton("Ok", (dialog, whichButton) -> {
-                        String value = input.getText().toString();
-                        if (!value.isEmpty()) {
-                            //FIXME Save file (ask name)
-                            File scriptFile = new File(loadFilePath + File.separator + value + ".conf");
-                            if (!scriptFile.exists()) {
-                                try {
-                                    if (getView() == null) {
-                                        return;
-                                    }
-                                    EditText source1 = getView().findViewById(R.id.windowsCmdSource);
-                                    String text1 = source1.getText().toString();
-                                    scriptFile.createNewFile();
-                                    FileOutputStream fOut = new FileOutputStream(scriptFile);
-                                    OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
-                                    myOutWriter.append(text1);
-                                    myOutWriter.close();
-                                    fOut.close();
-                                    NhPaths.showMessage(context,"Script saved");
-                                } catch (Exception e) {
-                                    NhPaths.showMessage(context, e.getMessage());
-                                }
-                            } else {
-                                NhPaths.showMessage(context,"File already exists");
-                            }
-                        } else {
-                            NhPaths.showMessage(context,"Wrong name provided");
-                        }
-                    });
-                    alert.setNegativeButton("Cancel", (dialog, whichButton) -> {
-                        ///Do nothing
-                    });
-                    alert.show();
-                    break;
-                default:
-                    NhPaths.showMessage(context,"Unknown click");
-                    break;
+            int id = v.getId();
+            if (id == R.id.windowsCmdUpdate) {
+                if (getView() == null) {
+                    return;
+                }
+                EditText source = getView().findViewById(R.id.windowsCmdSource);
+                String text = source.getText().toString();
+                boolean isSaved = exe.SaveFileContents(text, configFilePath);
+                if (isSaved) {
+                    NhPaths.showMessage(context, "Source updated");
+                }
+            } else if (id == R.id.windowsCmdLoad) {
+                try {
+                    File scriptsDir = new File(NhPaths.APP_SD_FILES_PATH, loadFilePath);
+                    if (!scriptsDir.exists()) scriptsDir.mkdirs();
+                } catch (Exception e) {
+                    NhPaths.showMessage(context, e.getMessage());
+                }
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                Uri selectedUri = Uri.parse(NhPaths.APP_SD_FILES_PATH + loadFilePath);
+                intent.setDataAndType(selectedUri, "file/*");
+                this.filePickerLauncher.launch(intent);
+            } else if (id == R.id.windowsCmdSave) {
+                try {
+                    File scriptsDir = new File(NhPaths.APP_SD_FILES_PATH, loadFilePath);
+                    if (!scriptsDir.exists()) scriptsDir.mkdirs();
+                } catch (Exception e) {
+                    NhPaths.showMessage(context, e.getMessage());
+                }
+                MaterialAlertDialogBuilder alert = getMaterialAlertDialogBuilder();
+                alert.setNegativeButton("Cancel", (dialog, whichButton) -> {
+                    ///Do nothing
+                });
+                alert.show();
+            } else {
+                NhPaths.showMessage(context, "Unknown click");
             }
+        }
+
+        @NonNull
+        private MaterialAlertDialogBuilder getMaterialAlertDialogBuilder() {
+            MaterialAlertDialogBuilder alert = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
+
+            alert.setTitle("Name");
+            alert.setMessage("Please enter a name for your script.");
+
+            // Set an EditText view to get user input
+            final EditText input = new EditText(activity);
+            alert.setView(input);
+
+            alert.setPositiveButton("Ok", (dialog, whichButton) -> {
+                String value = input.getText().toString();
+                if (!value.isEmpty()) {
+                    //FIXME Save file (ask name)
+                    File scriptFile = new File(loadFilePath + File.separator + value + ".conf");
+                    if (!scriptFile.exists()) {
+                        try {
+                            if (getView() == null) {
+                                return;
+                            }
+                            EditText source1 = getView().findViewById(R.id.windowsCmdSource);
+                            String text1 = source1.getText().toString();
+                            scriptFile.createNewFile();
+                            FileOutputStream fOut = new FileOutputStream(scriptFile);
+                            OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
+                            myOutWriter.append(text1);
+                            myOutWriter.close();
+                            fOut.close();
+                            NhPaths.showMessage(context,"Script saved");
+                        } catch (Exception e) {
+                            NhPaths.showMessage(context, e.getMessage());
+                        }
+                    } else {
+                        NhPaths.showMessage(context,"File already exists");
+                    }
+                } else {
+                    NhPaths.showMessage(context,"Wrong name provided");
+                }
+            });
+            return alert;
         }
 
         @Override
