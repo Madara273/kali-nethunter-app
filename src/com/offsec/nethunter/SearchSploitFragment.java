@@ -33,7 +33,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.channels.FileChannel;
 import java.util.List;
-import java.util.Objects;
+import java.util.Locale;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -122,22 +122,21 @@ public class SearchSploitFragment extends Fragment {
                     if (isFeeded) {
                         NhPaths.showMessage_long(context, "DB FEED DONE");
                         try {
-                            // Search List
                             String sd = Environment.getExternalStorageDirectory().getPath();
                             String data = NhPaths.APP_PATH + "/";
                             String DATABASE_NAME = "SearchSploit";
                             String currentDBPath = "databases/" + DATABASE_NAME;
-                            String backupDBPath = "/nh_files/" + DATABASE_NAME; // From SD directory.
+                            String backupDBPath = "/nh_files/" + DATABASE_NAME;
 
                             File backupDB = new File(data, currentDBPath);
                             File currentDB = new File(sd, backupDBPath);
 
-                            FileChannel src = new FileInputStream(currentDB).getChannel();
-                            FileChannel dst = new FileOutputStream(backupDB).getChannel();
-                            dst.transferFrom(src, 0, src.size());
-
-                            src.close();
-                            dst.close();
+                            try (FileInputStream fis = new FileInputStream(currentDB);
+                                 FileOutputStream fos = new FileOutputStream(backupDB);
+                                 FileChannel src = fis.getChannel();
+                                 FileChannel dst = fos.getChannel()) {
+                                dst.transferFrom(src, 0, src.size());
+                            }
                             Log.d("importDB", "Successfully imported " + DATABASE_NAME);
                             main(rootView);
                         } catch (Exception e) {
@@ -273,7 +272,7 @@ public class SearchSploitFragment extends Fragment {
                         this::loadExploits, 1500);
                 return;
             }
-            numex.setText(String.format("%d results", exploitList.size()));
+            numex.setText(String.format(Locale.getDefault(),"%d results", exploitList.size()));
             ExploitLoader exploitAdapter = new ExploitLoader(context, exploitList);
             searchSploitListView.setAdapter(exploitAdapter);
             if (!isLoaded) {
