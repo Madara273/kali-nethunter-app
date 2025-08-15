@@ -42,7 +42,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class CustomCommandsFragment extends Fragment {
     private static final String ARG_SECTION_NUMBER = "section_number";
     public static final String TAG = "CustomCommandsFragment";
@@ -147,61 +146,62 @@ public class CustomCommandsFragment extends Fragment {
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         final LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        final View promptView = inflater.inflate(R.layout.customcommands_custom_dialog_view, null);
-        final TextView titleTextView = promptView.findViewById(R.id.f_customcommands_adb_tv_title1);
-        final EditText storedpathEditText = promptView.findViewById(R.id.f_customcommands_adb_et_storedpath);
 
-        switch (item.getItemId()){
-            case R.id.f_customcommands_menu_backupDB:
-                titleTextView.setText("Full path to where you want to save the database:");
-                storedpathEditText.setText(NhPaths.APP_SD_SQLBACKUP_PATH + "/FragmentCustomCommands");
-                MaterialAlertDialogBuilder adbBackup = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                adbBackup.setView(promptView);
-                adbBackup.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-                adbBackup.setPositiveButton("OK", (dialog, which) -> { });
-                final AlertDialog adBackup = adbBackup.create();
-                adBackup.setOnShowListener(dialog -> {
-                    final Button buttonOK = adBackup.getButton(DialogInterface.BUTTON_POSITIVE);
-                    buttonOK.setOnClickListener(v -> {
-                        String returnedResult = CustomCommandsData.getInstance().backupData(CustomCommandsSQL.getInstance(context), storedpathEditText.getText().toString());
-                        if (returnedResult == null){
-                            NhPaths.showMessage(context, "db is successfully backup to " + storedpathEditText.getText().toString());
-                        } else {
-                            dialog.dismiss();
-                            new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to backup the DB.").setMessage(returnedResult).create().show();
-                        }
+        int id = item.getItemId();
+        if (id == R.id.f_customcommands_menu_backupDB) {
+            View promptViewBackup = inflater.inflate(R.layout.customcommands_custom_dialog_view, null);
+            final TextView titleTextView = promptViewBackup.findViewById(R.id.f_customcommands_adb_tv_title1);
+            final EditText storedpathEditText = promptViewBackup.findViewById(R.id.f_customcommands_adb_et_storedpath);
+
+            titleTextView.setText(R.string.customcommands_full_path_db_save);
+            storedpathEditText.setText(String.format("%s/FragmentCustomCommands", NhPaths.APP_SD_SQLBACKUP_PATH));
+            MaterialAlertDialogBuilder adbBackup = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
+            adbBackup.setView(promptViewBackup);
+            adbBackup.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+            adbBackup.setPositiveButton("OK", (dialog, which) -> { });
+            final AlertDialog adBackup = adbBackup.create();
+            adBackup.setOnShowListener(dialog -> {
+                final Button buttonOK = adBackup.getButton(DialogInterface.BUTTON_POSITIVE);
+                buttonOK.setOnClickListener(v -> {
+                    String returnedResult = CustomCommandsData.getInstance().backupData(CustomCommandsSQL.getInstance(context), storedpathEditText.getText().toString());
+                    if (returnedResult == null) {
+                        NhPaths.showMessage(context, "db is successfully backup to " + storedpathEditText.getText().toString());
+                    } else {
                         dialog.dismiss();
-                    });
+                        new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to backup the DB.").setMessage(returnedResult).create().show();
+                    }
+                    dialog.dismiss();
                 });
-                adBackup.show();
-                break;
-            default:
-            case R.id.f_customcommands_menu_restoreDB:
-                titleTextView.setText("Full path of the db file from where you want to restore:");
-                storedpathEditText.setText(NhPaths.APP_SD_SQLBACKUP_PATH + "/FragmentCustomCommands");
-                MaterialAlertDialogBuilder adbRestore = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                adbRestore.setView(promptView);
-                adbRestore.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-                adbRestore.setPositiveButton("OK", (dialog, which) -> { });
-                final AlertDialog adRestore = adbRestore.create();
-                adRestore.setOnShowListener(dialog -> {
-                    final Button buttonOK = adRestore.getButton(DialogInterface.BUTTON_POSITIVE);
-                    buttonOK.setOnClickListener(v -> {
-                        String returnedResult = CustomCommandsData.getInstance().restoreData(CustomCommandsSQL.getInstance(context), storedpathEditText.getText().toString());
-                        if (returnedResult == null) {
-                            NhPaths.showMessage(context, "db is successfully restored to " + storedpathEditText.getText().toString());
-                        } else {
-                            dialog.dismiss();
-                            new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to restore the DB.").setMessage(returnedResult).create().show();
-                        }
+            });
+            adBackup.show();
+        } else if (id == R.id.f_customcommands_menu_restoreDB) {
+            View promptViewRestore = inflater.inflate(R.layout.customcommands_custom_dialog_view, null);
+            final TextView titleTextView = promptViewRestore.findViewById(R.id.f_customcommands_adb_tv_title1);
+            final EditText storedpathEditText = promptViewRestore.findViewById(R.id.f_customcommands_adb_et_storedpath);
+
+            titleTextView.setText(R.string.customcommands_full_path_db_restore);
+            storedpathEditText.setText(String.format("%s/FragmentCustomCommands", NhPaths.APP_SD_SQLBACKUP_PATH));
+            MaterialAlertDialogBuilder adbRestore = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
+            adbRestore.setView(promptViewRestore);
+            adbRestore.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+            adbRestore.setPositiveButton("OK", (dialog, which) -> { });
+            final AlertDialog adRestore = adbRestore.create();
+            adRestore.setOnShowListener(dialog -> {
+                final Button buttonOK = adRestore.getButton(DialogInterface.BUTTON_POSITIVE);
+                buttonOK.setOnClickListener(v -> {
+                    String returnedResult = CustomCommandsData.getInstance().restoreData(CustomCommandsSQL.getInstance(context), storedpathEditText.getText().toString());
+                    if (returnedResult == null) {
+                        NhPaths.showMessage(context, "db is successfully restored to " + storedpathEditText.getText().toString());
+                    } else {
                         dialog.dismiss();
-                    });
+                        new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to restore the DB.").setMessage(returnedResult).create().show();
+                    }
+                    dialog.dismiss();
                 });
-                adRestore.show();
-                break;
-            case R.id.f_customcommands_menu_ResetToDefault:
-                CustomCommandsData.getInstance().resetData(CustomCommandsSQL.getInstance(context));
-                break;
+            });
+            adRestore.show();
+        } else if (id == R.id.f_customcommands_menu_ResetToDefault) {
+            CustomCommandsData.getInstance().resetData(CustomCommandsSQL.getInstance(context));
         }
         return super.onOptionsItemSelected(item);
     }

@@ -1348,6 +1348,8 @@
     <string name="can_advanced_options">Advanced Options</string>
     <string name="can_elm327_relay_configuration">ELM327 Relay Configuration</string>
     <string name="can_no_options_for_module">No options available for this module.</string>
+    <string name="customcommands_full_path_db_restore">Full path of the db file from where you want to restore:</string>
+    <string name="customcommands_full_path_db_save">Full path to where you want to save the database:</string>
 
     <!-- TTS Voice Model-->
     <string-array name="tts_voices">
