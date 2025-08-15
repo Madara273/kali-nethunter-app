@@ -3,7 +3,6 @@ package com.offsec.nethunter;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -638,9 +637,9 @@ public class ChrootManagerFragment extends Fragment {
     }
 
     private String getDeviceArch() {
-        String abi = Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0
+        String abi = (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0)
                 ? Build.SUPPORTED_ABIS[0]
-                : Build.CPU_ABI;
+                : "arm64"; // Fallback to arm64 if not available
         if (abi.contains("arm64")) return "arm64";
         if (abi.contains("armeabi")) return "armhf";
         // Default fallback
@@ -680,7 +679,7 @@ public class ChrootManagerFragment extends Fragment {
             MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
             adb.setTitle("Metapackage Install & Upgrade");
             LayoutInflater inflater = activity.getLayoutInflater();
-            @SuppressLint("InflateParams") final ScrollView sv = (ScrollView) inflater.inflate(R.layout.metapackagechooser, null);
+            final ScrollView sv = (ScrollView) inflater.inflate(R.layout.metapackagechooser, null);
             adb.setView(sv);
             final Button metapackageButton = sv.findViewById(R.id.metapackagesWeb);
             metapackageButton.setOnClickListener(v -> {
