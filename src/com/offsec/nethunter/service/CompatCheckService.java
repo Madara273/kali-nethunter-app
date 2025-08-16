@@ -77,26 +77,20 @@ public class CompatCheckService extends IntentService {
         }
 
         if (RESULTCODE == -1) {
-            if (new ShellExecuter().RunAsRootReturnValue(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"status\" -p " + NhPaths.CHROOT_PATH()) != 0) {
-                getApplicationContext().sendBroadcast(new Intent()
-                        .putExtra("ENABLEFRAGMENT", false)
-                        .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT").setPackage(/* TODO: provide the application ID. For example: */ getPackageName()));
-            } else {
-                getApplicationContext().sendBroadcast(new Intent()
-                        .putExtra("ENABLEFRAGMENT", true)
-                        .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT").setPackage(/* TODO: provide the application ID. For example: */ getPackageName()));
-            }
+            boolean isChrootValid = new ShellExecuter().RunAsRootReturnValue(
+                    NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"status\" -p " + NhPaths.CHROOT_PATH()) == 0;
+            broadcastCompatCheck(isChrootValid);
         } else {
-            if (RESULTCODE != 0) {
-                getApplicationContext().sendBroadcast(new Intent()
-                        .putExtra("ENABLEFRAGMENT", false)
-                        .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT").setPackage(/* TODO: provide the application ID. For example: */ getPackageName()));
-            } else {
-                getApplicationContext().sendBroadcast(new Intent()
-                        .putExtra("ENABLEFRAGMENT", true)
-                        .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT").setPackage(/* TODO: provide the application ID. For example: */ getPackageName()));
-            }
+            broadcastCompatCheck(RESULTCODE == 0);
         }
+
         return true;
+    }
+
+    private void broadcastCompatCheck(boolean enableFragment) {
+        getApplicationContext().sendBroadcast(new Intent()
+                .putExtra("ENABLEFRAGMENT", enableFragment)
+                .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT")
+                .setPackage(getPackageName()));
     }
 }
