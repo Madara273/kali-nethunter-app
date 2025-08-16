@@ -533,7 +533,7 @@ public class VNCFragment extends Fragment {
             } else {
                 String arch_path = exe.RunAsRootOutput("ls " + NhPaths.CHROOT_PATH() + "/usr/lib/ | grep linux-gnu | head -n1");
                 logToast("Starting server.. Please refresh the status in NetHunter app.");
-                if(selected_user.equals("root")) {
+                if (selected_user.equals("root")) {
                         exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd service dbus start"});
                         run_cmd("echo -ne \"\\033]0;Starting Server\\007\" && clear;" + delay_cmd + "if HOME=/root;USER=root;sudo -u root LD_PRELOAD=/usr/lib/" + arch_path +
                                 "/libgcc_s.so.1 nohup vncserver :" + selected_display + " " + localhostonly + "-name \"NetHunter KeX\" " + selected_vncresCMD + " >/dev/null 2>&1 </dev/null;then echo \"Server started! Closing terminal..\";else echo -ne \"\\033[0;31mServer already started! \\n\";fi && sleep 2 && exit");
@@ -737,6 +737,7 @@ public class VNCFragment extends Fragment {
             }
             @Override
             public void onNothingSelected(AdapterView<?> parentView) {
+                logDebug(TAG, "refreshVNC: No user selected");
             }
         });
         logDebug(TAG, "refreshVNC: userArray=" + Arrays.toString(userArray));

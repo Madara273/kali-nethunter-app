@@ -1,6 +1,4 @@
-<LinearLayout xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="fill_parent"
+<LinearLayout android:layout_width="fill_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
     xmlns:android="http://schemas.android.com/apk/res/android">
@@ -58,8 +56,6 @@
                     android:layout_marginEnd="20dp"
                     android:paddingTop="10dp"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
-
-
             </LinearLayout>
 
             <LinearLayout
@@ -88,7 +84,6 @@
                     android:layout_marginEnd="5dp"
                     android:dropDownWidth="match_parent"
                     android:saveEnabled="false" />
-
             </LinearLayout>
 
             <LinearLayout
@@ -116,7 +111,6 @@
                     android:layout_marginEnd="20dp"
                     android:text="Preview"
                     android:textAppearance="?android:attr/textAppearanceSmall" />
-
             </LinearLayout>
 
             <LinearLayout
@@ -155,6 +149,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:autofillHints="none"
                     android:ems="10"
                     android:inputType="number"
                     android:text="1080"
@@ -165,6 +160,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:autofillHints="none"
                     android:ems="10"
                     android:inputType="number"
                     android:text="1920"
@@ -228,6 +224,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:autofillHints="none"
                     android:ems="10"
                     android:inputType="number"
                     android:text="1080" />
@@ -237,6 +234,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:autofillHints="none"
                     android:ems="10"
                     android:inputType="number"
                     android:text="1920" />
@@ -297,6 +295,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="2"
+                    android:autofillHints="none"
                     android:ems="10"
                     android:inputType="number"
                     android:text="30" />
@@ -333,6 +332,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:autofillHints="none"
                     android:ems="80"
                     android:hint="Detecting..." />
             </LinearLayout>
@@ -384,6 +384,7 @@
                   android:layout_width="fill_parent"
                   android:layout_height="wrap_content"
                   android:layout_weight="1"
+                  android:autofillHints="none"
                   android:hint="/sdcard/nh_files_20201010.tar"
                   android:inputType="text" />
 

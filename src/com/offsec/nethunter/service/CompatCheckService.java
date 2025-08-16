@@ -80,21 +80,21 @@ public class CompatCheckService extends IntentService {
             if (new ShellExecuter().RunAsRootReturnValue(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"status\" -p " + NhPaths.CHROOT_PATH()) != 0) {
                 getApplicationContext().sendBroadcast(new Intent()
                         .putExtra("ENABLEFRAGMENT", false)
-                        .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT"));
+                        .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT").setPackage(/* TODO: provide the application ID. For example: */ getPackageName()));
             } else {
                 getApplicationContext().sendBroadcast(new Intent()
                         .putExtra("ENABLEFRAGMENT", true)
-                        .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT"));
+                        .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT").setPackage(/* TODO: provide the application ID. For example: */ getPackageName()));
             }
         } else {
             if (RESULTCODE != 0) {
                 getApplicationContext().sendBroadcast(new Intent()
                         .putExtra("ENABLEFRAGMENT", false)
-                        .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT"));
+                        .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT").setPackage(/* TODO: provide the application ID. For example: */ getPackageName()));
             } else {
                 getApplicationContext().sendBroadcast(new Intent()
                         .putExtra("ENABLEFRAGMENT", true)
-                        .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT"));
+                        .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT").setPackage(/* TODO: provide the application ID. For example: */ getPackageName()));
             }
         }
         return true;

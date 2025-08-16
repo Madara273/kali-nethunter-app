@@ -34,9 +34,7 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.Locale;
-import java.util.Queue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -82,7 +80,7 @@ public class CopyBootFilesExecutor {
     private String objects = "";
     private String tag = TAG;
 
-    private String ensureNhFilesOnSdcard() {
+    private void ensureNhFilesOnSdcard() {
         File nhFilesDir = new File(NhPaths.SD_PATH, "nh_files");
         if (!nhFilesDir.exists() || !nhFilesDir.isDirectory()) {
             copyAssetFolder("nh_files", NhPaths.SD_PATH + "/nh_files");
@@ -90,15 +88,13 @@ public class CopyBootFilesExecutor {
         } else {
             logDebug(TAG, "\"nh_files\" already exists at: " + nhFilesDir.getAbsolutePath());
         }
-        return null;
     }
 
-    private String fixPermissions() {
+    private void fixPermissions() {
         exe.RunAsRoot(new String[] {
                 "find " + NhPaths.APP_SCRIPTS_PATH + " " + NhPaths.APP_INITD_PATH + " -type f -exec chmod 700 {} \\;"
         });
         logDebug(TAG, "Permissions fixed for scripts and init.d files.");
-        return null;
     }
 
     private final Handler progressHandler = new Handler(Looper.getMainLooper());
@@ -212,13 +208,20 @@ public class CopyBootFilesExecutor {
         if (!shouldRun) {
             return result;
         }
-        if (prefs.getBoolean("files_copied", false)) {
-            logDebug("Files already copied. Skipping copy and symlink operations.");
-            return result;
-        }
         if (!CheckForRoot.isRoot()) {
             prefs.edit().putBoolean(AppNavHomeActivity.CHROOT_INSTALLED_TAG, false).apply();
             return "Root permission is required!!";
+        }
+        if (prefs.getBoolean("files_copied", false)) {
+            File nhFilesDir = new File(NhPaths.SD_PATH, "nh_files");
+            if (nhFilesDir.exists() && nhFilesDir.isDirectory()) {
+                logDebug("Files already copied, skipping copy operation.");
+                return result;
+            } else {
+                ensureNhFilesOnSdcard();
+            }
+        } else {
+            logDebug("Proceeding with copy and symlink operations.");
         }
 
         logDebug("COPYING FILES....");
@@ -226,6 +229,7 @@ public class CopyBootFilesExecutor {
         copyAssetFolder("etc/init.d", NhPaths.APP_INITD_PATH);
         copyAssetFolder("scripts", NhPaths.APP_SCRIPTS_PATH);
         copyAssetFolder("nh_files", NhPaths.APP_NHFILES_PATH);
+        ensureNhFilesOnSdcard();
 
         publishProgress("Fixing permissions for new files");
         setPermissions(NhPaths.APP_SCRIPTS_PATH, NhPaths.APP_INITD_PATH);
@@ -243,16 +247,16 @@ public class CopyBootFilesExecutor {
         Symlink("busybox_nh");
         disableMagiskNotification();
 
-        SharedPreferences.Editor ed = prefs.edit();
-        ed.putBoolean("files_copied", true);
-        ed.putString(TAG, buildTime);
-        ed.putInt(SharePrefTag.VERSION_CODE_TAG, BuildConfig.VERSION_CODE);
-        ed.apply();
+        prefs.edit()
+                .putBoolean("files_copied", true)
+                .putString(TAG, buildTime)
+                .putInt(SharePrefTag.VERSION_CODE_TAG, BuildConfig.VERSION_CODE)
+                .apply();
 
         publishProgress("Checking for chroot....");
         String command = "if [ -d " + NhPaths.CHROOT_PATH() + " ];then echo 1; fi";
         if ("1".equals(exe.RunAsRootOutput(command))) {
-            ed.putBoolean(AppNavHomeActivity.CHROOT_INSTALLED_TAG, true).apply();
+            prefs.edit().putBoolean(AppNavHomeActivity.CHROOT_INSTALLED_TAG, true).apply();
             publishProgress("Chroot Found!");
             publishProgress(exe.RunAsRootOutput(NhPaths.BUSYBOX + " mount -o remount,suid /data && chmod +s " +
                     NhPaths.CHROOT_PATH() + "/usr/bin/sudo" +
@@ -421,7 +425,7 @@ public class CopyBootFilesExecutor {
             logDebug("Symlinking " + filename);
             String sourcePath;
             if (filename.equals("busybox_nh")) {
-                sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/busybox";
+                sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/busybox_nh";
             } else {
                 sourcePath = NhPaths.APP_SCRIPTS_PATH + "/" + filename;
             }

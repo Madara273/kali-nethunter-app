@@ -1374,6 +1374,8 @@
     <string name="usb_linux_file_cd_storage_gadget">Linux File-CD/Stor gadget (kernel default)</string>
     <string name="usb_full_path_db_save">Full path to where you want to save the database:</string>
     <string name="usb_full_path_db_restore">Full path of the db file from where you want to restore:</string>
+    <string name="wp3_ap_mode_supported">Supported</string>
+    <string name="wp3_ap_mode_not_supported">Not supported</string>
 
     <!-- TTS Voice Model-->
     <string-array name="tts_voices">

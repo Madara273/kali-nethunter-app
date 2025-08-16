@@ -34,7 +34,6 @@ import com.offsec.nethunter.utils.SharePrefTag;
 import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -219,7 +218,7 @@ public class ChrootManagerFragment extends Fragment {
                                         NhPaths.showMessage(context, "Copied file is empty. Please select a valid backup.");
                                         return;
                                     }
-                                    try (InputStream checkIn = new FileInputStream(outFile)) {
+                                    try (InputStream checkIn = Files.newInputStream(outFile.toPath())) {
                                         byte[] magic = new byte[6];
                                         if (checkIn.read(magic) == 6) {
                                             if (!(magic[0] == (byte) 0xFD && magic[1] == '7' && magic[2] == 'z' && magic[3] == 'X' && magic[4] == 'Z' && magic[5] == 0x00)) {
