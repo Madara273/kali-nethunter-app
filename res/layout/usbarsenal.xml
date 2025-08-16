@@ -393,6 +393,7 @@
                         android:layout_weight="0.2"
                         android:adjustViewBounds="false"
                         android:baselineAlignBottom="false"
+                        android:contentDescription="TODO"
                         android:cropToPadding="false"
                         android:src="@drawable/ic_action_refresh" />
                 </LinearLayout>
