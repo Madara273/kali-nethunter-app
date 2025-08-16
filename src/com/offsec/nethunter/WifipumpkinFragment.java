@@ -30,7 +30,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.NhPaths;
@@ -38,6 +37,7 @@ import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -413,7 +413,7 @@ public class WifipumpkinFragment extends Fragment {
                 File file = new File(configFilePath);
                 String source;
                 try {
-                    source = Files.asCharSource(file, Charsets.UTF_8).read();
+                    source = Files.asCharSource(file, StandardCharsets.UTF_8).read();
                 } catch (IOException e) {
                     NhPaths.showMessage(context, "Failed to read the configuration file.");
                     e.printStackTrace();
