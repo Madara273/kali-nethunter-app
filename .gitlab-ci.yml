@@ -1,12 +1,10 @@
 ## REF: https://hub.docker.com/r/jangrewe/gitlab-ci-android
-image: docker.io/jangrewe/gitlab-ci-android
+image: github.com/kimocoder/gitlab-ci-android
 
 stages:
   - build
 
 before_script:
-  - apt update && apt install -y openjdk-17-jdk
-  - export JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
   - export PATH=$JAVA_HOME/bin:$PATH
   - java -version
   - export GRADLE_USER_HOME=$(pwd)/.gradle
