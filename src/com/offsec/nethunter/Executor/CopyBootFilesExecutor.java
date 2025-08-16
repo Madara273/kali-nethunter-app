@@ -414,21 +414,29 @@ public class CopyBootFilesExecutor {
     }
 
     private void Symlink(String filename) {
-        // Only symlink files starting with "bootkali", exactly "killkali", or exactly "busybox_nh"
+        // Symlink "bootkali*" and "killkali"; copy "busybox_nh"
         if (!(filename.startsWith("bootkali") || filename.equals("killkali") || filename.equals("busybox_nh"))) {
-            logDebug("Skipping symlink for: " + filename);
+            logDebug("Skipping symlink/copy for: " + filename);
             return;
         }
-        File checkfile = new File("/system/bin/" + filename);
-        logDebug("Checking for " + filename + " symlink....");
-        if (!checkfile.exists()) {
-            logDebug("Symlinking " + filename);
-            String sourcePath;
-            if (filename.equals("busybox_nh")) {
-                sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/busybox_nh";
-            } else {
-                sourcePath = NhPaths.APP_SCRIPTS_PATH + "/" + filename;
+        File target = new File("/system/bin/" + filename);
+        logDebug("Checking for " + filename + " presence....");
+        if (target.exists()) return;
+
+        if (filename.equals("busybox_nh")) {
+            String sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/busybox_nh";
+            String targetPath = "/system/bin/" + filename;
+            logDebug("Copying " + sourcePath + " to " + targetPath);
+            int result = exe.RunAsRootReturnValue(
+                    "cp -p " + sourcePath + " " + targetPath +
+                            " && chown root:root " + targetPath +
+                            " && chmod 0755 " + targetPath
+            );
+            if (result != 0) {
+                logDebug("Failed to copy: " + filename);
             }
+        } else {
+            String sourcePath = NhPaths.APP_SCRIPTS_PATH + "/" + filename;
             logDebug("command output: ln -s " + sourcePath + " /system/bin/" + filename);
             int result = exe.RunAsRootReturnValue("ln -s " + sourcePath + " /system/bin/" + filename);
             if (result != 0) {
