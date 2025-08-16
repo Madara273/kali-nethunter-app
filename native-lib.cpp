@@ -3,7 +3,7 @@
 
 extern "C"
 JNIEXPORT jboolean JNICALL
-Java_com_offsec_nethunter_VulkanHelper_isVulkanAvailable(JNIEnv* env, jobject /* this */) {
+Java_com_offsec_nethunter_VulkanHelper_isVulkanAvailable(jobject) {
     uint32_t instanceLayerCount = 0;
     VkResult result = vkEnumerateInstanceLayerProperties(&instanceLayerCount, nullptr);
     if (result != VK_SUCCESS) {
