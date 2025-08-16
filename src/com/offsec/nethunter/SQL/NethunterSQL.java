@@ -10,17 +10,19 @@ import android.text.TextUtils;
 
 import com.offsec.nethunter.BuildConfig;
 import com.offsec.nethunter.models.NethunterModel;
-import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.VulkanChecker;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
 public class NethunterSQL extends SQLiteOpenHelper {
+    private final Context context;
     private static final String DATABASE_NAME = "NethunterFragment";
     private static NethunterSQL instance;
     public static final String TAG = "NethunterSQL";
@@ -32,11 +34,10 @@ public class NethunterSQL extends SQLiteOpenHelper {
             {"3", "Root Status", "su -v", "\\n", "1"},
             {"4", "HID Status", "[ -n \"$(ls /dev/hidg* 2>/dev/null)\" ] && ls /dev/hidg* || { echo \"HID interface not found.\"; if [[ $(uname -r | cut -d. -f1) -ge 4 ]]; then echo \"Please enable in USB Arsenal.\"; fi }", "\\n", "1"},
             {"5", "CAN Status", "busybox_nh ip -o link show | awk -F': ' '{print $2}' | grep -E '^(can|vcan|slcan)[0-9]+$' || echo \"CAN interface not found.\nPlease enable in CARsenal.\"", "\\n", "1"},
-            {"6", "NetHunter Terminal Status", "[ \"$(pm list packages | grep 'com.offsec.nhterm')\" ] && echo \"NetHunter Terminal is installed.\" || echo \"NetHunter Terminal is NOT yet installed.\"", "\\n", "1"},
-            {"7", "Network Interface Status", " ip -o addr show | busybox_nh awk '{print $2, $3, $4}'", "\\n", "1"},
+            {"6", "NetHunter Terminal Status", "[ \"$(pm list packages | grep 'com.offsec.nhterm')\" ] && echo \"NetHunter Terminal is installed.\" || echo \"NetHunter Terminal is NOT installed.\"", "\\n", "1"},
+            {"7", "Network Interface Status", "ip -o addr show | busybox_nh awk '{print $2, $3, $4}'", "\\n", "1"},
             {"8", "External IP", "busybox_nh which wget > /dev/null 2>&1 && busybox_nh wget -qO - icanhazip.com || curl -s ipv4.icanhazip.com", "\\n", "0"}
     };
-    private final Context context;
 
     public static synchronized NethunterSQL getInstance(Context context) {
         if (instance == null) {
@@ -196,11 +197,12 @@ public class NethunterSQL extends SQLiteOpenHelper {
                 File currentDB = new File(currentDBPath);
                 File backupDB = new File(storedDBpath);
                 if (currentDB.exists()) {
-                    FileChannel src = new FileInputStream(currentDB).getChannel();
-                    FileChannel dst = new FileOutputStream(backupDB).getChannel();
-                    dst.transferFrom(src, 0, src.size());
-                    src.close();
-                    dst.close();
+                    try (FileInputStream fis = new FileInputStream(currentDB);
+                         FileChannel src = fis.getChannel();
+                         FileOutputStream fos = new FileOutputStream(backupDB);
+                         FileChannel dst = fos.getChannel()) {
+                        dst.transferFrom(src, 0, src.size());
+                    }
                 }
             }
         } catch (Exception e) {
@@ -211,7 +213,7 @@ public class NethunterSQL extends SQLiteOpenHelper {
     }
 
     public String restoreData(String storedDBpath) {
-        if (!new File(storedDBpath).exists()){
+        if (!new File(storedDBpath).exists()) {
             return "db file not found.";
         }
         if (!verifyDB(storedDBpath)) {
@@ -225,11 +227,18 @@ public class NethunterSQL extends SQLiteOpenHelper {
                 File currentDB = new File(currentDBPath);
                 File backupDB = new File(storedDBpath);
                 if (backupDB.exists()) {
-                    FileChannel src = new FileInputStream(backupDB).getChannel();
-                    FileChannel dst = new FileOutputStream(currentDB).getChannel();
-                    dst.transferFrom(src, 0, src.size());
-                    src.close();
-                    dst.close();
+                    try (FileInputStream fis = new FileInputStream(backupDB);
+                         FileChannel src = fis.getChannel();
+                         FileOutputStream fos = new FileOutputStream(currentDB);
+                         FileChannel dst = fos.getChannel()) {
+                        dst.transferFrom(src, 0, src.size());
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                        return "File not found: " + e.getMessage();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return "I/O error: " + e.getMessage();
+                    }
                 }
             }
         } catch (Exception e) {
