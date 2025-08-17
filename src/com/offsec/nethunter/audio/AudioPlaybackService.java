@@ -1,5 +1,6 @@
 package com.offsec.nethunter.audio;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -40,10 +41,10 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
     public static final String KEY_BUFFER_HEADROOM = "buffer_ms_ahead";
     public static final String KEY_TARGET_LATENCY = "buffer_ms_behind";
     private final IBinder binder = new LocalBinder(this);
-    private Handler handler = new Handler();
     private NotificationManager notifManager;
     private PowerManager.WakeLock wakeLock;
     private PendingIntent togglePendingIntent;
+    private final Handler handler = new Handler();
     @Nullable
     private AudioPlaybackWorker playWorker = null;
     @Nullable
@@ -60,7 +61,6 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
 
     @Override
     public void onCreate() {
-        handler = new Handler();
         notifManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         sharedPrefs = getSharedPreferences(AudioPlaybackService.class.getName(), Context.MODE_PRIVATE);
 
@@ -88,13 +88,11 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        if (intent != null) {
-            if (ACTION_TOGGLE.equals(intent.getAction())) {
-                if (getPlayState() == AudioPlayState.STOPPED) {
-                    play(getServerPref(), getPortPref());
-                } else {
-                    stop();
-                }
+        if (intent != null && ACTION_TOGGLE.equals(intent.getAction())) {
+            if (getPlayState() == AudioPlayState.STOPPED) {
+                play(getServerPref(), getPortPref());
+            } else {
+                stop();
             }
         }
         return START_NOT_STICKY;
@@ -104,43 +102,37 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
     public void onDestroy() {
         super.onDestroy();
 
-        // Stop playback and nullify worker references
+        // Stop playback and worker
         stop();
         stopWorker();
 
-        // Release the WakeLock if it is held
+        // Release WakeLock
         if (wakeLock != null && wakeLock.isHeld()) {
             wakeLock.release();
-            wakeLock = null;
             Log.d("AudioFragment", "WakeLock released.");
         }
         wakeLock = null;
 
-        // Remove all callbacks and messages from the Handler to avoid memory leaks
-        if (handler != null) {
-            handler.removeCallbacksAndMessages(null);
-            handler = null;
-            Log.d("AudioFragment", "Handler callbacks removed.");
-        }
-        handler = null;
+        // Clean handler callbacks (do not reassign final handler)
+        handler.removeCallbacksAndMessages(null);
+        Log.d("AudioFragment", "Handler callbacks removed.");
 
-        // Cancel notifications to release resources in the NotificationManager
+        // Cancel notifications
         if (notifManager != null) {
             notifManager.cancel(NOTIFICATION);
             notifManager = null;
         }
 
-        togglePendingIntent = null;
-
-        // Ensure that the play state LiveData is cleared to release observers
+        // Update state
         playState.setValue(AudioPlayState.STOPPED);
 
         Log.d("AudioFragment", "AudioPlaybackService destroyed and cleaned up.");
     }
 
+    @SuppressLint("InlinedApi")
     @Override
     public void onPlaybackError(@NonNull AudioPlaybackWorker worker, @NonNull Throwable t) {
-        if (worker == playWorker) {
+        if (playWorker != null && worker == playWorker) {
             notifyState(AudioPlayState.STOPPED);
             ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_DETACH);
             stopSelf();
@@ -149,21 +141,21 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
 
     @Override
     public void onPlaybackBuffering(@NonNull AudioPlaybackWorker worker) {
-        if (worker == playWorker) {
+        if (playWorker != null && worker == playWorker) {
             notifyState(BUFFERING);
         }
     }
 
     @Override
     public void onPlaybackStarted(@NonNull AudioPlaybackWorker worker) {
-        if (worker == playWorker) {
+        if (playWorker != null && worker == playWorker) {
             notifyState(AudioPlayState.STARTED);
         }
     }
 
     @Override
     public void onPlaybackStopped(@NonNull AudioPlaybackWorker worker) {
-        if (worker == playWorker) {
+        if (playWorker != null && worker == playWorker) {
             notifyState(AudioPlayState.STOPPED);
             ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_DETACH);
             stopSelf();
@@ -253,22 +245,15 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
     }
 
     private long getBufferSizePref(String key, long defaultValue) {
-        try {
-            return sharedPrefs.getLong(key, defaultValue);
-        } catch (ClassCastException ignored) {
+        if (sharedPrefs.contains(key)) {
+            try {
+                return sharedPrefs.getLong(key, defaultValue);
+            } catch (ClassCastException ignored) {
+                int compatValue = sharedPrefs.getInt(key, -1000);
+                return compatValue == -1000 ? defaultValue : compatValue * 1000L;
+            }
         }
-        // old buffer value saved as int
-        int compatValue;
-        try {
-            compatValue = sharedPrefs.getInt(key, -1000);
-        } catch (ClassCastException ignored) {
-            return defaultValue;
-        }
-        if (compatValue == -1000) {
-            return defaultValue;
-        }
-        // convert ms to us
-        return compatValue * 1000L;
+        return defaultValue;
     }
 
     private void notifyState(@NonNull AudioPlayState state) {
@@ -281,7 +266,7 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
     }
 
     public AudioPlayState getPlayState() {
-        return playState.getValue();
+        return playState.getValue() != null ? playState.getValue() : AudioPlayState.STOPPED;
     }
 
     @NonNull
@@ -346,6 +331,23 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
      * runs in the same process as its clients, we don't need to deal with
      * IPC.
      */
+    public boolean isPlaying() {
+        return playWorker != null && playWorker.isPlaying();
+    }
+
+    public int getServer() {
+        String server = getServerPref();
+        if (server.isEmpty()) {
+            return -1; // Return -1 if no server is set
+        }
+        return server.hashCode(); // Use hashCode as a simple identifier
+    }
+
+    public boolean getPort() {
+        int port = getPortPref();
+        return port != -1; // Return true if a valid port is set
+    }
+
     public static class LocalBinder extends Binder {
         private final AudioPlaybackService service;
         public LocalBinder(AudioPlaybackService service) {
