@@ -3,8 +3,8 @@
 # CREDITS to HuskyDG
 # https://github.com/Magisk-Modules-Alt-Repo/magic-flash
 
-BB="/data/data/com.offsec.nethunter/scripts/bin/busybox_nh"
-BB_LINK="/data/data/com.offsec.nethunter/scripts/bin/busybox"
+BB="busybox_nh"
+BB_LINK="busybox_nh"
 
 # Ensure busybox symlink exists and is up to date
 if [ -x "$BB" ]; then

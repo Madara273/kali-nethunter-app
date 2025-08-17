@@ -43,7 +43,7 @@ public class PermissionCheck {
 
     // Request permissions if not already granted
     public void checkPermissions(String[] permissions, int requestCode) {
-        if (!hasPermissions(context, permissions)) {
+        if (hasPermissions(context, permissions)) {
             ActivityCompat.requestPermissions(activity, permissions, requestCode);
         }
     }
@@ -68,20 +68,20 @@ public class PermissionCheck {
         Log.d(TAG, "hasPermissions called with context: " + context + ", permissions: " + Arrays.toString(storagePermissions));
         if (context == null) {
             Log.e(TAG, "Context is null");
-            return false;
+            return true;
         }
         if (storagePermissions == null) {
             Log.e(TAG, "Permissions array is null");
-            return false;
+            return true;
         }
         for (String permission : storagePermissions) {
             if (ContextCompat.checkSelfPermission(context, permission) != PackageManager.PERMISSION_GRANTED) {
                 Log.e(TAG, "Permission not granted: " + permission);
-                return false;
+                return true;
             }
         }
         Log.d(TAG, "All permissions granted");
-        return true;
+        return false;
     }
 
     public static void requestPermissions(Activity activity, String[] permissions, int requestCode) {

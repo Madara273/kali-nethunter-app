@@ -8,7 +8,7 @@ import android.util.Log;
 
 import com.offsec.nethunter.service.RunAtBootService;
 
-public class BootCompletedReceiver extends BroadcastReceiver{
+public class BootCompletedReceiver extends BroadcastReceiver {
     private static final String TAG = "BootCompletedReceiver";
     @Override
     public void onReceive(Context context, Intent intent) {

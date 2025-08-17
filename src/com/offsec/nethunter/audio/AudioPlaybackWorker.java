@@ -12,6 +12,7 @@ import android.util.Log;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -62,7 +63,7 @@ public class AudioPlaybackWorker implements Runnable {
                     // we run this on the main thread. It seems to work fine on android 7.1.2.
                     s.close();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    Log.e(AudioPlaybackWorker.class.getSimpleName(), "Error closing socket in stop()", e);
                 }
             }
         }
@@ -233,7 +234,7 @@ public class AudioPlaybackWorker implements Runnable {
             try {
                 audioData.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.e(AudioPlaybackWorker.class.getSimpleName(), "Error closing audioData in cleanup()", e);
             }
             audioData = null;
         }
@@ -241,7 +242,7 @@ public class AudioPlaybackWorker implements Runnable {
             try {
                 sock.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                Log.e(AudioPlaybackWorker.class.getSimpleName(), "Error closing socket in cleanup()", e);
             }
             sock = null;
         }
@@ -284,15 +285,23 @@ public class AudioPlaybackWorker implements Runnable {
                     sock = new Socket();
                 }
                 sock.setPerformancePreferences(0, 1, 0);
-                sock.connect(new InetSocketAddress(address, port));
+                try {
+                    sock.connect(new InetSocketAddress(address, port));
+                } catch (ConnectException e) {
+                    Log.e(AudioPlaybackWorker.class.getSimpleName(), "Connection failed: " + e.getMessage(), e);
+                    handler.post(() -> listener.onPlaybackError(this, e));
+                    return;
+                }
 
                 // We are now connected.
                 return;
             } catch (IOException connException) {
                 try {
-                    sock.close();
+                    if (sock != null) {
+                        sock.close();
+                    }
                 } catch (IOException e) {
-                    connException.addSuppressed(e);
+                    Log.e(AudioPlaybackWorker.class.getSimpleName(), "Error closing socket: " + e.getMessage(), e);
                 }
 
                 // Only throw on last address.
@@ -308,6 +317,10 @@ public class AudioPlaybackWorker implements Runnable {
     public void setBufferUsec(long headroomUsec, long latencyUsec) {
         this.headroomUsec = headroomUsec;
         this.latencyUsec = latencyUsec;
+    }
+
+    public boolean isPlaying() {
+        return audioTrack != null && audioTrack.getPlayState() == AudioTrack.PLAYSTATE_PLAYING;
     }
 
     public interface Listener {

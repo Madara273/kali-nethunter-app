@@ -15,6 +15,7 @@ import java.util.List;
 class AudioBufferSizeAdapter extends BaseAdapter {
     private final Context context;
     private final List<Long> presets;
+    private final DecimalFormat format = new DecimalFormat("");
 
     AudioBufferSizeAdapter(Context context, List<Long> presets) {
         this.context = context;
@@ -33,7 +34,7 @@ class AudioBufferSizeAdapter extends BaseAdapter {
 
     @Override
     public long getItemId(int position) {
-        return presets.get(position);
+        return position;
     }
 
     @Override
@@ -59,7 +60,6 @@ class AudioBufferSizeAdapter extends BaseAdapter {
         if (usec == 0) {
             return context.getString(R.string.buffer_none);
         }
-        DecimalFormat format = new DecimalFormat("");
         format.setMinimumIntegerDigits(1);
         format.setMaximumFractionDigits(6);
         return format.format(usec / 1000000d) + "s";

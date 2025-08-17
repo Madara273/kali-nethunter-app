@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
 
@@ -39,9 +41,6 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
         coreLibraryDesugaringEnabled true
     }
-    kotlinOptions {
-        jvmTarget = "17"
-    }
 
     defaultConfig {
         minSdk 21
@@ -49,7 +48,7 @@ android {
         targetSdk 29
         //noinspection HighAppVersionCode
         versionCode 2025020200
-        versionName "2025.2"
+        versionName '2025.3-rc1-dev'
         multiDexEnabled true
         applicationId "com.offsec.nethunter"
         externalNativeBuild {
@@ -59,7 +58,7 @@ android {
             }
         }
         ndk {
-            abiFilters 'armeabi-v7a', 'arm64-v8a'
+            abiFilters 'armeabi-v7a', 'arm64-v8a', "x86_64"
         }
     }
     externalNativeBuild {
@@ -108,6 +107,13 @@ android {
     }
 }
 
+kotlin {
+    jvmToolchain(17)
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
+}
+
 dependencies {
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
@@ -124,6 +130,7 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.2.10'
     // Snowfall
     implementation 'com.github.jetradarmobile:android-snowfall:1.2.1'
+    implementation 'androidx.navigation:navigation-runtime:2.9.3'
     //debugImplementation 'com.squareup.leakcanary:leakcanary-android:3.0-alpha-8'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 }

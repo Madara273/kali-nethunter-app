@@ -35,7 +35,6 @@ import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.Priority;
 import com.offsec.nethunter.AppNavHomeActivity;
-import com.offsec.nethunter.KaliGpsServiceFragment;
 import com.offsec.nethunter.R;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.PermissionCheck;
@@ -237,7 +236,7 @@ public class LocationUpdateService extends Service {
                 .build();
 
         Log.d(TAG, "Requesting permissions ..");
-        if (!PermissionCheck.hasPermissions(this, new String[] {
+        if (PermissionCheck.hasPermissions(this, new String[]{
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION
         })) {

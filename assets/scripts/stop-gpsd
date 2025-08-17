@@ -1,8 +1,5 @@
 #!/system/bin/sh
 
-# Ensure custom BusyBox is used
-export PATH=/data/data/com.offsec.nethunter/scripts/bin:$PATH
-
 # Use busybox_nh directly for all commands
 busybox_nh chmod 777 /dev/null
 

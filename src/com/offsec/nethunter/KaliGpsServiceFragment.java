@@ -8,6 +8,9 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -32,7 +35,9 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Lifecycle;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,6 +45,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import java.io.File;
+import java.util.concurrent.TimeUnit;
 
 /**
  * NOTICE: This code is part of the Kali NetHunter project.
@@ -101,12 +107,11 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = getContext();
-        setHasOptionsMenu(true);
 
         ActivityResultLauncher<String> backgroundLocationPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
                 isGranted -> {
-                    if (!isGranted) {
+                    if (!isGranted && context != null) {
                         Toast.makeText(context, "Background location permission denied", Toast.LENGTH_SHORT).show();
                     }
                 }
@@ -117,52 +122,6 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
                 backgroundLocationPermissionLauncher.launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION);
             }
         }
-    }
-
-    @Override
-    public void onCreateOptionsMenu(@NonNull android.view.Menu menu, @NonNull android.view.MenuInflater inflater) {
-        inflater.inflate(R.menu.gps_menu, menu);
-        super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull android.view.MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.action_wifi_status) {
-            String msg = isInternalMonitorModeSupported()
-                    ? "WIFI: MONITOR MODE: SUPPORTED"
-                    : "WIFI: MONITOR MODE: NOT SUPPORTED";
-            Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
-            return true;
-        } else if (id == R.id.action_info) {
-            View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.gps_info_dialog, null, false);
-            AlertDialog dialog = new AlertDialog.Builder(requireContext())
-                    .setView(dialogView)
-                    .create();
-
-            Button closeButton = dialogView.findViewById(R.id.gps_dialog_close_button);
-            closeButton.setOnClickListener(v -> dialog.dismiss());
-
-            dialog.show();
-            return true;
-        } else if (id == R.id.action_settings) {
-            View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.gps_dialog_settings, null, false);
-            AlertDialog dialog = new AlertDialog.Builder(requireContext())
-                    .setView(dialogView)
-                    .create();
-
-            Button closeButton = dialogView.findViewById(R.id.dialog_close_button);
-            closeButton.setOnClickListener(v -> dialog.dismiss());
-
-            dialog.show();
-            return true;
-        } else if (id == R.id.action_rtlsdr || id == R.id.action_rtlamr ||
-                id == R.id.action_rtladsb || id == R.id.action_mousejack) {
-            item.setChecked(!item.isChecked());
-            // Handle the checked state as needed
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -180,19 +139,6 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         }
     }
 
-    @Override
-    public void onPrepareOptionsMenu(@NonNull android.view.Menu menu) {
-        super.onPrepareOptionsMenu(menu);
-        android.view.MenuItem wifiItem = menu.findItem(R.id.action_wifi_status);
-        if (wifiItem != null) {
-            if (isInternalMonitorModeSupported()) {
-                wifiItem.setIcon(R.drawable.ic_wifi_enabled);
-            } else {
-                wifiItem.setIcon(R.drawable.ic_wifi_disabled);
-            }
-        }
-    }
-
     private void setCheckedQuietly(CompoundButton button, boolean state) {
         button.setTag("quiet");
         button.setChecked(state);
@@ -201,6 +147,65 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        requireActivity().addMenuProvider(new MenuProvider() {
+            @Override
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
+                menuInflater.inflate(R.menu.gps_menu, menu);
+            }
+
+            @Override
+            public void onPrepareMenu(@NonNull Menu menu) {
+                android.view.MenuItem wifiItem = menu.findItem(R.id.action_wifi_status);
+                if (wifiItem != null) {
+                    if (isInternalMonitorModeSupported()) {
+                        wifiItem.setIcon(R.drawable.ic_wifi_enabled);
+                    } else {
+                        wifiItem.setIcon(R.drawable.ic_wifi_disabled);
+                    }
+                }
+            }
+
+            @Override
+            public boolean onMenuItemSelected(@NonNull MenuItem menuItem) {
+                int id = menuItem.getItemId();
+                if (id == R.id.action_wifi_status) {
+                    String msg = isInternalMonitorModeSupported()
+                            ? "WIFI: MONITOR MODE: SUPPORTED"
+                            : "WIFI: MONITOR MODE: NOT SUPPORTED";
+                    Toast.makeText(requireContext(), msg, Toast.LENGTH_SHORT).show();
+                    return true;
+                } else if (id == R.id.action_info) {
+                    View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.gps_info_dialog, null, false);
+                    AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                            .setView(dialogView)
+                            .create();
+
+                    Button closeButton = dialogView.findViewById(R.id.gps_dialog_close_button);
+                    closeButton.setOnClickListener(v -> dialog.dismiss());
+
+                    dialog.show();
+                    return true;
+                } else if (id == R.id.action_settings) {
+                    View dialogView = LayoutInflater.from(requireContext()).inflate(R.layout.gps_dialog_settings, null, false);
+                    AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                            .setView(dialogView)
+                            .create();
+
+                    Button closeButton = dialogView.findViewById(R.id.dialog_close_button);
+                    closeButton.setOnClickListener(v -> dialog.dismiss());
+
+                    dialog.show();
+                    return true;
+                } else if (id == R.id.action_rtlsdr || id == R.id.action_rtlamr ||
+                        id == R.id.action_rtladsb || id == R.id.action_mousejack) {
+                    menuItem.setChecked(!menuItem.isChecked());
+                    return true;
+                }
+                return false;
+            }
+        }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
+
         super.onViewCreated(view, savedInstanceState);
         satellitesEditText = view.findViewById(R.id.gps_current_satellites);
         gpsTextView = view.findViewById(R.id.gps_textview);
@@ -343,11 +348,10 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
                 String[] parts = line.split(",");
                 // SNR is at index 7, 11, 15, 19 for each satellite in the sentence
                 for (int i = 7; i < parts.length; i += 4) {
-                    if (i < parts.length) {
-                        try {
-                            int snr = Integer.parseInt(parts[i]);
-                            snrs.add(snr);
-                        } catch (NumberFormatException ignored) {}
+                    try {
+                        int snr = Integer.parseInt(parts[i]);
+                        snrs.add(snr);
+                    } catch (NumberFormatException ignored) {
                     }
                 }
             }
@@ -481,6 +485,14 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
     public void onDestroy() {
         super.onDestroy();
         executor.shutdown();
+        try {
+            if (!executor.awaitTermination(60, TimeUnit.SECONDS)) {
+                executor.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            executor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
     }
 
     public void run_cmd(String cmd) {
