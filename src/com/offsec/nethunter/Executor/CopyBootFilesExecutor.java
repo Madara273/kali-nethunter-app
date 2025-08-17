@@ -112,8 +112,8 @@ public class CopyBootFilesExecutor {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final AssetManager assetManager;
-    // Debug logging: 0=off, 1=low, 2=medium, 3=high
-    public final int NH_SYSTEM_LOGGING = 1;
+    // Debug logging: 0=off, 1=on
+    public final int NH_SYSTEM_LOGGING = 0;
 
     // Logging wrapper attached to 'NH_SYSTEM_LOGGING' variable ("1" = enabled, "0" = disabled)
     // Howto add logging around this wrapper with the switch;
