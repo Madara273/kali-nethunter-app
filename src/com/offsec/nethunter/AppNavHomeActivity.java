@@ -571,7 +571,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         if (itemId == R.id.nethunter_item) {
             changeFragment(fragmentManager, NetHunterFragment.newInstance(itemId));
         } else if (itemId == R.id.can_item) {
-            changeFragment(fragmentManager, CANFragment.newInstance(itemId));
+            changeFragment(fragmentManager, CARsenalFragment.newInstance(itemId));
         } else if (itemId == R.id.kaliservices_item) {
             changeFragment(fragmentManager, KaliServicesFragment.newInstance(itemId));
         } else if (itemId == R.id.custom_commands_item) {

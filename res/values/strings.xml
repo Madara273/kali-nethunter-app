@@ -693,8 +693,8 @@
     <string name="audio_settings">AUDIO SETTINGS</string>
     <string name="audio_clear_logs">Clear logs</string>
     <string name="can_description">Configure your CAN interfaces and decode your VIN identification number.</string>
-    <string name="can_tools_desc">Unleash the power of can-utils suite by managing logs and Generate, Dump, Sniff or Replay signals! You may also run car diagnosis using Freediag and transfert CAN frames between two machines using Cannelloni tool!</string>
-    <string name="can_canusb_desc">Use your CAN Analyzer USB by Dumping and Sending signals using usb-can tool!</string>
+    <string name="can_tools_desc">Unleash the power of can-utils suite, diagnose your car using Freediag and transfer CAN frames between two machines using Cannelloni!</string>
+    <string name="can_canusb_desc">Use your CAN Analyzer USB by Dumping and Sending signals using usb-can!</string>
     <string name="can_caribou_desc">A friendly automotive security exploration tool.</string>
     <string name="can_icsim_desc">Instrument Cluster Simulator for SocketCAN</string>
     <string name="can_msf_desc">Use Metasploit Automotive modules!</string>

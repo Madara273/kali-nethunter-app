@@ -43,7 +43,6 @@ import androidx.core.content.ContextCompat;
 import androidx.core.text.HtmlCompat;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.Lifecycle;
 import androidx.preference.PreferenceManager;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
@@ -70,7 +69,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.Map;
 
-public class CANFragment extends Fragment {
+public class CARsenalFragment extends Fragment {
     private static final String TAG = "CANFragment";
     private static SharedPreferences sharedpreferences;
     private Activity activity;
@@ -79,8 +78,8 @@ public class CANFragment extends Fragment {
     private static final long RESET_COOLDOWN = 10000; // 10 seconds after final reset
     private static final String ARG_SECTION_NUMBER = "section_number";
 
-    public static CANFragment newInstance(int sectionNumber) {
-        CANFragment fragment = new CANFragment();
+    public static CARsenalFragment newInstance(int sectionNumber) {
+        CARsenalFragment fragment = new CARsenalFragment();
         Bundle args = new Bundle();
         args.putInt(ARG_SECTION_NUMBER, sectionNumber);
         fragment.setArguments(args);
@@ -97,7 +96,7 @@ public class CANFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View rootView = inflater.inflate(R.layout.can, container, false);
+        View rootView = inflater.inflate(R.layout.carsenal, container, false);
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         TabsPagerAdapter tabsPagerAdapter = new TabsPagerAdapter(this);
 
@@ -131,7 +130,7 @@ public class CANFragment extends Fragment {
         requireActivity().addMenuProvider(new MenuProvider() {
             @Override
             public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
-                menuInflater.inflate(R.menu.can, menu);
+                menuInflater.inflate(R.menu.carsenal, menu);
 
                 // Settings button dynamically for Main tab
                 MenuItem settingsItem = menu.findItem(R.id.action_settings);
@@ -280,7 +279,7 @@ public class CANFragment extends Fragment {
 
     public void RunAbout() {
         LayoutInflater inflater = LayoutInflater.from(activity);
-        View dialogView = inflater.inflate(R.layout.can_about_dialog, null);
+        View dialogView = inflater.inflate(R.layout.carsenal_about_dialog, null);
 
         TextView aboutText = dialogView.findViewById(R.id.about_text);
         TextView creditsText = dialogView.findViewById(R.id.credits_text);
@@ -388,11 +387,11 @@ public class CANFragment extends Fragment {
                 case 0:
                     return new MainFragment();
                 case 1:
-                    return new CANFragment.ToolsFragment();
+                    return new CARsenalFragment.ToolsFragment();
                 case 2:
                     return new CANUSBFragment();
                 case 3:
-                    return new CANFragment.CANCARIBOUFragment();
+                    return new CARsenalFragment.CANCARIBOUFragment();
                 case 4:
                     return new CANICSIMFragment();
                 default :
@@ -406,7 +405,7 @@ public class CANFragment extends Fragment {
         }
     }
 
-    public static class MainFragment extends CANFragment {
+    public static class MainFragment extends CARsenalFragment {
         final ShellExecuter exe = new ShellExecuter();
         private static final long SHORT_DELAY = 1000L;
         private Context context;
@@ -420,7 +419,7 @@ public class CANFragment extends Fragment {
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.can_main, container, false);
+            View rootView = inflater.inflate(R.layout.carsenal_main, container, false);
 
             // Common used variables
             SelectedIface = rootView.findViewById(R.id.can_iface);
@@ -1064,7 +1063,7 @@ public class CANFragment extends Fragment {
         }
     }
 
-    public static class ToolsFragment extends CANFragment {
+    public static class ToolsFragment extends CARsenalFragment {
         final ShellExecuter exe = new ShellExecuter();
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private Activity activity;
@@ -1093,7 +1092,7 @@ public class CANFragment extends Fragment {
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.can_tools, container, false);
+            View rootView = inflater.inflate(R.layout.carsenal_tools, container, false);
 
             final EditText cansend_sequence = rootView.findViewById(R.id.cansend_sequence);
             final EditText SelectedRHost = rootView.findViewById(R.id.cannelloni_rhost);
@@ -1511,7 +1510,7 @@ public class CANFragment extends Fragment {
         }
     }
 
-    public static class CANUSBFragment extends CANFragment {
+    public static class CANUSBFragment extends CARsenalFragment {
         final ShellExecuter exe = new ShellExecuter();
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private Activity activity;
@@ -1528,7 +1527,7 @@ public class CANFragment extends Fragment {
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.can_canusb, container, false);
+            View rootView = inflater.inflate(R.layout.carsenal_canusb, container, false);
 
             SelectedBaudrateUSB = rootView.findViewById(R.id.baudrate_usb);
             SelectedCanSpeedUSB = rootView.findViewById(R.id.canspeed_usb);
@@ -1724,7 +1723,7 @@ public class CANFragment extends Fragment {
         }
     }
 
-    public static class CANCARIBOUFragment extends CANFragment {
+    public static class CANCARIBOUFragment extends CARsenalFragment {
         final ShellExecuter exe = new ShellExecuter();
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private Activity activity;
@@ -1768,7 +1767,7 @@ public class CANFragment extends Fragment {
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.can_caribou, container, false);
+            View rootView = inflater.inflate(R.layout.carsenal_caribou, container, false);
 
             SelectedFile = rootView.findViewById(R.id.caribou_file);
             SelectedMessage = rootView.findViewById(R.id.caribou_message);
@@ -2239,7 +2238,7 @@ public class CANFragment extends Fragment {
     }
 
 
-    public static class CANICSIMFragment extends CANFragment {
+    public static class CANICSIMFragment extends CARsenalFragment {
         final ShellExecuter exe = new ShellExecuter();
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private static final String ICSIM_SCRIPT_PATH = "/opt/car_hacking/icsim_service.sh";
@@ -2256,7 +2255,7 @@ public class CANFragment extends Fragment {
         @SuppressLint("SetJavaScriptEnabled")
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.can_icsim, container, false);
+            View rootView = inflater.inflate(R.layout.carsenal_icsim, container, false);
 
             // Interfaces
             Spinner spinner = rootView.findViewById(R.id.device_interface);
@@ -2397,7 +2396,7 @@ public class CANFragment extends Fragment {
         }
     }
 
-    public static class CANMSFFragment extends CANFragment {
+    public static class CANMSFFragment extends CARsenalFragment {
         final ShellExecuter exe = new ShellExecuter();
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private Context context;
@@ -2413,7 +2412,7 @@ public class CANFragment extends Fragment {
         @SuppressLint("SetJavaScriptEnabled")
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.can_msf, container, false);
+            View rootView = inflater.inflate(R.layout.carsenal_msf, container, false);
 
             final EditText selected_baud = rootView.findViewById(R.id.baud_speed);
 
