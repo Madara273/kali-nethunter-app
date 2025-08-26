@@ -131,7 +131,7 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
 
     private boolean isInternalMonitorModeSupported() {
         try {
-            Process process = Runtime.getRuntime().exec(new String[]{"su", "-c", "ls /sys/module/wlan/parameters/con_mode"});
+            Process process = Runtime.getRuntime().exec(new String[]{"su", "-c", "ls /sys/module/*/parameters/con_mode"});
             int exitCode = process.waitFor();
             return exitCode == 0;
         } catch (Exception e) {
