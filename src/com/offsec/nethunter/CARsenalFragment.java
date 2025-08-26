@@ -924,7 +924,6 @@ public class CARsenalFragment extends Fragment {
                         } else {
                             showToast("Interface " + selected_caniface + " (" + interface_type + ") started!");
                         }
-                        return;
                     }
 
                 } catch (NumberFormatException e) {
@@ -1046,16 +1045,16 @@ public class CARsenalFragment extends Fragment {
             txqCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> txqEditText.setEnabled(isChecked));
 
             // Build dialog
-            new MaterialAlertDialogBuilder(requireContext())
+            new MaterialAlertDialogBuilder(requireContext(), R.style.DialogStyleCompat)
                     .setTitle("Interface Settings")
                     .setView(dialogView)
                     .setPositiveButton("Apply", (dialog, which) -> {
                         // Save values
                         prefs.edit()
                                 .putBoolean("mtu_enabled", mtuCheckBox.isChecked())
-                                .putString("mtu_value", mtuEditText.getText().toString())
                                 .putBoolean("txq_enabled", txqCheckBox.isChecked())
-                                .putString("txq_value", txqEditText.getText().toString())
+                                .putString("mtu_value", String.valueOf(mtuEditText.getText()))
+                                .putString("txq_value", String.valueOf(txqEditText.getText()))
                                 .apply();
                     })
                     .setNegativeButton("Cancel", null)
