@@ -2403,28 +2403,39 @@ public class CARsenalFragment extends Fragment {
         private void showFloatingWebView(WebView originalWebView) {
             if (floatingContainer != null) return;
 
-            WindowManager wm = (WindowManager) requireContext().getSystemService(Context.WINDOW_SERVICE);
+            final WindowManager wm = (WindowManager) requireContext().getSystemService(Context.WINDOW_SERVICE);
 
+            // Capture original parent and index
             final ViewGroup originalParent = (ViewGroup) originalWebView.getParent();
-            final int originalIndex = (originalParent != null) ? originalParent.indexOfChild(originalWebView) : -1;
             final ViewGroup.LayoutParams originalLayoutParams = originalWebView.getLayoutParams();
+            final int originalIndex = (originalParent != null) ? originalParent.indexOfChild(originalWebView) : -1;
 
-            if (originalParent != null) {
-                originalParent.removeView(originalWebView);
-            }
+            if (originalParent != null) originalParent.removeView(originalWebView);
 
+            // Floating container
             floatingContainer = new FrameLayout(requireContext());
             floatingContainer.setLayoutParams(new FrameLayout.LayoutParams(floatingInitialWidth, floatingInitialHeight));
 
-            // Make WebView display-only
-            originalWebView.setOnTouchListener((v, e) -> true);
-            originalWebView.setFocusable(false);
-            originalWebView.setFocusableInTouchMode(false);
+            // Card wrapper
+            MaterialCardView cardView = new MaterialCardView(requireContext());
+            FrameLayout.LayoutParams cardParams = new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+            );
+            cardParams.setMargins(20, 0, 20, 10);
+            cardView.setLayoutParams(cardParams);
+            cardView.setRadius(16f);
+            cardView.setCardElevation(8f);
+            cardView.setStrokeColor(ContextCompat.getColor(requireContext(), R.color.ifc_box_stroke));
+            cardView.setStrokeWidth(4);
+            cardView.setPreventCornerOverlap(false);
 
-            floatingContainer.addView(originalWebView, new FrameLayout.LayoutParams(
+            // Add WebView
+            cardView.addView(originalWebView, new FrameLayout.LayoutParams(
                     FrameLayout.LayoutParams.MATCH_PARENT,
                     FrameLayout.LayoutParams.MATCH_PARENT
             ));
+            floatingContainer.addView(cardView);
 
             // Close button
             ImageButton closeBtn = new ImageButton(requireContext());
@@ -2439,7 +2450,6 @@ public class CARsenalFragment extends Fragment {
                 try { wm.removeView(floatingContainer); } catch (IllegalArgumentException ignored) {}
                 floatingContainer = null;
 
-                // Reattach WebView
                 if (originalParent != null) {
                     ViewGroup currentParent = (ViewGroup) originalWebView.getParent();
                     if (currentParent != null) currentParent.removeView(originalWebView);
@@ -2449,12 +2459,14 @@ public class CARsenalFragment extends Fragment {
                 }
             });
 
-            // WindowManager params
+            // WindowManager
             final WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(
                     floatingInitialWidth,
                     floatingInitialHeight,
                     WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
                     PixelFormat.TRANSLUCENT
             );
             layoutParams.gravity = Gravity.TOP | Gravity.START;
@@ -2515,6 +2527,9 @@ public class CARsenalFragment extends Fragment {
                     return false;
                 }
             });
+
+            // Make WebView live but non-interactive
+            originalWebView.setOnTouchListener((v, event) -> true);
         }
 
         @NonNull
