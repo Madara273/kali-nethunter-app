@@ -7,12 +7,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.PixelFormat;
 import android.graphics.Typeface;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.Gravity;
@@ -20,8 +23,10 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -29,6 +34,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -42,12 +48,14 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.text.HtmlCompat;
 import androidx.core.view.MenuProvider;
+import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
@@ -152,6 +160,12 @@ public class CARsenalFragment extends Fragment {
                     stopItem = menu.add(Menu.NONE, R.id.action_stop, Menu.NONE, "Stop");
                     stopItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
                 }
+
+                MenuItem floatingItem = menu.findItem(R.id.action_floating);
+                if (floatingItem == null) {
+                    floatingItem = menu.add(Menu.NONE, R.id.action_floating, Menu.NONE, "Floating");
+                    floatingItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+                }
             }
 
             @Override
@@ -163,11 +177,13 @@ public class CARsenalFragment extends Fragment {
                 MenuItem settingsItem = menu.findItem(R.id.action_settings);
                 if (settingsItem != null) settingsItem.setVisible(currentTab == 0);
 
-                // Play/Stop visible only on ICSIM tab (tab index 4)
+                // Play/Stop/Floating visible only on ICSIM tab (tab index 4)
                 MenuItem playItem = menu.findItem(R.id.action_play);
                 MenuItem stopItem = menu.findItem(R.id.action_stop);
+                MenuItem floatingItem = menu.findItem(R.id.action_floating);
                 if (playItem != null) playItem.setVisible(currentTab == 4);
                 if (stopItem != null) stopItem.setVisible(currentTab == 4);
+                if (floatingItem != null) floatingItem.setVisible(currentTab == 4);
             }
 
             @Override
@@ -203,6 +219,10 @@ public class CARsenalFragment extends Fragment {
                 } else if (id == R.id.action_stop) {
                     Button stopICSIM = rootView.findViewById(R.id.stop_icsim);
                     if (stopICSIM != null) stopICSIM.performClick(); // reuse existing listener
+                    return true;
+                } else if (id == R.id.action_floating) {
+                    Button floatICSIM = rootView.findViewById(R.id.floating_icsim);
+                    if (floatICSIM != null) floatICSIM.performClick(); // reuse existing listener
                     return true;
                 } else {
                     return false;
@@ -2243,6 +2263,9 @@ public class CARsenalFragment extends Fragment {
         private static final String ICSIM_SCRIPT_PATH = "/opt/car_hacking/icsim_service.sh";
         private static final long SHORT_DELAY = 1000;
         private static final long LONG_DELAY = 2000;
+        private FrameLayout floatingContainer;
+        private int floatingInitialWidth = 800;
+        private int floatingInitialHeight = 600;
         private String selected_caniface;
 
 
@@ -2296,6 +2319,17 @@ public class CARsenalFragment extends Fragment {
                 }
             });
 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (!Settings.canDrawOverlays(requireContext())) {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:" + requireContext().getPackageName()));
+                    startActivity(intent);
+                }
+            }
+
+            Button floatICSIM = rootView.findViewById(R.id.floating_icsim);
+            floatICSIM.setOnClickListener(v -> toggleFloatingICSIM());
+
             // ICSIM
             Button runICSIM = rootView.findViewById(R.id.run_icsim);
             runICSIM.setOnClickListener(v -> {
@@ -2324,7 +2358,7 @@ public class CARsenalFragment extends Fragment {
                             view.setWebViewClient(new WebViewClient());
                         }
 
-                        icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale");
+                        icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale&view_only=true");
                         controlsView.loadUrl("http://localhost:6081/vnc.html?autoconnect=true&resize=scale");
 
                     }, SHORT_DELAY + LONG_DELAY);
@@ -2347,6 +2381,140 @@ public class CARsenalFragment extends Fragment {
             });
 
             return rootView;
+        }
+
+        private void toggleFloatingICSIM() {
+            if (floatingContainer == null) {
+                WebView icsimView = requireView().findViewById(R.id.icsim);
+                showFloatingWebView(icsimView);
+            } else {
+                removeFloatingWebView();
+            }
+        }
+
+        private void removeFloatingWebView() {
+            if (floatingContainer != null) {
+                WindowManager wm = (WindowManager) requireContext().getSystemService(Context.WINDOW_SERVICE);
+                wm.removeView(floatingContainer);
+                floatingContainer = null;
+            }
+        }
+
+        private void showFloatingWebView(WebView originalWebView) {
+            if (floatingContainer != null) return;
+
+            WindowManager wm = (WindowManager) requireContext().getSystemService(Context.WINDOW_SERVICE);
+
+            final ViewGroup originalParent = (ViewGroup) originalWebView.getParent();
+            final int originalIndex = (originalParent != null) ? originalParent.indexOfChild(originalWebView) : -1;
+            final ViewGroup.LayoutParams originalLayoutParams = originalWebView.getLayoutParams();
+
+            if (originalParent != null) {
+                originalParent.removeView(originalWebView);
+            }
+
+            floatingContainer = new FrameLayout(requireContext());
+            floatingContainer.setLayoutParams(new FrameLayout.LayoutParams(floatingInitialWidth, floatingInitialHeight));
+
+            // Make WebView display-only
+            originalWebView.setOnTouchListener((v, e) -> true);
+            originalWebView.setFocusable(false);
+            originalWebView.setFocusableInTouchMode(false);
+
+            floatingContainer.addView(originalWebView, new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+            ));
+
+            // Close button
+            ImageButton closeBtn = new ImageButton(requireContext());
+            closeBtn.setImageResource(R.drawable.ic_close_red);
+            FrameLayout.LayoutParams closeParams = new FrameLayout.LayoutParams(80, 80);
+            closeParams.gravity = Gravity.TOP | Gravity.END;
+            closeBtn.setLayoutParams(closeParams);
+            floatingContainer.addView(closeBtn);
+            ViewCompat.setElevation(closeBtn, 16f);
+
+            closeBtn.setOnClickListener(v -> {
+                try { wm.removeView(floatingContainer); } catch (IllegalArgumentException ignored) {}
+                floatingContainer = null;
+
+                // Reattach WebView
+                if (originalParent != null) {
+                    ViewGroup currentParent = (ViewGroup) originalWebView.getParent();
+                    if (currentParent != null) currentParent.removeView(originalWebView);
+
+                    originalParent.addView(originalWebView, originalIndex);
+                    originalWebView.setLayoutParams(originalLayoutParams);
+                }
+            });
+
+            // WindowManager params
+            final WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(
+                    floatingInitialWidth,
+                    floatingInitialHeight,
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    PixelFormat.TRANSLUCENT
+            );
+            layoutParams.gravity = Gravity.TOP | Gravity.START;
+            layoutParams.x = 100;
+            layoutParams.y = 100;
+
+            wm.addView(floatingContainer, layoutParams);
+
+            // Drag and resize
+            floatingContainer.setOnTouchListener(new View.OnTouchListener() {
+                private float offsetX, offsetY;
+                private int startWidth, startHeight;
+                private float startDist = 0;
+                private boolean isResizing = false;
+
+                private float distance(MotionEvent e) {
+                    float dx = e.getX(0) - e.getX(1);
+                    float dy = e.getY(0) - e.getY(1);
+                    return (float) Math.sqrt(dx * dx + dy * dy);
+                }
+
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    if (event.getPointerCount() == 2) { // pinch resize
+                        switch (event.getActionMasked()) {
+                            case MotionEvent.ACTION_POINTER_DOWN:
+                                startDist = distance(event);
+                                startWidth = layoutParams.width;
+                                startHeight = layoutParams.height;
+                                isResizing = true;
+                                break;
+                            case MotionEvent.ACTION_MOVE:
+                                if (isResizing) {
+                                    float scale = distance(event) / startDist;
+                                    layoutParams.width = (int) (startWidth * scale);
+                                    layoutParams.height = (int) (startHeight * scale);
+                                    wm.updateViewLayout(floatingContainer, layoutParams);
+                                }
+                                break;
+                            case MotionEvent.ACTION_POINTER_UP:
+                                isResizing = false;
+                                break;
+                        }
+                        return true;
+                    } else if (event.getPointerCount() == 1) { // drag
+                        switch (event.getActionMasked()) {
+                            case MotionEvent.ACTION_DOWN:
+                                offsetX = event.getRawX() - layoutParams.x;
+                                offsetY = event.getRawY() - layoutParams.y;
+                                return true;
+                            case MotionEvent.ACTION_MOVE:
+                                layoutParams.x = (int) (event.getRawX() - offsetX);
+                                layoutParams.y = (int) (event.getRawY() - offsetY);
+                                wm.updateViewLayout(floatingContainer, layoutParams);
+                                return true;
+                        }
+                    }
+                    return false;
+                }
+            });
         }
 
         @NonNull
