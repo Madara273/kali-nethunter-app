@@ -7,6 +7,11 @@
         android:title="Settings"
         app:showAsAction="always" />
     <item
+        android:id="@+id/action_canusb_settings"
+        android:icon="@drawable/ic_settings"
+        android:title="CAN-USB Settings"
+        app:showAsAction="ifRoom"/>
+    <item
         android:id="@+id/action_play"
         android:icon="@drawable/ic_action_play"
         android:title="Play"

@@ -177,6 +177,10 @@ public class CARsenalFragment extends Fragment {
                 MenuItem settingsItem = menu.findItem(R.id.action_settings);
                 if (settingsItem != null) settingsItem.setVisible(currentTab == 0);
 
+                // CAN-USB Settings visible only on CAN-USB tab (tab index 2)
+                MenuItem canusbSettingsItem = menu.findItem(R.id.action_canusb_settings);
+                if (canusbSettingsItem != null) canusbSettingsItem.setVisible(currentTab == 2);
+
                 // Play/Stop/Floating visible only on ICSIM tab (tab index 4)
                 MenuItem playItem = menu.findItem(R.id.action_play);
                 MenuItem stopItem = menu.findItem(R.id.action_stop);
@@ -200,6 +204,15 @@ public class CARsenalFragment extends Fragment {
                 } else if (id == R.id.update) {
                     RunUpdate();
                     return true;
+                } else if (id == R.id.action_canusb_settings) {
+                        ViewPager2 mViewPager = rootView.findViewById(R.id.pagerCAN);
+                        if (mViewPager.getCurrentItem() == 2) { // CAN-USB tab
+                            Fragment current = getChildFragmentManager().getFragments().get(2);
+                            if (current instanceof CANUSBFragment) {
+                                ((CANUSBFragment) current).showCanUsbConfig();
+                            }
+                        }
+                        return true;
                 } else if (id == R.id.about) {
                     RunAbout();
                     return true;
@@ -1530,10 +1543,9 @@ public class CARsenalFragment extends Fragment {
     }
 
     public static class CANUSBFragment extends CARsenalFragment {
-        final ShellExecuter exe = new ShellExecuter();
+        private final ShellExecuter exe = new ShellExecuter();
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private Activity activity;
-        private boolean isDebugEnabled = false;
         private EditText SelectedBaudrateUSB;
         private EditText SelectedCanSpeedUSB;
         private String selected_usb;
@@ -1551,10 +1563,9 @@ public class CARsenalFragment extends Fragment {
             SelectedBaudrateUSB = rootView.findViewById(R.id.baudrate_usb);
             SelectedCanSpeedUSB = rootView.findViewById(R.id.canspeed_usb);
 
-            // Devices Interfaces
+            // Devices Interfaces Spinner
             Spinner spinner = rootView.findViewById(R.id.device_interface);
             ImageButton refreshBtn = rootView.findViewById(R.id.refreshUSB);
-
             SpinnerUtils.setupDeviceInterfaceSpinner(
                     requireContext(),
                     executorService,
@@ -1567,178 +1578,136 @@ public class CARsenalFragment extends Fragment {
                     iface -> selected_usb = iface
             );
 
-            // Can-Usb Mode Spinner
-            final Spinner canusbModeList = rootView.findViewById(R.id.usb_mode_spinner);
-            ArrayAdapter<String> adapter = getStringArrayAdapter();
-            canusbModeList.setAdapter(adapter);
-            canusbModeList.setSelection(0);  // Set initial selection to "Mode"
-
-            canusbModeList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                    if (pos != 0) { // Ignore "Mode" hint
-                        String canusbmode_selected = parentView.getItemAtPosition(pos).toString();
-                        sharedpreferences.edit().putString("canusbmode_selected", canusbmode_selected).apply();
-                    }
-                }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> parentView) {
-                    // Do nothing
-                }
-            });
-
-            // Toggle Buttons
-            // Counter
-            Button btnCounter = rootView.findViewById(R.id.btn_toggle_usb_counter);
-            TextInputLayout counterContainer = rootView.findViewById(R.id.counter_container);
-
-            btnCounter.setOnClickListener(v -> {
-                boolean visible = counterContainer.getVisibility() == View.VISIBLE;
-                counterContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnCounter.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Data
-            Button btnData = rootView.findViewById(R.id.btn_toggle_usb_data);
-            TextInputLayout dataContainer = rootView.findViewById(R.id.data_container);
-
-            btnData.setOnClickListener(v -> {
-                boolean visible = dataContainer.getVisibility() == View.VISIBLE;
-                dataContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnData.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // ID
-            Button btnID = rootView.findViewById(R.id.btn_toggle_usb_id);
-            TextInputLayout idContainer = rootView.findViewById(R.id.id_container);
-
-            btnID.setOnClickListener(v -> {
-                boolean visible = idContainer.getVisibility() == View.VISIBLE;
-                idContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnID.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-
-            // Mode
-            Button btnMode = rootView.findViewById(R.id.btn_toggle_usb_mode);
-            View modeContainer = rootView.findViewById(R.id.usb_mode_container);
-
-            btnMode.setOnClickListener(v -> {
-                boolean visible = modeContainer.getVisibility() == View.VISIBLE;
-                modeContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnMode.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Sleep
-            Button btnSleep = rootView.findViewById(R.id.btn_toggle_usb_sleep);
-            TextInputLayout sleepContainer = rootView.findViewById(R.id.sleep_container);
-
-            btnSleep.setOnClickListener(v -> {
-                boolean visible = sleepContainer.getVisibility() == View.VISIBLE;
-                sleepContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnSleep.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Debug (TTY Output) Switch
-            SwitchCompat btnDebug = rootView.findViewById(R.id.btn_toggle_usb_ttyOutput);
-
-            btnDebug.setChecked(isDebugEnabled);
-            btnDebug.setTextColor(ContextCompat.getColor(requireContext(),
-                    isDebugEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light));
-
-            btnDebug.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                isDebugEnabled = isChecked;
-
-                int colorRes = isDebugEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnDebug.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
-            });
-
-            // Start USB-CAN
-            Button USBCanSendButton = rootView.findViewById(R.id.start_canusb_send);
-
-            USBCanSendButton.setOnClickListener(v -> {
-                String USBCANSpeed = SelectedCanSpeedUSB.getText().toString();
-                String USBBaudrate = SelectedBaudrateUSB.getText().toString();
-                String debugEnabled = isDebugEnabled ? " -t" : "";
-                String countValue = getVisibleParam(counterContainer.getEditText(), " -n ");
-                String idValue = getVisibleParam(idContainer.getEditText(), " -i ");
-                String dataValue = getVisibleParam(dataContainer.getEditText(), " -j ");
-                String sleepValue = getVisibleParam(sleepContainer.getEditText(), " -g ");
-
-                String modeValue = "";
-                if (modeContainer.getVisibility() == View.VISIBLE) {
-                    String selected = canusbModeList.getSelectedItem().toString().trim();
-                    if (!selected.isEmpty() && !selected.equals("Mode")) {
-                        modeValue = " -m " + selected;
-                    }
-                }
-
-                if (!selected_usb.isEmpty() && !selected_usb.equals("USB Device (None)") && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
-                    run_cmd("canusb -d " + selected_usb + " -s " + USBCANSpeed + " -b " + USBBaudrate + debugEnabled + idValue + dataValue + sleepValue + countValue + modeValue);
-                } else {
-                    showToast("Please ensure your USB Device and USB CAN Speed, Baudrate, Data fields is set!");
-                }
-
-                activity.invalidateOptionsMenu();
-            });
+            // Start USB-CAN button
+            rootView.findViewById(R.id.start_canusb_send).setOnClickListener(v -> runCanUsb());
 
             return rootView;
+        }
+
+        private void showCanUsbConfig() {
+            LayoutInflater inflater = LayoutInflater.from(requireContext());
+            View dialogView = inflater.inflate(R.layout.carsenal_canusb_dialog, null);
+
+            // Inputs
+            final EditText idInput = dialogView.findViewById(R.id.usb_id_value);
+            final EditText counterInput = dialogView.findViewById(R.id.usb_counter_value);
+            final EditText sleepInput = dialogView.findViewById(R.id.usb_sleep_value);
+            final EditText dataInput = dialogView.findViewById(R.id.usb_data_value);
+            final Spinner modeSpinner = dialogView.findViewById(R.id.usb_mode_spinner);
+            final SwitchCompat debugSwitch = dialogView.findViewById(R.id.btn_toggle_usb_ttyOutput);
+
+            // Checkboxes
+            final MaterialCheckBox idCheckbox = dialogView.findViewById(R.id.id_checkbox);
+            final MaterialCheckBox counterCheckbox = dialogView.findViewById(R.id.counter_checkbox);
+            final MaterialCheckBox sleepCheckbox = dialogView.findViewById(R.id.sleep_checkbox);
+            final MaterialCheckBox dataCheckbox = dialogView.findViewById(R.id.data_checkbox);
+            final MaterialCheckBox modeCheckbox = dialogView.findViewById(R.id.mode_checkbox);
+            final MaterialCheckBox debugCheckbox = dialogView.findViewById(R.id.debug_checkbox);
+
+            // Enable/disable inputs based on checkbox
+            idCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> idInput.setEnabled(isChecked));
+            counterCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> counterInput.setEnabled(isChecked));
+            sleepCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> sleepInput.setEnabled(isChecked));
+            dataCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> dataInput.setEnabled(isChecked));
+            modeCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> modeSpinner.setEnabled(isChecked));
+            debugCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> debugSwitch.setChecked(isChecked));
+
+            // Setup mode spinner
+            final String[] modeOptions = {"Mode", "0", "1", "2"};
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, modeOptions) {
+                @Override
+                public boolean isEnabled(int position) {
+                    return position != 0; // Disable "Mode" hint
+                }
+
+                @Override
+                public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
+                    TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
+                    tv.setTextColor(position == 0 ? Color.GRAY : Color.WHITE);
+                    return tv;
+                }
+            };
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            modeSpinner.setAdapter(adapter);
+            modeSpinner.setSelection(0);
+            modeSpinner.setEnabled(false);
+
+            // Load saved prefs for debug
+            SharedPreferences prefs = requireContext().getSharedPreferences("carsenal_prefs", Context.MODE_PRIVATE);
+            boolean debugEnabled = prefs.getBoolean("usb_debug_enabled", false);
+            debugSwitch.setChecked(debugEnabled);
+            debugCheckbox.setChecked(debugEnabled);
+
+            // Build dialog
+            new MaterialAlertDialogBuilder(requireContext(), R.style.DialogStyleCompat)
+                    .setTitle("CAN-USB Configuration")
+                    .setView(dialogView)
+                    .setPositiveButton("Apply", (dialog, which) -> {
+                        SharedPreferences.Editor editor = prefs.edit();
+
+                        // Debug
+                        editor.putBoolean("usb_debug_enabled", debugSwitch.isChecked());
+                        editor.putBoolean("usb_id_enabled", idCheckbox.isChecked());
+                        editor.putBoolean("usb_counter_enabled", counterCheckbox.isChecked());
+                        editor.putBoolean("usb_sleep_enabled", sleepCheckbox.isChecked());
+                        editor.putBoolean("usb_data_enabled", dataCheckbox.isChecked());
+                        editor.putBoolean("usb_mode_enabled", modeCheckbox.isChecked());
+
+                        // Save values only if enabled
+                        if (idCheckbox.isChecked()) editor.putString("usb_id_value", idInput.getText().toString().trim());
+                        if (counterCheckbox.isChecked()) editor.putString("usb_counter_value", counterInput.getText().toString().trim());
+                        if (sleepCheckbox.isChecked()) editor.putString("usb_sleep_value", sleepInput.getText().toString().trim());
+                        if (dataCheckbox.isChecked()) editor.putString("usb_data_value", dataInput.getText().toString().trim());
+                        if (modeCheckbox.isChecked()) editor.putString("usb_mode_value", modeSpinner.getSelectedItem().toString());
+
+                        editor.apply();
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
+        }
+
+        private void runCanUsb() {
+            String USBCANSpeed = SelectedCanSpeedUSB.getText().toString();
+            String USBBaudrate = SelectedBaudrateUSB.getText().toString();
+            SharedPreferences prefs = requireContext().getSharedPreferences("carsenal_prefs", Context.MODE_PRIVATE);
+
+            String debugEnabled = prefs.getBoolean("usb_debug_enabled", false) ? " -t" : "";
+            String countValue = prefs.getBoolean("usb_counter_enabled", false) ? " -n " + prefs.getString("usb_counter_value", "") : "";
+            String dataValue = prefs.getBoolean("usb_data_enabled", false) ? " -j " + prefs.getString("usb_data_value", "") : "";
+            String idValue = prefs.getBoolean("usb_id_enabled", false) ? " -i " + prefs.getString("usb_id_value", "") : "";
+            String sleepValue = prefs.getBoolean("usb_sleep_enabled", false) ? " -g " + prefs.getString("usb_sleep_value", "") : "";
+            String modeValue = prefs.getBoolean("usb_mode_enabled", false) ? " -m " + prefs.getString("usb_mode_value", "") : "";
+
+            if (!selected_usb.isEmpty() && !selected_usb.equals("USB Device (None)") && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
+                run_cmd("canusb -d " + selected_usb + " -s " + USBCANSpeed + " -b " + USBBaudrate +
+                        debugEnabled + idValue + dataValue + sleepValue + countValue + modeValue);
+            } else {
+                showToast("Please ensure your USB Device and USB CAN Speed, Baudrate, Data fields are set!");
+            }
+
+            activity.invalidateOptionsMenu();
         }
 
         @NonNull
         private ArrayAdapter<String> getStringArrayAdapter() {
             final String[] modeOptions = {"Mode", "0", "1", "2"};
-
             ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, modeOptions) {
                 @Override
                 public boolean isEnabled(int position) {
-                    // Disable "Mode" item
-                    return position != 0;
+                    return position != 0; // Disable "Mode" hint
                 }
 
                 @Override
                 public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
                     View view = super.getDropDownView(position, convertView, parent);
                     TextView tv = (TextView) view;
-                    if (position == 0) {
-                        tv.setTextColor(Color.GRAY);  // Hint text color
-                    } else {
-                        tv.setTextColor(Color.WHITE); // Normal text
-                    }
+                    tv.setTextColor(position == 0 ? Color.GRAY : Color.WHITE);
                     return view;
                 }
             };
 
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             return adapter;
-        }
-
-        private String getVisibleParam(View view, String prefix) {
-            if (view != null && view.getVisibility() == View.VISIBLE) {
-                if (view instanceof EditText) {
-                    String input = ((EditText) view).getText().toString().trim();
-                    if (!input.isEmpty()) {
-                        return prefix + input;
-                    }
-                } else if (view instanceof Spinner) {
-                    String selected = ((Spinner) view).getSelectedItem().toString().trim();
-                    if (!selected.isEmpty()) {
-                        return prefix + selected;
-                    }
-                }
-            }
-            return "";
         }
     }
 

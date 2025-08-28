@@ -149,7 +149,6 @@
                         android:id="@+id/level_container"
                         android:layout_width="match_parent"
                         android:layout_height="48dp"
-                        android:layout_marginBottom="5dp"
                         android:layout_marginStart="20dp"
                         android:layout_marginEnd="20dp">
 
@@ -181,7 +180,10 @@
                 android:layout_height="match_parent"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="4dp"
-                android:layout_margin="20dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
                 app:strokeColor="@color/ifc_box_stroke"
                 app:strokeWidth="2dp">
 
