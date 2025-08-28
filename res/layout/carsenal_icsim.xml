@@ -179,22 +179,28 @@
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                android:layout_marginTop="5dp"
-                android:layout_marginBottom="8dp"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="4dp"
+                android:layout_margin="20dp"
                 app:strokeColor="@color/ifc_box_stroke"
-                app:strokeWidth="2dp"
-                app:boxStrokeWidthFocused="3dp">
+                app:strokeWidth="2dp">
 
-                <WebView
-                    android:id="@+id/icsim"
+                <FrameLayout
                     android:layout_width="match_parent"
-                    android:layout_height="200dp"
-                    android:clickable="false" />
+                    android:layout_height="200dp">
 
+                    <WebView
+                        android:id="@+id/icsim"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent" />
+
+                    <!-- Transparent overlay to eat touches -->
+                    <View
+                        android:id="@+id/icsim_overlay"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@android:color/transparent" />
+                </FrameLayout>
             </com.google.android.material.card.MaterialCardView>
 
             <com.google.android.material.card.MaterialCardView

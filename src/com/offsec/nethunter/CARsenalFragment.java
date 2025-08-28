@@ -2430,11 +2430,25 @@ public class CARsenalFragment extends Fragment {
             cardView.setStrokeWidth(4);
             cardView.setPreventCornerOverlap(false);
 
+            // Inner wrapper (to hold WebView + overlay)
+            FrameLayout innerWrapper = new FrameLayout(requireContext());
+
             // Add WebView
-            cardView.addView(originalWebView, new FrameLayout.LayoutParams(
+            innerWrapper.addView(originalWebView, new FrameLayout.LayoutParams(
                     FrameLayout.LayoutParams.MATCH_PARENT,
                     FrameLayout.LayoutParams.MATCH_PARENT
             ));
+
+            // Transparent overlay on top of WebView
+            View overlay = new View(requireContext());
+            overlay.setLayoutParams(new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+            ));
+            overlay.setBackgroundColor(Color.TRANSPARENT);
+            innerWrapper.addView(overlay);
+
+            cardView.addView(innerWrapper);
             floatingContainer.addView(cardView);
 
             // Close button
@@ -2475,8 +2489,8 @@ public class CARsenalFragment extends Fragment {
 
             wm.addView(floatingContainer, layoutParams);
 
-            // Drag and resize
-            floatingContainer.setOnTouchListener(new View.OnTouchListener() {
+            // Drag and resize -> bind to overlay instead of WebView
+            overlay.setOnTouchListener(new View.OnTouchListener() {
                 private float offsetX, offsetY;
                 private int startWidth, startHeight;
                 private float startDist = 0;
@@ -2528,7 +2542,7 @@ public class CARsenalFragment extends Fragment {
                 }
             });
 
-            // Make WebView live but non-interactive
+            // WebView should not consume touches at all
             originalWebView.setOnTouchListener((v, event) -> true);
         }
 
