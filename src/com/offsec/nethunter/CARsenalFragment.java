@@ -43,6 +43,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.text.HtmlCompat;
@@ -380,7 +381,7 @@ public class CARsenalFragment extends Fragment {
 
         // Create a centered title TextView
         TextView titleView = new TextView(activity);
-        titleView.setText("About CARsenal");
+        titleView.setText(R.string.about_carsenal);
         titleView.setGravity(Gravity.CENTER);
         titleView.setTextSize(20);
         titleView.setTypeface(null, Typeface.BOLD);
@@ -1612,21 +1613,7 @@ public class CARsenalFragment extends Fragment {
             debugCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> debugSwitch.setChecked(isChecked));
 
             // Setup mode spinner
-            final String[] modeOptions = {"Mode", "0", "1", "2"};
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, modeOptions) {
-                @Override
-                public boolean isEnabled(int position) {
-                    return position != 0; // Disable "Mode" hint
-                }
-
-                @Override
-                public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
-                    TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
-                    tv.setTextColor(position == 0 ? Color.GRAY : Color.WHITE);
-                    return tv;
-                }
-            };
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            ArrayAdapter<String> adapter = getStringArrayAdapter();
             modeSpinner.setAdapter(adapter);
             modeSpinner.setSelection(0);
             modeSpinner.setEnabled(false);
@@ -1663,6 +1650,26 @@ public class CARsenalFragment extends Fragment {
                     })
                     .setNegativeButton("Cancel", null)
                     .show();
+        }
+
+        @NonNull
+        private ArrayAdapter<String> getStringArrayAdapter() {
+            final String[] modeOptions = {"Mode", "0", "1", "2"};
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, modeOptions) {
+                @Override
+                public boolean isEnabled(int position) {
+                    return position != 0; // Disable "Mode" hint
+                }
+
+                @Override
+                public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
+                    TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
+                    tv.setTextColor(position == 0 ? Color.GRAY : Color.WHITE);
+                    return tv;
+                }
+            };
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            return adapter;
         }
 
         private void runCanUsb() {
@@ -1747,17 +1754,8 @@ public class CARsenalFragment extends Fragment {
             startAddrContainer = rootView.findViewById(R.id.start_addr_container);
             separateLineContainer = rootView.findViewById(R.id.separate_line_container);
             idContainer = rootView.findViewById(R.id.id_container);
+            clearAllFields();
 
-            seedContainer.getEditText().setText("");
-            minContainer.getEditText().setText("");
-            maxContainer.getEditText().setText("");
-            srcContainer.getEditText().setText("");
-            dstContainer.getEditText().setText("");
-            delayContainer.getEditText().setText("");
-            lengthContainer.getEditText().setText("");
-            startAddrContainer.getEditText().setText("");
-            separateLineContainer.getEditText().setText("");
-            idContainer.getEditText().setText("");
 
             // Pad Switch
             SwitchCompat btnPad = rootView.findViewById(R.id.btn_toggle_pad);
@@ -2076,6 +2074,22 @@ public class CARsenalFragment extends Fragment {
             return rootView;
         }
 
+        private void clearAllFields() {
+            TextInputLayout[] containers = new TextInputLayout[] {
+                    seedContainer, minContainer, maxContainer, srcContainer, dstContainer,
+                    delayContainer, lengthContainer, startAddrContainer, separateLineContainer, idContainer
+            };
+
+            for (TextInputLayout container : containers) {
+                if (container != null) {
+                    EditText editText = container.getEditText();
+                    if (editText != null) {
+                        editText.setText("");
+                    }
+                }
+            }
+        }
+
         private String getVisibleParam(EditText editText, String prefix) {
             if (editText != null && editText.getVisibility() == View.VISIBLE) {
                 String input = editText.getText().toString().trim();
@@ -2213,10 +2227,9 @@ public class CARsenalFragment extends Fragment {
         private static final long SHORT_DELAY = 1000;
         private static final long LONG_DELAY = 2000;
         private FrameLayout floatingContainer;
-        private final int floatingInitialWidth = 800;
-        private final int floatingInitialHeight = 600;
         private String selected_caniface = "";
 
+        @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.carsenal_icsim, container, false);
@@ -2255,8 +2268,8 @@ public class CARsenalFragment extends Fragment {
                 public void onNothingSelected(AdapterView<?> parent) {}
             });
 
-            // Floating overlay permission
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(requireContext())) {
+            // Todo : Move perm to PermissionCheck
+            if (!Settings.canDrawOverlays(requireContext())) {
                 Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
                         Uri.parse("package:" + requireContext().getPackageName()));
                 startActivity(intent);
@@ -2345,6 +2358,7 @@ public class CARsenalFragment extends Fragment {
         }
 
         // Toggle floating WebView
+        @RequiresApi(api = Build.VERSION_CODES.O)
         private void toggleFloatingICSIM() {
             WebView icsimView = ICSIMWebViewHolder.getICSIMWebView(requireContext());
             if (floatingContainer == null) {
@@ -2374,6 +2388,7 @@ public class CARsenalFragment extends Fragment {
         }
 
         // Show WebView in floating overlay
+        @RequiresApi(api = Build.VERSION_CODES.O)
         private void showFloatingWebView(WebView webView) {
             if (floatingContainer != null) return;
 
@@ -2382,6 +2397,8 @@ public class CARsenalFragment extends Fragment {
             if (webView.getParent() != null) ((ViewGroup) webView.getParent()).removeView(webView);
 
             floatingContainer = new FrameLayout(requireContext());
+            int floatingInitialWidth = 800;
+            int floatingInitialHeight = 600;
             floatingContainer.setLayoutParams(new FrameLayout.LayoutParams(floatingInitialWidth, floatingInitialHeight));
 
             MaterialCardView cardView = new MaterialCardView(requireContext());
@@ -2439,6 +2456,7 @@ public class CARsenalFragment extends Fragment {
             // Touch for move/resize
             overlay.setOnTouchListener(new View.OnTouchListener() {
                 private float offsetX, offsetY;
+                private float startTouchX, startTouchY;
                 private int startWidth, startHeight;
                 private float startDist = 0;
                 private boolean isResizing = false;
@@ -2451,6 +2469,8 @@ public class CARsenalFragment extends Fragment {
 
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
+                    final int CLICK_THRESHOLD = 10; // pixels
+
                     if (event.getPointerCount() == 2) {
                         switch (event.getActionMasked()) {
                             case MotionEvent.ACTION_POINTER_DOWN:
@@ -2477,19 +2497,27 @@ public class CARsenalFragment extends Fragment {
                             case MotionEvent.ACTION_DOWN:
                                 offsetX = event.getRawX() - layoutParams.x;
                                 offsetY = event.getRawY() - layoutParams.y;
+                                startTouchX = event.getRawX();
+                                startTouchY = event.getRawY();
                                 return true;
                             case MotionEvent.ACTION_MOVE:
                                 layoutParams.x = (int) (event.getRawX() - offsetX);
                                 layoutParams.y = (int) (event.getRawY() - offsetY);
                                 wm.updateViewLayout(floatingContainer, layoutParams);
                                 return true;
+                            case MotionEvent.ACTION_UP:
+                                float dx = Math.abs(event.getRawX() - startTouchX);
+                                float dy = Math.abs(event.getRawY() - startTouchY);
+                                if (dx < CLICK_THRESHOLD && dy < CLICK_THRESHOLD) {
+                                    // Treat as click
+                                    v.performClick();
+                                }
+                                return true;
                         }
                     }
                     return false;
                 }
             });
-
-            webView.setOnTouchListener((v, event) -> true);
         }
 
         private boolean isICSIMRunning() {
@@ -2546,6 +2574,7 @@ public class CARsenalFragment extends Fragment {
                 return controlsWebView;
             }
 
+            @SuppressLint("SetJavaScriptEnabled")
             private static void setupWebView(WebView webView) {
                 webView.getSettings().setJavaScriptEnabled(true);
                 webView.getSettings().setDomStorageEnabled(true);
