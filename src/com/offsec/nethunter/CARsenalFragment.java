@@ -27,7 +27,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
-import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
@@ -2207,9 +2206,8 @@ public class CARsenalFragment extends Fragment {
         }
     }
 
-
     public static class CANICSIMFragment extends CARsenalFragment {
-        final ShellExecuter exe = new ShellExecuter();
+        private final ShellExecuter exe = new ShellExecuter();
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private static final String ICSIM_SCRIPT_PATH = "/opt/car_hacking/icsim_service.sh";
         private static final long SHORT_DELAY = 1000;
@@ -2217,23 +2215,16 @@ public class CARsenalFragment extends Fragment {
         private FrameLayout floatingContainer;
         private final int floatingInitialWidth = 800;
         private final int floatingInitialHeight = 600;
-        private String selected_caniface;
+        private String selected_caniface = "";
 
-
-        @Override
-        public void onCreate(@Nullable Bundle savedInstanceState) {
-            super.onCreate(savedInstanceState);
-        }
-
-        @SuppressLint("SetJavaScriptEnabled")
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.carsenal_icsim, container, false);
 
-            // Interfaces
             Spinner spinner = rootView.findViewById(R.id.device_interface);
             ImageButton refreshBtn = rootView.findViewById(R.id.refreshUSB);
 
+            // Setup device interface spinner
             SpinnerUtils.setupDeviceInterfaceSpinner(
                     requireContext(),
                     executorService,
@@ -2247,154 +2238,172 @@ public class CARsenalFragment extends Fragment {
             );
 
             // Level Spinner
-            // 0 = No randomization added to the packets other than location and ID
-            // 1 = Add NULL padding
-            // 2 = Randomize unused bytes
-            final Spinner levelList = rootView.findViewById(R.id.level_spinner);
-            ArrayAdapter<String> adapter = getStringArrayAdapter();
-            levelList.setAdapter(adapter);
-            levelList.setSelection(0);  // Set initial selection to "Level"
-
+            Spinner levelList = rootView.findViewById(R.id.level_spinner);
+            levelList.setAdapter(getStringArrayAdapter());
+            levelList.setSelection(0);
             levelList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
-                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                    if (pos != 0) { // Ignore "Level" hint
-                        String level_selected = parentView.getItemAtPosition(pos).toString();
-                        sharedpreferences.edit().putString("level_selected", level_selected).apply();
+                public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+                    if (pos != 0) {
+                        sharedpreferences.edit()
+                                .putString("level_selected", parent.getItemAtPosition(pos).toString())
+                                .apply();
                     }
                 }
 
                 @Override
-                public void onNothingSelected(AdapterView<?> parentView) {
-                    // Do nothing
-                }
+                public void onNothingSelected(AdapterView<?> parent) {}
             });
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                if (!Settings.canDrawOverlays(requireContext())) {
-                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                            Uri.parse("package:" + requireContext().getPackageName()));
-                    startActivity(intent);
-                }
+            // Floating overlay permission
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && !Settings.canDrawOverlays(requireContext())) {
+                Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                        Uri.parse("package:" + requireContext().getPackageName()));
+                startActivity(intent);
             }
 
             Button floatICSIM = rootView.findViewById(R.id.floating_icsim);
             floatICSIM.setOnClickListener(v -> toggleFloatingICSIM());
 
-            // ICSIM
-            Button runICSIM = rootView.findViewById(R.id.run_icsim);
-            runICSIM.setOnClickListener(v -> {
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces")) {
-                    // String randomizeEnabled = isRandomizeEnabled ? " -r" : "";
-                    String levelValue = getVisibleParam(levelList);
-                    if (!levelValue.isEmpty()) {
-                        run_cmd("su -c 'sh " + ICSIM_SCRIPT_PATH + " " + selected_caniface + levelValue + "'");
-                    }
-                    else {
-                        run_cmd("su -c 'sh " + ICSIM_SCRIPT_PATH + " " + selected_caniface + "'");
-                    }
-                    showToast("Running ICSim...");
-                    new Handler().postDelayed(() -> {
-                        WebView icsimView = rootView.findViewById(R.id.icsim);
-                        WebView controlsView = rootView.findViewById(R.id.controls);
+            FrameLayout icsimContainer = rootView.findViewById(R.id.icsim_container);
+            FrameLayout controlsContainer = rootView.findViewById(R.id.controls_container);
 
-                        for (WebView view : new WebView[]{icsimView, controlsView}) {
-                            WebSettings settings = view.getSettings();
-                            settings.setJavaScriptEnabled(true);
-                            settings.setDomStorageEnabled(true);
-                            settings.setLoadWithOverviewMode(true);
-                            settings.setUseWideViewPort(true);
-                            settings.setBuiltInZoomControls(true);
-                            settings.setDisplayZoomControls(false);
-                            view.setWebViewClient(new WebViewClient());
-                        }
+            WebView icsimView = ICSIMWebViewHolder.getICSIMWebView(requireContext());
+            WebView controlsView = ICSIMWebViewHolder.getControlsWebView(requireContext());
+
+            // Remove from previous parent if needed
+            if (icsimView.getParent() != null) ((ViewGroup) icsimView.getParent()).removeView(icsimView);
+            if (controlsView.getParent() != null) ((ViewGroup) controlsView.getParent()).removeView(controlsView);
+
+            // Attach WebViews once
+            icsimContainer.addView(icsimView, new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+            ));
+            controlsContainer.addView(controlsView, new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+            ));
+
+            // Buttons
+            rootView.findViewById(R.id.run_icsim).setOnClickListener(v -> runICSIM(icsimView, controlsView, levelList));
+            rootView.findViewById(R.id.stop_icsim).setOnClickListener(v -> stopICSIM(icsimView, controlsView));
+
+            // Auto-restore ICSim session if running
+            executorService.submit(() -> {
+                if (isICSIMRunning()) {
+                    new Handler(Looper.getMainLooper()).post(() -> {
+                        // Remove from floating if present
+                        if (floatingContainer != null) removeFloatingWebView(icsimView);
+
+                        icsimContainer.removeAllViews();
+                        controlsContainer.removeAllViews();
+
+                        icsimContainer.addView(icsimView, new FrameLayout.LayoutParams(
+                                FrameLayout.LayoutParams.MATCH_PARENT,
+                                FrameLayout.LayoutParams.MATCH_PARENT
+                        ));
+                        controlsContainer.addView(controlsView, new FrameLayout.LayoutParams(
+                                FrameLayout.LayoutParams.MATCH_PARENT,
+                                FrameLayout.LayoutParams.MATCH_PARENT
+                        ));
 
                         icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale&view_only=true");
                         controlsView.loadUrl("http://localhost:6081/vnc.html?autoconnect=true&resize=scale");
 
-                    }, SHORT_DELAY + LONG_DELAY);
-                } else {
-                    showToast("Please set a CAN interface!");
+                        Toast.makeText(requireContext(), "Restored ICSim session...", Toast.LENGTH_SHORT).show();
+                    });
                 }
-            });
-
-            Button stopICSIM = rootView.findViewById(R.id.stop_icsim);
-            stopICSIM.setOnClickListener(v -> {
-                WebView icsimView = rootView.findViewById(R.id.icsim);
-                WebView controlsView = rootView.findViewById(R.id.controls);
-
-                run_cmd("su -c 'sh " + ICSIM_SCRIPT_PATH + " stop'");
-                showToast("Stopping ICSim...");
-                icsimView.setBackgroundColor(Color.BLACK);
-                icsimView.loadUrl("about:blank");
-                controlsView.setBackgroundColor(Color.BLACK);
-                controlsView.loadUrl("about:blank");
             });
 
             return rootView;
         }
 
+        private void runICSIM(WebView icsimView, WebView controlsView, Spinner levelList) {
+            if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces")) {
+                String levelValue = getVisibleParam(levelList);
+                String cmd = "su -c 'sh " + ICSIM_SCRIPT_PATH + " " + selected_caniface + levelValue + "'";
+                run_cmd(cmd);
+                showToast("Running ICSim...");
+
+                new Handler().postDelayed(() -> {
+                    icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale&view_only=true");
+                    controlsView.loadUrl("http://localhost:6081/vnc.html?autoconnect=true&resize=scale");
+                }, SHORT_DELAY + LONG_DELAY);
+            } else {
+                showToast("Please set a CAN interface!");
+            }
+        }
+
+        private void stopICSIM(WebView icsimView, WebView controlsView) {
+            run_cmd("su -c 'sh " + ICSIM_SCRIPT_PATH + " stop'");
+            showToast("Stopping ICSim...");
+            icsimView.setBackgroundColor(Color.BLACK);
+            icsimView.loadUrl("about:blank");
+            controlsView.setBackgroundColor(Color.BLACK);
+            controlsView.loadUrl("about:blank");
+        }
+
+        // Toggle floating WebView
         private void toggleFloatingICSIM() {
+            WebView icsimView = ICSIMWebViewHolder.getICSIMWebView(requireContext());
             if (floatingContainer == null) {
-                WebView icsimView = requireView().findViewById(R.id.icsim);
                 showFloatingWebView(icsimView);
             } else {
-                removeFloatingWebView();
+                removeFloatingWebView(icsimView);
             }
         }
 
-        private void removeFloatingWebView() {
+        // Remove floating WebView and restore to container
+        private void removeFloatingWebView(WebView webView) {
             if (floatingContainer != null) {
                 WindowManager wm = (WindowManager) requireContext().getSystemService(Context.WINDOW_SERVICE);
-                wm.removeView(floatingContainer);
+                try {
+                    wm.removeView(floatingContainer);
+                } catch (IllegalArgumentException ignored) {}
                 floatingContainer = null;
+
+                // Return WebView back to main container
+                FrameLayout container = requireView().findViewById(R.id.icsim_container);
+                if (webView.getParent() != null) ((ViewGroup) webView.getParent()).removeView(webView);
+                container.addView(webView, new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT
+                ));
             }
         }
 
-        private void showFloatingWebView(WebView originalWebView) {
+        // Show WebView in floating overlay
+        private void showFloatingWebView(WebView webView) {
             if (floatingContainer != null) return;
 
             final WindowManager wm = (WindowManager) requireContext().getSystemService(Context.WINDOW_SERVICE);
 
-            // Capture original parent and index
-            final ViewGroup originalParent = (ViewGroup) originalWebView.getParent();
-            final ViewGroup.LayoutParams originalLayoutParams = originalWebView.getLayoutParams();
-            final int originalIndex = (originalParent != null) ? originalParent.indexOfChild(originalWebView) : -1;
+            if (webView.getParent() != null) ((ViewGroup) webView.getParent()).removeView(webView);
 
-            if (originalParent != null) originalParent.removeView(originalWebView);
-
-            // Floating container
             floatingContainer = new FrameLayout(requireContext());
             floatingContainer.setLayoutParams(new FrameLayout.LayoutParams(floatingInitialWidth, floatingInitialHeight));
 
-            // Card wrapper
             MaterialCardView cardView = new MaterialCardView(requireContext());
             FrameLayout.LayoutParams cardParams = new FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT
+                    FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT
             );
             cardParams.setMargins(20, 0, 20, 10);
             cardView.setLayoutParams(cardParams);
             cardView.setRadius(16f);
             cardView.setCardElevation(8f);
-            cardView.setStrokeColor(ContextCompat.getColor(requireContext(), R.color.ifc_box_stroke));
             cardView.setStrokeWidth(4);
             cardView.setPreventCornerOverlap(false);
 
-            // Inner wrapper (to hold WebView + overlay)
             FrameLayout innerWrapper = new FrameLayout(requireContext());
-
-            // Add WebView
-            innerWrapper.addView(originalWebView, new FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT
+            innerWrapper.addView(webView, new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT
             ));
 
-            // Transparent overlay on top of WebView
+            // Transparent overlay for touch handling
             View overlay = new View(requireContext());
             overlay.setLayoutParams(new FrameLayout.LayoutParams(
-                    FrameLayout.LayoutParams.MATCH_PARENT,
-                    FrameLayout.LayoutParams.MATCH_PARENT
+                    FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT
             ));
             overlay.setBackgroundColor(Color.TRANSPARENT);
             innerWrapper.addView(overlay);
@@ -2411,23 +2420,10 @@ public class CARsenalFragment extends Fragment {
             floatingContainer.addView(closeBtn);
             ViewCompat.setElevation(closeBtn, 16f);
 
-            closeBtn.setOnClickListener(v -> {
-                try { wm.removeView(floatingContainer); } catch (IllegalArgumentException ignored) {}
-                floatingContainer = null;
+            closeBtn.setOnClickListener(v -> removeFloatingWebView(webView));
 
-                if (originalParent != null) {
-                    ViewGroup currentParent = (ViewGroup) originalWebView.getParent();
-                    if (currentParent != null) currentParent.removeView(originalWebView);
-
-                    originalParent.addView(originalWebView, originalIndex);
-                    originalWebView.setLayoutParams(originalLayoutParams);
-                }
-            });
-
-            // WindowManager
             final WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(
-                    floatingInitialWidth,
-                    floatingInitialHeight,
+                    floatingInitialWidth, floatingInitialHeight,
                     WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
                             WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
@@ -2440,7 +2436,7 @@ public class CARsenalFragment extends Fragment {
 
             wm.addView(floatingContainer, layoutParams);
 
-            // Drag and resize -> bind to overlay instead of WebView
+            // Touch for move/resize
             overlay.setOnTouchListener(new View.OnTouchListener() {
                 private float offsetX, offsetY;
                 private int startWidth, startHeight;
@@ -2455,7 +2451,7 @@ public class CARsenalFragment extends Fragment {
 
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
-                    if (event.getPointerCount() == 2) { // pinch resize
+                    if (event.getPointerCount() == 2) {
                         switch (event.getActionMasked()) {
                             case MotionEvent.ACTION_POINTER_DOWN:
                                 startDist = distance(event);
@@ -2476,7 +2472,7 @@ public class CARsenalFragment extends Fragment {
                                 break;
                         }
                         return true;
-                    } else if (event.getPointerCount() == 1) { // drag
+                    } else if (event.getPointerCount() == 1) {
                         switch (event.getActionMasked()) {
                             case MotionEvent.ACTION_DOWN:
                                 offsetX = event.getRawX() - layoutParams.x;
@@ -2493,53 +2489,73 @@ public class CARsenalFragment extends Fragment {
                 }
             });
 
-            // WebView should not consume touches at all
-            originalWebView.setOnTouchListener((v, event) -> true);
+            webView.setOnTouchListener((v, event) -> true);
+        }
+
+        private boolean isICSIMRunning() {
+            String output = exe.RunAsChrootOutput("pgrep -f icsim_service.sh");
+            return output != null && !output.trim().isEmpty();
         }
 
         @NonNull
         private ArrayAdapter<String> getStringArrayAdapter() {
             final String[] levelOptions = {"Level", "0", "1", "2"};
 
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, levelOptions) {
+            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(),
+                    android.R.layout.simple_spinner_item, levelOptions) {
                 @Override
-                public boolean isEnabled(int position) {
-                    // Disable "Level" item
-                    return position != 0;
-                }
+                public boolean isEnabled(int position) { return position != 0; }
 
                 @Override
                 public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
                     View view = super.getDropDownView(position, convertView, parent);
                     TextView tv = (TextView) view;
-                    if (position == 0) {
-                        tv.setTextColor(Color.GRAY);  // Hint text color
-                    } else {
-                        tv.setTextColor(Color.WHITE); // Normal text
-                    }
+                    tv.setTextColor(position == 0 ? Color.GRAY : Color.WHITE);
                     return view;
                 }
             };
-
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             return adapter;
         }
 
         private String getVisibleParam(View view) {
-            if (view.getVisibility() == View.VISIBLE) {
-                if (view instanceof EditText) {
-                    String input = ((EditText) view).getText().toString().trim();
-                    if (!input.isEmpty()) {
-                        return " -l " + input;
-                    }
-                } else if (view instanceof Spinner) {
-                    String selected = ((Spinner) view).getSelectedItem().toString().trim();
-                    if (!selected.isEmpty() && !selected.equals("Level")) {
-                        return " -l " + selected;
-                    }
-                }
+            if (view.getVisibility() == View.VISIBLE && view instanceof Spinner) {
+                String selected = ((Spinner) view).getSelectedItem().toString().trim();
+                if (!selected.isEmpty() && !selected.equals("Level")) return " -l " + selected;
             }
             return "";
+        }
+
+        public static class ICSIMWebViewHolder {
+            private static WebView icsimWebView;
+            private static WebView controlsWebView;
+
+            public static WebView getICSIMWebView(Context context) {
+                if (icsimWebView == null) {
+                    icsimWebView = new WebView(context.getApplicationContext());
+                    setupWebView(icsimWebView);
+                }
+                return icsimWebView;
+            }
+
+            public static WebView getControlsWebView(Context context) {
+                if (controlsWebView == null) {
+                    controlsWebView = new WebView(context.getApplicationContext());
+                    setupWebView(controlsWebView);
+                }
+                return controlsWebView;
+            }
+
+            private static void setupWebView(WebView webView) {
+                webView.getSettings().setJavaScriptEnabled(true);
+                webView.getSettings().setDomStorageEnabled(true);
+                webView.getSettings().setLoadWithOverviewMode(true);
+                webView.getSettings().setUseWideViewPort(true);
+                webView.getSettings().setBuiltInZoomControls(true);
+                webView.getSettings().setDisplayZoomControls(false);
+                webView.setWebViewClient(new WebViewClient());
+                webView.setBackgroundColor(Color.BLACK);
+            }
         }
     }
 
@@ -2871,11 +2887,7 @@ public class CARsenalFragment extends Fragment {
                 String result = exe.RunAsChrootOutput(command);
 
                 ArrayList<String> deviceIfaces = new ArrayList<>();
-                if (onlyUsbDevices) {
-                    deviceIfaces.add("USB Devices");
-                } else {
-                    deviceIfaces.add("Interfaces");
-                }
+                deviceIfaces.add(onlyUsbDevices ? "USB Devices" : "Interfaces");
 
                 if (result != null && !result.trim().isEmpty()) {
                     deviceIfaces.addAll(Arrays.asList(result.split("\n")));
@@ -2884,10 +2896,9 @@ public class CARsenalFragment extends Fragment {
                 new Handler(Looper.getMainLooper()).post(() -> {
                     ArrayAdapter<String> adapter = new ArrayAdapter<String>(context, android.R.layout.simple_list_item_1, deviceIfaces) {
                         @Override
-                        public boolean isEnabled(int position) {
-                            return position != 0; // disable first item
-                        }
+                        public boolean isEnabled(int position) { return position != 0; }
 
+                        @NonNull
                         @Override
                         public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
                             View view = super.getDropDownView(position, convertView, parent);
@@ -2899,13 +2910,13 @@ public class CARsenalFragment extends Fragment {
 
                     spinner.setAdapter(adapter);
 
-                    // Try to restore previous selection
+                    // Restore previous selection
                     String prevIface = sharedPreferences.getString(sharedPrefKey + "_name", null);
-                    int selectionIndex = 0; // default to "Interface (None)"
+                    int selectionIndex = 0;
                     if (prevIface != null && deviceIfaces.contains(prevIface)) {
                         selectionIndex = deviceIfaces.indexOf(prevIface);
                     } else if (deviceIfaces.size() > 1) {
-                        selectionIndex = 1; // first real interface
+                        selectionIndex = 1;
                     }
 
                     spinner.setSelection(selectionIndex);
@@ -2914,21 +2925,19 @@ public class CARsenalFragment extends Fragment {
                     spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                         @Override
                         public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                            if (pos != 0) { // skip placeholder (first item)
+                            if (pos != 0) {
                                 String selected = parentView.getItemAtPosition(pos).toString();
-                                sharedPreferences.edit()
-                                        .putString(sharedPrefKey + "_name", selected)
-                                        .apply();
+                                sharedPreferences.edit().putString(sharedPrefKey + "_name", selected).apply();
                                 callback.onInterfaceSelected(selected);
                             }
                         }
-
                         @Override
                         public void onNothingSelected(AdapterView<?> parentView) {
                             callback.onInterfaceSelected(deviceIfaces.get(0));
                         }
                     });
 
+                    // Show last detected non-CAN device
                     if (!onlyUsbDevices && deviceIfaces.size() > 1) {
                         String detected = exe.RunAsChrootOutput(
                                 "dmesg | grep \"now attached to\" | tail -1 | awk '{ $1=$2=$3=$4=\"\"; print substr($0, 5) }'"
@@ -2940,18 +2949,44 @@ public class CARsenalFragment extends Fragment {
                 });
             };
 
+            // Refresh button reloads WebViews safely
             if (refreshButton != null) {
                 refreshButton.setOnClickListener(v -> {
                     Toast.makeText(context, "Refreshing Devices...", Toast.LENGTH_SHORT).show();
                     executorService.submit(loadInterfaces);
 
-                    Activity activity = (Activity) context;
-                    WebView icsimView = activity.findViewById(R.id.icsim);
-                    WebView controlsView = activity.findViewById(R.id.controls);
-                    if (icsimView != null && controlsView != null) {
-                        icsimView.reload();
-                        controlsView.reload();
-                        Toast.makeText(context, "Refreshing ICSim display...", Toast.LENGTH_SHORT).show();
+                    if (context instanceof Activity) {
+                        Activity activity = (Activity) context;
+                        FrameLayout icsimContainer = activity.findViewById(R.id.icsim_container);
+                        FrameLayout controlsContainer = activity.findViewById(R.id.controls_container);
+
+                        WebView icsimView = CANICSIMFragment.ICSIMWebViewHolder.getICSIMWebView(context);
+                        WebView controlsView = CANICSIMFragment.ICSIMWebViewHolder.getControlsWebView(context);
+
+                        // Remove from any old parent
+                        if (icsimView.getParent() != null) ((ViewGroup) icsimView.getParent()).removeView(icsimView);
+                        if (controlsView.getParent() != null) ((ViewGroup) controlsView.getParent()).removeView(controlsView);
+
+                        // Re-add to containers
+                        if (icsimContainer != null && controlsContainer != null) {
+                            icsimContainer.addView(icsimView, new FrameLayout.LayoutParams(
+                                    FrameLayout.LayoutParams.MATCH_PARENT,
+                                    FrameLayout.LayoutParams.MATCH_PARENT
+                            ));
+                            controlsContainer.addView(controlsView, new FrameLayout.LayoutParams(
+                                    FrameLayout.LayoutParams.MATCH_PARENT,
+                                    FrameLayout.LayoutParams.MATCH_PARENT
+                            ));
+
+                            // Reload only if ICSIM process is running
+                            String output = exe.RunAsChrootOutput("ps aux | grep 'icsim'");
+                            if (output != null && !output.isEmpty()) {
+                                icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale&view_only=true");
+                                controlsView.loadUrl("http://localhost:6081/vnc.html?autoconnect=true&resize=scale");
+                            }
+
+                            Toast.makeText(context, "Refreshing ICSim display...", Toast.LENGTH_SHORT).show();
+                        }
                     }
                 });
             }
