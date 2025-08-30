@@ -2979,7 +2979,7 @@ public class CARsenalFragment extends Fragment {
                             ));
 
                             // Reload only if ICSIM process is running
-                            String output = exe.RunAsChrootOutput("ps aux | grep 'icsim'");
+                            String output = exe.RunAsChrootOutput("ps aux | pgrep 'icsim'");
                             if (output != null && !output.isEmpty()) {
                                 icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale&view_only=true");
                                 controlsView.loadUrl("http://localhost:6081/vnc.html?autoconnect=true&resize=scale");
