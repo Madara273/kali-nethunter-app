@@ -683,6 +683,7 @@
     <string name="nethunter_full_path_db_restore">Full path of the db file from where you want to restore:</string>
 
     <!-- CARsenal -->
+    <string name="about_carsenal">About CARsenal</string>
     <string name="audio_audio_control">Audio Control</string>
     <string name="audio_host_hint">Host</string>
     <string name="audio_server_host_text">127.0.0.1</string>
