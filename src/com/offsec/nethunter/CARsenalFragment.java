@@ -7,12 +7,15 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.graphics.PixelFormat;
 import android.graphics.Typeface;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.text.method.LinkMovementMethod;
 import android.util.Log;
 import android.view.Gravity;
@@ -20,8 +23,10 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
@@ -29,6 +34,7 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -42,12 +48,14 @@ import androidx.appcompat.widget.SwitchCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.text.HtmlCompat;
 import androidx.core.view.MenuProvider;
+import androidx.core.view.ViewCompat;
 import androidx.fragment.app.Fragment;
 import androidx.preference.PreferenceManager;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
@@ -152,6 +160,12 @@ public class CARsenalFragment extends Fragment {
                     stopItem = menu.add(Menu.NONE, R.id.action_stop, Menu.NONE, "Stop");
                     stopItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
                 }
+
+                MenuItem floatingItem = menu.findItem(R.id.action_floating);
+                if (floatingItem == null) {
+                    floatingItem = menu.add(Menu.NONE, R.id.action_floating, Menu.NONE, "Floating");
+                    floatingItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+                }
             }
 
             @Override
@@ -163,11 +177,17 @@ public class CARsenalFragment extends Fragment {
                 MenuItem settingsItem = menu.findItem(R.id.action_settings);
                 if (settingsItem != null) settingsItem.setVisible(currentTab == 0);
 
-                // Play/Stop visible only on ICSIM tab (tab index 4)
+                // CAN-USB Settings visible only on CAN-USB tab (tab index 2)
+                MenuItem canusbSettingsItem = menu.findItem(R.id.action_canusb_settings);
+                if (canusbSettingsItem != null) canusbSettingsItem.setVisible(currentTab == 2);
+
+                // Play/Stop/Floating visible only on ICSIM tab (tab index 4)
                 MenuItem playItem = menu.findItem(R.id.action_play);
                 MenuItem stopItem = menu.findItem(R.id.action_stop);
+                MenuItem floatingItem = menu.findItem(R.id.action_floating);
                 if (playItem != null) playItem.setVisible(currentTab == 4);
                 if (stopItem != null) stopItem.setVisible(currentTab == 4);
+                if (floatingItem != null) floatingItem.setVisible(currentTab == 4);
             }
 
             @Override
@@ -184,6 +204,15 @@ public class CARsenalFragment extends Fragment {
                 } else if (id == R.id.update) {
                     RunUpdate();
                     return true;
+                } else if (id == R.id.action_canusb_settings) {
+                        ViewPager2 mViewPager = rootView.findViewById(R.id.pagerCAN);
+                        if (mViewPager.getCurrentItem() == 2) { // CAN-USB tab
+                            Fragment current = getChildFragmentManager().getFragments().get(2);
+                            if (current instanceof CANUSBFragment) {
+                                ((CANUSBFragment) current).showCanUsbConfig();
+                            }
+                        }
+                        return true;
                 } else if (id == R.id.about) {
                     RunAbout();
                     return true;
@@ -203,6 +232,10 @@ public class CARsenalFragment extends Fragment {
                 } else if (id == R.id.action_stop) {
                     Button stopICSIM = rootView.findViewById(R.id.stop_icsim);
                     if (stopICSIM != null) stopICSIM.performClick(); // reuse existing listener
+                    return true;
+                } else if (id == R.id.action_floating) {
+                    Button floatICSIM = rootView.findViewById(R.id.floating_icsim);
+                    if (floatICSIM != null) floatICSIM.performClick(); // reuse existing listener
                     return true;
                 } else {
                     return false;
@@ -924,7 +957,6 @@ public class CARsenalFragment extends Fragment {
                         } else {
                             showToast("Interface " + selected_caniface + " (" + interface_type + ") started!");
                         }
-                        return;
                     }
 
                 } catch (NumberFormatException e) {
@@ -1046,16 +1078,16 @@ public class CARsenalFragment extends Fragment {
             txqCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> txqEditText.setEnabled(isChecked));
 
             // Build dialog
-            new MaterialAlertDialogBuilder(requireContext())
+            new MaterialAlertDialogBuilder(requireContext(), R.style.DialogStyleCompat)
                     .setTitle("Interface Settings")
                     .setView(dialogView)
                     .setPositiveButton("Apply", (dialog, which) -> {
                         // Save values
                         prefs.edit()
                                 .putBoolean("mtu_enabled", mtuCheckBox.isChecked())
-                                .putString("mtu_value", mtuEditText.getText().toString())
                                 .putBoolean("txq_enabled", txqCheckBox.isChecked())
-                                .putString("txq_value", txqEditText.getText().toString())
+                                .putString("mtu_value", String.valueOf(mtuEditText.getText()))
+                                .putString("txq_value", String.valueOf(txqEditText.getText()))
                                 .apply();
                     })
                     .setNegativeButton("Cancel", null)
@@ -1511,10 +1543,9 @@ public class CARsenalFragment extends Fragment {
     }
 
     public static class CANUSBFragment extends CARsenalFragment {
-        final ShellExecuter exe = new ShellExecuter();
+        private final ShellExecuter exe = new ShellExecuter();
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private Activity activity;
-        private boolean isDebugEnabled = false;
         private EditText SelectedBaudrateUSB;
         private EditText SelectedCanSpeedUSB;
         private String selected_usb;
@@ -1532,10 +1563,9 @@ public class CARsenalFragment extends Fragment {
             SelectedBaudrateUSB = rootView.findViewById(R.id.baudrate_usb);
             SelectedCanSpeedUSB = rootView.findViewById(R.id.canspeed_usb);
 
-            // Devices Interfaces
+            // Devices Interfaces Spinner
             Spinner spinner = rootView.findViewById(R.id.device_interface);
             ImageButton refreshBtn = rootView.findViewById(R.id.refreshUSB);
-
             SpinnerUtils.setupDeviceInterfaceSpinner(
                     requireContext(),
                     executorService,
@@ -1548,178 +1578,114 @@ public class CARsenalFragment extends Fragment {
                     iface -> selected_usb = iface
             );
 
-            // Can-Usb Mode Spinner
-            final Spinner canusbModeList = rootView.findViewById(R.id.usb_mode_spinner);
-            ArrayAdapter<String> adapter = getStringArrayAdapter();
-            canusbModeList.setAdapter(adapter);
-            canusbModeList.setSelection(0);  // Set initial selection to "Mode"
-
-            canusbModeList.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                    if (pos != 0) { // Ignore "Mode" hint
-                        String canusbmode_selected = parentView.getItemAtPosition(pos).toString();
-                        sharedpreferences.edit().putString("canusbmode_selected", canusbmode_selected).apply();
-                    }
-                }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> parentView) {
-                    // Do nothing
-                }
-            });
-
-            // Toggle Buttons
-            // Counter
-            Button btnCounter = rootView.findViewById(R.id.btn_toggle_usb_counter);
-            TextInputLayout counterContainer = rootView.findViewById(R.id.counter_container);
-
-            btnCounter.setOnClickListener(v -> {
-                boolean visible = counterContainer.getVisibility() == View.VISIBLE;
-                counterContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnCounter.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Data
-            Button btnData = rootView.findViewById(R.id.btn_toggle_usb_data);
-            TextInputLayout dataContainer = rootView.findViewById(R.id.data_container);
-
-            btnData.setOnClickListener(v -> {
-                boolean visible = dataContainer.getVisibility() == View.VISIBLE;
-                dataContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnData.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // ID
-            Button btnID = rootView.findViewById(R.id.btn_toggle_usb_id);
-            TextInputLayout idContainer = rootView.findViewById(R.id.id_container);
-
-            btnID.setOnClickListener(v -> {
-                boolean visible = idContainer.getVisibility() == View.VISIBLE;
-                idContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnID.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-
-            // Mode
-            Button btnMode = rootView.findViewById(R.id.btn_toggle_usb_mode);
-            View modeContainer = rootView.findViewById(R.id.usb_mode_container);
-
-            btnMode.setOnClickListener(v -> {
-                boolean visible = modeContainer.getVisibility() == View.VISIBLE;
-                modeContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnMode.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Sleep
-            Button btnSleep = rootView.findViewById(R.id.btn_toggle_usb_sleep);
-            TextInputLayout sleepContainer = rootView.findViewById(R.id.sleep_container);
-
-            btnSleep.setOnClickListener(v -> {
-                boolean visible = sleepContainer.getVisibility() == View.VISIBLE;
-                sleepContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnSleep.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Debug (TTY Output) Switch
-            SwitchCompat btnDebug = rootView.findViewById(R.id.btn_toggle_usb_ttyOutput);
-
-            btnDebug.setChecked(isDebugEnabled);
-            btnDebug.setTextColor(ContextCompat.getColor(requireContext(),
-                    isDebugEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light));
-
-            btnDebug.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                isDebugEnabled = isChecked;
-
-                int colorRes = isDebugEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnDebug.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
-            });
-
-            // Start USB-CAN
-            Button USBCanSendButton = rootView.findViewById(R.id.start_canusb_send);
-
-            USBCanSendButton.setOnClickListener(v -> {
-                String USBCANSpeed = SelectedCanSpeedUSB.getText().toString();
-                String USBBaudrate = SelectedBaudrateUSB.getText().toString();
-                String debugEnabled = isDebugEnabled ? " -t" : "";
-                String countValue = getVisibleParam(counterContainer.getEditText(), " -n ");
-                String idValue = getVisibleParam(idContainer.getEditText(), " -i ");
-                String dataValue = getVisibleParam(dataContainer.getEditText(), " -j ");
-                String sleepValue = getVisibleParam(sleepContainer.getEditText(), " -g ");
-
-                String modeValue = "";
-                if (modeContainer.getVisibility() == View.VISIBLE) {
-                    String selected = canusbModeList.getSelectedItem().toString().trim();
-                    if (!selected.isEmpty() && !selected.equals("Mode")) {
-                        modeValue = " -m " + selected;
-                    }
-                }
-
-                if (!selected_usb.isEmpty() && !selected_usb.equals("USB Device (None)") && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
-                    run_cmd("canusb -d " + selected_usb + " -s " + USBCANSpeed + " -b " + USBBaudrate + debugEnabled + idValue + dataValue + sleepValue + countValue + modeValue);
-                } else {
-                    showToast("Please ensure your USB Device and USB CAN Speed, Baudrate, Data fields is set!");
-                }
-
-                activity.invalidateOptionsMenu();
-            });
+            // Start USB-CAN button
+            rootView.findViewById(R.id.start_canusb_send).setOnClickListener(v -> runCanUsb());
 
             return rootView;
         }
 
-        @NonNull
-        private ArrayAdapter<String> getStringArrayAdapter() {
-            final String[] modeOptions = {"Mode", "0", "1", "2"};
+        private void showCanUsbConfig() {
+            LayoutInflater inflater = LayoutInflater.from(requireContext());
+            View dialogView = inflater.inflate(R.layout.carsenal_canusb_dialog, null);
 
+            // Inputs
+            final EditText idInput = dialogView.findViewById(R.id.usb_id_value);
+            final EditText counterInput = dialogView.findViewById(R.id.usb_counter_value);
+            final EditText sleepInput = dialogView.findViewById(R.id.usb_sleep_value);
+            final EditText dataInput = dialogView.findViewById(R.id.usb_data_value);
+            final Spinner modeSpinner = dialogView.findViewById(R.id.usb_mode_spinner);
+            final SwitchCompat debugSwitch = dialogView.findViewById(R.id.btn_toggle_usb_ttyOutput);
+
+            // Checkboxes
+            final MaterialCheckBox idCheckbox = dialogView.findViewById(R.id.id_checkbox);
+            final MaterialCheckBox counterCheckbox = dialogView.findViewById(R.id.counter_checkbox);
+            final MaterialCheckBox sleepCheckbox = dialogView.findViewById(R.id.sleep_checkbox);
+            final MaterialCheckBox dataCheckbox = dialogView.findViewById(R.id.data_checkbox);
+            final MaterialCheckBox modeCheckbox = dialogView.findViewById(R.id.mode_checkbox);
+            final MaterialCheckBox debugCheckbox = dialogView.findViewById(R.id.debug_checkbox);
+
+            // Enable/disable inputs based on checkbox
+            idCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> idInput.setEnabled(isChecked));
+            counterCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> counterInput.setEnabled(isChecked));
+            sleepCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> sleepInput.setEnabled(isChecked));
+            dataCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> dataInput.setEnabled(isChecked));
+            modeCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> modeSpinner.setEnabled(isChecked));
+            debugCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> debugSwitch.setChecked(isChecked));
+
+            // Setup mode spinner
+            final String[] modeOptions = {"Mode", "0", "1", "2"};
             ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, modeOptions) {
                 @Override
                 public boolean isEnabled(int position) {
-                    // Disable "Mode" item
-                    return position != 0;
+                    return position != 0; // Disable "Mode" hint
                 }
 
                 @Override
                 public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
-                    View view = super.getDropDownView(position, convertView, parent);
-                    TextView tv = (TextView) view;
-                    if (position == 0) {
-                        tv.setTextColor(Color.GRAY);  // Hint text color
-                    } else {
-                        tv.setTextColor(Color.WHITE); // Normal text
-                    }
-                    return view;
+                    TextView tv = (TextView) super.getDropDownView(position, convertView, parent);
+                    tv.setTextColor(position == 0 ? Color.GRAY : Color.WHITE);
+                    return tv;
                 }
             };
-
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            return adapter;
+            modeSpinner.setAdapter(adapter);
+            modeSpinner.setSelection(0);
+            modeSpinner.setEnabled(false);
+
+            // Load saved prefs for debug
+            SharedPreferences prefs = requireContext().getSharedPreferences("carsenal_prefs", Context.MODE_PRIVATE);
+            boolean debugEnabled = prefs.getBoolean("usb_debug_enabled", false);
+            debugSwitch.setChecked(debugEnabled);
+            debugCheckbox.setChecked(debugEnabled);
+
+            // Build dialog
+            new MaterialAlertDialogBuilder(requireContext(), R.style.DialogStyleCompat)
+                    .setTitle("CAN-USB Configuration")
+                    .setView(dialogView)
+                    .setPositiveButton("Apply", (dialog, which) -> {
+                        SharedPreferences.Editor editor = prefs.edit();
+
+                        // Debug
+                        editor.putBoolean("usb_debug_enabled", debugSwitch.isChecked());
+                        editor.putBoolean("usb_id_enabled", idCheckbox.isChecked());
+                        editor.putBoolean("usb_counter_enabled", counterCheckbox.isChecked());
+                        editor.putBoolean("usb_sleep_enabled", sleepCheckbox.isChecked());
+                        editor.putBoolean("usb_data_enabled", dataCheckbox.isChecked());
+                        editor.putBoolean("usb_mode_enabled", modeCheckbox.isChecked());
+
+                        // Save values only if enabled
+                        if (idCheckbox.isChecked()) editor.putString("usb_id_value", idInput.getText().toString().trim());
+                        if (counterCheckbox.isChecked()) editor.putString("usb_counter_value", counterInput.getText().toString().trim());
+                        if (sleepCheckbox.isChecked()) editor.putString("usb_sleep_value", sleepInput.getText().toString().trim());
+                        if (dataCheckbox.isChecked()) editor.putString("usb_data_value", dataInput.getText().toString().trim());
+                        if (modeCheckbox.isChecked()) editor.putString("usb_mode_value", modeSpinner.getSelectedItem().toString());
+
+                        editor.apply();
+                    })
+                    .setNegativeButton("Cancel", null)
+                    .show();
         }
 
-        private String getVisibleParam(View view, String prefix) {
-            if (view != null && view.getVisibility() == View.VISIBLE) {
-                if (view instanceof EditText) {
-                    String input = ((EditText) view).getText().toString().trim();
-                    if (!input.isEmpty()) {
-                        return prefix + input;
-                    }
-                } else if (view instanceof Spinner) {
-                    String selected = ((Spinner) view).getSelectedItem().toString().trim();
-                    if (!selected.isEmpty()) {
-                        return prefix + selected;
-                    }
-                }
+        private void runCanUsb() {
+            String USBCANSpeed = SelectedCanSpeedUSB.getText().toString();
+            String USBBaudrate = SelectedBaudrateUSB.getText().toString();
+            SharedPreferences prefs = requireContext().getSharedPreferences("carsenal_prefs", Context.MODE_PRIVATE);
+
+            String debugEnabled = prefs.getBoolean("usb_debug_enabled", false) ? " -t" : "";
+            String countValue = prefs.getBoolean("usb_counter_enabled", false) ? " -n " + prefs.getString("usb_counter_value", "") : "";
+            String dataValue = prefs.getBoolean("usb_data_enabled", false) ? " -j " + prefs.getString("usb_data_value", "") : "";
+            String idValue = prefs.getBoolean("usb_id_enabled", false) ? " -i " + prefs.getString("usb_id_value", "") : "";
+            String sleepValue = prefs.getBoolean("usb_sleep_enabled", false) ? " -g " + prefs.getString("usb_sleep_value", "") : "";
+            String modeValue = prefs.getBoolean("usb_mode_enabled", false) ? " -m " + prefs.getString("usb_mode_value", "") : "";
+
+            if (!selected_usb.isEmpty() && !selected_usb.equals("USB Device (None)") && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
+                run_cmd("canusb -d " + selected_usb + " -s " + USBCANSpeed + " -b " + USBBaudrate +
+                        debugEnabled + idValue + dataValue + sleepValue + countValue + modeValue);
+            } else {
+                showToast("Please ensure your USB Device and USB CAN Speed, Baudrate, Data fields are set!");
             }
-            return "";
+
+            activity.invalidateOptionsMenu();
         }
     }
 
@@ -2244,6 +2210,9 @@ public class CARsenalFragment extends Fragment {
         private static final String ICSIM_SCRIPT_PATH = "/opt/car_hacking/icsim_service.sh";
         private static final long SHORT_DELAY = 1000;
         private static final long LONG_DELAY = 2000;
+        private FrameLayout floatingContainer;
+        private final int floatingInitialWidth = 800;
+        private final int floatingInitialHeight = 600;
         private String selected_caniface;
 
 
@@ -2297,6 +2266,17 @@ public class CARsenalFragment extends Fragment {
                 }
             });
 
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                if (!Settings.canDrawOverlays(requireContext())) {
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
+                            Uri.parse("package:" + requireContext().getPackageName()));
+                    startActivity(intent);
+                }
+            }
+
+            Button floatICSIM = rootView.findViewById(R.id.floating_icsim);
+            floatICSIM.setOnClickListener(v -> toggleFloatingICSIM());
+
             // ICSIM
             Button runICSIM = rootView.findViewById(R.id.run_icsim);
             runICSIM.setOnClickListener(v -> {
@@ -2325,7 +2305,7 @@ public class CARsenalFragment extends Fragment {
                             view.setWebViewClient(new WebViewClient());
                         }
 
-                        icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale");
+                        icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale&view_only=true");
                         controlsView.loadUrl("http://localhost:6081/vnc.html?autoconnect=true&resize=scale");
 
                     }, SHORT_DELAY + LONG_DELAY);
@@ -2348,6 +2328,169 @@ public class CARsenalFragment extends Fragment {
             });
 
             return rootView;
+        }
+
+        private void toggleFloatingICSIM() {
+            if (floatingContainer == null) {
+                WebView icsimView = requireView().findViewById(R.id.icsim);
+                showFloatingWebView(icsimView);
+            } else {
+                removeFloatingWebView();
+            }
+        }
+
+        private void removeFloatingWebView() {
+            if (floatingContainer != null) {
+                WindowManager wm = (WindowManager) requireContext().getSystemService(Context.WINDOW_SERVICE);
+                wm.removeView(floatingContainer);
+                floatingContainer = null;
+            }
+        }
+
+        private void showFloatingWebView(WebView originalWebView) {
+            if (floatingContainer != null) return;
+
+            final WindowManager wm = (WindowManager) requireContext().getSystemService(Context.WINDOW_SERVICE);
+
+            // Capture original parent and index
+            final ViewGroup originalParent = (ViewGroup) originalWebView.getParent();
+            final ViewGroup.LayoutParams originalLayoutParams = originalWebView.getLayoutParams();
+            final int originalIndex = (originalParent != null) ? originalParent.indexOfChild(originalWebView) : -1;
+
+            if (originalParent != null) originalParent.removeView(originalWebView);
+
+            // Floating container
+            floatingContainer = new FrameLayout(requireContext());
+            floatingContainer.setLayoutParams(new FrameLayout.LayoutParams(floatingInitialWidth, floatingInitialHeight));
+
+            // Card wrapper
+            MaterialCardView cardView = new MaterialCardView(requireContext());
+            FrameLayout.LayoutParams cardParams = new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+            );
+            cardParams.setMargins(20, 0, 20, 10);
+            cardView.setLayoutParams(cardParams);
+            cardView.setRadius(16f);
+            cardView.setCardElevation(8f);
+            cardView.setStrokeColor(ContextCompat.getColor(requireContext(), R.color.ifc_box_stroke));
+            cardView.setStrokeWidth(4);
+            cardView.setPreventCornerOverlap(false);
+
+            // Inner wrapper (to hold WebView + overlay)
+            FrameLayout innerWrapper = new FrameLayout(requireContext());
+
+            // Add WebView
+            innerWrapper.addView(originalWebView, new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+            ));
+
+            // Transparent overlay on top of WebView
+            View overlay = new View(requireContext());
+            overlay.setLayoutParams(new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+            ));
+            overlay.setBackgroundColor(Color.TRANSPARENT);
+            innerWrapper.addView(overlay);
+
+            cardView.addView(innerWrapper);
+            floatingContainer.addView(cardView);
+
+            // Close button
+            ImageButton closeBtn = new ImageButton(requireContext());
+            closeBtn.setImageResource(R.drawable.ic_close_red);
+            FrameLayout.LayoutParams closeParams = new FrameLayout.LayoutParams(80, 80);
+            closeParams.gravity = Gravity.TOP | Gravity.END;
+            closeBtn.setLayoutParams(closeParams);
+            floatingContainer.addView(closeBtn);
+            ViewCompat.setElevation(closeBtn, 16f);
+
+            closeBtn.setOnClickListener(v -> {
+                try { wm.removeView(floatingContainer); } catch (IllegalArgumentException ignored) {}
+                floatingContainer = null;
+
+                if (originalParent != null) {
+                    ViewGroup currentParent = (ViewGroup) originalWebView.getParent();
+                    if (currentParent != null) currentParent.removeView(originalWebView);
+
+                    originalParent.addView(originalWebView, originalIndex);
+                    originalWebView.setLayoutParams(originalLayoutParams);
+                }
+            });
+
+            // WindowManager
+            final WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(
+                    floatingInitialWidth,
+                    floatingInitialHeight,
+                    WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY,
+                    WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE |
+                            WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN |
+                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    PixelFormat.TRANSLUCENT
+            );
+            layoutParams.gravity = Gravity.TOP | Gravity.START;
+            layoutParams.x = 100;
+            layoutParams.y = 100;
+
+            wm.addView(floatingContainer, layoutParams);
+
+            // Drag and resize -> bind to overlay instead of WebView
+            overlay.setOnTouchListener(new View.OnTouchListener() {
+                private float offsetX, offsetY;
+                private int startWidth, startHeight;
+                private float startDist = 0;
+                private boolean isResizing = false;
+
+                private float distance(MotionEvent e) {
+                    float dx = e.getX(0) - e.getX(1);
+                    float dy = e.getY(0) - e.getY(1);
+                    return (float) Math.sqrt(dx * dx + dy * dy);
+                }
+
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    if (event.getPointerCount() == 2) { // pinch resize
+                        switch (event.getActionMasked()) {
+                            case MotionEvent.ACTION_POINTER_DOWN:
+                                startDist = distance(event);
+                                startWidth = layoutParams.width;
+                                startHeight = layoutParams.height;
+                                isResizing = true;
+                                break;
+                            case MotionEvent.ACTION_MOVE:
+                                if (isResizing) {
+                                    float scale = distance(event) / startDist;
+                                    layoutParams.width = (int) (startWidth * scale);
+                                    layoutParams.height = (int) (startHeight * scale);
+                                    wm.updateViewLayout(floatingContainer, layoutParams);
+                                }
+                                break;
+                            case MotionEvent.ACTION_POINTER_UP:
+                                isResizing = false;
+                                break;
+                        }
+                        return true;
+                    } else if (event.getPointerCount() == 1) { // drag
+                        switch (event.getActionMasked()) {
+                            case MotionEvent.ACTION_DOWN:
+                                offsetX = event.getRawX() - layoutParams.x;
+                                offsetY = event.getRawY() - layoutParams.y;
+                                return true;
+                            case MotionEvent.ACTION_MOVE:
+                                layoutParams.x = (int) (event.getRawX() - offsetX);
+                                layoutParams.y = (int) (event.getRawY() - offsetY);
+                                wm.updateViewLayout(floatingContainer, layoutParams);
+                                return true;
+                        }
+                    }
+                    return false;
+                }
+            });
+
+            // WebView should not consume touches at all
+            originalWebView.setOnTouchListener((v, event) -> true);
         }
 
         @NonNull

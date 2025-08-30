@@ -7,6 +7,11 @@
         android:title="Settings"
         app:showAsAction="always" />
     <item
+        android:id="@+id/action_canusb_settings"
+        android:icon="@drawable/ic_settings"
+        android:title="CAN-USB Settings"
+        app:showAsAction="ifRoom"/>
+    <item
         android:id="@+id/action_play"
         android:icon="@drawable/ic_action_play"
         android:title="Play"
@@ -15,6 +20,11 @@
         android:id="@+id/action_stop"
         android:icon="@drawable/ic_action_stop"
         android:title="Stop"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_floating"
+        android:icon="@drawable/ic_action_floating"
+        android:title="Floating"
         app:showAsAction="always" />
     <item
         android:id="@+id/documentation"
