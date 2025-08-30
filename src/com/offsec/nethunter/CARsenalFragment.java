@@ -1687,28 +1687,6 @@ public class CARsenalFragment extends Fragment {
 
             activity.invalidateOptionsMenu();
         }
-
-        @NonNull
-        private ArrayAdapter<String> getStringArrayAdapter() {
-            final String[] modeOptions = {"Mode", "0", "1", "2"};
-            ArrayAdapter<String> adapter = new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, modeOptions) {
-                @Override
-                public boolean isEnabled(int position) {
-                    return position != 0; // Disable "Mode" hint
-                }
-
-                @Override
-                public View getDropDownView(int position, View convertView, @NonNull ViewGroup parent) {
-                    View view = super.getDropDownView(position, convertView, parent);
-                    TextView tv = (TextView) view;
-                    tv.setTextColor(position == 0 ? Color.GRAY : Color.WHITE);
-                    return view;
-                }
-            };
-
-            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            return adapter;
-        }
     }
 
     public static class CANCARIBOUFragment extends CARsenalFragment {
@@ -2233,8 +2211,8 @@ public class CARsenalFragment extends Fragment {
         private static final long SHORT_DELAY = 1000;
         private static final long LONG_DELAY = 2000;
         private FrameLayout floatingContainer;
-        private int floatingInitialWidth = 800;
-        private int floatingInitialHeight = 600;
+        private final int floatingInitialWidth = 800;
+        private final int floatingInitialHeight = 600;
         private String selected_caniface;
 
 
