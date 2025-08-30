@@ -1749,6 +1749,17 @@ public class CARsenalFragment extends Fragment {
             separateLineContainer = rootView.findViewById(R.id.separate_line_container);
             idContainer = rootView.findViewById(R.id.id_container);
 
+            seedContainer.getEditText().setText("");
+            minContainer.getEditText().setText("");
+            maxContainer.getEditText().setText("");
+            srcContainer.getEditText().setText("");
+            dstContainer.getEditText().setText("");
+            delayContainer.getEditText().setText("");
+            lengthContainer.getEditText().setText("");
+            startAddrContainer.getEditText().setText("");
+            separateLineContainer.getEditText().setText("");
+            idContainer.getEditText().setText("");
+
             // Pad Switch
             SwitchCompat btnPad = rootView.findViewById(R.id.btn_toggle_pad);
 
@@ -2066,18 +2077,11 @@ public class CARsenalFragment extends Fragment {
             return rootView;
         }
 
-        private String getVisibleParam(View view, String prefix) {
-            if (view != null && view.getVisibility() == View.VISIBLE) {
-                if (view instanceof EditText) {
-                    String input = ((EditText) view).getText().toString().trim();
-                    if (!input.isEmpty()) {
-                        return prefix + input;
-                    }
-                } else if (view instanceof Spinner) {
-                    String selected = ((Spinner) view).getSelectedItem().toString().trim();
-                    if (!selected.isEmpty()) {
-                        return prefix + selected;
-                    }
+        private String getVisibleParam(EditText editText, String prefix) {
+            if (editText != null && editText.getVisibility() == View.VISIBLE) {
+                String input = editText.getText().toString().trim();
+                if (!input.isEmpty() && !input.equals(editText.getHint().toString())) {
+                    return prefix + input;
                 }
             }
             return "";
