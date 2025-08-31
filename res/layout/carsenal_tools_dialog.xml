@@ -1,0 +1,358 @@
+<!-- res/layout/carsenal_tools_dialog.xml -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <!-- Tools Configuration Container -->
+        <LinearLayout
+            android:id="@+id/tools_config"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:spacing="8dp">
+
+            <!-- CAN-Utils Configuration Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="4dp"
+                android:padding="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/textView1"
+                        android:gravity="center"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:text="CAN-Utils Configuration"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:textStyle="bold"/>
+
+                    <!-- Sequence -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginEnd="20dp"
+                        android:hint="@string/Sequence"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/cansend_sequence"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:text="@string/SequenceValue"
+                            android:textColor="@color/white"/>
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- Input File Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginEnd="20dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="8dp"
+                        android:spacing="8dp">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:hint="@string/Input"
+                            app:strokeWidth="2dp"
+                            app:boxStrokeWidthFocused="3dp"
+                            app:boxStrokeColor="@color/ifc_box_stroke"
+                            app:boxBackgroundColor="@color/transparent"
+                            app:hintTextColor="@color/ifc_hint_text">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/inputfilepath"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="text"
+                                android:text="@string/CanLogPath"
+                                android:textColor="@color/white" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/inputfilebrowse"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:icon="@drawable/baseline_folder_open_24"
+                            android:layout_marginStart="8dp"
+                            app:iconGravity="textStart"/>
+
+                    </LinearLayout>
+
+                    <!-- Output File Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginEnd="20dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="8dp"
+                        android:spacing="8dp">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:hint="@string/Output"
+                            app:strokeWidth="2dp"
+                            app:boxStrokeWidthFocused="3dp"
+                            app:boxStrokeColor="@color/ifc_box_stroke"
+                            app:boxBackgroundColor="@color/transparent"
+                            app:hintTextColor="@color/ifc_hint_text">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/outputfilepath"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="text"
+                                android:text="@string/CanLogPath"
+                                android:textColor="@color/white" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/outputfilebrowse"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            app:icon="@drawable/baseline_folder_open_24"
+                            android:layout_marginStart="8dp"
+                            app:iconGravity="textStart"/>
+
+                    </LinearLayout>
+
+                    <!-- Advanced Options -->
+                    <LinearLayout
+                        android:id="@+id/tools_advanced_options"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:layout_marginTop="8dp">
+
+                        <LinearLayout
+                            android:id="@+id/button_row"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginEnd="20dp"
+                            android:orientation="horizontal"
+                            android:gravity="center"
+                            android:layout_marginTop="4dp">
+
+                            <com.google.android.material.card.MaterialCardView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                app:cardCornerRadius="4dp"
+                                android:padding="8dp">
+
+                                <androidx.appcompat.widget.SwitchCompat
+                                    android:id="@+id/btn_toggle_interactive"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/Interactive"
+                                    android:textColor="@android:color/holo_red_light"
+                                    android:textAppearance="?android:attr/textAppearanceSmall"
+                                    android:paddingStart="12dp"
+                                    android:gravity="center_vertical" />
+
+                            </com.google.android.material.card.MaterialCardView>
+
+                            <com.google.android.material.card.MaterialCardView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                app:cardCornerRadius="4dp"
+                                android:layout_marginStart="5dp"
+                                android:padding="8dp">
+
+                                <androidx.appcompat.widget.SwitchCompat
+                                    android:id="@+id/btn_toggle_verbose"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/Verbose"
+                                    android:textColor="@android:color/holo_red_light"
+                                    android:textAppearance="?android:attr/textAppearanceSmall"
+                                    android:paddingStart="12dp"
+                                    android:gravity="center_vertical" />
+
+                            </com.google.android.material.card.MaterialCardView>
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/button_row2"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginEnd="20dp"
+                            android:layout_marginBottom="10dp"
+                            android:orientation="horizontal"
+                            android:gravity="center"
+                            android:layout_marginTop="4dp">
+
+                            <com.google.android.material.card.MaterialCardView
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                app:cardCornerRadius="4dp"
+                                android:padding="8dp">
+
+                                <androidx.appcompat.widget.SwitchCompat
+                                    android:id="@+id/btn_toggle_loopback"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="@string/LocalLoopback"
+                                    android:textColor="@android:color/holo_green_light"
+                                    android:textAppearance="?android:attr/textAppearanceSmall"
+                                    android:gravity="center_vertical"
+                                    android:paddingStart="12dp"
+                                    android:checked="true" />
+
+                            </com.google.android.material.card.MaterialCardView>
+
+                        </LinearLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- Cannelloni Configuration Card -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="8dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="4dp"
+                android:padding="12dp">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/cannelloniConf"
+                        android:gravity="center"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginTop="10dp"
+                        android:layout_marginBottom="10dp"
+                        android:text="Cannelloni Configuration"
+                        android:textAppearance="?android:attr/textAppearanceMedium"
+                        android:textStyle="bold"/>
+
+                    <!-- RHOST -->
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginEnd="20dp"
+                        android:hint="@string/RHOST"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/cannelloni_rhost"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:text="@string/RHOSTValue"
+                            android:textColor="@color/white"
+                            android:maxLength="15" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <!-- RPORT / LPORT Row -->
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="20dp"
+                        android:layout_marginEnd="20dp"
+                        android:layout_marginBottom="10dp"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="8dp"
+                        android:spacing="8dp">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:hint="@string/RPORT"
+                            app:strokeWidth="2dp"
+                            app:boxStrokeWidthFocused="3dp"
+                            app:boxStrokeColor="@color/ifc_box_stroke"
+                            app:boxBackgroundColor="@color/transparent"
+                            app:hintTextColor="@color/ifc_hint_text">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/cannelloni_rport"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="number"
+                                android:text="@string/PORTValue"
+                                android:textColor="@color/white"
+                                android:maxLength="6"/>
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:hint="@string/LPORT"
+                            app:boxStrokeColor="@color/ifc_box_stroke"
+                            app:strokeWidth="2dp"
+                            app:boxStrokeWidthFocused="3dp"
+                            app:boxBackgroundColor="@color/transparent"
+                            app:hintTextColor="@color/ifc_hint_text">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/cannelloni_lport"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="number"
+                                android:text="@string/PORTValue"
+                                android:textColor="@color/white"
+                                android:maxLength="6"/>
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                    </LinearLayout>
+
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+        </LinearLayout>
+    </LinearLayout>
+</ScrollView>
