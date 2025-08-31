@@ -72,7 +72,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.Map;
@@ -1138,7 +1137,7 @@ public class CARsenalFragment extends Fragment {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.carsenal_tools, container, false);
-            View dialogView = inflater.inflate(R.layout.carsenal_tools_dialog, null);
+            View dialogView = inflater.inflate(R.layout.carsenal_tools_dialog, container, false);
 
             final EditText cansend_sequence = dialogView.findViewById(R.id.cansend_sequence);
             final EditText SelectedRHost = dialogView.findViewById(R.id.cannelloni_rhost);

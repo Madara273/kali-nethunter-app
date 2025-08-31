@@ -175,9 +175,9 @@
                         android:id="@+id/cariboufilebrowse"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/Browse"
-                        android:textColor="#FFFFFFFF"
-                        android:layout_marginStart="8dp" />
+                        app:icon="@drawable/baseline_folder_open_24"
+                        android:layout_marginStart="8dp"
+                        app:iconGravity="textStart"/>
 
                 </LinearLayout>
 
