@@ -26,15 +26,6 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <!-- Checkbox gets weight -->
-                <com.google.android.material.checkbox.MaterialCheckBox
-                    android:id="@+id/mtu_checkbox"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="2"
-                    android:text="MTU"
-                    android:checked="false" />
-
                 <!-- Input field gets weight -->
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/mtu_input_layout"
@@ -43,47 +34,22 @@
                     android:layout_weight="2"
                     app:boxStrokeColor="@color/ifc_box_stroke"
                     app:boxBackgroundColor="@color/transparent"
-                    android:hint="mtu value">
+                    android:hint="MTU Value">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/mtu_value"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="number"
-                        android:text="72"
-                        android:enabled="false"/>
+                        android:inputType="number"/>
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
-        </LinearLayout>
-    </com.google.android.material.card.MaterialCardView>
-
-    <com.google.android.material.card.MaterialCardView
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:cardCornerRadius="12dp"
-        app:cardElevation="4dp">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="16dp"
-            android:gravity="center_vertical">
 
             <!-- Txqueuelen Row -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
                 android:orientation="horizontal">
-
-                <!-- Checkbox gets same weight -->
-                <com.google.android.material.checkbox.MaterialCheckBox
-                    android:id="@+id/txq_checkbox"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="2"
-                    android:text="Txqueuelen"
-                    android:checked="false" />
 
                 <!-- Input field gets same weight as MTU input -->
                 <com.google.android.material.textfield.TextInputLayout
@@ -93,15 +59,13 @@
                     android:layout_weight="2"
                     app:boxStrokeColor="@color/ifc_box_stroke"
                     app:boxBackgroundColor="@color/transparent"
-                    android:hint="txq value">
+                    android:hint="Txqueuelen Value">
 
                     <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/txq_value"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:inputType="number"
-                        android:text="1000"
-                        android:enabled="false"/>
+                        android:inputType="number"/>
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 

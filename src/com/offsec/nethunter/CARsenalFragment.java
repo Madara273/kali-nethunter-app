@@ -415,20 +415,6 @@ public class CARsenalFragment extends Fragment {
                 SetupDialog();
             }
 
-            // Services Toggle
-            Button btnServicesToggle = rootView.findViewById(R.id.btn_toggle_services);
-            LinearLayout servicesLayout = rootView.findViewById(R.id.main_services);
-
-            btnServicesToggle.setOnClickListener(v -> {
-                if (servicesLayout.getVisibility() == View.GONE) {
-                    servicesLayout.setVisibility(View.VISIBLE);
-                    btnServicesToggle.setText(R.string.can_hide_services);
-                } else {
-                    servicesLayout.setVisibility(View.GONE);
-                    btnServicesToggle.setText(R.string.can_services);
-                }
-            });
-
             // Attach and Daemon
             // ldattach
             Button LdAttachButton = rootView.findViewById(R.id.start_ldattach);
@@ -831,10 +817,8 @@ public class CARsenalFragment extends Fragment {
 
                 // Read MTU and Txqueuelen values from SharedPreferences
                 SharedPreferences prefs = requireContext().getSharedPreferences("carsenal_prefs", Context.MODE_PRIVATE);
-                boolean mtuEnabled = prefs.getBoolean("mtu_enabled", false);
-                boolean txqEnabled = prefs.getBoolean("txq_enabled", false);
-                String selected_mtu = mtuEnabled ? prefs.getString("mtu_value", "").trim() : "";
-                String selected_txqueuelen = txqEnabled ? prefs.getString("txq_value", "").trim() : "";
+                String selected_mtu = prefs.getString("mtu_value", "").trim();
+                String selected_txqueuelen = prefs.getString("txq_value", "").trim();
 
                 // Basic validation
                 if (selected_caniface.isEmpty()) {
@@ -862,13 +846,13 @@ public class CARsenalFragment extends Fragment {
                         }
 
                         // Set MTU
-                        if (mtuEnabled && !selected_mtu.isEmpty()) {
+                        if (!selected_mtu.isEmpty()) {
                             int mtuValue = Integer.parseInt(selected_mtu);
                             exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + mtuValue + " && echo Success || echo Failed");
                         }
 
                         // Set TX queue length if requested
-                        if (txqEnabled && !selected_txqueuelen.isEmpty()) {
+                        if (!selected_txqueuelen.isEmpty()) {
                             int txqValue = Integer.parseInt(selected_txqueuelen);
                             exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " txqueuelen " + txqValue + " && echo Success || echo Failed");
                         }
@@ -889,13 +873,13 @@ public class CARsenalFragment extends Fragment {
                         }
 
                         // Set MTU if requested
-                        if (mtuEnabled && !selected_mtu.isEmpty()) {
+                        if (!selected_mtu.isEmpty()) {
                             int mtuValue = Integer.parseInt(selected_mtu);
                             exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + mtuValue + " && echo Success || echo Failed");
                         }
 
                         // Set TX queue length if requested
-                        if (txqEnabled && !selected_txqueuelen.isEmpty()) {
+                        if (!selected_txqueuelen.isEmpty()) {
                             int txqValue = Integer.parseInt(selected_txqueuelen);
                             exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " txqueuelen " + txqValue + " && echo Success || echo Failed");
                         }
@@ -1003,29 +987,16 @@ public class CARsenalFragment extends Fragment {
         }
 
         private void showMainConfig() {
-            // Inflate the dialog layout
             LayoutInflater inflater = LayoutInflater.from(requireContext());
             View dialogView = inflater.inflate(R.layout.carsenal_main_dialog, null);
 
-            // Find views
-            MaterialCheckBox mtuCheckBox = dialogView.findViewById(R.id.mtu_checkbox);
-            MaterialCheckBox txqCheckBox = dialogView.findViewById(R.id.txq_checkbox);
             TextInputEditText mtuEditText = dialogView.findViewById(R.id.mtu_value);
             TextInputEditText txqEditText = dialogView.findViewById(R.id.txq_value);
 
             // Load saved values
             SharedPreferences prefs = requireContext().getSharedPreferences("carsenal_prefs", Context.MODE_PRIVATE);
-            mtuCheckBox.setChecked(prefs.getBoolean("mtu_enabled", false));
-            txqCheckBox.setChecked(prefs.getBoolean("txq_enabled", false));
             mtuEditText.setText(prefs.getString("mtu_value", ""));
             txqEditText.setText(prefs.getString("txq_value", ""));
-
-            // Enable/disable fields based on checkbox
-            mtuEditText.setEnabled(mtuCheckBox.isChecked());
-            txqEditText.setEnabled(txqCheckBox.isChecked());
-
-            mtuCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> mtuEditText.setEnabled(isChecked));
-            txqCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> txqEditText.setEnabled(isChecked));
 
             // Build dialog
             new MaterialAlertDialogBuilder(requireContext(), R.style.DialogStyleCompat)
@@ -1034,8 +1005,6 @@ public class CARsenalFragment extends Fragment {
                     .setPositiveButton("Apply", (dialog, which) -> {
                         // Save values
                         prefs.edit()
-                                .putBoolean("mtu_enabled", mtuCheckBox.isChecked())
-                                .putBoolean("txq_enabled", txqCheckBox.isChecked())
                                 .putString("mtu_value", String.valueOf(mtuEditText.getText()))
                                 .putString("txq_value", String.valueOf(txqEditText.getText()))
                                 .apply();
@@ -1219,7 +1188,7 @@ public class CARsenalFragment extends Fragment {
 
                 if (!canDumpCmd[0].isEmpty()) {
                     run_cmd(canDumpCmd[0]);
-                } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !outputfile.isEmpty()) {
+                } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces") && !outputfile.isEmpty()) {
                     run_cmd("candump " + selected_caniface + " -f " + outputfile);
                 } else {
                     showToast("Please ensure your CAN Interface and Output File fields are set!");
@@ -1353,20 +1322,33 @@ public class CARsenalFragment extends Fragment {
                 if (!cannelloniCmd[0].isEmpty()) {
                     run_cmd(cannelloniCmd[0]);
                 } else {
-                    if (selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
+                    if (selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
                         showToast("Please select a CAN Interface!");
                         return;
                     }
-                    if (rhost.length() != 15) {
-                        showToast("RHOST must be exactly 15 characters (e.g., 192.168.111.111)");
+
+                    // Check IP address (basic validation)
+                    if (!rhost.matches(
+                            "^((25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)\\.){3}" +
+                                    "(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)$")) {
+                        showToast("RHOST must be a valid IP address (e.g., 192.168.1.100)");
                         return;
                     }
-                    if (rport.length() != 6 || !rport.matches("\\d+")) {
-                        showToast("RPORT must be exactly 6 digits");
-                        return;
-                    }
-                    if (lport.length() != 6 || !lport.matches("\\d+")) {
-                        showToast("LPORT must be exactly 6 digits");
+
+                    // Check ports (valid range 1-65535)
+                    try {
+                        int rPortInt = Integer.parseInt(rport);
+                        int lPortInt = Integer.parseInt(lport);
+                        if (rPortInt < 1 || rPortInt > 65535) {
+                            showToast("RPORT must be between 1 and 65535");
+                            return;
+                        }
+                        if (lPortInt < 1 || lPortInt > 65535) {
+                            showToast("LPORT must be between 1 and 65535");
+                            return;
+                        }
+                    } catch (NumberFormatException e) {
+                        showToast("Ports must be numeric");
                         return;
                     }
 
@@ -1416,7 +1398,7 @@ public class CARsenalFragment extends Fragment {
 
                 if (!log2ascCmd[0].isEmpty()) {
                     run_cmd(log2ascCmd[0]);
-                } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !inputfile.isEmpty() && !outputfile.isEmpty()) {
+                } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces") && !inputfile.isEmpty() && !outputfile.isEmpty()) {
                     run_cmd("log2asc -I " + inputfile + " -O " + outputfile + " " + selected_caniface);
                 } else {
                     showToast("Please ensure your CAN Interface, Input and Output File fields are set!");
@@ -1549,8 +1531,8 @@ public class CARsenalFragment extends Fragment {
         private final ShellExecuter exe = new ShellExecuter();
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private Activity activity;
-        private EditText SelectedBaudrateUSB;
-        private EditText SelectedCanSpeedUSB;
+        private EditText selectedBaudrateUSB;
+        private EditText selectedCanSpeedUSB;
         private String selected_usb;
 
         @Override
@@ -1563,8 +1545,8 @@ public class CARsenalFragment extends Fragment {
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.carsenal_canusb, container, false);
 
-            SelectedBaudrateUSB = rootView.findViewById(R.id.baudrate_usb);
-            SelectedCanSpeedUSB = rootView.findViewById(R.id.canspeed_usb);
+            selectedBaudrateUSB = rootView.findViewById(R.id.baudrate_usb);
+            selectedCanSpeedUSB = rootView.findViewById(R.id.canspeed_usb);
 
             // Devices Interfaces Spinner
             Spinner spinner = rootView.findViewById(R.id.device_interface);
@@ -1599,33 +1581,24 @@ public class CARsenalFragment extends Fragment {
             final Spinner modeSpinner = dialogView.findViewById(R.id.usb_mode_spinner);
             final SwitchCompat debugSwitch = dialogView.findViewById(R.id.btn_toggle_usb_ttyOutput);
 
-            // Checkboxes
-            final MaterialCheckBox idCheckbox = dialogView.findViewById(R.id.id_checkbox);
-            final MaterialCheckBox counterCheckbox = dialogView.findViewById(R.id.counter_checkbox);
-            final MaterialCheckBox sleepCheckbox = dialogView.findViewById(R.id.sleep_checkbox);
-            final MaterialCheckBox dataCheckbox = dialogView.findViewById(R.id.data_checkbox);
-            final MaterialCheckBox modeCheckbox = dialogView.findViewById(R.id.mode_checkbox);
-            final MaterialCheckBox debugCheckbox = dialogView.findViewById(R.id.debug_checkbox);
-
-            // Enable/disable inputs based on checkbox
-            idCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> idInput.setEnabled(isChecked));
-            counterCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> counterInput.setEnabled(isChecked));
-            sleepCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> sleepInput.setEnabled(isChecked));
-            dataCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> dataInput.setEnabled(isChecked));
-            modeCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> modeSpinner.setEnabled(isChecked));
-            debugCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> debugSwitch.setChecked(isChecked));
-
             // Setup mode spinner
             ArrayAdapter<String> adapter = getStringArrayAdapter();
             modeSpinner.setAdapter(adapter);
             modeSpinner.setSelection(0);
-            modeSpinner.setEnabled(false);
 
-            // Load saved prefs for debug
+            // Load saved preferences
             SharedPreferences prefs = requireContext().getSharedPreferences("carsenal_prefs", Context.MODE_PRIVATE);
-            boolean debugEnabled = prefs.getBoolean("usb_debug_enabled", false);
-            debugSwitch.setChecked(debugEnabled);
-            debugCheckbox.setChecked(debugEnabled);
+
+            debugSwitch.setChecked(prefs.getBoolean("usb_debug_enabled", false));
+            idInput.setText(prefs.getString("usb_id_value", ""));
+            counterInput.setText(prefs.getString("usb_counter_value", ""));
+            sleepInput.setText(prefs.getString("usb_sleep_value", ""));
+            dataInput.setText(prefs.getString("usb_data_value", ""));
+            String savedMode = prefs.getString("usb_mode_value", "");
+            if (!savedMode.isEmpty()) {
+                int pos = adapter.getPosition(savedMode);
+                if (pos >= 0) modeSpinner.setSelection(pos);
+            }
 
             // Build dialog
             new MaterialAlertDialogBuilder(requireContext(), R.style.DialogStyleCompat)
@@ -1634,20 +1607,12 @@ public class CARsenalFragment extends Fragment {
                     .setPositiveButton("Apply", (dialog, which) -> {
                         SharedPreferences.Editor editor = prefs.edit();
 
-                        // Debug
                         editor.putBoolean("usb_debug_enabled", debugSwitch.isChecked());
-                        editor.putBoolean("usb_id_enabled", idCheckbox.isChecked());
-                        editor.putBoolean("usb_counter_enabled", counterCheckbox.isChecked());
-                        editor.putBoolean("usb_sleep_enabled", sleepCheckbox.isChecked());
-                        editor.putBoolean("usb_data_enabled", dataCheckbox.isChecked());
-                        editor.putBoolean("usb_mode_enabled", modeCheckbox.isChecked());
-
-                        // Save values only if enabled
-                        if (idCheckbox.isChecked()) editor.putString("usb_id_value", idInput.getText().toString().trim());
-                        if (counterCheckbox.isChecked()) editor.putString("usb_counter_value", counterInput.getText().toString().trim());
-                        if (sleepCheckbox.isChecked()) editor.putString("usb_sleep_value", sleepInput.getText().toString().trim());
-                        if (dataCheckbox.isChecked()) editor.putString("usb_data_value", dataInput.getText().toString().trim());
-                        if (modeCheckbox.isChecked()) editor.putString("usb_mode_value", modeSpinner.getSelectedItem().toString());
+                        editor.putString("usb_id_value", idInput.getText().toString().trim());
+                        editor.putString("usb_counter_value", counterInput.getText().toString().trim());
+                        editor.putString("usb_sleep_value", sleepInput.getText().toString().trim());
+                        editor.putString("usb_data_value", dataInput.getText().toString().trim());
+                        editor.putString("usb_mode_value", modeSpinner.getSelectedItem().toString().trim());
 
                         editor.apply();
                     })
@@ -1676,24 +1641,35 @@ public class CARsenalFragment extends Fragment {
         }
 
         private void runCanUsb() {
-            String USBCANSpeed = SelectedCanSpeedUSB.getText().toString();
-            String USBBaudrate = SelectedBaudrateUSB.getText().toString();
+            String USBCANSpeed = selectedCanSpeedUSB.getText().toString().trim();
+            String USBBaudrate = selectedBaudrateUSB.getText().toString().trim();
             SharedPreferences prefs = requireContext().getSharedPreferences("carsenal_prefs", Context.MODE_PRIVATE);
 
-            String debugEnabled = prefs.getBoolean("usb_debug_enabled", false) ? " -t" : "";
-            String countValue = prefs.getBoolean("usb_counter_enabled", false) ? " -n " + prefs.getString("usb_counter_value", "") : "";
-            String dataValue = prefs.getBoolean("usb_data_enabled", false) ? " -j " + prefs.getString("usb_data_value", "") : "";
-            String idValue = prefs.getBoolean("usb_id_enabled", false) ? " -i " + prefs.getString("usb_id_value", "") : "";
-            String sleepValue = prefs.getBoolean("usb_sleep_enabled", false) ? " -g " + prefs.getString("usb_sleep_value", "") : "";
-            String modeValue = prefs.getBoolean("usb_mode_enabled", false) ? " -m " + prefs.getString("usb_mode_value", "") : "";
-
-            if (!selected_usb.isEmpty() && !selected_usb.equals("USB Device (None)") && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
-                run_cmd("canusb -d " + selected_usb + " -s " + USBCANSpeed + " -b " + USBBaudrate +
-                        debugEnabled + idValue + dataValue + sleepValue + countValue + modeValue);
-            } else {
-                showToast("Please ensure your USB Device and USB CAN Speed, Baudrate, Data fields are set!");
+            if (selected_usb == null || selected_usb.isEmpty() || selected_usb.equals("USB Devices") || USBCANSpeed.isEmpty() || USBBaudrate.isEmpty()) {
+                showToast("Please ensure your USB Device, CAN Speed, Baudrate, and Data fields are set!");
+                return;
             }
 
+            String debugEnabled = prefs.getBoolean("usb_debug_enabled", false) ? " -t" : "";
+            String idValue = prefs.getString("usb_id_value", "").trim();
+            String countValue = prefs.getString("usb_counter_value", "").trim();
+            String dataValue = prefs.getString("usb_data_value", "").trim();
+            String sleepValue = prefs.getString("usb_sleep_value", "").trim();
+            String modeValue = prefs.getString("usb_mode_value", "").trim();
+
+            StringBuilder cmdBuilder = new StringBuilder();
+            cmdBuilder.append("canusb -d ").append(selected_usb)
+                    .append(" -s ").append(USBCANSpeed)
+                    .append(" -b ").append(USBBaudrate)
+                    .append(debugEnabled);
+
+            if (!idValue.isEmpty()) cmdBuilder.append(" -i ").append(idValue);
+            if (!dataValue.isEmpty()) cmdBuilder.append(" -j ").append(dataValue);
+            if (!sleepValue.isEmpty()) cmdBuilder.append(" -g ").append(sleepValue);
+            if (!countValue.isEmpty()) cmdBuilder.append(" -n ").append(countValue);
+            if (!modeValue.isEmpty()) cmdBuilder.append(" -m ").append(modeValue);
+
+            run_cmd(cmdBuilder.toString());
             activity.invalidateOptionsMenu();
         }
     }
@@ -1993,7 +1969,7 @@ public class CARsenalFragment extends Fragment {
             // Listener
             rootView.findViewById(R.id.start_listener).setOnClickListener(v -> {
                 String reverseEnabled = isReverseEnabled ? " -r" : "";
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
+                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces")) {
                     run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " listener" + reverseEnabled);
                 } else {
                     showToast("Please choose a CAN Interface!");
@@ -2104,7 +2080,7 @@ public class CARsenalFragment extends Fragment {
         }
 
         private void runFuzzer(String fuzzer_module) {
-            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
                 showToast("Please choose a CAN Interface!");
                 return;
             }
@@ -2138,7 +2114,7 @@ public class CARsenalFragment extends Fragment {
         }
 
         private void runSend(String send_module) {
-            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
                 showToast("Please choose a CAN Interface!");
                 return;
             }
@@ -2164,7 +2140,7 @@ public class CARsenalFragment extends Fragment {
         }
 
         private void runUDS(String uds_module) {
-            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
                 showToast("Please choose a CAN Interface!");
                 return;
             }
@@ -2190,7 +2166,7 @@ public class CARsenalFragment extends Fragment {
         }
 
         private void runXCP(String xcp_module) {
-            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
                 showToast("Please choose a CAN Interface!");
                 return;
             }
