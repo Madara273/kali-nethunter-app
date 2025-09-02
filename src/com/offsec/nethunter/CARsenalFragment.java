@@ -81,8 +81,6 @@ public class CARsenalFragment extends Fragment {
     private static SharedPreferences sharedpreferences;
     private Activity activity;
     private Toast currentToast;
-    private long lastResetTime = 0;
-    private static final long RESET_COOLDOWN = 10000; // 10 seconds after final reset
     private static final String ARG_SECTION_NUMBER = "section_number";
 
     public static CARsenalFragment newInstance(int sectionNumber) {
@@ -309,19 +307,6 @@ public class CARsenalFragment extends Fragment {
         Log.i(TAG, "Update completed");
     }
 
-    private void safeReleaseMediaPlayer(MediaPlayer player) {
-        if (player != null) {
-            try {
-                if (player.isPlaying()) {
-                    player.stop();
-                }
-            } catch (IllegalStateException ignored) {
-                // Player not in valid state, ignore
-            }
-            player.release();
-        }
-    }
-
     public void RunAbout() {
         LayoutInflater inflater = LayoutInflater.from(activity);
         View dialogView = inflater.inflate(R.layout.carsenal_about_dialog, null);
@@ -339,85 +324,38 @@ public class CARsenalFragment extends Fragment {
 
         // Easter egg button setup
         ImageView easterEggButton = dialogView.findViewById(R.id.easter_egg_button);
-
-        // Create media players
-        MediaPlayer mediaPlayerVroom = MediaPlayer.create(activity, R.raw.secret_vroom);
-        MediaPlayer mediaPlayerAngry = MediaPlayer.create(activity, R.raw.secret_angry);
-
+        MediaPlayer mediaPlayer = MediaPlayer.create(activity, R.raw.secret_vroom);
         final int[] clickCount = {0};
-        final long[] lastClickTime = {0};
-        final long CLICK_TIMEOUT = 2000; // 2 seconds
 
         easterEggButton.setOnClickListener(v -> {
-            long now = System.currentTimeMillis();
-
-            // Ignore clicks during cooldown after reset
-            if (now - lastResetTime < RESET_COOLDOWN) {
-                return;
-            }
-
-            // Reset click sequence if too much time passed
-            if (now - lastClickTime[0] > CLICK_TIMEOUT) {
-                clickCount[0] = 0;
-            }
-
-            lastClickTime[0] = now;
             clickCount[0]++;
-
-            switch (clickCount[0]) {
-                case 3:
-                    showToast("Hum??? What's up?");
-                    break;
-                case 6:
-                    try {
-                        if (mediaPlayerVroom.isPlaying()) mediaPlayerVroom.seekTo(0);
-                        mediaPlayerVroom.start();
-                    } catch (IllegalStateException ignored) {}
-                    break;
-                case 15:
-                    showToast("Ok. It was funny, but don't make me angry...");
-                    break;
-                case 25:
-                    showToast("GRMBLBLBL... This is your LAST warning!");
-                    break;
-                case 30:
-                    try {
-                        if (mediaPlayerAngry.isPlaying()) mediaPlayerAngry.seekTo(0);
-                        mediaPlayerAngry.start();
-                    } catch (IllegalStateException ignored) {}
-                    clickCount[0] = 0; // reset after final sound
-                    lastResetTime = now; // start cooldown
-                    break;
+            if (clickCount[0] == 3) {
+                showToast("Hum??? What's up?");
+            }
+            if (clickCount[0] == 7) {
+                mediaPlayer.start();
+                clickCount[0] = 0; // reset after playing sound
             }
         });
 
         // Create a centered title TextView
         TextView titleView = new TextView(activity);
-        titleView.setText(R.string.about_carsenal);
+        titleView.setText("About CARsenal");
         titleView.setGravity(Gravity.CENTER);
         titleView.setTextSize(20);
         titleView.setTypeface(null, Typeface.BOLD);
         int padding = (int) (16 * activity.getResources().getDisplayMetrics().density);
         titleView.setPadding(0, padding, 0, padding);
 
-        // Build the dialog
-        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+        new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
                 .setCustomTitle(titleView)
                 .setView(dialogView)
-                .setNegativeButton("Close", (d, id) -> {
-                    safeReleaseMediaPlayer(mediaPlayerVroom);
-                    safeReleaseMediaPlayer(mediaPlayerAngry);
+                .setNegativeButton("Close", (dialog, id) -> {
+                    if (mediaPlayer.isPlaying()) mediaPlayer.stop();
+                    mediaPlayer.release();
+                    dialog.dismiss();
                 })
-                .create();
-
-        dialog.setOnDismissListener(d -> {
-            clickCount[0] = 0;
-            lastClickTime[0] = 0;
-            safeReleaseMediaPlayer(mediaPlayerVroom);
-            safeReleaseMediaPlayer(mediaPlayerAngry);
-        });
-
-        dialog.show();
+                .show();
     }
 
     public static class TabsPagerAdapter extends FragmentStateAdapter {
@@ -1212,7 +1150,7 @@ public class CARsenalFragment extends Fragment {
             });
 
             // Input File browse button
-            MaterialButton inputfilebrowse = dialogView.findViewById(R.id.inputfilebrowse);
+            ImageButton inputfilebrowse = dialogView.findViewById(R.id.inputfilebrowse);
             TextInputEditText inputfilepath = dialogView.findViewById(R.id.inputfilepath);
 
             inputfilebrowse.setOnClickListener(v -> {
@@ -1221,7 +1159,7 @@ public class CARsenalFragment extends Fragment {
             });
 
             // Output File browse button
-            MaterialButton outputfilebrowse = dialogView.findViewById(R.id.outputfilebrowse);
+            ImageButton outputfilebrowse = dialogView.findViewById(R.id.outputfilebrowse);
             TextInputEditText outputfilepath = dialogView.findViewById(R.id.outputfilepath);
 
             outputfilebrowse.setOnClickListener(v -> {
@@ -1541,13 +1479,13 @@ public class CARsenalFragment extends Fragment {
             switchLoopback.setChecked(!isDisableLoopbackEnabled);
 
             // Browse buttons — use dialogView.getContext() to ensure proper context
-            MaterialButton inputfilebrowse = dialogView.findViewById(R.id.inputfilebrowse);
+            ImageButton inputfilebrowse = dialogView.findViewById(R.id.inputfilebrowse);
             inputfilebrowse.setOnClickListener(v -> {
                 RootFileBrowserDialog browserDialog = new RootFileBrowserDialog(dialogView.getContext(), inputFile::setText);
                 browserDialog.show();
             });
 
-            MaterialButton outputfilebrowse = dialogView.findViewById(R.id.outputfilebrowse);
+            ImageButton outputfilebrowse = dialogView.findViewById(R.id.outputfilebrowse);
             outputfilebrowse.setOnClickListener(v -> {
                 RootFileBrowserDialog browserDialog = new RootFileBrowserDialog(dialogView.getContext(), outputFile::setText);
                 browserDialog.show();
@@ -1909,7 +1847,7 @@ public class CARsenalFragment extends Fragment {
             );
 
             // Browse File
-            MaterialButton browseButton = rootView.findViewById(R.id.cariboufilebrowse);
+            ImageButton browseButton = rootView.findViewById(R.id.cariboufilebrowse);
             @SuppressLint("CutPasteId") TextInputEditText fileEditText = rootView.findViewById(R.id.caribou_file);
             browseButton.setOnClickListener(v -> {
                 RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), fileEditText::setText);
