@@ -54,9 +54,7 @@ import androidx.preference.PreferenceManager;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
@@ -340,7 +338,7 @@ public class CARsenalFragment extends Fragment {
 
         // Create a centered title TextView
         TextView titleView = new TextView(activity);
-        titleView.setText("About CARsenal");
+        titleView.setText(R.string.about_carsenal);
         titleView.setGravity(Gravity.CENTER);
         titleView.setTextSize(20);
         titleView.setTypeface(null, Typeface.BOLD);
@@ -1184,7 +1182,10 @@ public class CARsenalFragment extends Fragment {
             // CanDump
             Button CanDumpButton = rootView.findViewById(R.id.start_candump);
             CanDumpButton.setOnClickListener(v -> {
-                String outputfile = prefs.getString("output_file", outputfilepath.getText().toString());
+                String outputfile = prefs.getString(
+                        "output_file",
+                        (outputfilepath != null && outputfilepath.getText() != null) ? outputfilepath.getText().toString() : ""
+                );
 
                 if (!canDumpCmd[0].isEmpty()) {
                     run_cmd(canDumpCmd[0]);
@@ -1197,7 +1198,10 @@ public class CARsenalFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             CanDumpButton.setOnLongClickListener(v -> {
-                String outputfile = prefs.getString("output_file", outputfilepath.getText().toString());
+                String outputfile = prefs.getString(
+                        "output_file",
+                        (outputfilepath != null && outputfilepath.getText() != null) ? outputfilepath.getText().toString() : ""
+                );
                 String defaultCmd = "candump " + selected_caniface + " -f " + outputfile;
 
                 showEditCommandDialog("Edit CanDump Command", canDumpCmd, "canDump_cmd", defaultCmd);
@@ -1230,7 +1234,10 @@ public class CARsenalFragment extends Fragment {
             // CanPlayer
             Button CanPlayerButton = rootView.findViewById(R.id.start_canplayer);
             CanPlayerButton.setOnClickListener(v -> {
-                String inputfile = prefs.getString("input_file", inputfilepath.getText().toString());
+                String inputfile = prefs.getString(
+                        "input_file",
+                        (inputfilepath != null && inputfilepath.getText() != null) ? inputfilepath.getText().toString() : ""
+                );
                 String interactiveEnabled = prefs.getBoolean("interactive_enabled", isInteractiveEnabled) ? " -i" : "";
                 String verboseEnabled = prefs.getBoolean("verbose_enabled", isVerboseEnabled) ? " -v" : "";
                 String disableLoopbackEnabled = !prefs.getBoolean("disable_loopback", !isDisableLoopbackEnabled) ? " -x" : "";
@@ -1246,7 +1253,10 @@ public class CARsenalFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             CanPlayerButton.setOnLongClickListener(v -> {
-                String inputfile = prefs.getString("input_file", inputfilepath.getText().toString());
+                String inputfile = prefs.getString(
+                        "input_file",
+                        (inputfilepath != null && inputfilepath.getText() != null) ? inputfilepath.getText().toString() : ""
+                );
                 String interactiveEnabled = prefs.getBoolean("interactive_enabled", isInteractiveEnabled) ? " -i" : "";
                 String verboseEnabled = prefs.getBoolean("verbose_enabled", isVerboseEnabled) ? " -v" : "";
                 String disableLoopbackEnabled = !prefs.getBoolean("disable_loopback", !isDisableLoopbackEnabled) ? " -x" : "";
@@ -1260,7 +1270,10 @@ public class CARsenalFragment extends Fragment {
             // SequenceFinder
             Button SequenceFinderButton = rootView.findViewById(R.id.start_sequencefinder);
             SequenceFinderButton.setOnClickListener(v -> {
-                String inputfile = prefs.getString("input_file", inputfilepath.getText().toString());
+                String inputfile = prefs.getString(
+                        "input_file",
+                        (inputfilepath != null && inputfilepath.getText() != null) ? inputfilepath.getText().toString() : ""
+                );
 
                 if (!sequenceFinderCmd[0].isEmpty()) {
                     run_cmd(sequenceFinderCmd[0]);
@@ -1273,7 +1286,10 @@ public class CARsenalFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             SequenceFinderButton.setOnLongClickListener(v -> {
-                String inputfile = prefs.getString("input_file", inputfilepath.getText().toString());
+                String inputfile = prefs.getString(
+                        "input_file",
+                        (inputfilepath != null && inputfilepath.getText() != null) ? inputfilepath.getText().toString() : ""
+                );
                 String defaultCmd = "/opt/car_hacking/sequence_finder.sh " + inputfile;
 
                 showEditCommandDialog("Edit SequenceFinder Command", sequenceFinderCmd, "sequenceFinder_cmd", defaultCmd);
@@ -1369,8 +1385,15 @@ public class CARsenalFragment extends Fragment {
             // Asc2Log
             Button Asc2LogButton = rootView.findViewById(R.id.start_asc2log);
             Asc2LogButton.setOnClickListener(v -> {
-                String inputfile = prefs.getString("input_file", inputfilepath.getText().toString());
-                String outputfile = prefs.getString("output_file", outputfilepath.getText().toString());
+                String inputfile = prefs.getString(
+                        "input_file",
+                        (inputfilepath != null && inputfilepath.getText() != null) ? inputfilepath.getText().toString() : ""
+                );
+
+                String outputfile = prefs.getString(
+                        "output_file",
+                        (outputfilepath != null && outputfilepath.getText() != null) ? outputfilepath.getText().toString() : ""
+                );
 
                 if (!asc2logCmd[0].isEmpty()) {
                     run_cmd(asc2logCmd[0]);
@@ -1382,8 +1405,15 @@ public class CARsenalFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             Asc2LogButton.setOnLongClickListener(v -> {
-                String inputfile = prefs.getString("input_file", inputfilepath.getText().toString());
-                String outputfile = prefs.getString("output_file", outputfilepath.getText().toString());
+                String inputfile = prefs.getString(
+                        "input_file",
+                        (inputfilepath != null && inputfilepath.getText() != null) ? inputfilepath.getText().toString() : ""
+                );
+
+                String outputfile = prefs.getString(
+                        "output_file",
+                        (outputfilepath != null && outputfilepath.getText() != null) ? outputfilepath.getText().toString() : ""
+                );
 
                 String defaultCmd = "asc2log -I " + inputfile + " -O " + outputfile;
                 showEditCommandDialog("Edit Asc2Log Command", asc2logCmd, "asc2log_cmd", defaultCmd);
@@ -1393,8 +1423,15 @@ public class CARsenalFragment extends Fragment {
             // Log2Asc
             Button Log2AscButton = rootView.findViewById(R.id.start_log2asc);
             Log2AscButton.setOnClickListener(v -> {
-                String inputfile = prefs.getString("input_file", inputfilepath.getText().toString());
-                String outputfile = prefs.getString("output_file", outputfilepath.getText().toString());
+                String inputfile = prefs.getString(
+                        "input_file",
+                        (inputfilepath != null && inputfilepath.getText() != null) ? inputfilepath.getText().toString() : ""
+                );
+
+                String outputfile = prefs.getString(
+                        "output_file",
+                        (outputfilepath != null && outputfilepath.getText() != null) ? outputfilepath.getText().toString() : ""
+                );
 
                 if (!log2ascCmd[0].isEmpty()) {
                     run_cmd(log2ascCmd[0]);
@@ -1406,8 +1443,15 @@ public class CARsenalFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             Log2AscButton.setOnLongClickListener(v -> {
-                String inputfile = prefs.getString("input_file", inputfilepath.getText().toString());
-                String outputfile = prefs.getString("output_file", outputfilepath.getText().toString());
+                String inputfile = prefs.getString(
+                        "input_file",
+                        (inputfilepath != null && inputfilepath.getText() != null) ? inputfilepath.getText().toString() : ""
+                );
+
+                String outputfile = prefs.getString(
+                        "output_file",
+                        (outputfilepath != null && outputfilepath.getText() != null) ? outputfilepath.getText().toString() : ""
+                );
 
                 String defaultCmd = "log2asc -I " + inputfile + " -O " + outputfile + " " + selected_caniface;
                 showEditCommandDialog("Edit Log2asc Command", log2ascCmd, "log2asc_cmd", defaultCmd);
@@ -1479,12 +1523,24 @@ public class CARsenalFragment extends Fragment {
                     .setView(dialogView)
                     .setPositiveButton("Save", (dialog, which) -> {
                         prefs.edit()
-                                .putString("cansend_sequence", cansendSequence.getText().toString())
-                                .putString("cannelloni_rhost", rhost.getText().toString())
-                                .putString("cannelloni_rport", rport.getText().toString())
-                                .putString("cannelloni_lport", lport.getText().toString())
-                                .putString("input_file", inputFile.getText().toString())
-                                .putString("output_file", outputFile.getText().toString())
+                                .putString("cansend_sequence", cansendSequence.getText() != null
+                                        ? cansendSequence.getText().toString()
+                                        : "")
+                                .putString("cannelloni_rhost", rhost.getText() != null
+                                        ? rhost.getText().toString()
+                                        : "")
+                                .putString("cannelloni_rport", rport.getText() != null
+                                        ? rport.getText().toString()
+                                        : "")
+                                .putString("cannelloni_lport", lport.getText() != null
+                                        ? lport.getText().toString()
+                                        : "")
+                                .putString("input_file", inputFile.getText() != null
+                                        ? inputFile.getText().toString()
+                                        : "")
+                                .putString("output_file", outputFile.getText() != null
+                                        ? outputFile.getText().toString()
+                                        : "")
                                 .putBoolean("interactive_enabled", switchInteractive.isChecked())
                                 .putBoolean("verbose_enabled", switchVerbose.isChecked())
                                 .putBoolean("disable_loopback", !switchLoopback.isChecked())
