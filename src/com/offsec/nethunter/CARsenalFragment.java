@@ -54,9 +54,7 @@ import androidx.preference.PreferenceManager;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.viewpager2.widget.ViewPager2;
 
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.checkbox.MaterialCheckBox;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
@@ -81,8 +79,6 @@ public class CARsenalFragment extends Fragment {
     private static SharedPreferences sharedpreferences;
     private Activity activity;
     private Toast currentToast;
-    private long lastResetTime = 0;
-    private static final long RESET_COOLDOWN = 10000; // 10 seconds after final reset
     private static final String ARG_SECTION_NUMBER = "section_number";
 
     public static CARsenalFragment newInstance(int sectionNumber) {
@@ -309,19 +305,6 @@ public class CARsenalFragment extends Fragment {
         Log.i(TAG, "Update completed");
     }
 
-    private void safeReleaseMediaPlayer(MediaPlayer player) {
-        if (player != null) {
-            try {
-                if (player.isPlaying()) {
-                    player.stop();
-                }
-            } catch (IllegalStateException ignored) {
-                // Player not in valid state, ignore
-            }
-            player.release();
-        }
-    }
-
     public void RunAbout() {
         LayoutInflater inflater = LayoutInflater.from(activity);
         View dialogView = inflater.inflate(R.layout.carsenal_about_dialog, null);
@@ -339,55 +322,17 @@ public class CARsenalFragment extends Fragment {
 
         // Easter egg button setup
         ImageView easterEggButton = dialogView.findViewById(R.id.easter_egg_button);
-
-        // Create media players
-        MediaPlayer mediaPlayerVroom = MediaPlayer.create(activity, R.raw.secret_vroom);
-        MediaPlayer mediaPlayerAngry = MediaPlayer.create(activity, R.raw.secret_angry);
-
+        MediaPlayer mediaPlayer = MediaPlayer.create(activity, R.raw.secret_vroom);
         final int[] clickCount = {0};
-        final long[] lastClickTime = {0};
-        final long CLICK_TIMEOUT = 2000; // 2 seconds
 
         easterEggButton.setOnClickListener(v -> {
-            long now = System.currentTimeMillis();
-
-            // Ignore clicks during cooldown after reset
-            if (now - lastResetTime < RESET_COOLDOWN) {
-                return;
-            }
-
-            // Reset click sequence if too much time passed
-            if (now - lastClickTime[0] > CLICK_TIMEOUT) {
-                clickCount[0] = 0;
-            }
-
-            lastClickTime[0] = now;
             clickCount[0]++;
-
-            switch (clickCount[0]) {
-                case 3:
-                    showToast("Hum??? What's up?");
-                    break;
-                case 6:
-                    try {
-                        if (mediaPlayerVroom.isPlaying()) mediaPlayerVroom.seekTo(0);
-                        mediaPlayerVroom.start();
-                    } catch (IllegalStateException ignored) {}
-                    break;
-                case 15:
-                    showToast("Ok. It was funny, but don't make me angry...");
-                    break;
-                case 25:
-                    showToast("GRMBLBLBL... This is your LAST warning!");
-                    break;
-                case 30:
-                    try {
-                        if (mediaPlayerAngry.isPlaying()) mediaPlayerAngry.seekTo(0);
-                        mediaPlayerAngry.start();
-                    } catch (IllegalStateException ignored) {}
-                    clickCount[0] = 0; // reset after final sound
-                    lastResetTime = now; // start cooldown
-                    break;
+            if (clickCount[0] == 3) {
+                showToast("Hum??? What's up?");
+            }
+            if (clickCount[0] == 7) {
+                mediaPlayer.start();
+                clickCount[0] = 0; // reset after playing sound
             }
         });
 
@@ -400,24 +345,15 @@ public class CARsenalFragment extends Fragment {
         int padding = (int) (16 * activity.getResources().getDisplayMetrics().density);
         titleView.setPadding(0, padding, 0, padding);
 
-        // Build the dialog
-        androidx.appcompat.app.AlertDialog dialog = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+        new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
                 .setCustomTitle(titleView)
                 .setView(dialogView)
-                .setNegativeButton("Close", (d, id) -> {
-                    safeReleaseMediaPlayer(mediaPlayerVroom);
-                    safeReleaseMediaPlayer(mediaPlayerAngry);
+                .setNegativeButton("Close", (dialog, id) -> {
+                    if (mediaPlayer.isPlaying()) mediaPlayer.stop();
+                    mediaPlayer.release();
+                    dialog.dismiss();
                 })
-                .create();
-
-        dialog.setOnDismissListener(d -> {
-            clickCount[0] = 0;
-            lastClickTime[0] = 0;
-            safeReleaseMediaPlayer(mediaPlayerVroom);
-            safeReleaseMediaPlayer(mediaPlayerAngry);
-        });
-
-        dialog.show();
+                .show();
     }
 
     public static class TabsPagerAdapter extends FragmentStateAdapter {
@@ -476,20 +412,6 @@ public class CARsenalFragment extends Fragment {
             if (!setupdone) {
                 SetupDialog();
             }
-
-            // Services Toggle
-            Button btnServicesToggle = rootView.findViewById(R.id.btn_toggle_services);
-            LinearLayout servicesLayout = rootView.findViewById(R.id.main_services);
-
-            btnServicesToggle.setOnClickListener(v -> {
-                if (servicesLayout.getVisibility() == View.GONE) {
-                    servicesLayout.setVisibility(View.VISIBLE);
-                    btnServicesToggle.setText(R.string.can_hide_services);
-                } else {
-                    servicesLayout.setVisibility(View.GONE);
-                    btnServicesToggle.setText(R.string.can_services);
-                }
-            });
 
             // Attach and Daemon
             // ldattach
@@ -893,10 +815,8 @@ public class CARsenalFragment extends Fragment {
 
                 // Read MTU and Txqueuelen values from SharedPreferences
                 SharedPreferences prefs = requireContext().getSharedPreferences("carsenal_prefs", Context.MODE_PRIVATE);
-                boolean mtuEnabled = prefs.getBoolean("mtu_enabled", false);
-                boolean txqEnabled = prefs.getBoolean("txq_enabled", false);
-                String selected_mtu = mtuEnabled ? prefs.getString("mtu_value", "").trim() : "";
-                String selected_txqueuelen = txqEnabled ? prefs.getString("txq_value", "").trim() : "";
+                String selected_mtu = prefs.getString("mtu_value", "").trim();
+                String selected_txqueuelen = prefs.getString("txq_value", "").trim();
 
                 // Basic validation
                 if (selected_caniface.isEmpty()) {
@@ -924,13 +844,13 @@ public class CARsenalFragment extends Fragment {
                         }
 
                         // Set MTU
-                        if (mtuEnabled && !selected_mtu.isEmpty()) {
+                        if (!selected_mtu.isEmpty()) {
                             int mtuValue = Integer.parseInt(selected_mtu);
                             exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + mtuValue + " && echo Success || echo Failed");
                         }
 
                         // Set TX queue length if requested
-                        if (txqEnabled && !selected_txqueuelen.isEmpty()) {
+                        if (!selected_txqueuelen.isEmpty()) {
                             int txqValue = Integer.parseInt(selected_txqueuelen);
                             exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " txqueuelen " + txqValue + " && echo Success || echo Failed");
                         }
@@ -951,13 +871,13 @@ public class CARsenalFragment extends Fragment {
                         }
 
                         // Set MTU if requested
-                        if (mtuEnabled && !selected_mtu.isEmpty()) {
+                        if (!selected_mtu.isEmpty()) {
                             int mtuValue = Integer.parseInt(selected_mtu);
                             exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " mtu " + mtuValue + " && echo Success || echo Failed");
                         }
 
                         // Set TX queue length if requested
-                        if (txqEnabled && !selected_txqueuelen.isEmpty()) {
+                        if (!selected_txqueuelen.isEmpty()) {
                             int txqValue = Integer.parseInt(selected_txqueuelen);
                             exe.RunAsChrootOutput("sudo ip link set " + selected_caniface + " txqueuelen " + txqValue + " && echo Success || echo Failed");
                         }
@@ -1065,29 +985,16 @@ public class CARsenalFragment extends Fragment {
         }
 
         private void showMainConfig() {
-            // Inflate the dialog layout
             LayoutInflater inflater = LayoutInflater.from(requireContext());
             View dialogView = inflater.inflate(R.layout.carsenal_main_dialog, null);
 
-            // Find views
-            MaterialCheckBox mtuCheckBox = dialogView.findViewById(R.id.mtu_checkbox);
-            MaterialCheckBox txqCheckBox = dialogView.findViewById(R.id.txq_checkbox);
             TextInputEditText mtuEditText = dialogView.findViewById(R.id.mtu_value);
             TextInputEditText txqEditText = dialogView.findViewById(R.id.txq_value);
 
             // Load saved values
             SharedPreferences prefs = requireContext().getSharedPreferences("carsenal_prefs", Context.MODE_PRIVATE);
-            mtuCheckBox.setChecked(prefs.getBoolean("mtu_enabled", false));
-            txqCheckBox.setChecked(prefs.getBoolean("txq_enabled", false));
             mtuEditText.setText(prefs.getString("mtu_value", ""));
             txqEditText.setText(prefs.getString("txq_value", ""));
-
-            // Enable/disable fields based on checkbox
-            mtuEditText.setEnabled(mtuCheckBox.isChecked());
-            txqEditText.setEnabled(txqCheckBox.isChecked());
-
-            mtuCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> mtuEditText.setEnabled(isChecked));
-            txqCheckBox.setOnCheckedChangeListener((buttonView, isChecked) -> txqEditText.setEnabled(isChecked));
 
             // Build dialog
             new MaterialAlertDialogBuilder(requireContext(), R.style.DialogStyleCompat)
@@ -1096,8 +1003,6 @@ public class CARsenalFragment extends Fragment {
                     .setPositiveButton("Apply", (dialog, which) -> {
                         // Save values
                         prefs.edit()
-                                .putBoolean("mtu_enabled", mtuCheckBox.isChecked())
-                                .putBoolean("txq_enabled", txqCheckBox.isChecked())
                                 .putString("mtu_value", String.valueOf(mtuEditText.getText()))
                                 .putString("txq_value", String.valueOf(txqEditText.getText()))
                                 .apply();
@@ -1212,7 +1117,7 @@ public class CARsenalFragment extends Fragment {
             });
 
             // Input File browse button
-            MaterialButton inputfilebrowse = dialogView.findViewById(R.id.inputfilebrowse);
+            ImageButton inputfilebrowse = dialogView.findViewById(R.id.inputfilebrowse);
             TextInputEditText inputfilepath = dialogView.findViewById(R.id.inputfilepath);
 
             inputfilebrowse.setOnClickListener(v -> {
@@ -1221,7 +1126,7 @@ public class CARsenalFragment extends Fragment {
             });
 
             // Output File browse button
-            MaterialButton outputfilebrowse = dialogView.findViewById(R.id.outputfilebrowse);
+            ImageButton outputfilebrowse = dialogView.findViewById(R.id.outputfilebrowse);
             TextInputEditText outputfilepath = dialogView.findViewById(R.id.outputfilepath);
 
             outputfilebrowse.setOnClickListener(v -> {
@@ -1277,11 +1182,14 @@ public class CARsenalFragment extends Fragment {
             // CanDump
             Button CanDumpButton = rootView.findViewById(R.id.start_candump);
             CanDumpButton.setOnClickListener(v -> {
-                String outputfile = prefs.getString("output_file", outputfilepath.getText().toString());
+                String outputfile = prefs.getString(
+                        "output_file",
+                        (outputfilepath != null && outputfilepath.getText() != null) ? outputfilepath.getText().toString() : ""
+                );
 
                 if (!canDumpCmd[0].isEmpty()) {
                     run_cmd(canDumpCmd[0]);
-                } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !outputfile.isEmpty()) {
+                } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces") && !outputfile.isEmpty()) {
                     run_cmd("candump " + selected_caniface + " -f " + outputfile);
                 } else {
                     showToast("Please ensure your CAN Interface and Output File fields are set!");
@@ -1290,7 +1198,10 @@ public class CARsenalFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             CanDumpButton.setOnLongClickListener(v -> {
-                String outputfile = prefs.getString("output_file", outputfilepath.getText().toString());
+                String outputfile = prefs.getString(
+                        "output_file",
+                        (outputfilepath != null && outputfilepath.getText() != null) ? outputfilepath.getText().toString() : ""
+                );
                 String defaultCmd = "candump " + selected_caniface + " -f " + outputfile;
 
                 showEditCommandDialog("Edit CanDump Command", canDumpCmd, "canDump_cmd", defaultCmd);
@@ -1323,7 +1234,10 @@ public class CARsenalFragment extends Fragment {
             // CanPlayer
             Button CanPlayerButton = rootView.findViewById(R.id.start_canplayer);
             CanPlayerButton.setOnClickListener(v -> {
-                String inputfile = prefs.getString("input_file", inputfilepath.getText().toString());
+                String inputfile = prefs.getString(
+                        "input_file",
+                        (inputfilepath != null && inputfilepath.getText() != null) ? inputfilepath.getText().toString() : ""
+                );
                 String interactiveEnabled = prefs.getBoolean("interactive_enabled", isInteractiveEnabled) ? " -i" : "";
                 String verboseEnabled = prefs.getBoolean("verbose_enabled", isVerboseEnabled) ? " -v" : "";
                 String disableLoopbackEnabled = !prefs.getBoolean("disable_loopback", !isDisableLoopbackEnabled) ? " -x" : "";
@@ -1339,7 +1253,10 @@ public class CARsenalFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             CanPlayerButton.setOnLongClickListener(v -> {
-                String inputfile = prefs.getString("input_file", inputfilepath.getText().toString());
+                String inputfile = prefs.getString(
+                        "input_file",
+                        (inputfilepath != null && inputfilepath.getText() != null) ? inputfilepath.getText().toString() : ""
+                );
                 String interactiveEnabled = prefs.getBoolean("interactive_enabled", isInteractiveEnabled) ? " -i" : "";
                 String verboseEnabled = prefs.getBoolean("verbose_enabled", isVerboseEnabled) ? " -v" : "";
                 String disableLoopbackEnabled = !prefs.getBoolean("disable_loopback", !isDisableLoopbackEnabled) ? " -x" : "";
@@ -1353,7 +1270,10 @@ public class CARsenalFragment extends Fragment {
             // SequenceFinder
             Button SequenceFinderButton = rootView.findViewById(R.id.start_sequencefinder);
             SequenceFinderButton.setOnClickListener(v -> {
-                String inputfile = prefs.getString("input_file", inputfilepath.getText().toString());
+                String inputfile = prefs.getString(
+                        "input_file",
+                        (inputfilepath != null && inputfilepath.getText() != null) ? inputfilepath.getText().toString() : ""
+                );
 
                 if (!sequenceFinderCmd[0].isEmpty()) {
                     run_cmd(sequenceFinderCmd[0]);
@@ -1366,7 +1286,10 @@ public class CARsenalFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             SequenceFinderButton.setOnLongClickListener(v -> {
-                String inputfile = prefs.getString("input_file", inputfilepath.getText().toString());
+                String inputfile = prefs.getString(
+                        "input_file",
+                        (inputfilepath != null && inputfilepath.getText() != null) ? inputfilepath.getText().toString() : ""
+                );
                 String defaultCmd = "/opt/car_hacking/sequence_finder.sh " + inputfile;
 
                 showEditCommandDialog("Edit SequenceFinder Command", sequenceFinderCmd, "sequenceFinder_cmd", defaultCmd);
@@ -1415,20 +1338,33 @@ public class CARsenalFragment extends Fragment {
                 if (!cannelloniCmd[0].isEmpty()) {
                     run_cmd(cannelloniCmd[0]);
                 } else {
-                    if (selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
+                    if (selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
                         showToast("Please select a CAN Interface!");
                         return;
                     }
-                    if (rhost.length() != 15) {
-                        showToast("RHOST must be exactly 15 characters (e.g., 192.168.111.111)");
+
+                    // Check IP address (basic validation)
+                    if (!rhost.matches(
+                            "^((25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)\\.){3}" +
+                                    "(25[0-5]|2[0-4]\\d|1\\d{2}|[1-9]?\\d)$")) {
+                        showToast("RHOST must be a valid IP address (e.g., 192.168.1.100)");
                         return;
                     }
-                    if (rport.length() != 6 || !rport.matches("\\d+")) {
-                        showToast("RPORT must be exactly 6 digits");
-                        return;
-                    }
-                    if (lport.length() != 6 || !lport.matches("\\d+")) {
-                        showToast("LPORT must be exactly 6 digits");
+
+                    // Check ports (valid range 1-65535)
+                    try {
+                        int rPortInt = Integer.parseInt(rport);
+                        int lPortInt = Integer.parseInt(lport);
+                        if (rPortInt < 1 || rPortInt > 65535) {
+                            showToast("RPORT must be between 1 and 65535");
+                            return;
+                        }
+                        if (lPortInt < 1 || lPortInt > 65535) {
+                            showToast("LPORT must be between 1 and 65535");
+                            return;
+                        }
+                    } catch (NumberFormatException e) {
+                        showToast("Ports must be numeric");
                         return;
                     }
 
@@ -1449,8 +1385,15 @@ public class CARsenalFragment extends Fragment {
             // Asc2Log
             Button Asc2LogButton = rootView.findViewById(R.id.start_asc2log);
             Asc2LogButton.setOnClickListener(v -> {
-                String inputfile = prefs.getString("input_file", inputfilepath.getText().toString());
-                String outputfile = prefs.getString("output_file", outputfilepath.getText().toString());
+                String inputfile = prefs.getString(
+                        "input_file",
+                        (inputfilepath != null && inputfilepath.getText() != null) ? inputfilepath.getText().toString() : ""
+                );
+
+                String outputfile = prefs.getString(
+                        "output_file",
+                        (outputfilepath != null && outputfilepath.getText() != null) ? outputfilepath.getText().toString() : ""
+                );
 
                 if (!asc2logCmd[0].isEmpty()) {
                     run_cmd(asc2logCmd[0]);
@@ -1462,8 +1405,15 @@ public class CARsenalFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             Asc2LogButton.setOnLongClickListener(v -> {
-                String inputfile = prefs.getString("input_file", inputfilepath.getText().toString());
-                String outputfile = prefs.getString("output_file", outputfilepath.getText().toString());
+                String inputfile = prefs.getString(
+                        "input_file",
+                        (inputfilepath != null && inputfilepath.getText() != null) ? inputfilepath.getText().toString() : ""
+                );
+
+                String outputfile = prefs.getString(
+                        "output_file",
+                        (outputfilepath != null && outputfilepath.getText() != null) ? outputfilepath.getText().toString() : ""
+                );
 
                 String defaultCmd = "asc2log -I " + inputfile + " -O " + outputfile;
                 showEditCommandDialog("Edit Asc2Log Command", asc2logCmd, "asc2log_cmd", defaultCmd);
@@ -1473,12 +1423,19 @@ public class CARsenalFragment extends Fragment {
             // Log2Asc
             Button Log2AscButton = rootView.findViewById(R.id.start_log2asc);
             Log2AscButton.setOnClickListener(v -> {
-                String inputfile = prefs.getString("input_file", inputfilepath.getText().toString());
-                String outputfile = prefs.getString("output_file", outputfilepath.getText().toString());
+                String inputfile = prefs.getString(
+                        "input_file",
+                        (inputfilepath != null && inputfilepath.getText() != null) ? inputfilepath.getText().toString() : ""
+                );
+
+                String outputfile = prefs.getString(
+                        "output_file",
+                        (outputfilepath != null && outputfilepath.getText() != null) ? outputfilepath.getText().toString() : ""
+                );
 
                 if (!log2ascCmd[0].isEmpty()) {
                     run_cmd(log2ascCmd[0]);
-                } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)") && !inputfile.isEmpty() && !outputfile.isEmpty()) {
+                } else if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces") && !inputfile.isEmpty() && !outputfile.isEmpty()) {
                     run_cmd("log2asc -I " + inputfile + " -O " + outputfile + " " + selected_caniface);
                 } else {
                     showToast("Please ensure your CAN Interface, Input and Output File fields are set!");
@@ -1486,8 +1443,15 @@ public class CARsenalFragment extends Fragment {
                 activity.invalidateOptionsMenu();
             });
             Log2AscButton.setOnLongClickListener(v -> {
-                String inputfile = prefs.getString("input_file", inputfilepath.getText().toString());
-                String outputfile = prefs.getString("output_file", outputfilepath.getText().toString());
+                String inputfile = prefs.getString(
+                        "input_file",
+                        (inputfilepath != null && inputfilepath.getText() != null) ? inputfilepath.getText().toString() : ""
+                );
+
+                String outputfile = prefs.getString(
+                        "output_file",
+                        (outputfilepath != null && outputfilepath.getText() != null) ? outputfilepath.getText().toString() : ""
+                );
 
                 String defaultCmd = "log2asc -I " + inputfile + " -O " + outputfile + " " + selected_caniface;
                 showEditCommandDialog("Edit Log2asc Command", log2ascCmd, "log2asc_cmd", defaultCmd);
@@ -1541,13 +1505,13 @@ public class CARsenalFragment extends Fragment {
             switchLoopback.setChecked(!isDisableLoopbackEnabled);
 
             // Browse buttons — use dialogView.getContext() to ensure proper context
-            MaterialButton inputfilebrowse = dialogView.findViewById(R.id.inputfilebrowse);
+            ImageButton inputfilebrowse = dialogView.findViewById(R.id.inputfilebrowse);
             inputfilebrowse.setOnClickListener(v -> {
                 RootFileBrowserDialog browserDialog = new RootFileBrowserDialog(dialogView.getContext(), inputFile::setText);
                 browserDialog.show();
             });
 
-            MaterialButton outputfilebrowse = dialogView.findViewById(R.id.outputfilebrowse);
+            ImageButton outputfilebrowse = dialogView.findViewById(R.id.outputfilebrowse);
             outputfilebrowse.setOnClickListener(v -> {
                 RootFileBrowserDialog browserDialog = new RootFileBrowserDialog(dialogView.getContext(), outputFile::setText);
                 browserDialog.show();
@@ -1559,12 +1523,24 @@ public class CARsenalFragment extends Fragment {
                     .setView(dialogView)
                     .setPositiveButton("Save", (dialog, which) -> {
                         prefs.edit()
-                                .putString("cansend_sequence", cansendSequence.getText().toString())
-                                .putString("cannelloni_rhost", rhost.getText().toString())
-                                .putString("cannelloni_rport", rport.getText().toString())
-                                .putString("cannelloni_lport", lport.getText().toString())
-                                .putString("input_file", inputFile.getText().toString())
-                                .putString("output_file", outputFile.getText().toString())
+                                .putString("cansend_sequence", cansendSequence.getText() != null
+                                        ? cansendSequence.getText().toString()
+                                        : "")
+                                .putString("cannelloni_rhost", rhost.getText() != null
+                                        ? rhost.getText().toString()
+                                        : "")
+                                .putString("cannelloni_rport", rport.getText() != null
+                                        ? rport.getText().toString()
+                                        : "")
+                                .putString("cannelloni_lport", lport.getText() != null
+                                        ? lport.getText().toString()
+                                        : "")
+                                .putString("input_file", inputFile.getText() != null
+                                        ? inputFile.getText().toString()
+                                        : "")
+                                .putString("output_file", outputFile.getText() != null
+                                        ? outputFile.getText().toString()
+                                        : "")
                                 .putBoolean("interactive_enabled", switchInteractive.isChecked())
                                 .putBoolean("verbose_enabled", switchVerbose.isChecked())
                                 .putBoolean("disable_loopback", !switchLoopback.isChecked())
@@ -1611,8 +1587,8 @@ public class CARsenalFragment extends Fragment {
         private final ShellExecuter exe = new ShellExecuter();
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private Activity activity;
-        private EditText SelectedBaudrateUSB;
-        private EditText SelectedCanSpeedUSB;
+        private EditText selectedBaudrateUSB;
+        private EditText selectedCanSpeedUSB;
         private String selected_usb;
 
         @Override
@@ -1625,8 +1601,8 @@ public class CARsenalFragment extends Fragment {
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.carsenal_canusb, container, false);
 
-            SelectedBaudrateUSB = rootView.findViewById(R.id.baudrate_usb);
-            SelectedCanSpeedUSB = rootView.findViewById(R.id.canspeed_usb);
+            selectedBaudrateUSB = rootView.findViewById(R.id.baudrate_usb);
+            selectedCanSpeedUSB = rootView.findViewById(R.id.canspeed_usb);
 
             // Devices Interfaces Spinner
             Spinner spinner = rootView.findViewById(R.id.device_interface);
@@ -1661,33 +1637,24 @@ public class CARsenalFragment extends Fragment {
             final Spinner modeSpinner = dialogView.findViewById(R.id.usb_mode_spinner);
             final SwitchCompat debugSwitch = dialogView.findViewById(R.id.btn_toggle_usb_ttyOutput);
 
-            // Checkboxes
-            final MaterialCheckBox idCheckbox = dialogView.findViewById(R.id.id_checkbox);
-            final MaterialCheckBox counterCheckbox = dialogView.findViewById(R.id.counter_checkbox);
-            final MaterialCheckBox sleepCheckbox = dialogView.findViewById(R.id.sleep_checkbox);
-            final MaterialCheckBox dataCheckbox = dialogView.findViewById(R.id.data_checkbox);
-            final MaterialCheckBox modeCheckbox = dialogView.findViewById(R.id.mode_checkbox);
-            final MaterialCheckBox debugCheckbox = dialogView.findViewById(R.id.debug_checkbox);
-
-            // Enable/disable inputs based on checkbox
-            idCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> idInput.setEnabled(isChecked));
-            counterCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> counterInput.setEnabled(isChecked));
-            sleepCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> sleepInput.setEnabled(isChecked));
-            dataCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> dataInput.setEnabled(isChecked));
-            modeCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> modeSpinner.setEnabled(isChecked));
-            debugCheckbox.setOnCheckedChangeListener((buttonView, isChecked) -> debugSwitch.setChecked(isChecked));
-
             // Setup mode spinner
             ArrayAdapter<String> adapter = getStringArrayAdapter();
             modeSpinner.setAdapter(adapter);
             modeSpinner.setSelection(0);
-            modeSpinner.setEnabled(false);
 
-            // Load saved prefs for debug
+            // Load saved preferences
             SharedPreferences prefs = requireContext().getSharedPreferences("carsenal_prefs", Context.MODE_PRIVATE);
-            boolean debugEnabled = prefs.getBoolean("usb_debug_enabled", false);
-            debugSwitch.setChecked(debugEnabled);
-            debugCheckbox.setChecked(debugEnabled);
+
+            debugSwitch.setChecked(prefs.getBoolean("usb_debug_enabled", false));
+            idInput.setText(prefs.getString("usb_id_value", ""));
+            counterInput.setText(prefs.getString("usb_counter_value", ""));
+            sleepInput.setText(prefs.getString("usb_sleep_value", ""));
+            dataInput.setText(prefs.getString("usb_data_value", ""));
+            String savedMode = prefs.getString("usb_mode_value", "");
+            if (!savedMode.isEmpty()) {
+                int pos = adapter.getPosition(savedMode);
+                if (pos >= 0) modeSpinner.setSelection(pos);
+            }
 
             // Build dialog
             new MaterialAlertDialogBuilder(requireContext(), R.style.DialogStyleCompat)
@@ -1696,20 +1663,12 @@ public class CARsenalFragment extends Fragment {
                     .setPositiveButton("Apply", (dialog, which) -> {
                         SharedPreferences.Editor editor = prefs.edit();
 
-                        // Debug
                         editor.putBoolean("usb_debug_enabled", debugSwitch.isChecked());
-                        editor.putBoolean("usb_id_enabled", idCheckbox.isChecked());
-                        editor.putBoolean("usb_counter_enabled", counterCheckbox.isChecked());
-                        editor.putBoolean("usb_sleep_enabled", sleepCheckbox.isChecked());
-                        editor.putBoolean("usb_data_enabled", dataCheckbox.isChecked());
-                        editor.putBoolean("usb_mode_enabled", modeCheckbox.isChecked());
-
-                        // Save values only if enabled
-                        if (idCheckbox.isChecked()) editor.putString("usb_id_value", idInput.getText().toString().trim());
-                        if (counterCheckbox.isChecked()) editor.putString("usb_counter_value", counterInput.getText().toString().trim());
-                        if (sleepCheckbox.isChecked()) editor.putString("usb_sleep_value", sleepInput.getText().toString().trim());
-                        if (dataCheckbox.isChecked()) editor.putString("usb_data_value", dataInput.getText().toString().trim());
-                        if (modeCheckbox.isChecked()) editor.putString("usb_mode_value", modeSpinner.getSelectedItem().toString());
+                        editor.putString("usb_id_value", idInput.getText().toString().trim());
+                        editor.putString("usb_counter_value", counterInput.getText().toString().trim());
+                        editor.putString("usb_sleep_value", sleepInput.getText().toString().trim());
+                        editor.putString("usb_data_value", dataInput.getText().toString().trim());
+                        editor.putString("usb_mode_value", modeSpinner.getSelectedItem().toString().trim());
 
                         editor.apply();
                     })
@@ -1738,24 +1697,35 @@ public class CARsenalFragment extends Fragment {
         }
 
         private void runCanUsb() {
-            String USBCANSpeed = SelectedCanSpeedUSB.getText().toString();
-            String USBBaudrate = SelectedBaudrateUSB.getText().toString();
+            String USBCANSpeed = selectedCanSpeedUSB.getText().toString().trim();
+            String USBBaudrate = selectedBaudrateUSB.getText().toString().trim();
             SharedPreferences prefs = requireContext().getSharedPreferences("carsenal_prefs", Context.MODE_PRIVATE);
 
-            String debugEnabled = prefs.getBoolean("usb_debug_enabled", false) ? " -t" : "";
-            String countValue = prefs.getBoolean("usb_counter_enabled", false) ? " -n " + prefs.getString("usb_counter_value", "") : "";
-            String dataValue = prefs.getBoolean("usb_data_enabled", false) ? " -j " + prefs.getString("usb_data_value", "") : "";
-            String idValue = prefs.getBoolean("usb_id_enabled", false) ? " -i " + prefs.getString("usb_id_value", "") : "";
-            String sleepValue = prefs.getBoolean("usb_sleep_enabled", false) ? " -g " + prefs.getString("usb_sleep_value", "") : "";
-            String modeValue = prefs.getBoolean("usb_mode_enabled", false) ? " -m " + prefs.getString("usb_mode_value", "") : "";
-
-            if (!selected_usb.isEmpty() && !selected_usb.equals("USB Device (None)") && !USBCANSpeed.isEmpty() && !USBBaudrate.isEmpty()) {
-                run_cmd("canusb -d " + selected_usb + " -s " + USBCANSpeed + " -b " + USBBaudrate +
-                        debugEnabled + idValue + dataValue + sleepValue + countValue + modeValue);
-            } else {
-                showToast("Please ensure your USB Device and USB CAN Speed, Baudrate, Data fields are set!");
+            if (selected_usb == null || selected_usb.isEmpty() || selected_usb.equals("USB Devices") || USBCANSpeed.isEmpty() || USBBaudrate.isEmpty()) {
+                showToast("Please ensure your USB Device, CAN Speed, Baudrate, and Data fields are set!");
+                return;
             }
 
+            String debugEnabled = prefs.getBoolean("usb_debug_enabled", false) ? " -t" : "";
+            String idValue = prefs.getString("usb_id_value", "").trim();
+            String countValue = prefs.getString("usb_counter_value", "").trim();
+            String dataValue = prefs.getString("usb_data_value", "").trim();
+            String sleepValue = prefs.getString("usb_sleep_value", "").trim();
+            String modeValue = prefs.getString("usb_mode_value", "").trim();
+
+            StringBuilder cmdBuilder = new StringBuilder();
+            cmdBuilder.append("canusb -d ").append(selected_usb)
+                    .append(" -s ").append(USBCANSpeed)
+                    .append(" -b ").append(USBBaudrate)
+                    .append(debugEnabled);
+
+            if (!idValue.isEmpty()) cmdBuilder.append(" -i ").append(idValue);
+            if (!dataValue.isEmpty()) cmdBuilder.append(" -j ").append(dataValue);
+            if (!sleepValue.isEmpty()) cmdBuilder.append(" -g ").append(sleepValue);
+            if (!countValue.isEmpty()) cmdBuilder.append(" -n ").append(countValue);
+            if (!modeValue.isEmpty()) cmdBuilder.append(" -m ").append(modeValue);
+
+            run_cmd(cmdBuilder.toString());
             activity.invalidateOptionsMenu();
         }
     }
@@ -1763,17 +1733,12 @@ public class CARsenalFragment extends Fragment {
     public static class CANCARIBOUFragment extends CARsenalFragment {
         final ShellExecuter exe = new ShellExecuter();
         private final ExecutorService executorService = Executors.newCachedThreadPool();
-        private Activity activity;
         private EditText SelectedFile;
         private EditText SelectedMessage;
-        private boolean isPadEnabled = false;
-        private boolean isCandumpEnabled = false;
-        private boolean isOutputEnabled = false;
-        private boolean isLoopEnabled = false;
-        private boolean isReverseEnabled = false;
         private String selected_caniface = "";
-        private TextInputLayout seedContainer, minContainer, maxContainer, srcContainer, dstContainer;
-        private TextInputLayout delayContainer, lengthContainer, startAddrContainer, separateLineContainer, idContainer;
+        private TextInputLayout seedContainer, minContainer, maxContainer, srcContainer, dstContainer, messageContainer;
+        private TextInputLayout delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer;
+        private ViewGroup loopContainer, padContainer, outputContainer, fileContainer, reverseContainer, candumpContainer;
 
         private ArrayAdapter<String> createDisabledFirstItemAdapter(String[] items) {
             return new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, items) {
@@ -1799,15 +1764,11 @@ public class CARsenalFragment extends Fragment {
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            activity = getActivity();
         }
 
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.carsenal_caribou, container, false);
-
-            SelectedFile = rootView.findViewById(R.id.caribou_file);
-            SelectedMessage = rootView.findViewById(R.id.caribou_message);
 
             seedContainer = rootView.findViewById(R.id.seed_container);
             minContainer = rootView.findViewById(R.id.min_container);
@@ -1821,75 +1782,20 @@ public class CARsenalFragment extends Fragment {
             idContainer = rootView.findViewById(R.id.id_container);
             clearAllFields();
 
-
-            // Pad Switch
-            SwitchCompat btnPad = rootView.findViewById(R.id.btn_toggle_pad);
-
-            btnPad.setChecked(isPadEnabled);
-            btnPad.setTextColor(ContextCompat.getColor(requireContext(),
-                    isPadEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light));
-
-            btnPad.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                isPadEnabled = isChecked;
-
-                int colorRes = isPadEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnPad.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
-            });
-
-            // Loop Switch
-            SwitchCompat btnLoop = rootView.findViewById(R.id.btn_toggle_loop);
-
-            btnLoop.setChecked(isLoopEnabled);
-            btnLoop.setTextColor(ContextCompat.getColor(requireContext(),
-                    isLoopEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light));
-
-            btnLoop.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                isLoopEnabled = isChecked;
-
-                int colorRes = isLoopEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnLoop.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
-            });
-
-            // Reverse Switch
-            SwitchCompat btnReverse = rootView.findViewById(R.id.btn_toggle_reverse);
-
-            btnReverse.setChecked(isReverseEnabled);
-            btnReverse.setTextColor(ContextCompat.getColor(requireContext(),
-                    isReverseEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light));
-
-            btnReverse.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                isReverseEnabled = isChecked;
-
-                int colorRes = isReverseEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnReverse.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
-            });
-
-            // Output Switch
-            SwitchCompat btnOutput = rootView.findViewById(R.id.btn_toggle_output);
-
-            btnOutput.setChecked(isOutputEnabled);
-            btnOutput.setTextColor(ContextCompat.getColor(requireContext(),
-                    isOutputEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light));
-
-            btnOutput.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                isOutputEnabled = isChecked;
-
-                int colorRes = isOutputEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnOutput.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
-            });
-
-            // Candump Switch
-            SwitchCompat btnCandump = rootView.findViewById(R.id.btn_toggle_candump);
-
-            btnCandump.setChecked(isCandumpEnabled);
-            btnCandump.setTextColor(ContextCompat.getColor(requireContext(),
-                    isCandumpEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light));
-
-            btnCandump.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                isCandumpEnabled = isChecked;
-
-                int colorRes = isCandumpEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnCandump.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
+            loopContainer = rootView.findViewById(R.id.loop_container);
+            padContainer = rootView.findViewById(R.id.pad_container);
+            reverseContainer = rootView.findViewById(R.id.reverse_container);
+            outputContainer = rootView.findViewById(R.id.output_container);
+            candumpContainer = rootView.findViewById(R.id.candump_container);
+            messageContainer = rootView.findViewById(R.id.message_container);
+            SelectedMessage = rootView.findViewById(R.id.caribou_message);
+            fileContainer = rootView.findViewById(R.id.file_container);
+            SelectedFile = rootView.findViewById(R.id.caribou_file);
+            // Browse File
+            ImageButton browseButton = rootView.findViewById(R.id.cariboufilebrowse);
+            browseButton.setOnClickListener(v -> {
+                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), SelectedFile::setText);
+                dialog.show();
             });
 
             // Interfaces
@@ -1908,168 +1814,15 @@ public class CARsenalFragment extends Fragment {
                     iface -> selected_caniface = iface
             );
 
-            // Browse File
-            MaterialButton browseButton = rootView.findViewById(R.id.cariboufilebrowse);
-            @SuppressLint("CutPasteId") TextInputEditText fileEditText = rootView.findViewById(R.id.caribou_file);
-            browseButton.setOnClickListener(v -> {
-                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), fileEditText::setText);
-                dialog.show();
-            });
-
-            // Advanced Options Toggle
-            Button btnToggle = rootView.findViewById(R.id.btn_toggle_advanced);
-            LinearLayout advancedOptionsLayout = rootView.findViewById(R.id.caribou_advanced_options);
-            btnToggle.setOnClickListener(v -> {
-                if (advancedOptionsLayout.getVisibility() == View.GONE) {
-                    advancedOptionsLayout.setVisibility(View.VISIBLE);
-                    btnToggle.setText(R.string.can_hide_advanced_options);
-                } else {
-                    advancedOptionsLayout.setVisibility(View.GONE);
-                    btnToggle.setText(R.string.can_advanced_options);
-                }
-            });
-
-            // Start Address
-            Button btnStartAddr = rootView.findViewById(R.id.btn_toggle_start_addr);
-
-            btnStartAddr.setOnClickListener(v -> {
-                boolean visible = startAddrContainer.getVisibility() == View.VISIBLE;
-                startAddrContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnStartAddr.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Min
-            Button btnMin = rootView.findViewById(R.id.btn_toggle_min);
-
-            btnMin.setOnClickListener(v -> {
-                boolean visible = minContainer.getVisibility() == View.VISIBLE;
-                minContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnMin.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Max
-            Button btnMax = rootView.findViewById(R.id.btn_toggle_max);
-
-            btnMax.setOnClickListener(v -> {
-                boolean visible = maxContainer.getVisibility() == View.VISIBLE;
-                maxContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnMax.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Src
-            Button btnSrc = rootView.findViewById(R.id.btn_toggle_src);
-
-            btnSrc.setOnClickListener(v -> {
-                boolean visible = srcContainer.getVisibility() == View.VISIBLE;
-                srcContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnSrc.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Dst
-            Button btnDst = rootView.findViewById(R.id.btn_toggle_dst);
-
-            btnDst.setOnClickListener(v -> {
-                boolean visible = dstContainer.getVisibility() == View.VISIBLE;
-                dstContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnDst.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Length
-            Button btnLength = rootView.findViewById(R.id.btn_toggle_length);
-
-            btnLength.setOnClickListener(v -> {
-                boolean visible = lengthContainer.getVisibility() == View.VISIBLE;
-                lengthContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnLength.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Seed
-            Button btnSeed = rootView.findViewById(R.id.btn_toggle_seed);
-
-            btnSeed.setOnClickListener(v -> {
-                boolean visible = seedContainer.getVisibility() == View.VISIBLE;
-                seedContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnSeed.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Separate Line
-            Button btnSeparateLine = rootView.findViewById(R.id.btn_toggle_separateLine);
-
-            btnSeparateLine.setOnClickListener(v -> {
-                boolean visible = separateLineContainer.getVisibility() == View.VISIBLE;
-                separateLineContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnSeparateLine.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // ID
-            Button btnId = rootView.findViewById(R.id.btn_toggle_id);
-
-            btnId.setOnClickListener(v -> {
-                boolean visible = idContainer.getVisibility() == View.VISIBLE;
-                idContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnId.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Delay
-            Button btnDelay = rootView.findViewById(R.id.btn_toggle_delay);
-
-            btnDelay.setOnClickListener(v -> {
-                boolean visible = delayContainer.getVisibility() == View.VISIBLE;
-                delayContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnDelay.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Dump
-            rootView.findViewById(R.id.start_dump).setOnClickListener(v -> {
-                String candumpFormat = isCandumpEnabled ? " -t" : "";
-                String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
-                String separateLineValue = getVisibleParam(separateLineContainer.getEditText(), " -s ");
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces")) {
-                    run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " dump" + separateLineValue + candumpFormat + outputEnabled);
-                } else {
-                    showToast("Please choose a CAN Interface!");
-                }
-                activity.invalidateOptionsMenu();
-            });
-
-            // Listener
-            rootView.findViewById(R.id.start_listener).setOnClickListener(v -> {
-                String reverseEnabled = isReverseEnabled ? " -r" : "";
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interface (None)")) {
-                    run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " listener" + reverseEnabled);
-                } else {
-                    showToast("Please choose a CAN Interface!");
-                }
-                activity.invalidateOptionsMenu();
-            });
-
             // Module and SubModule spinners
             final Spinner moduleSpinner = rootView.findViewById(R.id.module_spinner);
             final Spinner subModuleSpinner = rootView.findViewById(R.id.submodule_spinner);
             final Button startButton = rootView.findViewById(R.id.start_button);
 
-            final String[] modules = {"Modules", "Fuzz", "Send", "UDS", "XCP"};
+            final String[] modules = {"Modules", "Dump", "Listener", "Fuzz", "Send", "UDS", "XCP"};
             final Map<String, String[]> subModulesMap = new HashMap<>();
+            subModulesMap.put("Dump", new String[]{"Sub-Modules", "None"});
+            subModulesMap.put("Listener", new String[]{"Sub-Modules", "None"});
             subModulesMap.put("Fuzz", new String[]{"Sub-Modules", "brute", "identify", "mutate", "random", "replay"});
             subModulesMap.put("Send", new String[]{"Sub-Modules", "file", "message"});
             subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services"});
@@ -2109,6 +1862,105 @@ public class CARsenalFragment extends Fragment {
                 @Override public void onNothingSelected(AdapterView<?> parent) {}
             });
 
+            subModuleSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    String selectedModule = (String) moduleSpinner.getSelectedItem();
+                    String selectedSubModule = (String) subModuleSpinner.getSelectedItem();
+
+                    // Default: hide field
+                    idContainer.setVisibility(View.GONE);
+                    minContainer.setVisibility(View.GONE);
+                    maxContainer.setVisibility(View.GONE);
+                    srcContainer.setVisibility(View.GONE);
+                    dstContainer.setVisibility(View.GONE);
+                    seedContainer.setVisibility(View.GONE);
+                    outputContainer.setVisibility(View.GONE);
+                    messageContainer.setVisibility(View.GONE);
+                    loopContainer.setVisibility(View.GONE);
+                    fileContainer.setVisibility(View.GONE);
+                    padContainer.setVisibility(View.GONE);
+                    candumpContainer.setVisibility(View.GONE);
+                    reverseContainer.setVisibility(View.GONE);
+                    lengthContainer.setVisibility(View.GONE);
+                    separateLineContainer.setVisibility(View.GONE);
+                    startAddrContainer.setVisibility(View.GONE);
+                    delayContainer.setVisibility(View.GONE);
+
+                    // Show only for specific submodules
+                    if ("Dump".equals(selectedModule)) {
+                        if ("None".equals(selectedSubModule)) {
+                            candumpContainer.setVisibility(View.VISIBLE);
+                            outputContainer.setVisibility(View.VISIBLE);
+                            separateLineContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    if ("Listener".equals(selectedModule)) {
+                        if ("None".equals(selectedSubModule)) {
+                            reverseContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    if ("Fuzz".equals(selectedModule)) {
+                        if ("brute".equals(selectedSubModule) || "mutate".equals(selectedSubModule)) {
+                            idContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("identify".equals(selectedSubModule) || "replay".equals(selectedSubModule)) {
+                            outputContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("random".equals(selectedSubModule)) {
+                            minContainer.setVisibility(View.VISIBLE);
+                            seedContainer.setVisibility(View.VISIBLE);
+                            outputContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    if ("Send".equals(selectedModule)) {
+                        if ("file".equals(selectedSubModule)) {
+                            delayContainer.setVisibility(View.VISIBLE);
+                            loopContainer.setVisibility(View.VISIBLE);
+                            fileContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("message".equals(selectedSubModule)) {
+                            delayContainer.setVisibility(View.VISIBLE);
+                            loopContainer.setVisibility(View.VISIBLE);
+                            padContainer.setVisibility(View.VISIBLE);
+                            messageContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    if ("UDS".equals(selectedModule)) {
+                        if ("discovery".equals(selectedSubModule)) {
+                            minContainer.setVisibility(View.VISIBLE);
+                            maxContainer.setVisibility(View.VISIBLE);
+                            delayContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("services".equals(selectedSubModule)) {
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    if ("XCP".equals(selectedModule)) {
+                        if ("discovery".equals(selectedSubModule)) {
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
+                            outputContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("info".equals(selectedSubModule)) {
+                            startAddrContainer.setVisibility(View.VISIBLE);
+                            lengthContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("dump".equals(selectedSubModule)) {
+                            startAddrContainer.setVisibility(View.VISIBLE);
+                            lengthContainer.setVisibility(View.VISIBLE);
+                            minContainer.setVisibility(View.VISIBLE);
+                            maxContainer.setVisibility(View.VISIBLE);
+                            outputContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
+                }
+
+                @Override public void onNothingSelected(AdapterView<?> parent) {}
+            });
+
+
             startButton.setOnClickListener(v -> {
                 String module = (String) moduleSpinner.getSelectedItem();
                 String subModule = (String) subModuleSpinner.getSelectedItem();
@@ -2119,6 +1971,12 @@ public class CARsenalFragment extends Fragment {
                 }
 
                 switch (module) {
+                    case "Dump":
+                        runDump(subModule);
+                        break;
+                    case "Listener":
+                        runListener(subModule);
+                        break;
                     case "Fuzz":
                         runFuzzer(subModule);
                         break;
@@ -2142,7 +2000,7 @@ public class CARsenalFragment extends Fragment {
         private void clearAllFields() {
             TextInputLayout[] containers = new TextInputLayout[] {
                     seedContainer, minContainer, maxContainer, srcContainer, dstContainer,
-                    delayContainer, lengthContainer, startAddrContainer, separateLineContainer, idContainer
+                    delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer
             };
 
             for (TextInputLayout container : containers) {
@@ -2156,22 +2014,92 @@ public class CARsenalFragment extends Fragment {
         }
 
         private String getVisibleParam(EditText editText, String prefix) {
-            if (editText != null && editText.getVisibility() == View.VISIBLE) {
-                String input = editText.getText().toString().trim();
-                if (!input.isEmpty() && !input.equals(editText.getHint().toString())) {
-                    return prefix + input;
+            if (editText != null) {
+                View container = (View) editText.getParent().getParent();
+                if (container.getVisibility() == View.VISIBLE && container.isEnabled()) {
+                    String input = editText.getText().toString().trim();
+                    if (!input.isEmpty() && !input.equals(editText.getHint().toString())) {
+                        return prefix + input;
+                    }
                 }
             }
             return "";
         }
 
-        private void runFuzzer(String fuzzer_module) {
-            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
+        private void runDump(String dump_module) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
                 showToast("Please choose a CAN Interface!");
                 return;
             }
 
-            String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
+            String separateLineValue = getVisibleParam(separateLineContainer.getEditText(), " -s ");
+            String outputEnabled = "";
+            if (outputContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat outputSwitch = outputContainer.findViewById(R.id.btn_toggle_output);
+                if (outputSwitch != null && outputSwitch.isChecked()) {
+                    String filePath = SelectedFile.getText().toString().trim();
+                    if (!filePath.isEmpty()) {
+                        outputEnabled = " -f " + filePath;
+                    }
+                }
+            }
+
+            String candumpEnabled = "";
+            if (candumpContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat candumpSwitch = candumpContainer.findViewById(R.id.btn_toggle_candump);
+                if (candumpSwitch != null && candumpSwitch.isChecked()) {
+                    candumpEnabled = " -t";
+                }
+            }
+
+            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " dump";
+
+            if (dump_module.equals("None")) {
+                run_cmd(cmdBase + separateLineValue + candumpEnabled + outputEnabled);
+            } else {
+                showToast("Unknown dump submodule: " + dump_module);
+            }
+        }
+
+        private void runListener(String listener_module) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
+                showToast("Please choose a CAN Interface!");
+                return;
+            }
+
+            String reverseEnabled = "";
+            if (reverseContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat reverseSwitch = reverseContainer.findViewById(R.id.btn_toggle_reverse);
+                if (reverseSwitch != null && reverseSwitch.isChecked()) {
+                    reverseEnabled = " -r";
+                }
+            }
+
+            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " listener";
+
+            if (listener_module.equals("None")) {
+                run_cmd(cmdBase + reverseEnabled);
+            } else {
+                showToast("Unknown listener submodule: " + listener_module);
+            }
+        }
+
+        private void runFuzzer(String fuzzer_module) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
+                showToast("Please choose a CAN Interface!");
+                return;
+            }
+
+            String outputEnabled = "";
+            if (outputContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat outputSwitch = outputContainer.findViewById(R.id.btn_toggle_output);
+                if (outputSwitch != null && outputSwitch.isChecked()) {
+                    String filePath = SelectedFile.getText().toString().trim();
+                    if (!filePath.isEmpty()) {
+                        outputEnabled = " -f " + filePath;
+                    }
+                }
+            }
             String idValue = getVisibleParam(idContainer.getEditText(), " ");
             String seedValue = getVisibleParam(seedContainer.getEditText(), " --seed ");
             String minValue = getVisibleParam(minContainer.getEditText(), " -min ");
@@ -2200,15 +2128,39 @@ public class CARsenalFragment extends Fragment {
         }
 
         private void runSend(String send_module) {
-            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
                 showToast("Please choose a CAN Interface!");
                 return;
             }
 
-            String selected_message = SelectedMessage.getText().toString();
-            String selected_file = SelectedFile.getText().toString();
-            String loopEnabled = isLoopEnabled ? " -l" : "";
-            String padEnabled = isPadEnabled ? " -p" : "";
+            String selected_message = "";
+            if (messageContainer.getVisibility() == View.VISIBLE) {
+                String text = SelectedMessage.getText().toString().trim();
+                if (!text.isEmpty()) {
+                    selected_message = text;
+                }
+            }
+            String selected_file = "";
+            if (fileContainer.getVisibility() == View.VISIBLE) {
+                String text = SelectedFile.getText().toString().trim();
+                if (!text.isEmpty()) {
+                    selected_file = text;
+                }
+            }
+            String loopEnabled = "";
+            if (loopContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat loopSwitch = loopContainer.findViewById(R.id.btn_toggle_loop);
+                if (loopSwitch != null && loopSwitch.isChecked()) {
+                    loopEnabled = " -l";
+                }
+            }
+            String padEnabled = "";
+            if (padContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat padSwitch = padContainer.findViewById(R.id.btn_toggle_pad);
+                if (padSwitch != null && padSwitch.isChecked()) {
+                    padEnabled = " -p";
+                }
+            }
             String delayValue = getVisibleParam(delayContainer.getEditText(), " -d ");
 
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " send ";
@@ -2226,7 +2178,7 @@ public class CARsenalFragment extends Fragment {
         }
 
         private void runUDS(String uds_module) {
-            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
                 showToast("Please choose a CAN Interface!");
                 return;
             }
@@ -2252,13 +2204,21 @@ public class CARsenalFragment extends Fragment {
         }
 
         private void runXCP(String xcp_module) {
-            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interface (None)")) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
                 showToast("Please choose a CAN Interface!");
                 return;
             }
 
-
-            String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
+            String outputEnabled = "";
+            if (outputContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat outputSwitch = outputContainer.findViewById(R.id.btn_toggle_output);
+                if (outputSwitch != null && outputSwitch.isChecked()) {
+                    String filePath = SelectedFile.getText().toString().trim();
+                    if (!filePath.isEmpty()) {
+                        outputEnabled = " -f " + filePath;
+                    }
+                }
+            }
             String startAddrValue = getVisibleParam(startAddrContainer.getEditText(), " ");
             String lengthValue = getVisibleParam(lengthContainer.getEditText(), " ");
             String srcValue = getVisibleParam(srcContainer.getEditText(), " ");
@@ -2689,22 +2649,8 @@ public class CARsenalFragment extends Fragment {
                     iface -> selected_caniface = iface
             );
 
-            // ELM327 Configuration Toggle
-            Button btnConfigurationToggle = rootView.findViewById(R.id.btn_toggle_relay);
-            LinearLayout configurationLayout = rootView.findViewById(R.id.msf_elmconfig);
-
-            btnConfigurationToggle.setOnClickListener(v -> {
-                if (configurationLayout.getVisibility() == View.GONE) {
-                    configurationLayout.setVisibility(View.VISIBLE);
-                    btnConfigurationToggle.setText(R.string.can_hide_configuration);
-                } else {
-                    configurationLayout.setVisibility(View.GONE);
-                    btnConfigurationToggle.setText(R.string.can_elm327_relay_configuration);
-                }
-            });
-
             // ELM327 Relay
-            Button elm327relayButton = rootView.findViewById(R.id.run_relay);
+            ImageButton elm327relayButton = rootView.findViewById(R.id.run_relay);
 
             elm327relayButton.setOnClickListener(v -> {
                 String baudSpeed = selected_baud.getText().toString();

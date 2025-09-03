@@ -80,6 +80,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:layout_marginEnd="10dp"
                             android:hint="@string/Input"
                             app:strokeWidth="2dp"
                             app:boxStrokeWidthFocused="3dp"
@@ -96,14 +97,14 @@
                                 android:textColor="@color/white" />
                         </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.button.MaterialButton
+                        <ImageButton
                             android:id="@+id/inputfilebrowse"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            app:icon="@drawable/baseline_folder_open_24"
-                            android:layout_marginStart="8dp"
-                            app:iconGravity="textStart"/>
-
+                            android:src="@drawable/baseline_folder_open_24"
+                            android:contentDescription="Browse Input"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:padding="8dp"/>
                     </LinearLayout>
 
                     <!-- Output File Row -->
@@ -121,6 +122,7 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
+                            android:layout_marginEnd="10dp"
                             android:hint="@string/Output"
                             app:strokeWidth="2dp"
                             app:boxStrokeWidthFocused="3dp"
@@ -137,13 +139,15 @@
                                 android:textColor="@color/white" />
                         </com.google.android.material.textfield.TextInputLayout>
 
-                        <com.google.android.material.button.MaterialButton
+                        <ImageButton
                             android:id="@+id/outputfilebrowse"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            app:icon="@drawable/baseline_folder_open_24"
-                            android:layout_marginStart="8dp"
-                            app:iconGravity="textStart"/>
+                            android:src="@drawable/baseline_folder_open_24"
+                            android:contentDescription="Browse Output"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:padding="8dp"/>
+
 
                     </LinearLayout>
 
@@ -184,12 +188,25 @@
 
                             </com.google.android.material.card.MaterialCardView>
 
+
+
+                        </LinearLayout>
+
+                        <LinearLayout
+                            android:id="@+id/button_row_verbose"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="20dp"
+                            android:layout_marginEnd="20dp"
+                            android:orientation="horizontal"
+                            android:gravity="center"
+                            android:layout_marginTop="4dp">
+
                             <com.google.android.material.card.MaterialCardView
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
                                 android:layout_weight="1"
                                 app:cardCornerRadius="4dp"
-                                android:layout_marginStart="5dp"
                                 android:padding="8dp">
 
                                 <androidx.appcompat.widget.SwitchCompat
