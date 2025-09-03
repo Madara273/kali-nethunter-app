@@ -1736,14 +1736,10 @@ public class CARsenalFragment extends Fragment {
         private Activity activity;
         private EditText SelectedFile;
         private EditText SelectedMessage;
-        private boolean isPadEnabled = false;
-        private boolean isCandumpEnabled = false;
-        private boolean isOutputEnabled = false;
-        private boolean isLoopEnabled = false;
-        private boolean isReverseEnabled = false;
         private String selected_caniface = "";
-        private TextInputLayout seedContainer, minContainer, maxContainer, srcContainer, dstContainer;
-        private TextInputLayout delayContainer, lengthContainer, startAddrContainer, separateLineContainer, idContainer;
+        private TextInputLayout seedContainer, minContainer, maxContainer, srcContainer, dstContainer, messageContainer;
+        private TextInputLayout delayContainer, lengthContainer, startAddrContainer, idContainer;//, separateLineContainer
+        private ViewGroup loopContainer, padContainer, outputContainer, fileContainer;//, reverseContainer, candumpContainer;
 
         private ArrayAdapter<String> createDisabledFirstItemAdapter(String[] items) {
             return new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, items) {
@@ -1776,9 +1772,6 @@ public class CARsenalFragment extends Fragment {
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.carsenal_caribou, container, false);
 
-            SelectedFile = rootView.findViewById(R.id.caribou_file);
-            SelectedMessage = rootView.findViewById(R.id.caribou_message);
-
             seedContainer = rootView.findViewById(R.id.seed_container);
             minContainer = rootView.findViewById(R.id.min_container);
             maxContainer = rootView.findViewById(R.id.max_container);
@@ -1787,80 +1780,53 @@ public class CARsenalFragment extends Fragment {
             delayContainer = rootView.findViewById(R.id.delay_container);
             lengthContainer = rootView.findViewById(R.id.length_container);
             startAddrContainer = rootView.findViewById(R.id.start_addr_container);
-            separateLineContainer = rootView.findViewById(R.id.separate_line_container);
+            //separateLineContainer = rootView.findViewById(R.id.separate_line_container);
             idContainer = rootView.findViewById(R.id.id_container);
             clearAllFields();
 
-
-            // Pad Switch
-            SwitchCompat btnPad = rootView.findViewById(R.id.btn_toggle_pad);
-
-            btnPad.setChecked(isPadEnabled);
-            btnPad.setTextColor(ContextCompat.getColor(requireContext(),
-                    isPadEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light));
-
-            btnPad.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                isPadEnabled = isChecked;
-
-                int colorRes = isPadEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnPad.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
-            });
-
-            // Loop Switch
-            SwitchCompat btnLoop = rootView.findViewById(R.id.btn_toggle_loop);
-
-            btnLoop.setChecked(isLoopEnabled);
-            btnLoop.setTextColor(ContextCompat.getColor(requireContext(),
-                    isLoopEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light));
-
-            btnLoop.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                isLoopEnabled = isChecked;
-
-                int colorRes = isLoopEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnLoop.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
+            loopContainer = rootView.findViewById(R.id.loop_container);
+            padContainer = rootView.findViewById(R.id.pad_container);
+            //reverseContainer = rootView.findViewById(R.id.reverse_container);
+            outputContainer = rootView.findViewById(R.id.output_container);
+            //candumpContainer = rootView.findViewById(R.id.candump_container);
+            messageContainer = rootView.findViewById(R.id.message_container);
+            SelectedMessage = rootView.findViewById(R.id.caribou_message);
+            fileContainer = rootView.findViewById(R.id.file_container);
+            SelectedFile = rootView.findViewById(R.id.caribou_file);
+            // Browse File
+            ImageButton browseButton = rootView.findViewById(R.id.cariboufilebrowse);
+            browseButton.setOnClickListener(v -> {
+                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), SelectedFile::setText);
+                dialog.show();
             });
 
             // Reverse Switch
-            SwitchCompat btnReverse = rootView.findViewById(R.id.btn_toggle_reverse);
+            //SwitchCompat btnReverse = rootView.findViewById(R.id.btn_toggle_reverse);
 
-            btnReverse.setChecked(isReverseEnabled);
-            btnReverse.setTextColor(ContextCompat.getColor(requireContext(),
-                    isReverseEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light));
+            //btnReverse.setChecked(isReverseEnabled);
+            //btnReverse.setTextColor(ContextCompat.getColor(requireContext(),
+            //        isReverseEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light));
 
-            btnReverse.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                isReverseEnabled = isChecked;
+            //btnReverse.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            //    isReverseEnabled = isChecked;
 
-                int colorRes = isReverseEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnReverse.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
-            });
-
-            // Output Switch
-            SwitchCompat btnOutput = rootView.findViewById(R.id.btn_toggle_output);
-
-            btnOutput.setChecked(isOutputEnabled);
-            btnOutput.setTextColor(ContextCompat.getColor(requireContext(),
-                    isOutputEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light));
-
-            btnOutput.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                isOutputEnabled = isChecked;
-
-                int colorRes = isOutputEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnOutput.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
-            });
+            //    int colorRes = isReverseEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
+            //    btnReverse.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
+            //});
 
             // Candump Switch
-            SwitchCompat btnCandump = rootView.findViewById(R.id.btn_toggle_candump);
+            //SwitchCompat btnCandump = rootView.findViewById(R.id.btn_toggle_candump);
 
-            btnCandump.setChecked(isCandumpEnabled);
-            btnCandump.setTextColor(ContextCompat.getColor(requireContext(),
-                    isCandumpEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light));
+            //btnCandump.setChecked(isCandumpEnabled);
+            //btnCandump.setTextColor(ContextCompat.getColor(requireContext(),
+            //        isCandumpEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light));
 
-            btnCandump.setOnCheckedChangeListener((buttonView, isChecked) -> {
-                isCandumpEnabled = isChecked;
+            //btnCandump.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            //    isCandumpEnabled = isChecked;
 
-                int colorRes = isCandumpEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-                btnCandump.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
-            });
+            //    int colorRes = isCandumpEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
+            //    btnCandump.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
+            //});
 
             // Interfaces
             Spinner spinner = rootView.findViewById(R.id.device_interface);
@@ -1878,160 +1844,40 @@ public class CARsenalFragment extends Fragment {
                     iface -> selected_caniface = iface
             );
 
-            // Browse File
-            ImageButton browseButton = rootView.findViewById(R.id.cariboufilebrowse);
-            @SuppressLint("CutPasteId") TextInputEditText fileEditText = rootView.findViewById(R.id.caribou_file);
-            browseButton.setOnClickListener(v -> {
-                RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), fileEditText::setText);
-                dialog.show();
-            });
-
-            // Advanced Options Toggle
-            Button btnToggle = rootView.findViewById(R.id.btn_toggle_advanced);
-            LinearLayout advancedOptionsLayout = rootView.findViewById(R.id.caribou_advanced_options);
-            btnToggle.setOnClickListener(v -> {
-                if (advancedOptionsLayout.getVisibility() == View.GONE) {
-                    advancedOptionsLayout.setVisibility(View.VISIBLE);
-                    btnToggle.setText(R.string.can_hide_advanced_options);
-                } else {
-                    advancedOptionsLayout.setVisibility(View.GONE);
-                    btnToggle.setText(R.string.can_advanced_options);
-                }
-            });
-
-            // Start Address
-            Button btnStartAddr = rootView.findViewById(R.id.btn_toggle_start_addr);
-
-            btnStartAddr.setOnClickListener(v -> {
-                boolean visible = startAddrContainer.getVisibility() == View.VISIBLE;
-                startAddrContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnStartAddr.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Min
-            Button btnMin = rootView.findViewById(R.id.btn_toggle_min);
-
-            btnMin.setOnClickListener(v -> {
-                boolean visible = minContainer.getVisibility() == View.VISIBLE;
-                minContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnMin.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Max
-            Button btnMax = rootView.findViewById(R.id.btn_toggle_max);
-
-            btnMax.setOnClickListener(v -> {
-                boolean visible = maxContainer.getVisibility() == View.VISIBLE;
-                maxContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnMax.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Src
-            Button btnSrc = rootView.findViewById(R.id.btn_toggle_src);
-
-            btnSrc.setOnClickListener(v -> {
-                boolean visible = srcContainer.getVisibility() == View.VISIBLE;
-                srcContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnSrc.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Dst
-            Button btnDst = rootView.findViewById(R.id.btn_toggle_dst);
-
-            btnDst.setOnClickListener(v -> {
-                boolean visible = dstContainer.getVisibility() == View.VISIBLE;
-                dstContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnDst.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Length
-            Button btnLength = rootView.findViewById(R.id.btn_toggle_length);
-
-            btnLength.setOnClickListener(v -> {
-                boolean visible = lengthContainer.getVisibility() == View.VISIBLE;
-                lengthContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnLength.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Seed
-            Button btnSeed = rootView.findViewById(R.id.btn_toggle_seed);
-
-            btnSeed.setOnClickListener(v -> {
-                boolean visible = seedContainer.getVisibility() == View.VISIBLE;
-                seedContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnSeed.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
             // Separate Line
-            Button btnSeparateLine = rootView.findViewById(R.id.btn_toggle_separateLine);
+            //Button btnSeparateLine = rootView.findViewById(R.id.btn_toggle_separateLine);
 
-            btnSeparateLine.setOnClickListener(v -> {
-                boolean visible = separateLineContainer.getVisibility() == View.VISIBLE;
-                separateLineContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
+            //btnSeparateLine.setOnClickListener(v -> {
+            //    boolean visible = separateLineContainer.getVisibility() == View.VISIBLE;
+            //    separateLineContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
 
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnSeparateLine.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // ID
-            Button btnId = rootView.findViewById(R.id.btn_toggle_id);
-
-            btnId.setOnClickListener(v -> {
-                boolean visible = idContainer.getVisibility() == View.VISIBLE;
-                idContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnId.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
-
-            // Delay
-            Button btnDelay = rootView.findViewById(R.id.btn_toggle_delay);
-
-            btnDelay.setOnClickListener(v -> {
-                boolean visible = delayContainer.getVisibility() == View.VISIBLE;
-                delayContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-                int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-                btnDelay.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            });
+            //    int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
+            //    btnSeparateLine.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
+            //});
 
             // Dump
-            rootView.findViewById(R.id.start_dump).setOnClickListener(v -> {
-                String candumpFormat = isCandumpEnabled ? " -t" : "";
-                String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
-                String separateLineValue = getVisibleParam(separateLineContainer.getEditText(), " -s ");
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces")) {
-                    run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " dump" + separateLineValue + candumpFormat + outputEnabled);
-                } else {
-                    showToast("Please choose a CAN Interface!");
-                }
-                activity.invalidateOptionsMenu();
-            });
+            //rootView.findViewById(R.id.start_dump).setOnClickListener(v -> {
+             //   String candumpFormat = isCandumpEnabled ? " -t" : "";
+             //   String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
+             //   String separateLineValue = getVisibleParam(separateLineContainer.getEditText(), " -s ");
+             //   if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces")) {
+             //       run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " dump" + separateLineValue + candumpFormat + outputEnabled);
+             //   } else {
+             //       showToast("Please choose a CAN Interface!");
+             //   }
+             //   activity.invalidateOptionsMenu();
+            //});
 
             // Listener
-            rootView.findViewById(R.id.start_listener).setOnClickListener(v -> {
-                String reverseEnabled = isReverseEnabled ? " -r" : "";
-                if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces")) {
-                    run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " listener" + reverseEnabled);
-                } else {
-                    showToast("Please choose a CAN Interface!");
-                }
-                activity.invalidateOptionsMenu();
-            });
+            //rootView.findViewById(R.id.start_listener).setOnClickListener(v -> {
+            //    String reverseEnabled = isReverseEnabled ? " -r" : "";
+            //    if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces")) {
+            //        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " listener" + reverseEnabled);
+            //    } else {
+            //        showToast("Please choose a CAN Interface!");
+            //    }
+            //    activity.invalidateOptionsMenu();
+            //});
 
             // Module and SubModule spinners
             final Spinner moduleSpinner = rootView.findViewById(R.id.module_spinner);
@@ -2079,6 +1925,92 @@ public class CARsenalFragment extends Fragment {
                 @Override public void onNothingSelected(AdapterView<?> parent) {}
             });
 
+            subModuleSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    String selectedModule = (String) moduleSpinner.getSelectedItem();
+                    String selectedSubModule = (String) subModuleSpinner.getSelectedItem();
+
+                    // Default: hide field
+                    idContainer.setVisibility(View.GONE);
+                    minContainer.setVisibility(View.GONE);
+                    maxContainer.setVisibility(View.GONE);
+                    srcContainer.setVisibility(View.GONE);
+                    dstContainer.setVisibility(View.GONE);
+                    seedContainer.setVisibility(View.GONE);
+                    outputContainer.setVisibility(View.GONE);
+                    messageContainer.setVisibility(View.GONE);
+                    loopContainer.setVisibility(View.GONE);
+                    fileContainer.setVisibility(View.GONE);
+                    padContainer.setVisibility(View.GONE);
+                    //messageContainer.setVisibility(View.GONE);
+                    lengthContainer.setVisibility(View.GONE);
+                    //separateLineContainer.setVisibility(View.GONE);
+                    startAddrContainer.setVisibility(View.GONE);
+                    delayContainer.setVisibility(View.GONE);
+
+                    // Show ID input only for specific submodules
+                    if ("Fuzz".equals(selectedModule)) {
+                        if ("brute".equals(selectedSubModule) || "mutate".equals(selectedSubModule)) {
+                            idContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("identify".equals(selectedSubModule) || "replay".equals(selectedSubModule)) {
+                            outputContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("random".equals(selectedSubModule)) {
+                            minContainer.setVisibility(View.VISIBLE);
+                            seedContainer.setVisibility(View.VISIBLE);
+                            outputContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    if ("Send".equals(selectedModule)) {
+                        if ("file".equals(selectedSubModule)) {
+                            delayContainer.setVisibility(View.VISIBLE);
+                            loopContainer.setVisibility(View.VISIBLE);
+                            fileContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("message".equals(selectedSubModule)) {
+                            delayContainer.setVisibility(View.VISIBLE);
+                            loopContainer.setVisibility(View.VISIBLE);
+                            padContainer.setVisibility(View.VISIBLE);
+                            messageContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    if ("UDS".equals(selectedModule)) {
+                        if ("discovery".equals(selectedSubModule)) {
+                            minContainer.setVisibility(View.VISIBLE);
+                            maxContainer.setVisibility(View.VISIBLE);
+                            delayContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("services".equals(selectedSubModule)) {
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    if ("XCP".equals(selectedModule)) {
+                        if ("discovery".equals(selectedSubModule)) {
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
+                            outputContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("info".equals(selectedSubModule)) {
+                            startAddrContainer.setVisibility(View.VISIBLE);
+                            lengthContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("dump".equals(selectedSubModule)) {
+                            startAddrContainer.setVisibility(View.VISIBLE);
+                            lengthContainer.setVisibility(View.VISIBLE);
+                            minContainer.setVisibility(View.VISIBLE);
+                            maxContainer.setVisibility(View.VISIBLE);
+                            outputContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
+                }
+
+                @Override public void onNothingSelected(AdapterView<?> parent) {}
+            });
+
+
             startButton.setOnClickListener(v -> {
                 String module = (String) moduleSpinner.getSelectedItem();
                 String subModule = (String) subModuleSpinner.getSelectedItem();
@@ -2112,7 +2044,7 @@ public class CARsenalFragment extends Fragment {
         private void clearAllFields() {
             TextInputLayout[] containers = new TextInputLayout[] {
                     seedContainer, minContainer, maxContainer, srcContainer, dstContainer,
-                    delayContainer, lengthContainer, startAddrContainer, separateLineContainer, idContainer
+                    delayContainer, lengthContainer, startAddrContainer, idContainer//, separateLineContainer
             };
 
             for (TextInputLayout container : containers) {
@@ -2126,10 +2058,13 @@ public class CARsenalFragment extends Fragment {
         }
 
         private String getVisibleParam(EditText editText, String prefix) {
-            if (editText != null && editText.getVisibility() == View.VISIBLE) {
-                String input = editText.getText().toString().trim();
-                if (!input.isEmpty() && !input.equals(editText.getHint().toString())) {
-                    return prefix + input;
+            if (editText != null) {
+                View container = (View) editText.getParent().getParent(); // usually the TextInputLayout
+                if (container.getVisibility() == View.VISIBLE && container.isEnabled()) {
+                    String input = editText.getText().toString().trim();
+                    if (!input.isEmpty() && !input.equals(editText.getHint().toString())) {
+                        return prefix + input;
+                    }
                 }
             }
             return "";
@@ -2141,7 +2076,16 @@ public class CARsenalFragment extends Fragment {
                 return;
             }
 
-            String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
+            String outputEnabled = "";
+            if (outputContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat outputSwitch = outputContainer.findViewById(R.id.btn_toggle_output);
+                if (outputSwitch != null && outputSwitch.isChecked()) {
+                    String filePath = SelectedFile.getText().toString().trim();
+                    if (!filePath.isEmpty()) {
+                        outputEnabled = " -f " + filePath;
+                    }
+                }
+            }
             String idValue = getVisibleParam(idContainer.getEditText(), " ");
             String seedValue = getVisibleParam(seedContainer.getEditText(), " --seed ");
             String minValue = getVisibleParam(minContainer.getEditText(), " -min ");
@@ -2175,10 +2119,34 @@ public class CARsenalFragment extends Fragment {
                 return;
             }
 
-            String selected_message = SelectedMessage.getText().toString();
-            String selected_file = SelectedFile.getText().toString();
-            String loopEnabled = isLoopEnabled ? " -l" : "";
-            String padEnabled = isPadEnabled ? " -p" : "";
+            String selected_message = "";
+            if (messageContainer.getVisibility() == View.VISIBLE) {
+                String text = SelectedMessage.getText().toString().trim();
+                if (!text.isEmpty()) {
+                    selected_message = text;
+                }
+            }
+            String selected_file = "";
+            if (fileContainer.getVisibility() == View.VISIBLE) {
+                String text = SelectedFile.getText().toString().trim();
+                if (!text.isEmpty()) {
+                    selected_file = text;
+                }
+            }
+            String loopEnabled = "";
+            if (loopContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat loopSwitch = loopContainer.findViewById(R.id.btn_toggle_loop);
+                if (loopSwitch != null && loopSwitch.isChecked()) {
+                    loopEnabled = " -l";
+                }
+            }
+            String padEnabled = "";
+            if (padContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat padSwitch = padContainer.findViewById(R.id.btn_toggle_pad);
+                if (padSwitch != null && padSwitch.isChecked()) {
+                    padEnabled = " -p";
+                }
+            }
             String delayValue = getVisibleParam(delayContainer.getEditText(), " -d ");
 
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " send ";
@@ -2227,8 +2195,16 @@ public class CARsenalFragment extends Fragment {
                 return;
             }
 
-
-            String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
+            String outputEnabled = "";
+            if (outputContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat outputSwitch = outputContainer.findViewById(R.id.btn_toggle_output);
+                if (outputSwitch != null && outputSwitch.isChecked()) {
+                    String filePath = SelectedFile.getText().toString().trim();
+                    if (!filePath.isEmpty()) {
+                        outputEnabled = " -f " + filePath;
+                    }
+                }
+            }
             String startAddrValue = getVisibleParam(startAddrContainer.getEditText(), " ");
             String lengthValue = getVisibleParam(lengthContainer.getEditText(), " ");
             String srcValue = getVisibleParam(srcContainer.getEditText(), " ");

@@ -96,23 +96,13 @@
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
-            <Button
-                android:id="@+id/btn_toggle_advanced"
-                android:layout_marginTop="5dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/AdvancedOptions" />
-
             <LinearLayout
                 android:id="@+id/caribou_advanced_options"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="20dp"
                 android:layout_marginEnd="20dp"
-                android:orientation="vertical"
-                android:visibility="gone">
+                android:orientation="vertical">
 
                 <LinearLayout
                     android:baselineAligned="false"
@@ -122,6 +112,7 @@
                     android:orientation="horizontal">
 
                     <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/message_container"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -145,6 +136,7 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/file_container"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="5dp"
@@ -191,6 +183,7 @@
                     android:orientation="horizontal">
 
                     <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/loop_container"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -209,8 +202,9 @@
                             tools:ignore="RtlSymmetry" />
 
                     </com.google.android.material.card.MaterialCardView>
-
+                    <!--
                     <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/reverse_container"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -229,8 +223,9 @@
                             tools:ignore="RtlSymmetry" />
 
                     </com.google.android.material.card.MaterialCardView>
-
+                    -->
                     <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/pad_container"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -259,8 +254,9 @@
                     android:orientation="horizontal"
                     android:layout_marginTop="8dp"
                     android:gravity="center">
-
+                    <!--
                     <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/candump_container"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -279,8 +275,9 @@
                             tools:ignore="RtlSymmetry" />
 
                     </com.google.android.material.card.MaterialCardView>
-
+                    -->
                     <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/output_container"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
@@ -302,137 +299,6 @@
 
                 </LinearLayout>
 
-                <LinearLayout
-                    android:id="@+id/button_row"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/btn_toggle_start_addr"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/StartAddress"
-                        android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        tools:ignore="ButtonStyle" />
-
-                    <Button
-                        android:id="@+id/btn_toggle_length"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/Length"
-                        android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        tools:ignore="ButtonStyle" />
-
-                    <Button
-                        android:id="@+id/btn_toggle_separateLine"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/SeparateLine"
-                        android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        tools:ignore="ButtonStyle" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/button_row2"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/btn_toggle_id"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/ID"
-                        android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        tools:ignore="ButtonStyle" />
-
-                    <Button
-                        android:id="@+id/btn_toggle_src"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/Src"
-                        android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        tools:ignore="ButtonStyle" />
-
-                    <Button
-                        android:id="@+id/btn_toggle_dst"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/Dst"
-                        android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        tools:ignore="ButtonStyle" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/button_row3"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/btn_toggle_seed"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/Seed"
-                        android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        tools:ignore="ButtonStyle" />
-
-                    <Button
-                        android:id="@+id/btn_toggle_min"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/Min"
-                        android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        tools:ignore="ButtonStyle" />
-
-                    <Button
-                        android:id="@+id/btn_toggle_max"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/Max"
-                        android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall"
-                        tools:ignore="ButtonStyle" />
-
-                </LinearLayout>
-
-                <LinearLayout
-                    android:id="@+id/button_row7"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="5dp"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/btn_toggle_delay"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/Delay"
-                        android:textColor="@android:color/holo_red_light"
-                        android:textAppearance="?android:attr/textAppearanceSmall" />
-                </LinearLayout>
 
                 <LinearLayout
                     android:id="@+id/advanced_row_1"
@@ -447,7 +313,6 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:visibility="gone"
                         app:strokeWidth="2dp"
                         app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
@@ -471,7 +336,6 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginStart="3dp"
-                        android:visibility="gone"
                         app:strokeWidth="2dp"
                         app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
@@ -488,14 +352,13 @@
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
-
+                    <!--
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/separate_line_container"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginStart="3dp"
-                        android:visibility="gone"
                         app:strokeWidth="2dp"
                         app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
@@ -512,6 +375,7 @@
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
+                    -->
                 </LinearLayout>
 
                 <LinearLayout
@@ -527,7 +391,6 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:visibility="gone"
                         app:strokeWidth="2dp"
                         app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
@@ -551,7 +414,6 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginStart="3dp"
-                        android:visibility="gone"
                         app:strokeWidth="2dp"
                         app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
@@ -575,7 +437,6 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginStart="3dp"
-                        android:visibility="gone"
                         app:strokeWidth="2dp"
                         app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
@@ -599,7 +460,6 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginStart="3dp"
-                        android:visibility="gone"
                         app:strokeWidth="2dp"
                         app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
@@ -630,7 +490,6 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:visibility="gone"
                         app:strokeWidth="2dp"
                         app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
@@ -654,7 +513,6 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginStart="3dp"
-                        android:visibility="gone"
                         app:strokeWidth="2dp"
                         app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
@@ -678,7 +536,6 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:layout_marginStart="3dp"
-                        android:visibility="gone"
                         app:strokeWidth="2dp"
                         app:boxStrokeWidthFocused="3dp"
                         app:boxStrokeColor="@color/ifc_box_stroke"
@@ -696,6 +553,7 @@
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
+
             </LinearLayout>
 
             <View
@@ -705,7 +563,7 @@
                 android:layout_marginBottom="10dp"
                 android:layout_height="1dp"
                 android:background="?android:attr/listDivider" />
-
+<!--
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -733,7 +591,7 @@
                     tools:ignore="ButtonStyle" />
 
             </LinearLayout>
-
+-->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -808,7 +666,6 @@
                         android:layout_marginStart="8dp" />
 
                 </androidx.constraintlayout.widget.ConstraintLayout>
-
             </LinearLayout>
 
         </LinearLayout>
