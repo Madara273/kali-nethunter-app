@@ -223,7 +223,7 @@
                             tools:ignore="RtlSymmetry" />
 
                     </com.google.android.material.card.MaterialCardView>
-                    <!--
+
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/reverse_container"
                         android:layout_width="0dp"
@@ -244,7 +244,7 @@
                             tools:ignore="RtlSymmetry" />
 
                     </com.google.android.material.card.MaterialCardView>
-                    -->
+
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/pad_container"
                         android:layout_width="0dp"
@@ -275,7 +275,7 @@
                     android:orientation="horizontal"
                     android:layout_marginTop="8dp"
                     android:gravity="center">
-                    <!--
+
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/candump_container"
                         android:layout_width="0dp"
@@ -296,7 +296,17 @@
                             tools:ignore="RtlSymmetry" />
 
                     </com.google.android.material.card.MaterialCardView>
-                    -->
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/button_row7"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center">
+
                     <com.google.android.material.card.MaterialCardView
                         android:id="@+id/output_container"
                         android:layout_width="0dp"
@@ -373,7 +383,7 @@
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
-                    <!--
+
                     <com.google.android.material.textfield.TextInputLayout
                         android:id="@+id/separate_line_container"
                         android:layout_width="0dp"
@@ -396,7 +406,7 @@
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
-                    -->
+
                 </LinearLayout>
 
                 <LinearLayout
@@ -585,35 +595,7 @@
                 android:layout_marginBottom="5dp"
                 android:layout_height="1dp"
                 android:background="?android:attr/listDivider" />
-<!--
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                android:paddingStart="20dp"
-                android:paddingEnd="20dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center">
 
-                <Button
-                    android:id="@+id/start_dump"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/Dump"
-                    tools:ignore="ButtonStyle" />
-
-                <Button
-                    android:id="@+id/start_listener"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/Listener"
-                    tools:ignore="ButtonStyle" />
-
-            </LinearLayout>
--->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

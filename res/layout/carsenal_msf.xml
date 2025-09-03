@@ -96,70 +96,79 @@
                 </com.google.android.material.card.MaterialCardView>
             </LinearLayout>
 
-            <Button
-                android:id="@+id/btn_toggle_relay"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/msf_elmconfig_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/elmrelay" />
-
-            <LinearLayout
-                android:id="@+id/msf_elmconfig"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:visibility="gone">
+                android:layout_margin="16dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="4dp"
+                app:strokeColor="@color/ifc_box_stroke"
+                app:strokeWidth="2dp">
 
                 <LinearLayout
-                    android:baselineAligned="false"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    android:layout_marginTop="5dp"
-                    android:layout_marginBottom="5dp"
-                    android:orientation="horizontal">
+                    android:orientation="vertical"
+                    android:padding="12dp">
 
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:layout_width="0dp"
+                    <!-- Title -->
+                    <TextView
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        app:strokeWidth="2dp"
-                        app:boxStrokeWidthFocused="3dp"
-                        app:boxStrokeColor="@color/ifc_box_stroke"
-                        app:boxBackgroundColor="@color/transparent"
-                        app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="@string/baudspeed">
+                        android:text="ELM Config"
+                        android:textColor="@color/white"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="8dp"/>
 
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/baud_speed"
-                            android:layout_width="match_parent"
+                    <!-- Baud speed input -->
+                    <LinearLayout
+                        android:baselineAligned="false"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="0dp"
+                        android:layout_marginEnd="0dp"
+                        android:layout_marginBottom="5dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:inputType="number"
-                            android:text="@string/baudspeedValue"
-                            android:textColor="@color/white"/>
+                            android:layout_weight="1"
+                            app:strokeWidth="2dp"
+                            app:boxStrokeWidthFocused="3dp"
+                            app:boxStrokeColor="@color/ifc_box_stroke"
+                            app:boxBackgroundColor="@color/transparent"
+                            app:hintTextColor="@color/ifc_hint_text"
+                            android:hint="@string/baudspeed">
 
-                    </com.google.android.material.textfield.TextInputLayout>
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/baud_speed"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginEnd="10dp"
+                                android:inputType="number"
+                                android:text="@string/baudspeedValue"
+                                android:textColor="@color/white"/>
+
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <ImageButton
+                            android:id="@+id/run_relay"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:src="@drawable/ic_action_play"
+                            android:contentDescription="Run"
+                            android:background="?attr/selectableItemBackgroundBorderless"
+                            android:padding="8dp"/>
+
+                    </LinearLayout>
 
                 </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
 
-                <Button
-                    android:id="@+id/run_relay"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginEnd="20dp"
-                    android:text="Start Relay"
-                    tools:ignore="ButtonStyle,HardcodedText,VisualLintButtonSize" />
-            </LinearLayout>
-            <View
-                android:id="@+id/divider3"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:layout_marginTop="10dp"
-                android:layout_marginBottom="10dp"
-                android:background="?android:attr/listDivider" />
 
             <Button
                 android:id="@+id/msfconsole_start"

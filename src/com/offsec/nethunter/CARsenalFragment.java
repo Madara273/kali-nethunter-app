@@ -1733,13 +1733,12 @@ public class CARsenalFragment extends Fragment {
     public static class CANCARIBOUFragment extends CARsenalFragment {
         final ShellExecuter exe = new ShellExecuter();
         private final ExecutorService executorService = Executors.newCachedThreadPool();
-        private Activity activity;
         private EditText SelectedFile;
         private EditText SelectedMessage;
         private String selected_caniface = "";
         private TextInputLayout seedContainer, minContainer, maxContainer, srcContainer, dstContainer, messageContainer;
-        private TextInputLayout delayContainer, lengthContainer, startAddrContainer, idContainer;//, separateLineContainer
-        private ViewGroup loopContainer, padContainer, outputContainer, fileContainer;//, reverseContainer, candumpContainer;
+        private TextInputLayout delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer;
+        private ViewGroup loopContainer, padContainer, outputContainer, fileContainer, reverseContainer, candumpContainer;
 
         private ArrayAdapter<String> createDisabledFirstItemAdapter(String[] items) {
             return new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, items) {
@@ -1765,7 +1764,6 @@ public class CARsenalFragment extends Fragment {
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            activity = getActivity();
         }
 
         @Override
@@ -1780,15 +1778,15 @@ public class CARsenalFragment extends Fragment {
             delayContainer = rootView.findViewById(R.id.delay_container);
             lengthContainer = rootView.findViewById(R.id.length_container);
             startAddrContainer = rootView.findViewById(R.id.start_addr_container);
-            //separateLineContainer = rootView.findViewById(R.id.separate_line_container);
+            separateLineContainer = rootView.findViewById(R.id.separate_line_container);
             idContainer = rootView.findViewById(R.id.id_container);
             clearAllFields();
 
             loopContainer = rootView.findViewById(R.id.loop_container);
             padContainer = rootView.findViewById(R.id.pad_container);
-            //reverseContainer = rootView.findViewById(R.id.reverse_container);
+            reverseContainer = rootView.findViewById(R.id.reverse_container);
             outputContainer = rootView.findViewById(R.id.output_container);
-            //candumpContainer = rootView.findViewById(R.id.candump_container);
+            candumpContainer = rootView.findViewById(R.id.candump_container);
             messageContainer = rootView.findViewById(R.id.message_container);
             SelectedMessage = rootView.findViewById(R.id.caribou_message);
             fileContainer = rootView.findViewById(R.id.file_container);
@@ -1799,34 +1797,6 @@ public class CARsenalFragment extends Fragment {
                 RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), SelectedFile::setText);
                 dialog.show();
             });
-
-            // Reverse Switch
-            //SwitchCompat btnReverse = rootView.findViewById(R.id.btn_toggle_reverse);
-
-            //btnReverse.setChecked(isReverseEnabled);
-            //btnReverse.setTextColor(ContextCompat.getColor(requireContext(),
-            //        isReverseEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light));
-
-            //btnReverse.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            //    isReverseEnabled = isChecked;
-
-            //    int colorRes = isReverseEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-            //    btnReverse.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
-            //});
-
-            // Candump Switch
-            //SwitchCompat btnCandump = rootView.findViewById(R.id.btn_toggle_candump);
-
-            //btnCandump.setChecked(isCandumpEnabled);
-            //btnCandump.setTextColor(ContextCompat.getColor(requireContext(),
-            //        isCandumpEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light));
-
-            //btnCandump.setOnCheckedChangeListener((buttonView, isChecked) -> {
-            //    isCandumpEnabled = isChecked;
-
-            //    int colorRes = isCandumpEnabled ? android.R.color.holo_green_light : android.R.color.holo_red_light;
-            //    btnCandump.setTextColor(ContextCompat.getColor(requireContext(), colorRes));
-            //});
 
             // Interfaces
             Spinner spinner = rootView.findViewById(R.id.device_interface);
@@ -1844,48 +1814,15 @@ public class CARsenalFragment extends Fragment {
                     iface -> selected_caniface = iface
             );
 
-            // Separate Line
-            //Button btnSeparateLine = rootView.findViewById(R.id.btn_toggle_separateLine);
-
-            //btnSeparateLine.setOnClickListener(v -> {
-            //    boolean visible = separateLineContainer.getVisibility() == View.VISIBLE;
-            //    separateLineContainer.setVisibility(visible ? View.GONE : View.VISIBLE);
-
-            //    int color = visible ? android.R.color.holo_red_light : android.R.color.holo_green_light;
-            //    btnSeparateLine.setTextColor(ContextCompat.getColorStateList(requireContext(), color));
-            //});
-
-            // Dump
-            //rootView.findViewById(R.id.start_dump).setOnClickListener(v -> {
-             //   String candumpFormat = isCandumpEnabled ? " -t" : "";
-             //   String outputEnabled = isOutputEnabled ? " -f " + SelectedFile.getText().toString() : "";
-             //   String separateLineValue = getVisibleParam(separateLineContainer.getEditText(), " -s ");
-             //   if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces")) {
-             //       run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " dump" + separateLineValue + candumpFormat + outputEnabled);
-             //   } else {
-             //       showToast("Please choose a CAN Interface!");
-             //   }
-             //   activity.invalidateOptionsMenu();
-            //});
-
-            // Listener
-            //rootView.findViewById(R.id.start_listener).setOnClickListener(v -> {
-            //    String reverseEnabled = isReverseEnabled ? " -r" : "";
-            //    if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces")) {
-            //        run_cmd("printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " listener" + reverseEnabled);
-            //    } else {
-            //        showToast("Please choose a CAN Interface!");
-            //    }
-            //    activity.invalidateOptionsMenu();
-            //});
-
             // Module and SubModule spinners
             final Spinner moduleSpinner = rootView.findViewById(R.id.module_spinner);
             final Spinner subModuleSpinner = rootView.findViewById(R.id.submodule_spinner);
             final Button startButton = rootView.findViewById(R.id.start_button);
 
-            final String[] modules = {"Modules", "Fuzz", "Send", "UDS", "XCP"};
+            final String[] modules = {"Modules", "Dump", "Listener", "Fuzz", "Send", "UDS", "XCP"};
             final Map<String, String[]> subModulesMap = new HashMap<>();
+            subModulesMap.put("Dump", new String[]{"Sub-Modules", "None"});
+            subModulesMap.put("Listener", new String[]{"Sub-Modules", "None"});
             subModulesMap.put("Fuzz", new String[]{"Sub-Modules", "brute", "identify", "mutate", "random", "replay"});
             subModulesMap.put("Send", new String[]{"Sub-Modules", "file", "message"});
             subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services"});
@@ -1943,13 +1880,26 @@ public class CARsenalFragment extends Fragment {
                     loopContainer.setVisibility(View.GONE);
                     fileContainer.setVisibility(View.GONE);
                     padContainer.setVisibility(View.GONE);
-                    //messageContainer.setVisibility(View.GONE);
+                    candumpContainer.setVisibility(View.GONE);
+                    reverseContainer.setVisibility(View.GONE);
                     lengthContainer.setVisibility(View.GONE);
-                    //separateLineContainer.setVisibility(View.GONE);
+                    separateLineContainer.setVisibility(View.GONE);
                     startAddrContainer.setVisibility(View.GONE);
                     delayContainer.setVisibility(View.GONE);
 
-                    // Show ID input only for specific submodules
+                    // Show only for specific submodules
+                    if ("Dump".equals(selectedModule)) {
+                        if ("None".equals(selectedSubModule)) {
+                            candumpContainer.setVisibility(View.VISIBLE);
+                            outputContainer.setVisibility(View.VISIBLE);
+                            separateLineContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    if ("Listener".equals(selectedModule)) {
+                        if ("None".equals(selectedSubModule)) {
+                            reverseContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
                     if ("Fuzz".equals(selectedModule)) {
                         if ("brute".equals(selectedSubModule) || "mutate".equals(selectedSubModule)) {
                             idContainer.setVisibility(View.VISIBLE);
@@ -2021,6 +1971,12 @@ public class CARsenalFragment extends Fragment {
                 }
 
                 switch (module) {
+                    case "Dump":
+                        runDump(subModule);
+                        break;
+                    case "Listener":
+                        runListener(subModule);
+                        break;
                     case "Fuzz":
                         runFuzzer(subModule);
                         break;
@@ -2044,7 +2000,7 @@ public class CARsenalFragment extends Fragment {
         private void clearAllFields() {
             TextInputLayout[] containers = new TextInputLayout[] {
                     seedContainer, minContainer, maxContainer, srcContainer, dstContainer,
-                    delayContainer, lengthContainer, startAddrContainer, idContainer//, separateLineContainer
+                    delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer
             };
 
             for (TextInputLayout container : containers) {
@@ -2059,7 +2015,7 @@ public class CARsenalFragment extends Fragment {
 
         private String getVisibleParam(EditText editText, String prefix) {
             if (editText != null) {
-                View container = (View) editText.getParent().getParent(); // usually the TextInputLayout
+                View container = (View) editText.getParent().getParent();
                 if (container.getVisibility() == View.VISIBLE && container.isEnabled()) {
                     String input = editText.getText().toString().trim();
                     if (!input.isEmpty() && !input.equals(editText.getHint().toString())) {
@@ -2068,6 +2024,64 @@ public class CARsenalFragment extends Fragment {
                 }
             }
             return "";
+        }
+
+        private void runDump(String dump_module) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
+                showToast("Please choose a CAN Interface!");
+                return;
+            }
+
+            String separateLineValue = getVisibleParam(separateLineContainer.getEditText(), " -s ");
+            String outputEnabled = "";
+            if (outputContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat outputSwitch = outputContainer.findViewById(R.id.btn_toggle_output);
+                if (outputSwitch != null && outputSwitch.isChecked()) {
+                    String filePath = SelectedFile.getText().toString().trim();
+                    if (!filePath.isEmpty()) {
+                        outputEnabled = " -f " + filePath;
+                    }
+                }
+            }
+
+            String candumpEnabled = "";
+            if (candumpContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat candumpSwitch = candumpContainer.findViewById(R.id.btn_toggle_candump);
+                if (candumpSwitch != null && candumpSwitch.isChecked()) {
+                    candumpEnabled = " -t";
+                }
+            }
+
+            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " dump";
+
+            if (dump_module.equals("None")) {
+                run_cmd(cmdBase + separateLineValue + candumpEnabled + outputEnabled);
+            } else {
+                showToast("Unknown dump submodule: " + dump_module);
+            }
+        }
+
+        private void runListener(String listener_module) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
+                showToast("Please choose a CAN Interface!");
+                return;
+            }
+
+            String reverseEnabled = "";
+            if (reverseContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat reverseSwitch = reverseContainer.findViewById(R.id.btn_toggle_reverse);
+                if (reverseSwitch != null && reverseSwitch.isChecked()) {
+                    reverseEnabled = " -r";
+                }
+            }
+
+            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " listener";
+
+            if (listener_module.equals("None")) {
+                run_cmd(cmdBase + reverseEnabled);
+            } else {
+                showToast("Unknown listener submodule: " + listener_module);
+            }
         }
 
         private void runFuzzer(String fuzzer_module) {
@@ -2634,20 +2648,6 @@ public class CARsenalFragment extends Fragment {
                     false,
                     iface -> selected_caniface = iface
             );
-
-            // ELM327 Configuration Toggle
-            Button btnConfigurationToggle = rootView.findViewById(R.id.btn_toggle_relay);
-            LinearLayout configurationLayout = rootView.findViewById(R.id.msf_elmconfig);
-
-            btnConfigurationToggle.setOnClickListener(v -> {
-                if (configurationLayout.getVisibility() == View.GONE) {
-                    configurationLayout.setVisibility(View.VISIBLE);
-                    btnConfigurationToggle.setText(R.string.can_hide_configuration);
-                } else {
-                    configurationLayout.setVisibility(View.GONE);
-                    btnConfigurationToggle.setText(R.string.can_elm327_relay_configuration);
-                }
-            });
 
             // ELM327 Relay
             Button elm327relayButton = rootView.findViewById(R.id.run_relay);
