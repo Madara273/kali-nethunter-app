@@ -315,7 +315,7 @@ public class SettingsFragment extends Fragment {
             int finalValueIH=Integer.parseInt(imageheight)-192;
             ImageHeight.setText(String.valueOf(finalValueIH));
         });
-        ImageResMinus.setOnClickListener(v -> {
+        ImageResPlus.setOnClickListener(v -> {
             String imagewidth = ImageWidth.getText().toString();
             int finalValueIW=Integer.parseInt(imagewidth)+108;
             ImageWidth.setText(String.valueOf(finalValueIW));
@@ -323,7 +323,7 @@ public class SettingsFragment extends Fragment {
             int finalValueIH=Integer.parseInt(imageheight)+192;
             ImageHeight.setText(String.valueOf(finalValueIH));
         });
-        ImageResMinus.setOnClickListener(v -> {
+        FinalResMinus.setOnClickListener(v -> {
             String finalwidth = FinalWidth.getText().toString();
             int finalValueFW=Integer.parseInt(finalwidth)-108;
             FinalWidth.setText(String.valueOf(finalValueFW));
@@ -331,7 +331,7 @@ public class SettingsFragment extends Fragment {
             int finalValueFH=Integer.parseInt(finalheight)-192;
             FinalHeight.setText(String.valueOf(finalValueFH));
         });
-        ImageResMinus.setOnClickListener(v -> {
+        FinalResPlus.setOnClickListener(v -> {
             String finalwidth = FinalWidth.getText().toString();
             int finalValueFW=Integer.parseInt(finalwidth)+108;
             FinalWidth.setText(String.valueOf(finalValueFW));
