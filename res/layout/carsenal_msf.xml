@@ -100,7 +100,10 @@
                 android:id="@+id/msf_elmconfig_card"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_margin="16dp"
+                android:layout_marginTop="10dp"
+                android:layout_marginBottom="10dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
                 app:cardCornerRadius="8dp"
                 app:cardElevation="4dp"
                 app:strokeColor="@color/ifc_box_stroke"
@@ -114,8 +117,9 @@
 
                     <!-- Title -->
                     <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:gravity="center"
                         android:text="ELM Config"
                         android:textColor="@color/white"
                         android:textSize="16sp"

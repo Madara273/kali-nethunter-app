@@ -2650,7 +2650,7 @@ public class CARsenalFragment extends Fragment {
             );
 
             // ELM327 Relay
-            Button elm327relayButton = rootView.findViewById(R.id.run_relay);
+            ImageButton elm327relayButton = rootView.findViewById(R.id.run_relay);
 
             elm327relayButton.setOnClickListener(v -> {
                 String baudSpeed = selected_baud.getText().toString();
