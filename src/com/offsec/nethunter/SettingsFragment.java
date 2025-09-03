@@ -382,6 +382,10 @@ public class SettingsFragment extends Fragment {
             BootanimationPath.setText(bootanimation_path);
         }
 
+        if (!bootanimation_mount.isEmpty()) {
+            Toast.makeText(requireActivity().getApplicationContext(), "Magisk bootanimation detected", Toast.LENGTH_SHORT).show();
+        }
+
         // Make bootanimation
         Button MakeBootAnimationButton = rootView.findViewById(R.id.make_bootanimation);
         EditText FPS = rootView.findViewById(R.id.fps);
@@ -416,7 +420,7 @@ public class SettingsFragment extends Fragment {
             if (AnimationZip.length() == 0)
                 Toast.makeText(requireActivity().getApplicationContext(), "Bootanimation zip is not created!!", Toast.LENGTH_SHORT).show();
             else {
-                if (bootanimation_mount.isEmpty()) {
+                if (!bootanimation_mount.isEmpty()) {
                     String mount_path = exe.RunAsRootOutput("mount | grep \"media/bootanimation\" | awk {'print $3'}");
                     run_cmd_android("echo -ne \"\\033]0;Installing animation\\007\" && clear;grep ' / ' /proc/mounts | grep -qv 'rootfs' || grep -q ' /system_root ' /proc/mounts && SYSTEM=/ || SYSTEM=/system " +
                             "&& mount -o rw,remount " + mount_path + " && cp " + NhPaths.SD_PATH + "/bootanimation.zip " + BootanimationPath.getText().toString() + " " +
