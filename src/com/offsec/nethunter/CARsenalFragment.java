@@ -1864,7 +1864,7 @@ public class CARsenalFragment extends Fragment {
             subModulesMap.put("Listener", new String[]{"Sub-Modules", "None"});
             subModulesMap.put("Fuzzer", new String[]{"Sub-Modules", "brute", "identify", "mutate", "random", "replay"});
             subModulesMap.put("Send", new String[]{"Sub-Modules", "file", "message"});
-            subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services", "subservices", "testerpresent", "dump_dids"});
+            subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services", "subservices", "testerpresent", "dump_dids", "auto"});
             subModulesMap.put("XCP", new String[]{"Sub-Modules", "discovery", "info", "commands", "dump"});
 
             ArrayAdapter<String> moduleAdapter = createDisabledFirstItemAdapter(modules);
@@ -2004,7 +2004,7 @@ public class CARsenalFragment extends Fragment {
                         }
                     }
                     if ("UDS".equals(selectedModule)) {
-                        if ("discovery".equals(selectedSubModule)) {
+                        if ("discovery".equals(selectedSubModule) || "auto".equals(selectedSubModule)) {
                             minContainer.setVisibility(View.VISIBLE);
                             maxContainer.setVisibility(View.VISIBLE);
                             blacklistContainer.setVisibility(View.VISIBLE);
@@ -2028,6 +2028,11 @@ public class CARsenalFragment extends Fragment {
                             delayContainer.setVisibility(View.VISIBLE);
                             sprContainer.setVisibility(View.VISIBLE);
                             srcContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("auto".equals(selectedSubModule)) {
+                            timeoutContainer.setVisibility(View.VISIBLE);
+                            mindidContainer.setVisibility(View.VISIBLE);
+                            maxdidContainer.setVisibility(View.VISIBLE);
                         }
                     }
                     if ("XCP".equals(selectedModule)) {
@@ -2340,6 +2345,9 @@ public class CARsenalFragment extends Fragment {
                     break;
                 case "dump_dids":
                     run_cmd(cmdBase + "dump_dids" + timeoutValue + mindidValue + maxdidValue + srcValue + dstValue);
+                    break;
+                case "auto":
+                    run_cmd(cmdBase + "auto" + minValue + maxValue + blacklistValue + autoBlacklistValue + skipverifyEnabled + delayValue + timeoutValue + mindidValue + maxdidValue);
                     break;
                 default:
                     showToast("Unknown UDS submodule: " + uds_module);
