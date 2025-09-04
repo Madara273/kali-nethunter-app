@@ -1755,7 +1755,7 @@ public class CARsenalFragment extends Fragment {
         private String selected_caniface = "";
         private TextInputLayout seedContainer, minContainer, maxContainer, srcContainer, dstContainer, messageContainer;
         private TextInputLayout delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer;
-        private TextInputLayout whitelistContainer, indexContainer, arbIDContainer, dataContainer;
+        private TextInputLayout whitelistContainer, indexContainer, arbIDContainer, dataContainer, blacklistContainer, autoBlacklistContainer;
         private ViewGroup loopContainer, padContainer, outputContainer, fileContainer, reverseContainer;
         private ViewGroup requestsContainer, candumpContainer, responsesContainer;
 
@@ -1803,6 +1803,8 @@ public class CARsenalFragment extends Fragment {
             indexContainer = rootView.findViewById(R.id.index_container);
             arbIDContainer = rootView.findViewById(R.id.arbID_container);
             dataContainer = rootView.findViewById(R.id.data_container);
+            blacklistContainer = rootView.findViewById(R.id.blacklist_container);
+            autoBlacklistContainer = rootView.findViewById(R.id.autoBlacklist_container);
 
             loopContainer = rootView.findViewById(R.id.loop_container);
             padContainer = rootView.findViewById(R.id.pad_container);
@@ -1918,6 +1920,8 @@ public class CARsenalFragment extends Fragment {
                     indexContainer.setVisibility(View.GONE);
                     arbIDContainer.setVisibility(View.GONE);
                     dataContainer.setVisibility(View.GONE);
+                    blacklistContainer.setVisibility(View.GONE);
+                    autoBlacklistContainer.setVisibility(View.GONE);
 
                     // Show only for specific submodules
                     if ("Dump".equals(selectedModule)) {
@@ -1990,20 +1994,20 @@ public class CARsenalFragment extends Fragment {
                     }
                     if ("XCP".equals(selectedModule)) {
                         if ("discovery".equals(selectedSubModule)) {
-                            srcContainer.setVisibility(View.VISIBLE);
-                            dstContainer.setVisibility(View.VISIBLE);
-                            outputContainer.setVisibility(View.VISIBLE);
-                        }
-                        if ("info".equals(selectedSubModule)) {
-                            startAddrContainer.setVisibility(View.VISIBLE);
-                            lengthContainer.setVisibility(View.VISIBLE);
-                        }
-                        if ("dump".equals(selectedSubModule)) {
-                            startAddrContainer.setVisibility(View.VISIBLE);
-                            lengthContainer.setVisibility(View.VISIBLE);
                             minContainer.setVisibility(View.VISIBLE);
                             maxContainer.setVisibility(View.VISIBLE);
-                            outputContainer.setVisibility(View.VISIBLE);
+                            blacklistContainer.setVisibility(View.VISIBLE);
+                            autoBlacklistContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("info".equals(selectedSubModule)) {
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("dump".equals(selectedSubModule)) {
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
+                            startAddrContainer.setVisibility(View.VISIBLE);
+                            lengthContainer.setVisibility(View.VISIBLE);
                         }
                     }
                 }
@@ -2275,35 +2279,27 @@ public class CARsenalFragment extends Fragment {
                 return;
             }
 
-            String outputEnabled = "";
-            if (outputContainer.getVisibility() == View.VISIBLE) {
-                SwitchCompat outputSwitch = outputContainer.findViewById(R.id.btn_toggle_output);
-                if (outputSwitch != null && outputSwitch.isChecked()) {
-                    String filePath = SelectedFile.getText().toString().trim();
-                    if (!filePath.isEmpty()) {
-                        outputEnabled = " -f " + filePath;
-                    }
-                }
-            }
             String startAddrValue = getVisibleParam(startAddrContainer.getEditText(), " ");
             String lengthValue = getVisibleParam(lengthContainer.getEditText(), " ");
             String srcValue = getVisibleParam(srcContainer.getEditText(), " ");
             String dstValue = getVisibleParam(dstContainer.getEditText(), " ");
             String minValue = getVisibleParam(minContainer.getEditText(), " -min ");
             String maxValue = getVisibleParam(maxContainer.getEditText(), " -max ");
+            String blacklistValue = getVisibleParam(blacklistContainer.getEditText(), " -blacklist ");
+            String autoBlacklistValue = getVisibleParam(autoBlacklistContainer.getEditText(), " -autoblacklist ");
 
 
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp ";
 
             switch (xcp_module) {
                 case "discovery":
-                    run_cmd(cmdBase + "discovery" + outputEnabled + srcValue + dstValue);
+                    run_cmd(cmdBase + "discovery" + minValue + maxValue + blacklistValue + autoBlacklistValue);
                     break;
                 case "info":
-                    run_cmd(cmdBase + "info" + startAddrValue + lengthValue);
+                    run_cmd(cmdBase + "info" + srcValue + dstValue);
                     break;
                 case "dump":
-                    run_cmd(cmdBase + "dump" + startAddrValue + lengthValue + minValue + maxValue + outputEnabled);
+                    run_cmd(cmdBase + "dump" + srcValue + dstValue + startAddrValue + lengthValue);
                     break;
                 default:
                     showToast("Unknown XCP submodule: " + xcp_module);
