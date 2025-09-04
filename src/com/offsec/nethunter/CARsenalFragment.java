@@ -1925,9 +1925,12 @@ public class CARsenalFragment extends Fragment {
                             outputContainer.setVisibility(View.VISIBLE);
                         }
                         if ("random".equals(selectedSubModule)) {
+                            idContainer.setVisibility(View.VISIBLE);
                             minContainer.setVisibility(View.VISIBLE);
+                            maxContainer.setVisibility(View.VISIBLE);
                             seedContainer.setVisibility(View.VISIBLE);
                             outputContainer.setVisibility(View.VISIBLE);
+                            delayContainer.setVisibility(View.VISIBLE);
                         }
                     }
                     if ("Send".equals(selectedModule)) {
@@ -2117,9 +2120,11 @@ public class CARsenalFragment extends Fragment {
                     }
                 }
             }
-            String idValue = getVisibleParam(idContainer.getEditText(), " ");
-            String seedValue = getVisibleParam(seedContainer.getEditText(), " --seed ");
+            String idValue = getVisibleParam(idContainer.getEditText(), " -id ");
+            String seedValue = getVisibleParam(seedContainer.getEditText(), " -seed ");
             String minValue = getVisibleParam(minContainer.getEditText(), " -min ");
+            String maxValue = getVisibleParam(minContainer.getEditText(), " -max ");
+            String delayValue = getVisibleParam(delayContainer.getEditText(), " -delay ");
 
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer ";
 
@@ -2134,7 +2139,7 @@ public class CARsenalFragment extends Fragment {
                     run_cmd(cmdBase + "mutate" + idValue);
                     break;
                 case "random":
-                    run_cmd(cmdBase + "random" + minValue + seedValue + outputEnabled);
+                    run_cmd(cmdBase + "random" + minValue + maxValue + seedValue + delayValue + outputEnabled);
                     break;
                 case "replay":
                     run_cmd(cmdBase + "replay" + outputEnabled);
