@@ -1754,10 +1754,10 @@ public class CARsenalFragment extends Fragment {
         private EditText SelectedMessage;
         private String selected_caniface = "";
         private TextInputLayout seedContainer, minContainer, maxContainer, srcContainer, dstContainer, messageContainer;
-        private TextInputLayout delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer;
+        private TextInputLayout delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer, timeoutContainer;
         private TextInputLayout whitelistContainer, indexContainer, arbIDContainer, dataContainer, blacklistContainer, autoBlacklistContainer;
         private ViewGroup loopContainer, padContainer, outputContainer, fileContainer, reverseContainer;
-        private ViewGroup requestsContainer, candumpContainer, responsesContainer;
+        private ViewGroup requestsContainer, candumpContainer, responsesContainer, skipverifyContainer;
 
         private ArrayAdapter<String> createDisabledFirstItemAdapter(String[] items) {
             return new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, items) {
@@ -1805,7 +1805,9 @@ public class CARsenalFragment extends Fragment {
             dataContainer = rootView.findViewById(R.id.data_container);
             blacklistContainer = rootView.findViewById(R.id.blacklist_container);
             autoBlacklistContainer = rootView.findViewById(R.id.autoBlacklist_container);
+            timeoutContainer = rootView.findViewById(R.id.timeout_container);
 
+            skipverifyContainer = rootView.findViewById(R.id.skipverify_container);
             loopContainer = rootView.findViewById(R.id.loop_container);
             padContainer = rootView.findViewById(R.id.pad_container);
             reverseContainer = rootView.findViewById(R.id.reverse_container);
@@ -1922,6 +1924,8 @@ public class CARsenalFragment extends Fragment {
                     dataContainer.setVisibility(View.GONE);
                     blacklistContainer.setVisibility(View.GONE);
                     autoBlacklistContainer.setVisibility(View.GONE);
+                    skipverifyContainer.setVisibility(View.GONE);
+                    timeoutContainer.setVisibility(View.GONE);
 
                     // Show only for specific submodules
                     if ("Dump".equals(selectedModule)) {
@@ -1985,9 +1989,13 @@ public class CARsenalFragment extends Fragment {
                         if ("discovery".equals(selectedSubModule)) {
                             minContainer.setVisibility(View.VISIBLE);
                             maxContainer.setVisibility(View.VISIBLE);
+                            blacklistContainer.setVisibility(View.VISIBLE);
+                            autoBlacklistContainer.setVisibility(View.VISIBLE);
+                            skipverifyContainer.setVisibility(View.VISIBLE);
                             delayContainer.setVisibility(View.VISIBLE);
                         }
                         if ("services".equals(selectedSubModule)) {
+                            timeoutContainer.setVisibility(View.VISIBLE);
                             srcContainer.setVisibility(View.VISIBLE);
                             dstContainer.setVisibility(View.VISIBLE);
                         }
@@ -2253,20 +2261,31 @@ public class CARsenalFragment extends Fragment {
                 return;
             }
 
+            String skipverifyEnabled = "";
+            if (skipverifyContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat skipverifySwitch = skipverifyContainer.findViewById(R.id.btn_toggle_skipverify);
+                if (skipverifySwitch != null && skipverifySwitch.isChecked()) {
+                    skipverifyEnabled = " --skipverify";
+                }
+            }
+
             String srcValue = getVisibleParam(srcContainer.getEditText(), " ");
             String dstValue = getVisibleParam(dstContainer.getEditText(), " ");
             String minValue = getVisibleParam(minContainer.getEditText(), " -min ");
             String maxValue = getVisibleParam(maxContainer.getEditText(), " -max ");
             String delayValue = getVisibleParam(delayContainer.getEditText(), " -d ");
+            String timeoutValue = getVisibleParam(timeoutContainer.getEditText(), " -t ");
+            String blacklistValue = getVisibleParam(blacklistContainer.getEditText(), " --blacklist ");
+            String autoBlacklistValue = getVisibleParam(autoBlacklistContainer.getEditText(), " --autoblacklist ");
 
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds ";
 
             switch (uds_module) {
                 case "discovery":
-                    run_cmd(cmdBase + "discovery" + minValue + maxValue + delayValue);
+                    run_cmd(cmdBase + "discovery" + minValue + maxValue + delayValue + blacklistValue + autoBlacklistValue + skipverifyEnabled);
                     break;
                 case "services":
-                    run_cmd(cmdBase + "services" + srcValue + dstValue);
+                    run_cmd(cmdBase + "services" + srcValue + dstValue + timeoutValue);
                     break;
                 default:
                     showToast("Unknown UDS submodule: " + uds_module);
