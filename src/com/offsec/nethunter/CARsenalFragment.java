@@ -1946,7 +1946,7 @@ public class CARsenalFragment extends Fragment {
                             seedContainer.setVisibility(View.VISIBLE);
                         }
                         if ("identify".equals(selectedSubModule) || "replay".equals(selectedSubModule)) {
-                            outputContainer.setVisibility(View.VISIBLE);
+                            fileContainer.setVisibility(View.VISIBLE);
                             responsesContainer.setVisibility(View.VISIBLE);
                             delayContainer.setVisibility(View.VISIBLE);
                         }
@@ -2153,6 +2153,14 @@ public class CARsenalFragment extends Fragment {
                 }
             }
 
+            String selected_file = "";
+            if (fileContainer.getVisibility() == View.VISIBLE) {
+                String text = SelectedFile.getText().toString().trim();
+                if (!text.isEmpty()) {
+                    selected_file = text;
+                }
+            }
+
             String idValue = getVisibleParam(idContainer.getEditText(), " -id ");
             String seedValue = getVisibleParam(seedContainer.getEditText(), " -seed ");
             String minValue = getVisibleParam(minContainer.getEditText(), " -min ");
@@ -2161,7 +2169,6 @@ public class CARsenalFragment extends Fragment {
             String indexValue = getVisibleParam(indexContainer.getEditText(), " -index ");
             String arbIDValue = getVisibleParam(arbIDContainer.getEditText(), " ");
             String dataValue = getVisibleParam(dataContainer.getEditText(), " ");
-            String filePath = SelectedFile.getText().toString().trim();
 
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer ";
 
@@ -2170,7 +2177,7 @@ public class CARsenalFragment extends Fragment {
                     run_cmd(cmdBase + "brute" + responsesEnabled + indexValue + delayValue + outputEnabled + arbIDValue + dataValue);
                     break;
                 case "identify":
-                    run_cmd(cmdBase + "identify" + responsesEnabled + delayValue + filePath);
+                    run_cmd(cmdBase + "identify" + responsesEnabled + delayValue + " " + selected_file);
                     break;
                 case "mutate":
                     run_cmd(cmdBase + "mutate" + responsesEnabled + seedValue + indexValue + delayValue + outputEnabled + arbIDValue + dataValue);
@@ -2179,7 +2186,7 @@ public class CARsenalFragment extends Fragment {
                     run_cmd(cmdBase + "random" + indexValue + idValue + minValue + maxValue + seedValue + delayValue + dataValue + outputEnabled);
                     break;
                 case "replay":
-                    run_cmd(cmdBase + "replay" + responsesEnabled + requestsEnabled + delayValue + filePath);
+                    run_cmd(cmdBase + "replay" + responsesEnabled + requestsEnabled + delayValue + " " + selected_file);
                     break;
                 default:
                     showToast("Unknown fuzzer submodule: " + fuzzer_module);
