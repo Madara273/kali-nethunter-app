@@ -1856,7 +1856,7 @@ public class CARsenalFragment extends Fragment {
             subModulesMap.put("Fuzzer", new String[]{"Sub-Modules", "brute", "identify", "mutate", "random", "replay"});
             subModulesMap.put("Send", new String[]{"Sub-Modules", "file", "message"});
             subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services"});
-            subModulesMap.put("XCP", new String[]{"Sub-Modules", "discovery", "info", "dump"});
+            subModulesMap.put("XCP", new String[]{"Sub-Modules", "discovery", "info", "commands", "dump"});
 
             ArrayAdapter<String> moduleAdapter = createDisabledFirstItemAdapter(modules);
             moduleAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -1932,6 +1932,7 @@ public class CARsenalFragment extends Fragment {
                         if ("None".equals(selectedSubModule)) {
                             candumpContainer.setVisibility(View.VISIBLE);
                             outputContainer.setVisibility(View.VISIBLE);
+                            fileContainer.setVisibility(View.VISIBLE);
                             separateLineContainer.setVisibility(View.VISIBLE);
                             whitelistContainer.setVisibility(View.VISIBLE);
                         }
@@ -1944,6 +1945,7 @@ public class CARsenalFragment extends Fragment {
                     if ("Fuzzer".equals(selectedModule)) {
                         if ("brute".equals(selectedSubModule) || "mutate".equals(selectedSubModule)) {
                             outputContainer.setVisibility(View.VISIBLE);
+                            fileContainer.setVisibility(View.VISIBLE);
                             delayContainer.setVisibility(View.VISIBLE);
                             responsesContainer.setVisibility(View.VISIBLE);
                             indexContainer.setVisibility(View.VISIBLE);
@@ -1970,6 +1972,7 @@ public class CARsenalFragment extends Fragment {
                             dataContainer.setVisibility(View.VISIBLE);
                             delayContainer.setVisibility(View.VISIBLE);
                             outputContainer.setVisibility(View.VISIBLE);
+                            fileContainer.setVisibility(View.VISIBLE);
                         }
                     }
                     if ("Send".equals(selectedModule)) {
@@ -2007,7 +2010,7 @@ public class CARsenalFragment extends Fragment {
                             blacklistContainer.setVisibility(View.VISIBLE);
                             autoBlacklistContainer.setVisibility(View.VISIBLE);
                         }
-                        if ("info".equals(selectedSubModule)) {
+                        if ("info".equals(selectedSubModule) || "commands".equals(selectedSubModule)) {
                             srcContainer.setVisibility(View.VISIBLE);
                             dstContainer.setVisibility(View.VISIBLE);
                         }
@@ -2016,6 +2019,8 @@ public class CARsenalFragment extends Fragment {
                             dstContainer.setVisibility(View.VISIBLE);
                             startAddrContainer.setVisibility(View.VISIBLE);
                             lengthContainer.setVisibility(View.VISIBLE);
+                            outputContainer.setVisibility(View.VISIBLE);
+                            fileContainer.setVisibility(View.VISIBLE);
                         }
                     }
                 }
@@ -2298,6 +2303,17 @@ public class CARsenalFragment extends Fragment {
                 return;
             }
 
+            String outputEnabled = "";
+            if (outputContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat outputSwitch = outputContainer.findViewById(R.id.btn_toggle_output);
+                if (outputSwitch != null && outputSwitch.isChecked()) {
+                    String filePath = SelectedFile.getText().toString().trim();
+                    if (!filePath.isEmpty()) {
+                        outputEnabled = " -f " + filePath;
+                    }
+                }
+            }
+
             String startAddrValue = getVisibleParam(startAddrContainer.getEditText(), " ");
             String lengthValue = getVisibleParam(lengthContainer.getEditText(), " ");
             String srcValue = getVisibleParam(srcContainer.getEditText(), " ");
@@ -2317,8 +2333,11 @@ public class CARsenalFragment extends Fragment {
                 case "info":
                     run_cmd(cmdBase + "info" + srcValue + dstValue);
                     break;
+                case "commands":
+                    run_cmd(cmdBase + "commands" + srcValue + dstValue);
+                    break;
                 case "dump":
-                    run_cmd(cmdBase + "dump" + srcValue + dstValue + startAddrValue + lengthValue);
+                    run_cmd(cmdBase + "dump" + srcValue + dstValue + startAddrValue + lengthValue + outputEnabled);
                     break;
                 default:
                     showToast("Unknown XCP submodule: " + xcp_module);
