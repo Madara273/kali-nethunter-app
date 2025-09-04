@@ -423,6 +423,37 @@
 
                 </LinearLayout>
 
+                <LinearLayout
+                    android:id="@+id/button_row11"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/spr_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        app:cardCornerRadius="4dp"
+                        android:padding="8dp">
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/btn_toggle_spr"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Suppress positive response"
+                            android:textColor="@android:color/holo_red_light"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:paddingStart="12dp"
+                            android:gravity="center_vertical"
+                            tools:ignore="RtlSymmetry" />
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+
 
                 <LinearLayout
                     android:id="@+id/advanced_row_1"
@@ -551,6 +582,29 @@
                             android:layout_height="wrap_content"
                             android:inputType="text"
                             android:text="@string/IDValue"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/duration_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Duration">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/duration_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:text="5"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>

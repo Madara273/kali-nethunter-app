@@ -1757,8 +1757,10 @@ public class CARsenalFragment extends Fragment {
         private TextInputLayout delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer;
         private TextInputLayout whitelistContainer, indexContainer, arbIDContainer, dataContainer, blacklistContainer;
         private TextInputLayout dtypeContainer, stypeContainer, messageContainer, timeoutContainer, autoBlacklistContainer;
+        private TextInputLayout durationContainer;
         private ViewGroup loopContainer, padContainer, outputContainer, fileContainer, reverseContainer;
         private ViewGroup requestsContainer, candumpContainer, responsesContainer, skipverifyContainer;
+        private ViewGroup sprContainer;
 
         private ArrayAdapter<String> createDisabledFirstItemAdapter(String[] items) {
             return new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, items) {
@@ -1809,7 +1811,9 @@ public class CARsenalFragment extends Fragment {
             blacklistContainer = rootView.findViewById(R.id.blacklist_container);
             autoBlacklistContainer = rootView.findViewById(R.id.autoBlacklist_container);
             timeoutContainer = rootView.findViewById(R.id.timeout_container);
+            durationContainer = rootView.findViewById(R.id.duration_container);
 
+            sprContainer = rootView.findViewById(R.id.spr_container);
             skipverifyContainer = rootView.findViewById(R.id.skipverify_container);
             loopContainer = rootView.findViewById(R.id.loop_container);
             padContainer = rootView.findViewById(R.id.pad_container);
@@ -1931,6 +1935,8 @@ public class CARsenalFragment extends Fragment {
                     timeoutContainer.setVisibility(View.GONE);
                     stypeContainer.setVisibility(View.GONE);
                     dtypeContainer.setVisibility(View.GONE);
+                    durationContainer.setVisibility(View.GONE);
+                    sprContainer.setVisibility(View.GONE);
 
                     // Show only for specific submodules
                     if ("Dump".equals(selectedModule)) {
@@ -2010,6 +2016,12 @@ public class CARsenalFragment extends Fragment {
                         if ("subservices".equals(selectedSubModule)) {
                             stypeContainer.setVisibility(View.VISIBLE);
                             dtypeContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("testerpresent".equals(selectedSubModule)) {
+                            durationContainer.setVisibility(View.VISIBLE);
+                            delayContainer.setVisibility(View.VISIBLE);
+                            sprContainer.setVisibility(View.VISIBLE);
+                            srcContainer.setVisibility(View.VISIBLE);
                         }
                     }
                     if ("XCP".equals(selectedModule)) {
@@ -2283,6 +2295,14 @@ public class CARsenalFragment extends Fragment {
                 }
             }
 
+            String sprEnabled = "";
+            if (sprContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat sprSwitch = sprContainer.findViewById(R.id.btn_toggle_spr);
+                if (sprSwitch != null && sprSwitch.isChecked()) {
+                    sprEnabled = " -spr";
+                }
+            }
+
             String dtypeValue = getVisibleParam(dtypeContainer.getEditText(), " ");
             String stypeValue = getVisibleParam(stypeContainer.getEditText(), " ");
             String srcValue = getVisibleParam(srcContainer.getEditText(), " ");
@@ -2290,6 +2310,7 @@ public class CARsenalFragment extends Fragment {
             String minValue = getVisibleParam(minContainer.getEditText(), " -min ");
             String maxValue = getVisibleParam(maxContainer.getEditText(), " -max ");
             String delayValue = getVisibleParam(delayContainer.getEditText(), " -d ");
+            String durationValue = getVisibleParam(durationContainer.getEditText(), " --duration ");
             String timeoutValue = getVisibleParam(timeoutContainer.getEditText(), " -t ");
             String blacklistValue = getVisibleParam(blacklistContainer.getEditText(), " --blacklist ");
             String autoBlacklistValue = getVisibleParam(autoBlacklistContainer.getEditText(), " --autoblacklist ");
@@ -2305,6 +2326,9 @@ public class CARsenalFragment extends Fragment {
                     break;
                 case "subservices":
                     run_cmd(cmdBase + "subservices" + timeoutValue + dtypeValue + stypeValue + srcValue + dstValue);
+                    break;
+                case "testerpresent":
+                    run_cmd(cmdBase + "testerpresent" + delayValue + durationValue + sprEnabled + srcValue);
                     break;
                 default:
                     showToast("Unknown UDS submodule: " + uds_module);
