@@ -1752,19 +1752,18 @@ public class CARsenalFragment extends Fragment {
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private EditText SelectedFile;
         private EditText SelectedMessage;
-        private Spinner ecuResetTypeSpinner, sessionTypeSpinner, securityLevelSpinner;
+        private Spinner ecuResetTypeSpinner, ecuResetMethodeSpinner, sessionTypeSpinner, securityLevelSpinner;
         private String selected_caniface = "";
         private TextInputLayout seedContainer, minContainer, maxContainer, srcContainer, dstContainer;
         private TextInputLayout delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer;
         private TextInputLayout whitelistContainer, indexContainer, arbIDContainer, dataContainer, blacklistContainer;
         private TextInputLayout dtypeContainer, stypeContainer, messageContainer, timeoutContainer, autoBlacklistContainer;
-        private TextInputLayout durationContainer, mindidContainer, maxdidContainer, numberContainer;
+        private TextInputLayout durationContainer, mindidContainer, maxdidContainer, numberContainer, interDelayContainer, iterationsContainer;
         private TextInputLayout memLengthContainer, memSizeContainer, addrByteSizeContainer, memLengthByteSizeContainer;
+        private TextInputLayout sessionTypeInputContainer, securityLevelInputContainer, sessionSeqContainer, seedTargetContainer;
         private ViewGroup loopContainer, padContainer, outputContainer, fileContainer, reverseContainer;
         private ViewGroup requestsContainer, candumpContainer, responsesContainer, skipverifyContainer;
-        private ViewGroup sprContainer, ecuResetTypeContainer, sessionTypeContainer, securityLevelContainer;
-        private TextInputLayout sessionTypeInputContainer, securityLevelInputContainer;
-
+        private ViewGroup sprContainer, ecuResetTypeContainer, ecuResetMethodeContainer, sessionTypeContainer, securityLevelContainer;
 
         private ArrayAdapter<String> createDisabledFirstItemAdapter(String[] items) {
             return new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, items) {
@@ -1822,7 +1821,10 @@ public class CARsenalFragment extends Fragment {
             memSizeContainer = rootView.findViewById(R.id.memSize_container);
             addrByteSizeContainer = rootView.findViewById(R.id.addrByteSize_container);
             memLengthByteSizeContainer = rootView.findViewById(R.id.memLengthByteSize_container);
-
+            sessionSeqContainer = rootView.findViewById(R.id.sessionSeq_container);
+            seedTargetContainer = rootView.findViewById(R.id.seedTarget_container);
+            interDelayContainer = rootView.findViewById(R.id.interDelay_container);
+            iterationsContainer = rootView.findViewById(R.id.iterations_container);
             sprContainer = rootView.findViewById(R.id.spr_container);
             skipverifyContainer = rootView.findViewById(R.id.skipverify_container);
             loopContainer = rootView.findViewById(R.id.loop_container);
@@ -1842,6 +1844,10 @@ public class CARsenalFragment extends Fragment {
             ecuResetTypeContainer = rootView.findViewById(R.id.spinner_row_ecureset);
             ecuResetTypeSpinner = rootView.findViewById(R.id.ecureset_type_spinner);
 
+            // Spinner for ECU Reset Methode
+            ecuResetMethodeContainer = rootView.findViewById(R.id.spinner_row_ecuresetmethode);
+            ecuResetMethodeSpinner = rootView.findViewById(R.id.ecureset_methode_spinner);
+
             // Spinner for security_seed (sessionType)
             sessionTypeContainer = rootView.findViewById(R.id.spinner_row_stype);
             sessionTypeSpinner = rootView.findViewById(R.id.stype_spinner);
@@ -1852,6 +1858,7 @@ public class CARsenalFragment extends Fragment {
             securityLevelSpinner = rootView.findViewById(R.id.level_spinner);
             securityLevelInputContainer = rootView.findViewById(R.id.level_input_container);
 
+            // Spinner for ECU Reset Type
             String[] ecuResetOptions = {
                     "Select ECU Reset Type",  // disabled first entry
                     "1=hard",
@@ -1864,6 +1871,17 @@ public class CARsenalFragment extends Fragment {
             ArrayAdapter<String> ecuResetAdapter = createDisabledFirstItemAdapter(ecuResetOptions);
             ecuResetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             ecuResetTypeSpinner.setAdapter(ecuResetAdapter);
+
+            // Spinner for EcuResetMethode
+            String[] ecuResetMethodeOptions = {
+                    "Select ECU Reset Methode",  // disabled first entry
+                    "0=once before seed request start",
+                    "1=before each seed request (default)"
+            };
+
+            ArrayAdapter<String> ecuResetMethodeAdapter = createDisabledFirstItemAdapter(ecuResetMethodeOptions);
+            ecuResetMethodeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            ecuResetMethodeSpinner.setAdapter(ecuResetMethodeAdapter);
 
             // Spinner for security_seed (sessionType)
             String[] sessionTypeOptions = {
@@ -1957,7 +1975,7 @@ public class CARsenalFragment extends Fragment {
             final Spinner subModuleSpinner = rootView.findViewById(R.id.submodule_spinner);
             final Button startButton = rootView.findViewById(R.id.start_button);
 
-            final String[] modules = {"Modules", "Dump", "Fuzzer", "Listener", "module_template", "Send", "UDS", "XCP"};
+            final String[] modules = {"Modules", "Dump", "Fuzzer", "Listener", "module_template", "Send", "UDS", "UDS_Fuzz", "XCP"};
             final Map<String, String[]> subModulesMap = new HashMap<>();
             subModulesMap.put("Dump", new String[]{"Sub-Modules", "None"});
             subModulesMap.put("Fuzzer", new String[]{"Sub-Modules", "brute", "identify", "mutate", "random", "replay"});
@@ -1965,6 +1983,7 @@ public class CARsenalFragment extends Fragment {
             subModulesMap.put("module_template", new String[]{"Sub-Modules", "None"});
             subModulesMap.put("Send", new String[]{"Sub-Modules", "file", "message"});
             subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services", "subservices", "ecu_reset", "testerpresent", "security_seed", "dump_dids", "read_mem", "auto"});
+            subModulesMap.put("UDS_Fuzz", new String[]{"Sub-Modules", "delay_fuzzer", "seed_randomness_fuzzer"});
             subModulesMap.put("XCP", new String[]{"Sub-Modules", "discovery", "info", "commands", "dump"});
 
             ArrayAdapter<String> moduleAdapter = createDisabledFirstItemAdapter(modules);
@@ -2042,6 +2061,7 @@ public class CARsenalFragment extends Fragment {
                     durationContainer.setVisibility(View.GONE);
                     sprContainer.setVisibility(View.GONE);
                     ecuResetTypeContainer.setVisibility(View.GONE);
+                    ecuResetMethodeContainer.setVisibility(View.GONE);
                     numberContainer.setVisibility(View.GONE);
                     securityLevelContainer.setVisibility(View.GONE);
                     sessionTypeContainer.setVisibility(View.GONE);
@@ -2049,6 +2069,10 @@ public class CARsenalFragment extends Fragment {
                     memSizeContainer.setVisibility(View.GONE);
                     addrByteSizeContainer.setVisibility(View.GONE);
                     memLengthByteSizeContainer.setVisibility(View.GONE);
+                    sessionSeqContainer.setVisibility(View.GONE);
+                    seedTargetContainer.setVisibility(View.GONE);
+                    interDelayContainer.setVisibility(View.GONE);
+                    iterationsContainer.setVisibility(View.GONE);
 
                     // Show only for specific submodules
                     if ("Dump".equals(selectedModule)) {
@@ -2175,6 +2199,26 @@ public class CARsenalFragment extends Fragment {
                             maxdidContainer.setVisibility(View.VISIBLE);
                         }
                     }
+                    if ("UDS_Fuzz".equals(selectedModule)) {
+                        if ("delay_fuzzer".equals(selectedSubModule)) {
+                            ecuResetTypeContainer.setVisibility(View.VISIBLE);
+                            delayContainer.setVisibility(View.VISIBLE);
+                            sessionSeqContainer.setVisibility(View.VISIBLE);
+                            seedTargetContainer.setVisibility(View.VISIBLE);
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("seed_randomness_fuzzer".equals(selectedSubModule)) {
+                            ecuResetTypeContainer.setVisibility(View.VISIBLE);
+                            ecuResetMethodeContainer.setVisibility(View.VISIBLE);
+                            delayContainer.setVisibility(View.VISIBLE);
+                            sessionSeqContainer.setVisibility(View.VISIBLE);
+                            interDelayContainer.setVisibility(View.VISIBLE);
+                            iterationsContainer.setVisibility(View.VISIBLE);
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
                     if ("XCP".equals(selectedModule)) {
                         if ("discovery".equals(selectedSubModule)) {
                             minContainer.setVisibility(View.VISIBLE);
@@ -2229,6 +2273,9 @@ public class CARsenalFragment extends Fragment {
                     case "UDS":
                         runUDS(subModule);
                         break;
+                    case "UDS_Fuzz":
+                        runUDSFuzz(subModule);
+                        break;
                     case "XCP":
                         runXCP(subModule);
                         break;
@@ -2273,8 +2320,7 @@ public class CARsenalFragment extends Fragment {
         private String getVisibleSpinnerOrInputValue(
                 Spinner spinner,
                 ViewGroup spinnerContainer,
-                TextInputLayout inputContainer,
-                String prefix
+                TextInputLayout inputContainer
         ) {
             if (spinnerContainer.getVisibility() == View.VISIBLE && spinner.getSelectedItemPosition() > 0) {
                 String selected = (String) spinner.getSelectedItem();
@@ -2282,9 +2328,12 @@ public class CARsenalFragment extends Fragment {
                 // Case 1: Range or list → user must type value
                 if (selected.contains("-") || selected.contains(",")) {
                     if (inputContainer.getVisibility() == View.VISIBLE) {
-                        String input = inputContainer.getEditText().getText().toString().trim();
-                        if (!input.isEmpty()) {
-                            return prefix + input;  // e.g. " 0x40"
+                        EditText editText = inputContainer.getEditText();
+                        if (editText != null) {
+                            String input = editText.getText().toString().trim();
+                            if (!input.isEmpty()) {
+                                return " " + input;  // e.g. " 0x40"
+                            }
                         }
                     }
                     return ""; // no input provided
@@ -2292,10 +2341,10 @@ public class CARsenalFragment extends Fragment {
 
                 // Case 2: Single discrete value like "1=defaultSession"
                 if (selected.contains("=")) {
-                    return prefix + selected.split("=")[0]; // take part before '=' → "1"
+                    return " " + selected.split("=")[0]; // take part before '=' → "1"
                 }
 
-                return prefix + selected; // fallback
+                return " " + selected; // fallback
             }
             return "";
         }
@@ -2440,7 +2489,7 @@ public class CARsenalFragment extends Fragment {
 
             String idValue = getVisibleParam(idContainer.getEditText(), " -id ");
 
-            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " module_template";
+            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " module_template ";
 
             if (moduleTemplate_module.equals("None")) {
                 run_cmd(cmdBase + idValue);
@@ -2555,15 +2604,13 @@ public class CARsenalFragment extends Fragment {
             String sessiontypeValue = getVisibleSpinnerOrInputValue(
                     sessionTypeSpinner,
                     sessionTypeContainer,
-                    sessionTypeInputContainer,
-                    " "
+                    sessionTypeInputContainer
             );
 
             String levelValue = getVisibleSpinnerOrInputValue(
                     securityLevelSpinner,
                     securityLevelContainer,
-                    securityLevelInputContainer,
-                    " "
+                    securityLevelInputContainer
             );
 
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds ";
@@ -2599,6 +2646,36 @@ public class CARsenalFragment extends Fragment {
                     break;
                 default:
                     showToast("Unknown UDS submodule: " + uds_module);
+            }
+        }
+
+        private void runUDSFuzz(String uds_fuzz_module) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
+                showToast("Please choose a CAN Interface!");
+                return;
+            }
+
+            String ecuResetValue = getVisibleSpinnerValue(ecuResetTypeSpinner, ecuResetTypeContainer, " --reset ");
+            String ecuResetMethodeValue = getVisibleSpinnerValue(ecuResetMethodeSpinner, ecuResetMethodeContainer, " --reset_method ");
+            String delayValue = getVisibleParam(delayContainer.getEditText(), " -d ");
+            String sessionSeqValue = getVisibleParam(sessionSeqContainer.getEditText(), " ");
+            String seedTargetValue = getVisibleParam(seedTargetContainer.getEditText(), " ");
+            String srcValue = getVisibleParam(srcContainer.getEditText(), " ");
+            String dstValue = getVisibleParam(dstContainer.getEditText(), " ");
+            String interDelayValue = getVisibleParam(interDelayContainer.getEditText(), " --inter_delay ");
+            String iterationsValue = getVisibleParam(iterationsContainer.getEditText(), " --iter ");
+
+            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds_fuzz ";
+
+            switch (uds_fuzz_module) {
+                case "delay_fuzzer":
+                    run_cmd(cmdBase + "delay_fuzzer" + ecuResetValue + delayValue + sessionSeqValue + seedTargetValue + srcValue + dstValue);
+                    break;
+                case "seed_randomness_fuzzer":
+                    run_cmd(cmdBase + "seed_randomness_fuzzer" + iterationsValue + ecuResetValue + interDelayValue + ecuResetMethodeValue + delayValue + sessionSeqValue + srcValue + dstValue);
+                    break;
+                default:
+                    showToast("Unknown UDS_Fuzz submodule: " + uds_fuzz_module);
             }
         }
 
@@ -2660,7 +2737,6 @@ public class CARsenalFragment extends Fragment {
         private FrameLayout floatingContainer;
         private String selected_caniface = "";
         private TextInputEditText udsimConfigEdit;
-        private ImageButton udsimBrowseBtn;
 
         @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
@@ -2709,7 +2785,7 @@ public class CARsenalFragment extends Fragment {
             }
 
             udsimConfigEdit = rootView.findViewById(R.id.udsim_config_path);
-            udsimBrowseBtn = rootView.findViewById(R.id.udsim_config_browse);
+            ImageButton udsimBrowseBtn = rootView.findViewById(R.id.udsim_config_browse);
 
             udsimBrowseBtn.setOnClickListener(v -> {
                 RootFileBrowserDialog browser = new RootFileBrowserDialog(requireContext(), udsimConfigEdit::setText);
@@ -2791,7 +2867,9 @@ public class CARsenalFragment extends Fragment {
         private void runICSIM(WebView icsimView, WebView controlsView, Spinner levelList, WebView udsimView) {
             if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces")) {
 
-                String udsimConfig = udsimConfigEdit.getText().toString().trim();
+                String udsimConfig = (udsimConfigEdit != null && udsimConfigEdit.getText() != null)
+                        ? udsimConfigEdit.getText().toString().trim()
+                        : "";
                 String combinedCmd = "su -c 'sh " + ICSIM_SCRIPT_PATH + " " + selected_caniface;
                 String levelValue = getVisibleParam(levelList);
 
@@ -2943,9 +3021,7 @@ public class CARsenalFragment extends Fragment {
             floatingContainer.addView(closeBtn);
             ViewCompat.setElevation(closeBtn, 16f);
 
-            closeBtn.setOnClickListener(v -> {
-                removeFloatingWebViews(icsimView, udsimView);
-            });
+            closeBtn.setOnClickListener(v -> removeFloatingWebViews(icsimView, udsimView));
 
             final WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(
                     floatingInitialWidth, floatingInitialHeight,

@@ -259,6 +259,37 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/spinner_row_ecuresetmethode"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp">
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/spinner_ecureset_methode_card"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            app:strokeColor="@color/nh_box_stroke_spinner"
+                            app:strokeWidth="2dp"
+                            android:padding="4dp"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent">
+
+                            <Spinner
+                                android:id="@+id/ecureset_methode_spinner"
+                                android:layout_width="match_parent"
+                                android:layout_height="48dp"
+                                android:spinnerMode="dropdown"/>
+                        </com.google.android.material.card.MaterialCardView>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </LinearLayout>
+
+                <LinearLayout
                     android:id="@+id/spinner_row_stype"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -1265,6 +1296,114 @@
                             android:layout_height="wrap_content"
                             android:inputType="number"
                             android:text="2"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/advanced_row_10"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:baselineAligned="false">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/sessionSeq_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Session Sequence">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/sessionSeq_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:text="1003110210052705"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/seedTarget_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Seed Target">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/seedTarget_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:text="41414141414141"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/advanced_row_11"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:baselineAligned="false">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/iterations_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Iterations of seed requests">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/iterations_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:text="1000"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/interDelay_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Intermediate delay between messages">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/interDelay_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:text="0.1"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
