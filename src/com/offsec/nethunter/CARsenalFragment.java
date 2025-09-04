@@ -1753,9 +1753,10 @@ public class CARsenalFragment extends Fragment {
         private EditText SelectedFile;
         private EditText SelectedMessage;
         private String selected_caniface = "";
-        private TextInputLayout seedContainer, minContainer, maxContainer, srcContainer, dstContainer, messageContainer;
-        private TextInputLayout delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer, timeoutContainer;
-        private TextInputLayout whitelistContainer, indexContainer, arbIDContainer, dataContainer, blacklistContainer, autoBlacklistContainer;
+        private TextInputLayout seedContainer, minContainer, maxContainer, srcContainer, dstContainer;
+        private TextInputLayout delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer;
+        private TextInputLayout whitelistContainer, indexContainer, arbIDContainer, dataContainer, blacklistContainer;
+        private TextInputLayout dtypeContainer, stypeContainer, messageContainer, timeoutContainer, autoBlacklistContainer;
         private ViewGroup loopContainer, padContainer, outputContainer, fileContainer, reverseContainer;
         private ViewGroup requestsContainer, candumpContainer, responsesContainer, skipverifyContainer;
 
@@ -1794,6 +1795,8 @@ public class CARsenalFragment extends Fragment {
             maxContainer = rootView.findViewById(R.id.max_container);
             srcContainer = rootView.findViewById(R.id.src_container);
             dstContainer = rootView.findViewById(R.id.dst_container);
+            stypeContainer = rootView.findViewById(R.id.stype_container);
+            dtypeContainer = rootView.findViewById(R.id.dtype_container);
             delayContainer = rootView.findViewById(R.id.delay_container);
             lengthContainer = rootView.findViewById(R.id.length_container);
             startAddrContainer = rootView.findViewById(R.id.start_addr_container);
@@ -1855,7 +1858,7 @@ public class CARsenalFragment extends Fragment {
             subModulesMap.put("Listener", new String[]{"Sub-Modules", "None"});
             subModulesMap.put("Fuzzer", new String[]{"Sub-Modules", "brute", "identify", "mutate", "random", "replay"});
             subModulesMap.put("Send", new String[]{"Sub-Modules", "file", "message"});
-            subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services"});
+            subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services", "subservices"});
             subModulesMap.put("XCP", new String[]{"Sub-Modules", "discovery", "info", "commands", "dump"});
 
             ArrayAdapter<String> moduleAdapter = createDisabledFirstItemAdapter(modules);
@@ -1926,6 +1929,8 @@ public class CARsenalFragment extends Fragment {
                     autoBlacklistContainer.setVisibility(View.GONE);
                     skipverifyContainer.setVisibility(View.GONE);
                     timeoutContainer.setVisibility(View.GONE);
+                    stypeContainer.setVisibility(View.GONE);
+                    dtypeContainer.setVisibility(View.GONE);
 
                     // Show only for specific submodules
                     if ("Dump".equals(selectedModule)) {
@@ -1997,10 +2002,14 @@ public class CARsenalFragment extends Fragment {
                             skipverifyContainer.setVisibility(View.VISIBLE);
                             delayContainer.setVisibility(View.VISIBLE);
                         }
-                        if ("services".equals(selectedSubModule)) {
+                        if ("services".equals(selectedSubModule) || "subservices".equals(selectedSubModule)) {
                             timeoutContainer.setVisibility(View.VISIBLE);
                             srcContainer.setVisibility(View.VISIBLE);
                             dstContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("subservices".equals(selectedSubModule)) {
+                            stypeContainer.setVisibility(View.VISIBLE);
+                            dtypeContainer.setVisibility(View.VISIBLE);
                         }
                     }
                     if ("XCP".equals(selectedModule)) {
@@ -2274,6 +2283,8 @@ public class CARsenalFragment extends Fragment {
                 }
             }
 
+            String dtypeValue = getVisibleParam(dtypeContainer.getEditText(), " ");
+            String stypeValue = getVisibleParam(stypeContainer.getEditText(), " ");
             String srcValue = getVisibleParam(srcContainer.getEditText(), " ");
             String dstValue = getVisibleParam(dstContainer.getEditText(), " ");
             String minValue = getVisibleParam(minContainer.getEditText(), " -min ");
@@ -2290,7 +2301,10 @@ public class CARsenalFragment extends Fragment {
                     run_cmd(cmdBase + "discovery" + minValue + maxValue + delayValue + blacklistValue + autoBlacklistValue + skipverifyEnabled);
                     break;
                 case "services":
-                    run_cmd(cmdBase + "services" + srcValue + dstValue + timeoutValue);
+                    run_cmd(cmdBase + "services" + timeoutValue + srcValue + dstValue);
+                    break;
+                case "subservices":
+                    run_cmd(cmdBase + "subservices" + timeoutValue + dtypeValue + stypeValue + srcValue + dstValue);
                     break;
                 default:
                     showToast("Unknown UDS submodule: " + uds_module);
