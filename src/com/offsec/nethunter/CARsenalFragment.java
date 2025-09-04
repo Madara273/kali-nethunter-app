@@ -1755,6 +1755,7 @@ public class CARsenalFragment extends Fragment {
         private String selected_caniface = "";
         private TextInputLayout seedContainer, minContainer, maxContainer, srcContainer, dstContainer, messageContainer;
         private TextInputLayout delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer;
+        private TextInputLayout whitelistContainer;
         private ViewGroup loopContainer, padContainer, outputContainer, fileContainer, reverseContainer, candumpContainer;
 
         private ArrayAdapter<String> createDisabledFirstItemAdapter(String[] items) {
@@ -1797,7 +1798,7 @@ public class CARsenalFragment extends Fragment {
             startAddrContainer = rootView.findViewById(R.id.start_addr_container);
             separateLineContainer = rootView.findViewById(R.id.separate_line_container);
             idContainer = rootView.findViewById(R.id.id_container);
-            clearAllFields();
+            whitelistContainer = rootView.findViewById(R.id.whitelist_arbID_container);
 
             loopContainer = rootView.findViewById(R.id.loop_container);
             padContainer = rootView.findViewById(R.id.pad_container);
@@ -1808,6 +1809,7 @@ public class CARsenalFragment extends Fragment {
             SelectedMessage = rootView.findViewById(R.id.caribou_message);
             fileContainer = rootView.findViewById(R.id.file_container);
             SelectedFile = rootView.findViewById(R.id.caribou_file);
+
             // Browse File
             ImageButton browseButton = rootView.findViewById(R.id.cariboufilebrowse);
             browseButton.setOnClickListener(v -> {
@@ -1903,6 +1905,7 @@ public class CARsenalFragment extends Fragment {
                     separateLineContainer.setVisibility(View.GONE);
                     startAddrContainer.setVisibility(View.GONE);
                     delayContainer.setVisibility(View.GONE);
+                    whitelistContainer.setVisibility(View.GONE);
 
                     // Show only for specific submodules
                     if ("Dump".equals(selectedModule)) {
@@ -1910,6 +1913,7 @@ public class CARsenalFragment extends Fragment {
                             candumpContainer.setVisibility(View.VISIBLE);
                             outputContainer.setVisibility(View.VISIBLE);
                             separateLineContainer.setVisibility(View.VISIBLE);
+                            whitelistContainer.setVisibility(View.VISIBLE);
                         }
                     }
                     if ("Listener".equals(selectedModule)) {
@@ -2017,22 +2021,6 @@ public class CARsenalFragment extends Fragment {
             return rootView;
         }
 
-        private void clearAllFields() {
-            TextInputLayout[] containers = new TextInputLayout[] {
-                    seedContainer, minContainer, maxContainer, srcContainer, dstContainer,
-                    delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer
-            };
-
-            for (TextInputLayout container : containers) {
-                if (container != null) {
-                    EditText editText = container.getEditText();
-                    if (editText != null) {
-                        editText.setText("");
-                    }
-                }
-            }
-        }
-
         private String getVisibleParam(EditText editText, String prefix) {
             if (editText != null) {
                 View container = (View) editText.getParent().getParent();
@@ -2052,6 +2040,7 @@ public class CARsenalFragment extends Fragment {
                 return;
             }
 
+            String whitelistValue = getVisibleParam(whitelistContainer.getEditText(), " ");
             String separateLineValue = getVisibleParam(separateLineContainer.getEditText(), " -s ");
             String outputEnabled = "";
             if (outputContainer.getVisibility() == View.VISIBLE) {
@@ -2068,14 +2057,14 @@ public class CARsenalFragment extends Fragment {
             if (candumpContainer.getVisibility() == View.VISIBLE) {
                 SwitchCompat candumpSwitch = candumpContainer.findViewById(R.id.btn_toggle_candump);
                 if (candumpSwitch != null && candumpSwitch.isChecked()) {
-                    candumpEnabled = " -t";
+                    candumpEnabled = " -c";
                 }
             }
 
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " dump";
 
             if (dump_module.equals("None")) {
-                run_cmd(cmdBase + separateLineValue + candumpEnabled + outputEnabled);
+                run_cmd(cmdBase + separateLineValue + candumpEnabled + outputEnabled + whitelistValue);
             } else {
                 showToast("Unknown dump submodule: " + dump_module);
             }
