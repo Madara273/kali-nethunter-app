@@ -1858,11 +1858,12 @@ public class CARsenalFragment extends Fragment {
             final Spinner subModuleSpinner = rootView.findViewById(R.id.submodule_spinner);
             final Button startButton = rootView.findViewById(R.id.start_button);
 
-            final String[] modules = {"Modules", "Dump", "Listener", "Fuzzer", "Send", "UDS", "XCP"};
+            final String[] modules = {"Modules", "Dump", "Fuzzer", "Listener", "module_template", "Send", "UDS", "XCP"};
             final Map<String, String[]> subModulesMap = new HashMap<>();
             subModulesMap.put("Dump", new String[]{"Sub-Modules", "None"});
-            subModulesMap.put("Listener", new String[]{"Sub-Modules", "None"});
             subModulesMap.put("Fuzzer", new String[]{"Sub-Modules", "brute", "identify", "mutate", "random", "replay"});
+            subModulesMap.put("Listener", new String[]{"Sub-Modules", "None"});
+            subModulesMap.put("module_template", new String[]{"Sub-Modules", "None"});
             subModulesMap.put("Send", new String[]{"Sub-Modules", "file", "message"});
             subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services", "subservices", "testerpresent", "dump_dids", "auto"});
             subModulesMap.put("XCP", new String[]{"Sub-Modules", "discovery", "info", "commands", "dump"});
@@ -1952,11 +1953,6 @@ public class CARsenalFragment extends Fragment {
                             whitelistContainer.setVisibility(View.VISIBLE);
                         }
                     }
-                    if ("Listener".equals(selectedModule)) {
-                        if ("None".equals(selectedSubModule)) {
-                            reverseContainer.setVisibility(View.VISIBLE);
-                        }
-                    }
                     if ("Fuzzer".equals(selectedModule)) {
                         if ("brute".equals(selectedSubModule) || "mutate".equals(selectedSubModule)) {
                             outputContainer.setVisibility(View.VISIBLE);
@@ -1988,6 +1984,16 @@ public class CARsenalFragment extends Fragment {
                             delayContainer.setVisibility(View.VISIBLE);
                             outputContainer.setVisibility(View.VISIBLE);
                             fileContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    if ("Listener".equals(selectedModule)) {
+                        if ("None".equals(selectedSubModule)) {
+                            reverseContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    if ("module_template".equals(selectedModule)) {
+                        if ("None".equals(selectedSubModule)) {
+                            idContainer.setVisibility(View.VISIBLE);
                         }
                     }
                     if ("Send".equals(selectedModule)) {
@@ -2074,11 +2080,14 @@ public class CARsenalFragment extends Fragment {
                     case "Dump":
                         runDump(subModule);
                         break;
+                    case "Fuzzer":
+                        runFuzzer(subModule);
+                        break;
                     case "Listener":
                         runListener(subModule);
                         break;
-                    case "Fuzzer":
-                        runFuzzer(subModule);
+                    case "module_template":
+                        runModuleTemplate(subModule);
                         break;
                     case "Send":
                         runSend(subModule);
@@ -2143,29 +2152,6 @@ public class CARsenalFragment extends Fragment {
                 run_cmd(cmdBase + separateLineValue + candumpEnabled + outputEnabled + whitelistValue);
             } else {
                 showToast("Unknown dump submodule: " + dump_module);
-            }
-        }
-
-        private void runListener(String listener_module) {
-            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
-                showToast("Please choose a CAN Interface!");
-                return;
-            }
-
-            String reverseEnabled = "";
-            if (reverseContainer.getVisibility() == View.VISIBLE) {
-                SwitchCompat reverseSwitch = reverseContainer.findViewById(R.id.btn_toggle_reverse);
-                if (reverseSwitch != null && reverseSwitch.isChecked()) {
-                    reverseEnabled = " -r";
-                }
-            }
-
-            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " listener";
-
-            if (listener_module.equals("None")) {
-                run_cmd(cmdBase + reverseEnabled);
-            } else {
-                showToast("Unknown listener submodule: " + listener_module);
             }
         }
 
@@ -2239,6 +2225,46 @@ public class CARsenalFragment extends Fragment {
                     break;
                 default:
                     showToast("Unknown fuzzer submodule: " + fuzzer_module);
+            }
+        }
+
+        private void runListener(String listener_module) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
+                showToast("Please choose a CAN Interface!");
+                return;
+            }
+
+            String reverseEnabled = "";
+            if (reverseContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat reverseSwitch = reverseContainer.findViewById(R.id.btn_toggle_reverse);
+                if (reverseSwitch != null && reverseSwitch.isChecked()) {
+                    reverseEnabled = " -r";
+                }
+            }
+
+            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " listener";
+
+            if (listener_module.equals("None")) {
+                run_cmd(cmdBase + reverseEnabled);
+            } else {
+                showToast("Unknown listener submodule: " + listener_module);
+            }
+        }
+
+        private void runModuleTemplate(String moduleTemplate_module) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
+                showToast("Please choose a CAN Interface!");
+                return;
+            }
+
+            String idValue = getVisibleParam(idContainer.getEditText(), " -id ");
+
+            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " module_template";
+
+            if (moduleTemplate_module.equals("None")) {
+                run_cmd(cmdBase + idValue);
+            } else {
+                showToast("Unknown module_template submodule: " + moduleTemplate_module);
             }
         }
 
