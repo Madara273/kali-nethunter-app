@@ -1755,8 +1755,9 @@ public class CARsenalFragment extends Fragment {
         private String selected_caniface = "";
         private TextInputLayout seedContainer, minContainer, maxContainer, srcContainer, dstContainer, messageContainer;
         private TextInputLayout delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer;
-        private TextInputLayout whitelistContainer;
-        private ViewGroup loopContainer, padContainer, outputContainer, fileContainer, reverseContainer, candumpContainer;
+        private TextInputLayout whitelistContainer, indexContainer, arbIDContainer, dataContainer;
+        private ViewGroup loopContainer, padContainer, outputContainer, fileContainer, reverseContainer;
+        private ViewGroup requestsContainer, candumpContainer, responsesContainer;
 
         private ArrayAdapter<String> createDisabledFirstItemAdapter(String[] items) {
             return new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, items) {
@@ -1799,16 +1800,22 @@ public class CARsenalFragment extends Fragment {
             separateLineContainer = rootView.findViewById(R.id.separate_line_container);
             idContainer = rootView.findViewById(R.id.id_container);
             whitelistContainer = rootView.findViewById(R.id.whitelist_arbID_container);
+            indexContainer = rootView.findViewById(R.id.index_container);
+            arbIDContainer = rootView.findViewById(R.id.arbID_container);
+            dataContainer = rootView.findViewById(R.id.data_container);
 
             loopContainer = rootView.findViewById(R.id.loop_container);
             padContainer = rootView.findViewById(R.id.pad_container);
             reverseContainer = rootView.findViewById(R.id.reverse_container);
             outputContainer = rootView.findViewById(R.id.output_container);
+            responsesContainer = rootView.findViewById(R.id.responses_container);
+            requestsContainer = rootView.findViewById(R.id.requests_container);
             candumpContainer = rootView.findViewById(R.id.candump_container);
             messageContainer = rootView.findViewById(R.id.message_container);
             SelectedMessage = rootView.findViewById(R.id.caribou_message);
             fileContainer = rootView.findViewById(R.id.file_container);
             SelectedFile = rootView.findViewById(R.id.caribou_file);
+
 
             // Browse File
             ImageButton browseButton = rootView.findViewById(R.id.cariboufilebrowse);
@@ -1838,11 +1845,11 @@ public class CARsenalFragment extends Fragment {
             final Spinner subModuleSpinner = rootView.findViewById(R.id.submodule_spinner);
             final Button startButton = rootView.findViewById(R.id.start_button);
 
-            final String[] modules = {"Modules", "Dump", "Listener", "Fuzz", "Send", "UDS", "XCP"};
+            final String[] modules = {"Modules", "Dump", "Listener", "Fuzzer", "Send", "UDS", "XCP"};
             final Map<String, String[]> subModulesMap = new HashMap<>();
             subModulesMap.put("Dump", new String[]{"Sub-Modules", "None"});
             subModulesMap.put("Listener", new String[]{"Sub-Modules", "None"});
-            subModulesMap.put("Fuzz", new String[]{"Sub-Modules", "brute", "identify", "mutate", "random", "replay"});
+            subModulesMap.put("Fuzzer", new String[]{"Sub-Modules", "brute", "identify", "mutate", "random", "replay"});
             subModulesMap.put("Send", new String[]{"Sub-Modules", "file", "message"});
             subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services"});
             subModulesMap.put("XCP", new String[]{"Sub-Modules", "discovery", "info", "dump"});
@@ -1906,6 +1913,11 @@ public class CARsenalFragment extends Fragment {
                     startAddrContainer.setVisibility(View.GONE);
                     delayContainer.setVisibility(View.GONE);
                     whitelistContainer.setVisibility(View.GONE);
+                    responsesContainer.setVisibility(View.GONE);
+                    requestsContainer.setVisibility(View.GONE);
+                    indexContainer.setVisibility(View.GONE);
+                    arbIDContainer.setVisibility(View.GONE);
+                    dataContainer.setVisibility(View.GONE);
 
                     // Show only for specific submodules
                     if ("Dump".equals(selectedModule)) {
@@ -1921,20 +1933,35 @@ public class CARsenalFragment extends Fragment {
                             reverseContainer.setVisibility(View.VISIBLE);
                         }
                     }
-                    if ("Fuzz".equals(selectedModule)) {
+                    if ("Fuzzer".equals(selectedModule)) {
                         if ("brute".equals(selectedSubModule) || "mutate".equals(selectedSubModule)) {
-                            idContainer.setVisibility(View.VISIBLE);
+                            outputContainer.setVisibility(View.VISIBLE);
+                            delayContainer.setVisibility(View.VISIBLE);
+                            responsesContainer.setVisibility(View.VISIBLE);
+                            indexContainer.setVisibility(View.VISIBLE);
+                            arbIDContainer.setVisibility(View.VISIBLE);
+                            dataContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("mutate".equals(selectedSubModule)) {
+                            seedContainer.setVisibility(View.VISIBLE);
                         }
                         if ("identify".equals(selectedSubModule) || "replay".equals(selectedSubModule)) {
                             outputContainer.setVisibility(View.VISIBLE);
+                            responsesContainer.setVisibility(View.VISIBLE);
+                            delayContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("replay".equals(selectedSubModule)) {
+                            requestsContainer.setVisibility(View.VISIBLE);
                         }
                         if ("random".equals(selectedSubModule)) {
                             idContainer.setVisibility(View.VISIBLE);
+                            indexContainer.setVisibility(View.VISIBLE);
                             minContainer.setVisibility(View.VISIBLE);
                             maxContainer.setVisibility(View.VISIBLE);
                             seedContainer.setVisibility(View.VISIBLE);
-                            outputContainer.setVisibility(View.VISIBLE);
+                            dataContainer.setVisibility(View.VISIBLE);
                             delayContainer.setVisibility(View.VISIBLE);
+                            outputContainer.setVisibility(View.VISIBLE);
                         }
                     }
                     if ("Send".equals(selectedModule)) {
@@ -2001,7 +2028,7 @@ public class CARsenalFragment extends Fragment {
                     case "Listener":
                         runListener(subModule);
                         break;
-                    case "Fuzz":
+                    case "Fuzzer":
                         runFuzzer(subModule);
                         break;
                     case "Send":
@@ -2109,29 +2136,50 @@ public class CARsenalFragment extends Fragment {
                     }
                 }
             }
+
+            String responsesEnabled = "";
+            if (responsesContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat responsesSwitch = responsesContainer.findViewById(R.id.btn_toggle_responses);
+                if (responsesSwitch != null && responsesSwitch.isChecked()) {
+                    responsesEnabled = " -responses";
+                }
+            }
+
+            String requestsEnabled = "";
+            if (requestsContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat requestsSwitch = requestsContainer.findViewById(R.id.btn_toggle_requests);
+                if (requestsSwitch != null && requestsSwitch.isChecked()) {
+                    requestsEnabled = " -requests";
+                }
+            }
+
             String idValue = getVisibleParam(idContainer.getEditText(), " -id ");
             String seedValue = getVisibleParam(seedContainer.getEditText(), " -seed ");
             String minValue = getVisibleParam(minContainer.getEditText(), " -min ");
             String maxValue = getVisibleParam(minContainer.getEditText(), " -max ");
             String delayValue = getVisibleParam(delayContainer.getEditText(), " -delay ");
+            String indexValue = getVisibleParam(indexContainer.getEditText(), " -index ");
+            String arbIDValue = getVisibleParam(arbIDContainer.getEditText(), " ");
+            String dataValue = getVisibleParam(dataContainer.getEditText(), " ");
+            String filePath = SelectedFile.getText().toString().trim();
 
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer ";
 
             switch (fuzzer_module) {
                 case "brute":
-                    run_cmd(cmdBase + "brute" + idValue);
+                    run_cmd(cmdBase + "brute" + responsesEnabled + indexValue + delayValue + outputEnabled + arbIDValue + dataValue);
                     break;
                 case "identify":
-                    run_cmd(cmdBase + "identify" + outputEnabled);
+                    run_cmd(cmdBase + "identify" + responsesEnabled + delayValue + filePath);
                     break;
                 case "mutate":
-                    run_cmd(cmdBase + "mutate" + idValue);
+                    run_cmd(cmdBase + "mutate" + responsesEnabled + seedValue + indexValue + delayValue + outputEnabled + arbIDValue + dataValue);
                     break;
                 case "random":
-                    run_cmd(cmdBase + "random" + minValue + maxValue + seedValue + delayValue + outputEnabled);
+                    run_cmd(cmdBase + "random" + indexValue + idValue + minValue + maxValue + seedValue + delayValue + dataValue + outputEnabled);
                     break;
                 case "replay":
-                    run_cmd(cmdBase + "replay" + outputEnabled);
+                    run_cmd(cmdBase + "replay" + responsesEnabled + requestsEnabled + delayValue + filePath);
                     break;
                 default:
                     showToast("Unknown fuzzer submodule: " + fuzzer_module);

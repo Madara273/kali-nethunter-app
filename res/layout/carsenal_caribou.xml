@@ -330,6 +330,68 @@
 
                 </LinearLayout>
 
+                <LinearLayout
+                    android:id="@+id/button_row8"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/responses_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        app:cardCornerRadius="4dp"
+                        android:padding="8dp">
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/btn_toggle_responses"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Responses to stdout"
+                            android:textColor="@android:color/holo_red_light"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:paddingStart="12dp"
+                            android:gravity="center_vertical"
+                            tools:ignore="RtlSymmetry" />
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/button_row9"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/requests_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        app:cardCornerRadius="4dp"
+                        android:padding="8dp">
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/btn_toggle_requests"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Requests to stdout"
+                            android:textColor="@android:color/holo_red_light"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:paddingStart="12dp"
+                            android:gravity="center_vertical"
+                            tools:ignore="RtlSymmetry" />
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+
 
                 <LinearLayout
                     android:id="@+id/advanced_row_1"
@@ -609,8 +671,84 @@
                             android:id="@+id/whitelist_arbID_value"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:inputType="number"
+                            android:inputType="text"
                             android:text="0x733 0x734"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/arbID_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Arbitration ID (dot mark indices to mutate e.g. 7f..)">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/arbID_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:text="7f.."
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/data_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Hex data (dot mark indices to mutate e.g. 123.AB..)">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/data_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:text="123.AB.."
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/advanced_row_5"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:baselineAligned="false">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/index_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Index (for resuming previous session)">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/index_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
