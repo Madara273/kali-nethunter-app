@@ -22,7 +22,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
-                android:text="@string/icsim"
+                android:text="@string/sim"
                 android:textAppearance="?android:attr/textAppearanceMedium"
                 android:textStyle="bold" />
 
@@ -34,7 +34,7 @@
                 android:layout_marginEnd="20dp"
                 android:layout_gravity="center_horizontal"
                 android:gravity="center"
-                android:text="@string/can_icsim_desc" />
+                android:text="@string/can_sim_desc" />
 
             <View
                 android:id="@+id/divider1"
@@ -164,6 +164,48 @@
                         </com.google.android.material.card.MaterialCardView>
                     </androidx.constraintlayout.widget.ConstraintLayout>
                 </LinearLayout>
+                <!-- Input File Row -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginTop="8dp"
+                    android:spacing="8dp">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="10dp"
+                        android:hint="@string/UDSimConfigFile"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/udsim_config_path"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:text="@string/UDSimConfigPath"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <ImageButton
+                        android:id="@+id/udsim_config_browse"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:src="@drawable/baseline_folder_open_24"
+                        android:contentDescription="Browse Input"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:padding="8dp"/>
+                </LinearLayout>
+
             </LinearLayout>
 
             <!-- ICSIM WebView -->
@@ -185,6 +227,24 @@
                     android:layout_height="200dp" />
             </com.google.android.material.card.MaterialCardView>
 
+            <!-- UDSim WebView -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:layout_marginBottom="10dp"
+                app:cardCornerRadius="8dp"
+                app:cardElevation="4dp"
+                app:strokeColor="@color/ifc_box_stroke"
+                app:strokeWidth="2dp">
+
+                <FrameLayout
+                    android:id="@+id/udsim_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="200dp"/>
+            </com.google.android.material.card.MaterialCardView>
+
             <!-- Controls WebView -->
             <com.google.android.material.card.MaterialCardView
                 android:layout_width="match_parent"
@@ -200,7 +260,8 @@
                 <FrameLayout
                     android:id="@+id/controls_container"
                     android:layout_width="match_parent"
-                    android:layout_height="200dp" />
+                    android:layout_height="200dp"
+                    android:visibility="gone" />
             </com.google.android.material.card.MaterialCardView>
 
         </LinearLayout>

@@ -27,6 +27,11 @@
         android:title="Stop"
         app:showAsAction="always" />
     <item
+        android:id="@+id/action_controller"
+        android:icon="@drawable/ic_action_controller"
+        android:title="Controller"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/action_floating"
         android:icon="@drawable/ic_action_floating"
         android:title="Floating"

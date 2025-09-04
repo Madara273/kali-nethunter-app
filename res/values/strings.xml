@@ -229,7 +229,7 @@
 
     <!-- Kernel -->
     <string name="kernel_description">Flash your custom kernel straight from Android. Still in experimental state. Some systems does not support runtime flashing. In that case, it is recommended to flash the kernel through recovery. Your device\'s actual codename may not be in the kernel repo, in that case, use the list below to find available device names.</string>
- 
+
     <!-- chroot stuff -->
     <array name="f_chrootmanager_build_chroot_arm_opts">
         <item>arm64</item>
@@ -697,7 +697,7 @@
     <string name="can_tools_desc">Unleash the power of can-utils suite, diagnose your car using Freediag and transfer CAN frames between two machines using Cannelloni!</string>
     <string name="can_canusb_desc">Use your CAN Analyzer USB by Dumping and Sending signals using usb-can!</string>
     <string name="can_caribou_desc">A friendly automotive security exploration tool.</string>
-    <string name="can_icsim_desc">Instrument Cluster Simulator for SocketCAN</string>
+    <string name="can_sim_desc">Instrument Cluster Simulator for SocketCAN (ICSim) and Unified Diagnostic Services Simulator (UDSim)</string>
     <string name="can_msf_desc">Use Metasploit Automotive modules!</string>
     <string name="can_app_name">MyApp</string>
     <string name="can_settings">Settings</string>
@@ -806,8 +806,10 @@
     <string name="DelayValue">1</string>
     <string name="IDValue">0x003</string>
     <!-- ICSim -->
-    <string name="icsim">Instrument Cluster Simulator</string>
+    <string name="sim">Simulator</string>
     <string name="Configuration">Configuration</string>
+    <string name="UDSimConfigFile">UDSim Config File</string>
+    <string name="UDSimConfigPath">/opt/car_hacking/udsim_vcan_config</string>
     <!-- MSF Automotive -->
     <string name="msfautomotive">MSF Automotive</string>
     <string name="elmrelay">ELM327 Relay Configuration</string>
