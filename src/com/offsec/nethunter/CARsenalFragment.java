@@ -3100,43 +3100,49 @@ public class CARsenalFragment extends Fragment {
 
                     if (context instanceof Activity) {
                         Activity activity = (Activity) context;
-                        FrameLayout icsimContainer = activity.findViewById(R.id.icsim_container);
-                        FrameLayout controlsContainer = activity.findViewById(R.id.controls_container);
-                        FrameLayout udsimContainer = activity.findViewById(R.id.udsim_container);
 
-                        WebView icsimView = SIMFragment.ICSIMWebViewHolder.getICSIMWebView(context);
-                        WebView controlsView = SIMFragment.ICSIMWebViewHolder.getControlsWebView(context);
-                        WebView udsimView = SIMFragment.ICSIMWebViewHolder.getUDSIMWebView(context);
+                        TabLayout tabLayout = activity.findViewById(R.id.tabLayoutCAN);
+                        int selectedTabIndex = tabLayout.getSelectedTabPosition();
 
-                        // Remove from any old parent
-                        if (icsimView.getParent() != null) ((ViewGroup) icsimView.getParent()).removeView(icsimView);
-                        if (controlsView.getParent() != null) ((ViewGroup) controlsView.getParent()).removeView(controlsView);
-                        if (udsimView.getParent() != null) ((ViewGroup) udsimView.getParent()).removeView(udsimView);
+                        if (selectedTabIndex == 4) { // Only run ICSim refresh on Simulator tab
+                            FrameLayout icsimContainer = activity.findViewById(R.id.icsim_container);
+                            FrameLayout controlsContainer = activity.findViewById(R.id.controls_container);
+                            FrameLayout udsimContainer = activity.findViewById(R.id.udsim_container);
 
-                        // Re-add to containers
-                        if (icsimContainer != null && controlsContainer != null && udsimContainer != null) {
-                            icsimContainer.addView(icsimView, new FrameLayout.LayoutParams(
-                                    FrameLayout.LayoutParams.MATCH_PARENT,
-                                    FrameLayout.LayoutParams.MATCH_PARENT
-                            ));
-                            controlsContainer.addView(controlsView, new FrameLayout.LayoutParams(
-                                    FrameLayout.LayoutParams.MATCH_PARENT,
-                                    FrameLayout.LayoutParams.MATCH_PARENT
-                            ));
-                            udsimContainer.addView(udsimView, new FrameLayout.LayoutParams(
-                                    FrameLayout.LayoutParams.MATCH_PARENT,
-                                    FrameLayout.LayoutParams.MATCH_PARENT
-                            ));
+                            WebView icsimView = SIMFragment.ICSIMWebViewHolder.getICSIMWebView(context);
+                            WebView controlsView = SIMFragment.ICSIMWebViewHolder.getControlsWebView(context);
+                            WebView udsimView = SIMFragment.ICSIMWebViewHolder.getUDSIMWebView(context);
 
-                            // Reload only if ICSIM process is running
-                            String output = exe.RunAsChrootOutput("ps aux | pgrep 'icsim'");
-                            if (output != null && !output.isEmpty()) {
-                                icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale&view_only=true");
-                                controlsView.loadUrl("http://localhost:6081/vnc.html?autoconnect=true&resize=scale");
-                                udsimView.loadUrl("http://localhost:6082/vnc.html?autoconnect=true&resize=scale");
+                            // Remove from any old parent
+                            if (icsimView.getParent() != null) ((ViewGroup) icsimView.getParent()).removeView(icsimView);
+                            if (controlsView.getParent() != null) ((ViewGroup) controlsView.getParent()).removeView(controlsView);
+                            if (udsimView.getParent() != null) ((ViewGroup) udsimView.getParent()).removeView(udsimView);
+
+                            // Re-add to containers
+                            if (icsimContainer != null && controlsContainer != null && udsimContainer != null) {
+                                icsimContainer.addView(icsimView, new FrameLayout.LayoutParams(
+                                        FrameLayout.LayoutParams.MATCH_PARENT,
+                                        FrameLayout.LayoutParams.MATCH_PARENT
+                                ));
+                                controlsContainer.addView(controlsView, new FrameLayout.LayoutParams(
+                                        FrameLayout.LayoutParams.MATCH_PARENT,
+                                        FrameLayout.LayoutParams.MATCH_PARENT
+                                ));
+                                udsimContainer.addView(udsimView, new FrameLayout.LayoutParams(
+                                        FrameLayout.LayoutParams.MATCH_PARENT,
+                                        FrameLayout.LayoutParams.MATCH_PARENT
+                                ));
+
+                                // Reload only if ICSIM process is running
+                                String output = exe.RunAsChrootOutput("ps aux | pgrep 'icsim'");
+                                if (output != null && !output.isEmpty()) {
+                                    icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale&view_only=true");
+                                    controlsView.loadUrl("http://localhost:6081/vnc.html?autoconnect=true&resize=scale");
+                                    udsimView.loadUrl("http://localhost:6082/vnc.html?autoconnect=true&resize=scale");
+                                }
+
+                                Toast.makeText(context, "Refreshing ICSim and UDSim display...", Toast.LENGTH_SHORT).show();
                             }
-
-                            Toast.makeText(context, "Refreshing ICSim and UDSim display...", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });

@@ -826,14 +826,20 @@
     <string name="credits_text"><![CDATA[
         <div style="text-align:center;"><b><u>CREDITS</u></b></div>
         <ul>
-            <li><a href="https://github.com/fenugrec">Fenugrec</a> - Freediag tool.</li>
-            <li><a href="https://github.com/kobolt">Kobolt</a> - CAN-USB.</li>
-            <li><a href="https://github.com/alexmohr">Alexmohr</a> - CAN-USB Fork.</li>
-            <li><a href="https://github.com/linux-can">Linux-Can</a> - CAN-utils and Socketcand.</li>
-            <li><a href="https://github.com/mguentner">Mguentner</a> - Cannelloni.</li>
-            <li><a href="https://github.com/CaringCaribou">CaringCaribou Team</a> - CaringCaribou</li>
-            <li><a href="https://github.com/zombieCraig">zombieCraig</a> - ICSim.</li>
-            <li><a href="https://github.com/idlesign">idlesign</a> - VIN Info.</li>
+            <li><a href="https://github.com/fenugrec"> Fenugrec</a> - Freediag tool.</li>
+            <li><a href="https://github.com/kobolt"> Kobolt</a> - CAN-USB.</li>
+            <li><a href="https://github.com/alexmohr"> Alexmohr</a> - CAN-USB Fork.</li>
+            <li><a href="https://github.com/linux-can"> Linux-Can</a> - CAN-utils and Socketcand.</li>
+            <li><a href="https://github.com/mguentner"> Mguentner</a> - Cannelloni.</li>
+            <li><a href="https://github.com/CaringCaribou"> CaringCaribou Team</a> - CaringCaribou</li>
+            <li><a href="https://github.com/zombieCraig"> zombieCraig</a> - ICSim and UDSim.</li>
+            <li><a href="https://github.com/idlesign"> idlesign</a> - VIN Info.</li>
+            <li><a href="https://www.rapid7.com/"> rapid7</a> - Metasploit Framework.</li>
+            <li><a href="https://www.crunchbase.com/person/craig-smith-12"> Craig Smith</a> - MSF Automotive Modules.</li>
+            <li><a href="https://x.com/pietro_biondi94"> Pietro Biondi</a> - MSF Automotive Modules.</li>
+            <li><a href="https://ph.linkedin.com/in/shipjayturla"> Jay Turla</a> - MSF Automotive Modules.</li>
+            <li><a href="https://x.com/johbraun"> Johannes Braun</a> - MSF Automotive Modules.</li>
+            <li><a href="https://de.linkedin.com/in/j%C3%BCrgen-d%C3%BCrrwang-75160217a"> Juergen Duerrwang</a> - MSF Automotive Modules.</li>
         </ul>
         ]]>
     </string>
