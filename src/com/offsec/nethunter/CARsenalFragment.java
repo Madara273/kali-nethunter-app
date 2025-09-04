@@ -115,7 +115,7 @@ public class CARsenalFragment extends Fragment {
                         case 1: tab.setText("Tools"); break;
                         case 2: tab.setText("CAN-USB"); break;
                         case 3: tab.setText("Caribou"); break;
-                        case 4: tab.setText("ICSim"); break;
+                        case 4: tab.setText("Simulator"); break;
                         case 5: tab.setText("MSF"); break;
                         default: tab.setText("Tab " + (position + 1));
                     }
@@ -144,6 +144,11 @@ public class CARsenalFragment extends Fragment {
                 }
 
                 // ICSIM buttons dynamically for ICSIM tab
+                MenuItem controllerItem = menu.findItem(R.id.action_controller);
+                if (controllerItem == null) {
+                    controllerItem = menu.add(Menu.NONE, R.id.action_controller, Menu.NONE, "Controller");
+                    controllerItem.setShowAsAction(MenuItem.SHOW_AS_ACTION_IF_ROOM);
+                }
                 MenuItem playItem = menu.findItem(R.id.action_play);
                 if (playItem == null) {
                     playItem = menu.add(Menu.NONE, R.id.action_play, Menu.NONE, "Play");
@@ -180,13 +185,15 @@ public class CARsenalFragment extends Fragment {
                 MenuItem canusbSettingsItem = menu.findItem(R.id.action_canusb_settings);
                 if (canusbSettingsItem != null) canusbSettingsItem.setVisible(currentTab == 2);
 
-                // Play/Stop/Floating visible only on ICSIM tab (tab index 4)
+                // Play/Stop/Floating visible only on Simulator tab (tab index 4)
                 MenuItem playItem = menu.findItem(R.id.action_play);
                 MenuItem stopItem = menu.findItem(R.id.action_stop);
                 MenuItem floatingItem = menu.findItem(R.id.action_floating);
+                MenuItem controllerItem = menu.findItem(R.id.action_controller);
                 if (playItem != null) playItem.setVisible(currentTab == 4);
                 if (stopItem != null) stopItem.setVisible(currentTab == 4);
                 if (floatingItem != null) floatingItem.setVisible(currentTab == 4);
+                if (controllerItem != null) controllerItem.setVisible(currentTab == 4);
             }
 
             @Override
@@ -245,6 +252,16 @@ public class CARsenalFragment extends Fragment {
                     Button floatICSIM = rootView.findViewById(R.id.floating_icsim);
                     if (floatICSIM != null) floatICSIM.performClick(); // reuse existing listener
                     return true;
+                } else if (id == R.id.action_controller) {
+                        FrameLayout controlsContainer = rootView.findViewById(R.id.controls_container);
+                        if (controlsContainer != null) {
+                            if (controlsContainer.getVisibility() == View.VISIBLE) {
+                                controlsContainer.setVisibility(View.GONE);
+                            } else {
+                                controlsContainer.setVisibility(View.VISIBLE);
+                            }
+                        }
+                        return true;
                 } else {
                     return false;
                 }
@@ -374,7 +391,7 @@ public class CARsenalFragment extends Fragment {
                 case 3:
                     return new CARsenalFragment.CANCARIBOUFragment();
                 case 4:
-                    return new CANICSIMFragment();
+                    return new SIMFragment();
                 default :
                     return new CANMSFFragment();
             }
@@ -2245,10 +2262,11 @@ public class CARsenalFragment extends Fragment {
         }
     }
 
-    public static class CANICSIMFragment extends CARsenalFragment {
+    public static class SIMFragment extends CARsenalFragment {
         private final ShellExecuter exe = new ShellExecuter();
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private static final String ICSIM_SCRIPT_PATH = "/opt/car_hacking/icsim_service.sh";
+        private static final String UDSIM_SCRIPT_PATH = "/opt/car_hacking/udsim_service.sh";
         private static final long SHORT_DELAY = 1000;
         private static final long LONG_DELAY = 2000;
         private FrameLayout floatingContainer;
@@ -2257,7 +2275,7 @@ public class CARsenalFragment extends Fragment {
         @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.carsenal_icsim, container, false);
+            View rootView = inflater.inflate(R.layout.carsenal_sim, container, false);
 
             Spinner spinner = rootView.findViewById(R.id.device_interface);
             ImageButton refreshBtn = rootView.findViewById(R.id.refreshUSB);
@@ -2300,18 +2318,22 @@ public class CARsenalFragment extends Fragment {
                 startActivity(intent);
             }
 
+            WebView icsimView = ICSIMWebViewHolder.getICSIMWebView(requireContext());
+            WebView controlsView = ICSIMWebViewHolder.getControlsWebView(requireContext());
+            WebView udsimView = ICSIMWebViewHolder.getUDSIMWebView(requireContext());
+
             Button floatICSIM = rootView.findViewById(R.id.floating_icsim);
-            floatICSIM.setOnClickListener(v -> toggleFloatingICSIM());
+            floatICSIM.setOnClickListener(v -> toggleFloatingICSIM(icsimView, udsimView));
 
             FrameLayout icsimContainer = rootView.findViewById(R.id.icsim_container);
             FrameLayout controlsContainer = rootView.findViewById(R.id.controls_container);
-
-            WebView icsimView = ICSIMWebViewHolder.getICSIMWebView(requireContext());
-            WebView controlsView = ICSIMWebViewHolder.getControlsWebView(requireContext());
+            controlsContainer.setVisibility(View.GONE);
+            FrameLayout udsimContainer = rootView.findViewById(R.id.udsim_container);
 
             // Remove from previous parent if needed
             if (icsimView.getParent() != null) ((ViewGroup) icsimView.getParent()).removeView(icsimView);
             if (controlsView.getParent() != null) ((ViewGroup) controlsView.getParent()).removeView(controlsView);
+            if (udsimView.getParent() != null) ((ViewGroup) udsimView.getParent()).removeView(udsimView);
 
             // Attach WebViews once
             icsimContainer.addView(icsimView, new FrameLayout.LayoutParams(
@@ -2322,20 +2344,25 @@ public class CARsenalFragment extends Fragment {
                     FrameLayout.LayoutParams.MATCH_PARENT,
                     FrameLayout.LayoutParams.MATCH_PARENT
             ));
+            udsimContainer.addView(udsimView, new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+            ));
 
             // Buttons
-            rootView.findViewById(R.id.run_icsim).setOnClickListener(v -> runICSIM(icsimView, controlsView, levelList));
-            rootView.findViewById(R.id.stop_icsim).setOnClickListener(v -> stopICSIM(icsimView, controlsView));
+            rootView.findViewById(R.id.run_icsim).setOnClickListener(v -> runICSIM(icsimView, controlsView, levelList, udsimView));
+            rootView.findViewById(R.id.stop_icsim).setOnClickListener(v -> stopICSIM(icsimView, controlsView, udsimView));
 
             // Auto-restore ICSim session if running
             executorService.submit(() -> {
                 if (isICSIMRunning()) {
                     new Handler(Looper.getMainLooper()).post(() -> {
                         // Remove from floating if present
-                        if (floatingContainer != null) removeFloatingWebView(icsimView);
+                        if (floatingContainer != null) removeFloatingWebViews(icsimView, udsimView);
 
                         icsimContainer.removeAllViews();
                         controlsContainer.removeAllViews();
+                        udsimContainer.removeAllViews();
 
                         icsimContainer.addView(icsimView, new FrameLayout.LayoutParams(
                                 FrameLayout.LayoutParams.MATCH_PARENT,
@@ -2345,11 +2372,16 @@ public class CARsenalFragment extends Fragment {
                                 FrameLayout.LayoutParams.MATCH_PARENT,
                                 FrameLayout.LayoutParams.MATCH_PARENT
                         ));
+                        udsimContainer.addView(udsimView, new FrameLayout.LayoutParams(
+                                FrameLayout.LayoutParams.MATCH_PARENT,
+                                FrameLayout.LayoutParams.MATCH_PARENT
+                        ));
 
                         icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale&view_only=true");
                         controlsView.loadUrl("http://localhost:6081/vnc.html?autoconnect=true&resize=scale");
+                        udsimView.loadUrl("http://localhost:6082/vnc.html?autoconnect=true&resize=scale");
 
-                        Toast.makeText(requireContext(), "Restored ICSim session...", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(requireContext(), "Restored ICSim and UDSim sessions...", Toast.LENGTH_SHORT).show();
                     });
                 }
             });
@@ -2357,44 +2389,47 @@ public class CARsenalFragment extends Fragment {
             return rootView;
         }
 
-        private void runICSIM(WebView icsimView, WebView controlsView, Spinner levelList) {
+        private void runICSIM(WebView icsimView, WebView controlsView, Spinner levelList, WebView udsimView) {
             if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces")) {
                 String levelValue = getVisibleParam(levelList);
-                String cmd = "su -c 'sh " + ICSIM_SCRIPT_PATH + " " + selected_caniface + levelValue + "'";
-                run_cmd(cmd);
-                showToast("Running ICSim...");
+                String icsim_start = "su -c 'sh " + ICSIM_SCRIPT_PATH + " " + selected_caniface + levelValue + ";sh " + UDSIM_SCRIPT_PATH + " " + selected_caniface + "'";
+                run_cmd(icsim_start);
+                showToast("Running ICSim and UDSim...");
 
                 new Handler().postDelayed(() -> {
                     icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale&view_only=true");
                     controlsView.loadUrl("http://localhost:6081/vnc.html?autoconnect=true&resize=scale");
+                    udsimView.loadUrl("http://localhost:6082/vnc.html?autoconnect=true&resize=scale");
                 }, SHORT_DELAY + LONG_DELAY);
             } else {
                 showToast("Please set a CAN interface!");
             }
         }
 
-        private void stopICSIM(WebView icsimView, WebView controlsView) {
-            run_cmd("su -c 'sh " + ICSIM_SCRIPT_PATH + " stop'");
-            showToast("Stopping ICSim...");
+        private void stopICSIM(WebView icsimView, WebView controlsView, WebView udsimView) {
+            run_cmd("su -c 'sh " + ICSIM_SCRIPT_PATH + " stop;sh " + UDSIM_SCRIPT_PATH + " stop'");
+            showToast("Stopping ICSim and UDSim...");
             icsimView.setBackgroundColor(Color.BLACK);
             icsimView.loadUrl("about:blank");
             controlsView.setBackgroundColor(Color.BLACK);
             controlsView.loadUrl("about:blank");
+            udsimView.setBackgroundColor(Color.BLACK);
+            udsimView.loadUrl("about:blank");
         }
 
-        // Toggle floating WebView
         @RequiresApi(api = Build.VERSION_CODES.O)
-        private void toggleFloatingICSIM() {
-            WebView icsimView = ICSIMWebViewHolder.getICSIMWebView(requireContext());
+        private void toggleFloatingICSIM(WebView icsimView, WebView udsimView) {
             if (floatingContainer == null) {
-                showFloatingWebView(icsimView);
+                // Show both inside floating window
+                showFloatingWebView(icsimView, udsimView);
             } else {
-                removeFloatingWebView(icsimView);
+                // Restore both back to their containers
+                removeFloatingWebViews(icsimView, udsimView);
             }
         }
 
-        // Remove floating WebView and restore to container
-        private void removeFloatingWebView(WebView webView) {
+        // Remove floating container and restore BOTH WebViews
+        private void removeFloatingWebViews(WebView icsimView, WebView udsimView) {
             if (floatingContainer != null) {
                 WindowManager wm = (WindowManager) requireContext().getSystemService(Context.WINDOW_SERVICE);
                 try {
@@ -2402,24 +2437,34 @@ public class CARsenalFragment extends Fragment {
                 } catch (IllegalArgumentException ignored) {}
                 floatingContainer = null;
 
-                // Return WebView back to main container
-                FrameLayout container = requireView().findViewById(R.id.icsim_container);
-                if (webView.getParent() != null) ((ViewGroup) webView.getParent()).removeView(webView);
-                container.addView(webView, new FrameLayout.LayoutParams(
+                // Restore ICSIM WebView
+                FrameLayout icsimContainer = requireView().findViewById(R.id.icsim_container);
+                if (icsimView.getParent() != null) ((ViewGroup) icsimView.getParent()).removeView(icsimView);
+                icsimContainer.addView(icsimView, new FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT
+                ));
+
+                // Restore UDSIM WebView
+                FrameLayout udsimContainer = requireView().findViewById(R.id.udsim_container);
+                if (udsimView.getParent() != null) ((ViewGroup) udsimView.getParent()).removeView(udsimView);
+                udsimContainer.addView(udsimView, new FrameLayout.LayoutParams(
                         FrameLayout.LayoutParams.MATCH_PARENT,
                         FrameLayout.LayoutParams.MATCH_PARENT
                 ));
             }
         }
 
-        // Show WebView in floating overlay
+        // Show BOTH ICSIM + UDSIM WebViews in floating overlay
         @RequiresApi(api = Build.VERSION_CODES.O)
-        private void showFloatingWebView(WebView webView) {
+        private void showFloatingWebView(WebView icsimView, WebView udsimView) {
             if (floatingContainer != null) return;
 
             final WindowManager wm = (WindowManager) requireContext().getSystemService(Context.WINDOW_SERVICE);
 
-            if (webView.getParent() != null) ((ViewGroup) webView.getParent()).removeView(webView);
+            // Detach WebViews if they already have a parent
+            if (icsimView.getParent() != null) ((ViewGroup) icsimView.getParent()).removeView(icsimView);
+            if (udsimView.getParent() != null) ((ViewGroup) udsimView.getParent()).removeView(udsimView);
 
             floatingContainer = new FrameLayout(requireContext());
             int floatingInitialWidth = 800;
@@ -2437,10 +2482,34 @@ public class CARsenalFragment extends Fragment {
             cardView.setStrokeWidth(4);
             cardView.setPreventCornerOverlap(false);
 
-            FrameLayout innerWrapper = new FrameLayout(requireContext());
-            innerWrapper.addView(webView, new FrameLayout.LayoutParams(
+            // 🔹 Vertical layout wrapper for ICSIM + UDSIM
+            LinearLayout verticalWrapper = new LinearLayout(requireContext());
+            verticalWrapper.setOrientation(LinearLayout.VERTICAL);
+            verticalWrapper.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT
+            ));
+
+            // Inner wrapper for ICSIM
+            FrameLayout icsimWrapper = new FrameLayout(requireContext());
+            icsimWrapper.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
+            ));
+            icsimWrapper.addView(icsimView, new FrameLayout.LayoutParams(
                     FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT
             ));
+
+            // Inner wrapper for UDSIM
+            FrameLayout udsimWrapper = new FrameLayout(requireContext());
+            udsimWrapper.setLayoutParams(new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.MATCH_PARENT, 0, 1f
+            ));
+            udsimWrapper.addView(udsimView, new FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT
+            ));
+
+            // Add both wrappers to vertical layout
+            verticalWrapper.addView(icsimWrapper);
+            verticalWrapper.addView(udsimWrapper);
 
             // Transparent overlay for touch handling
             View overlay = new View(requireContext());
@@ -2448,9 +2517,10 @@ public class CARsenalFragment extends Fragment {
                     FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT
             ));
             overlay.setBackgroundColor(Color.TRANSPARENT);
-            innerWrapper.addView(overlay);
 
-            cardView.addView(innerWrapper);
+            // Add everything inside card
+            cardView.addView(verticalWrapper);
+            cardView.addView(overlay);
             floatingContainer.addView(cardView);
 
             // Close button
@@ -2462,7 +2532,9 @@ public class CARsenalFragment extends Fragment {
             floatingContainer.addView(closeBtn);
             ViewCompat.setElevation(closeBtn, 16f);
 
-            closeBtn.setOnClickListener(v -> removeFloatingWebView(webView));
+            closeBtn.setOnClickListener(v -> {
+                removeFloatingWebViews(icsimView, udsimView);
+            });
 
             final WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(
                     floatingInitialWidth, floatingInitialHeight,
@@ -2534,7 +2606,6 @@ public class CARsenalFragment extends Fragment {
                                 float dx = Math.abs(event.getRawX() - startTouchX);
                                 float dy = Math.abs(event.getRawY() - startTouchY);
                                 if (dx < CLICK_THRESHOLD && dy < CLICK_THRESHOLD) {
-                                    // Treat as click
                                     v.performClick();
                                 }
                                 return true;
@@ -2582,6 +2653,7 @@ public class CARsenalFragment extends Fragment {
         public static class ICSIMWebViewHolder {
             private static WebView icsimWebView;
             private static WebView controlsWebView;
+            private static WebView udsimWebView;
 
             public static WebView getICSIMWebView(Context context) {
                 if (icsimWebView == null) {
@@ -2597,6 +2669,14 @@ public class CARsenalFragment extends Fragment {
                     setupWebView(controlsWebView);
                 }
                 return controlsWebView;
+            }
+
+            public static WebView getUDSIMWebView(Context context) {
+                if (udsimWebView == null) {
+                    udsimWebView = new WebView(context.getApplicationContext());
+                    setupWebView(udsimWebView);
+                }
+                return udsimWebView;
             }
 
             @SuppressLint("SetJavaScriptEnabled")
@@ -2999,21 +3079,28 @@ public class CARsenalFragment extends Fragment {
                         Activity activity = (Activity) context;
                         FrameLayout icsimContainer = activity.findViewById(R.id.icsim_container);
                         FrameLayout controlsContainer = activity.findViewById(R.id.controls_container);
+                        FrameLayout udsimContainer = activity.findViewById(R.id.udsim_container);
 
-                        WebView icsimView = CANICSIMFragment.ICSIMWebViewHolder.getICSIMWebView(context);
-                        WebView controlsView = CANICSIMFragment.ICSIMWebViewHolder.getControlsWebView(context);
+                        WebView icsimView = SIMFragment.ICSIMWebViewHolder.getICSIMWebView(context);
+                        WebView controlsView = SIMFragment.ICSIMWebViewHolder.getControlsWebView(context);
+                        WebView udsimView = SIMFragment.ICSIMWebViewHolder.getUDSIMWebView(context);
 
                         // Remove from any old parent
                         if (icsimView.getParent() != null) ((ViewGroup) icsimView.getParent()).removeView(icsimView);
                         if (controlsView.getParent() != null) ((ViewGroup) controlsView.getParent()).removeView(controlsView);
+                        if (udsimView.getParent() != null) ((ViewGroup) udsimView.getParent()).removeView(udsimView);
 
                         // Re-add to containers
-                        if (icsimContainer != null && controlsContainer != null) {
+                        if (icsimContainer != null && controlsContainer != null && udsimContainer != null) {
                             icsimContainer.addView(icsimView, new FrameLayout.LayoutParams(
                                     FrameLayout.LayoutParams.MATCH_PARENT,
                                     FrameLayout.LayoutParams.MATCH_PARENT
                             ));
                             controlsContainer.addView(controlsView, new FrameLayout.LayoutParams(
+                                    FrameLayout.LayoutParams.MATCH_PARENT,
+                                    FrameLayout.LayoutParams.MATCH_PARENT
+                            ));
+                            udsimContainer.addView(udsimView, new FrameLayout.LayoutParams(
                                     FrameLayout.LayoutParams.MATCH_PARENT,
                                     FrameLayout.LayoutParams.MATCH_PARENT
                             ));
@@ -3023,9 +3110,10 @@ public class CARsenalFragment extends Fragment {
                             if (output != null && !output.isEmpty()) {
                                 icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale&view_only=true");
                                 controlsView.loadUrl("http://localhost:6081/vnc.html?autoconnect=true&resize=scale");
+                                udsimView.loadUrl("http://localhost:6082/vnc.html?autoconnect=true&resize=scale");
                             }
 
-                            Toast.makeText(context, "Refreshing ICSim display...", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(context, "Refreshing ICSim and UDSim display...", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });

@@ -697,7 +697,7 @@
     <string name="can_tools_desc">Unleash the power of can-utils suite, diagnose your car using Freediag and transfer CAN frames between two machines using Cannelloni!</string>
     <string name="can_canusb_desc">Use your CAN Analyzer USB by Dumping and Sending signals using usb-can!</string>
     <string name="can_caribou_desc">A friendly automotive security exploration tool.</string>
-    <string name="can_icsim_desc">Instrument Cluster Simulator for SocketCAN</string>
+    <string name="can_sim_desc">Instrument Cluster Simulator for SocketCAN (ICSim) and Unified Diagnostic Services Simulator (UDSim)</string>
     <string name="can_msf_desc">Use Metasploit Automotive modules!</string>
     <string name="can_app_name">MyApp</string>
     <string name="can_settings">Settings</string>
@@ -806,7 +806,7 @@
     <string name="DelayValue">1</string>
     <string name="IDValue">0x003</string>
     <!-- ICSim -->
-    <string name="icsim">Instrument Cluster Simulator</string>
+    <string name="sim">Simulator</string>
     <string name="Configuration">Configuration</string>
     <!-- MSF Automotive -->
     <string name="msfautomotive">MSF Automotive</string>
