@@ -2408,7 +2408,7 @@ public class CARsenalFragment extends Fragment {
                 String levelValue = getVisibleParam(levelList);
 
                 if (!levelValue.isEmpty()) {
-                    combinedCmd += " " + levelValue;
+                    combinedCmd += levelValue;
                 }
                 combinedCmd += " && sh " + UDSIM_SCRIPT_PATH + " " + selected_caniface;
                 if (!udsimConfig.isEmpty()) {
