@@ -141,7 +141,8 @@ public class CopyBootFilesExecutor {
         } else {
             Log.d(tag, message);
         }
-        logToast(message); // Show toast for debug messages
+        //Enable if debugging
+        //logToast(message); // Show toast for debug messages
     }
 
     private void logToast(String message) {
