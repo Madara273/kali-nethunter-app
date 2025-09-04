@@ -1759,6 +1759,7 @@ public class CARsenalFragment extends Fragment {
         private TextInputLayout whitelistContainer, indexContainer, arbIDContainer, dataContainer, blacklistContainer;
         private TextInputLayout dtypeContainer, stypeContainer, messageContainer, timeoutContainer, autoBlacklistContainer;
         private TextInputLayout durationContainer, mindidContainer, maxdidContainer, numberContainer;
+        private TextInputLayout memLengthContainer, memSizeContainer, addrByteSizeContainer, memLengthByteSizeContainer;
         private ViewGroup loopContainer, padContainer, outputContainer, fileContainer, reverseContainer;
         private ViewGroup requestsContainer, candumpContainer, responsesContainer, skipverifyContainer;
         private ViewGroup sprContainer, ecuResetTypeContainer, sessionTypeContainer, securityLevelContainer;
@@ -1817,6 +1818,10 @@ public class CARsenalFragment extends Fragment {
             autoBlacklistContainer = rootView.findViewById(R.id.autoBlacklist_container);
             timeoutContainer = rootView.findViewById(R.id.timeout_container);
             durationContainer = rootView.findViewById(R.id.duration_container);
+            memLengthContainer = rootView.findViewById(R.id.memLength_container);
+            memSizeContainer = rootView.findViewById(R.id.memSize_container);
+            addrByteSizeContainer = rootView.findViewById(R.id.addrByteSize_container);
+            memLengthByteSizeContainer = rootView.findViewById(R.id.memLengthByteSize_container);
 
             sprContainer = rootView.findViewById(R.id.spr_container);
             skipverifyContainer = rootView.findViewById(R.id.skipverify_container);
@@ -1959,7 +1964,7 @@ public class CARsenalFragment extends Fragment {
             subModulesMap.put("Listener", new String[]{"Sub-Modules", "None"});
             subModulesMap.put("module_template", new String[]{"Sub-Modules", "None"});
             subModulesMap.put("Send", new String[]{"Sub-Modules", "file", "message"});
-            subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services", "subservices", "ecu_reset", "testerpresent", "security_seed", "dump_dids", "auto"});
+            subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services", "subservices", "ecu_reset", "testerpresent", "security_seed", "dump_dids", "read_mem", "auto"});
             subModulesMap.put("XCP", new String[]{"Sub-Modules", "discovery", "info", "commands", "dump"});
 
             ArrayAdapter<String> moduleAdapter = createDisabledFirstItemAdapter(modules);
@@ -2040,6 +2045,10 @@ public class CARsenalFragment extends Fragment {
                     numberContainer.setVisibility(View.GONE);
                     securityLevelContainer.setVisibility(View.GONE);
                     sessionTypeContainer.setVisibility(View.GONE);
+                    memLengthContainer.setVisibility(View.GONE);
+                    memSizeContainer.setVisibility(View.GONE);
+                    addrByteSizeContainer.setVisibility(View.GONE);
+                    memLengthByteSizeContainer.setVisibility(View.GONE);
 
                     // Show only for specific submodules
                     if ("Dump".equals(selectedModule)) {
@@ -2147,6 +2156,18 @@ public class CARsenalFragment extends Fragment {
                             delayContainer.setVisibility(View.VISIBLE);
                             sprContainer.setVisibility(View.VISIBLE);
                             srcContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("read_mem".equals(selectedSubModule)) {
+                            timeoutContainer.setVisibility(View.VISIBLE);
+                            startAddrContainer.setVisibility(View.VISIBLE);
+                            memLengthContainer.setVisibility(View.VISIBLE);
+                            memSizeContainer.setVisibility(View.VISIBLE);
+                            addrByteSizeContainer.setVisibility(View.VISIBLE);
+                            memLengthByteSizeContainer.setVisibility(View.VISIBLE);
+                            outputContainer.setVisibility(View.VISIBLE);
+                            fileContainer.setVisibility(View.VISIBLE);
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
                         }
                         if ("auto".equals(selectedSubModule)) {
                             timeoutContainer.setVisibility(View.VISIBLE);
@@ -2500,6 +2521,17 @@ public class CARsenalFragment extends Fragment {
                 }
             }
 
+            String outputEnabled = "";
+            if (outputContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat outputSwitch = outputContainer.findViewById(R.id.btn_toggle_output);
+                if (outputSwitch != null && outputSwitch.isChecked()) {
+                    String filePath = SelectedFile.getText().toString().trim();
+                    if (!filePath.isEmpty()) {
+                        outputEnabled = " --outfile " + filePath;
+                    }
+                }
+            }
+
             String dtypeValue = getVisibleParam(dtypeContainer.getEditText(), " ");
             String stypeValue = getVisibleParam(stypeContainer.getEditText(), " ");
             String srcValue = getVisibleParam(srcContainer.getEditText(), " ");
@@ -2514,6 +2546,11 @@ public class CARsenalFragment extends Fragment {
             String numberValue = getVisibleParam(numberContainer.getEditText(), " --num ");
             String blacklistValue = getVisibleParam(blacklistContainer.getEditText(), " --blacklist ");
             String autoBlacklistValue = getVisibleParam(autoBlacklistContainer.getEditText(), " --autoblacklist ");
+            String startAddrValue = getVisibleParam(startAddrContainer.getEditText(), " --start_addr ");
+            String memLengthValue = getVisibleParam(memLengthContainer.getEditText(), " --mem_length ");
+            String memSizeValue = getVisibleParam(memSizeContainer.getEditText(), " --mem_size ");
+            String addrByteSizeValue = getVisibleParam(addrByteSizeContainer.getEditText(), " --address_byte_size ");
+            String memLengthByteSizeValue = getVisibleParam(memLengthByteSizeContainer.getEditText(), " --memory_length_byte_size ");
             String ecuResetValue = getVisibleSpinnerValue(ecuResetTypeSpinner, ecuResetTypeContainer, " ");
             String sessiontypeValue = getVisibleSpinnerOrInputValue(
                     sessionTypeSpinner,
@@ -2553,6 +2590,9 @@ public class CARsenalFragment extends Fragment {
                     break;
                 case "dump_dids":
                     run_cmd(cmdBase + "dump_dids" + timeoutValue + mindidValue + maxdidValue + srcValue + dstValue);
+                    break;
+                case "read_mem":
+                    run_cmd(cmdBase + "read_mem" + timeoutValue + startAddrValue + memLengthValue + memSizeValue + addrByteSizeValue + memLengthByteSizeValue + outputEnabled + srcValue + dstValue);
                     break;
                 case "auto":
                     run_cmd(cmdBase + "auto" + minValue + maxValue + blacklistValue + autoBlacklistValue + skipverifyEnabled + delayValue + timeoutValue + mindidValue + maxdidValue);

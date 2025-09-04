@@ -155,6 +155,37 @@
 
                 </LinearLayout>
 
+                <LinearLayout
+                    android:id="@+id/button_row7"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center">
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/output_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        app:cardCornerRadius="4dp"
+                        android:padding="8dp">
+
+                        <androidx.appcompat.widget.SwitchCompat
+                            android:id="@+id/btn_toggle_output"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="@string/Output"
+                            android:textColor="@android:color/holo_red_light"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:paddingStart="12dp"
+                            android:gravity="center_vertical"
+                            tools:ignore="RtlSymmetry" />
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                </LinearLayout>
+
                 <!-- file_container row -->
                 <LinearLayout
                     android:id="@+id/file_container"
@@ -427,37 +458,6 @@
                 </LinearLayout>
 
                 <LinearLayout
-                    android:id="@+id/button_row7"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="8dp"
-                    android:gravity="center">
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:id="@+id/output_container"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        app:cardCornerRadius="4dp"
-                        android:padding="8dp">
-
-                        <androidx.appcompat.widget.SwitchCompat
-                            android:id="@+id/btn_toggle_output"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/Output"
-                            android:textColor="@android:color/holo_red_light"
-                            android:textAppearance="?android:attr/textAppearanceSmall"
-                            android:paddingStart="12dp"
-                            android:gravity="center_vertical"
-                            tools:ignore="RtlSymmetry" />
-
-                    </com.google.android.material.card.MaterialCardView>
-
-                </LinearLayout>
-
-                <LinearLayout
                     android:id="@+id/button_row8"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -608,6 +608,29 @@
                             android:layout_height="wrap_content"
                             android:inputType="text"
                             android:text="@string/StartAddressValue"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/timeout_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Timeout (default: 0.2)">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/timeout_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="text"
+                            android:text="0.2"
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
@@ -1084,29 +1107,6 @@
                             android:textAppearance="?android:attr/textAppearanceSmall"
                             android:textColor="@color/white" />
                     </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/timeout_container"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:layout_marginStart="3dp"
-                        app:strokeWidth="2dp"
-                        app:boxStrokeWidthFocused="3dp"
-                        app:boxStrokeColor="@color/ifc_box_stroke"
-                        app:boxBackgroundColor="@color/transparent"
-                        app:hintTextColor="@color/ifc_hint_text"
-                        android:hint="Timeout (default: 0.2)">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/timeout_value"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:inputType="text"
-                            android:text="0.2"
-                            android:textAppearance="?android:attr/textAppearanceSmall"
-                            android:textColor="@color/white" />
-                    </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
 
                 <LinearLayout
@@ -1161,6 +1161,114 @@
                     </com.google.android.material.textfield.TextInputLayout>
                 </LinearLayout>
 
+                <LinearLayout
+                    android:id="@+id/advanced_row_8"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:baselineAligned="false">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/memLength_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Mem Length">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/memLength_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:text="256"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/memSize_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Mem Size">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/memSize_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:text="16"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/advanced_row_9"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:baselineAligned="false">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/addrByteSize_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Addr. Byte Size">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/addrByteSize_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:text="4"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/memLengthByteSize_container"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginStart="3dp"
+                        app:strokeWidth="2dp"
+                        app:boxStrokeWidthFocused="3dp"
+                        app:boxStrokeColor="@color/ifc_box_stroke"
+                        app:boxBackgroundColor="@color/transparent"
+                        app:hintTextColor="@color/ifc_hint_text"
+                        android:hint="Mem Length Byte Size">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/memLengthByteSize_value"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:inputType="number"
+                            android:text="2"
+                            android:textAppearance="?android:attr/textAppearanceSmall"
+                            android:textColor="@color/white" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
             </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
