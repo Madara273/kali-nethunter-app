@@ -197,6 +197,37 @@
                 </LinearLayout>
 
                 <LinearLayout
+                    android:id="@+id/spinner_row_ecureset"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:orientation="horizontal">
+
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="48dp">
+
+                        <com.google.android.material.card.MaterialCardView
+                            android:id="@+id/spinner_ecureset_type_card"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            app:strokeColor="@color/nh_box_stroke_spinner"
+                            app:strokeWidth="2dp"
+                            android:padding="4dp"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent">
+
+                            <Spinner
+                                android:id="@+id/ecureset_type_spinner"
+                                android:layout_width="match_parent"
+                                android:layout_height="48dp"
+                                android:spinnerMode="dropdown"/>
+                        </com.google.android.material.card.MaterialCardView>
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+                </LinearLayout>
+
+                <LinearLayout
                     android:id="@+id/button_row4"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"

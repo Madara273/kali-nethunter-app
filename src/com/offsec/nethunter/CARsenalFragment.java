@@ -1752,6 +1752,7 @@ public class CARsenalFragment extends Fragment {
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private EditText SelectedFile;
         private EditText SelectedMessage;
+        private Spinner ecuResetTypeSpinner;
         private String selected_caniface = "";
         private TextInputLayout seedContainer, minContainer, maxContainer, srcContainer, dstContainer;
         private TextInputLayout delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer;
@@ -1760,7 +1761,7 @@ public class CARsenalFragment extends Fragment {
         private TextInputLayout durationContainer, mindidContainer, maxdidContainer;
         private ViewGroup loopContainer, padContainer, outputContainer, fileContainer, reverseContainer;
         private ViewGroup requestsContainer, candumpContainer, responsesContainer, skipverifyContainer;
-        private ViewGroup sprContainer;
+        private ViewGroup sprContainer, ecuResetTypeContainer;
 
         private ArrayAdapter<String> createDisabledFirstItemAdapter(String[] items) {
             return new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, items) {
@@ -1830,6 +1831,23 @@ public class CARsenalFragment extends Fragment {
             SelectedFile = rootView.findViewById(R.id.caribou_file);
 
 
+            // Spinner for ECU Reset Type
+            ecuResetTypeContainer = rootView.findViewById(R.id.spinner_row_ecureset);
+            ecuResetTypeSpinner = rootView.findViewById(R.id.ecureset_type_spinner);
+
+            String[] ecuResetOptions = {
+                    "Select ECU Reset Type",  // disabled first entry
+                    "1=hard",
+                    "2=key off/on",
+                    "3=soft",
+                    "4=enable rapid power shutdown",
+                    "5=disable rapid power shutdown"
+            };
+
+            ArrayAdapter<String> ecuResetAdapter = createDisabledFirstItemAdapter(ecuResetOptions);
+            ecuResetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            ecuResetTypeSpinner.setAdapter(ecuResetAdapter);
+
             // Browse File
             ImageButton browseButton = rootView.findViewById(R.id.cariboufilebrowse);
             browseButton.setOnClickListener(v -> {
@@ -1865,7 +1883,7 @@ public class CARsenalFragment extends Fragment {
             subModulesMap.put("Listener", new String[]{"Sub-Modules", "None"});
             subModulesMap.put("module_template", new String[]{"Sub-Modules", "None"});
             subModulesMap.put("Send", new String[]{"Sub-Modules", "file", "message"});
-            subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services", "subservices", "testerpresent", "dump_dids", "auto"});
+            subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services", "subservices", "ecu_reset", "testerpresent", "dump_dids", "auto"});
             subModulesMap.put("XCP", new String[]{"Sub-Modules", "discovery", "info", "commands", "dump"});
 
             ArrayAdapter<String> moduleAdapter = createDisabledFirstItemAdapter(modules);
@@ -1942,6 +1960,7 @@ public class CARsenalFragment extends Fragment {
                     dtypeContainer.setVisibility(View.GONE);
                     durationContainer.setVisibility(View.GONE);
                     sprContainer.setVisibility(View.GONE);
+                    ecuResetTypeContainer.setVisibility(View.GONE);
 
                     // Show only for specific submodules
                     if ("Dump".equals(selectedModule)) {
@@ -2029,6 +2048,12 @@ public class CARsenalFragment extends Fragment {
                             stypeContainer.setVisibility(View.VISIBLE);
                             dtypeContainer.setVisibility(View.VISIBLE);
                         }
+                        if ("ecu_reset".equals(selectedSubModule)) {
+                            timeoutContainer.setVisibility(View.VISIBLE);
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
+                            ecuResetTypeContainer.setVisibility(View.VISIBLE);
+                        }
                         if ("testerpresent".equals(selectedSubModule)) {
                             durationContainer.setVisibility(View.VISIBLE);
                             delayContainer.setVisibility(View.VISIBLE);
@@ -2114,6 +2139,19 @@ public class CARsenalFragment extends Fragment {
                     if (!input.isEmpty() && !input.equals(editText.getHint().toString())) {
                         return prefix + input;
                     }
+                }
+            }
+            return "";
+        }
+
+        private String getVisibleSpinnerValue(Spinner spinner, ViewGroup container, String prefix) {
+            if (container.getVisibility() == View.VISIBLE && container.isEnabled()) {
+                int pos = spinner.getSelectedItemPosition();
+                if (pos > 0) { // ignore "Select ECU Reset Type"
+                    String selected = (String) spinner.getSelectedItem();
+                    // only keep digit before '='
+                    String digit = selected.split("=")[0];
+                    return prefix + digit;
                 }
             }
             return "";
@@ -2353,6 +2391,7 @@ public class CARsenalFragment extends Fragment {
             String timeoutValue = getVisibleParam(timeoutContainer.getEditText(), " -t ");
             String blacklistValue = getVisibleParam(blacklistContainer.getEditText(), " --blacklist ");
             String autoBlacklistValue = getVisibleParam(autoBlacklistContainer.getEditText(), " --autoblacklist ");
+            String ecuResetValue = getVisibleSpinnerValue(ecuResetTypeSpinner, ecuResetTypeContainer, " ");
 
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds ";
 
@@ -2364,7 +2403,10 @@ public class CARsenalFragment extends Fragment {
                     run_cmd(cmdBase + "services" + timeoutValue + srcValue + dstValue);
                     break;
                 case "subservices":
-                    run_cmd(cmdBase + "subservices" + timeoutValue + dtypeValue + stypeValue + srcValue + dstValue);
+                    run_cmd(cmdBase + "subservices" + timeoutValue + dtypeValue + srcValue + dstValue);
+                    break;
+                case "ecu_reset":
+                    run_cmd(cmdBase + "ecu_reset" + timeoutValue + ecuResetValue + stypeValue + srcValue + dstValue);
                     break;
                 case "testerpresent":
                     run_cmd(cmdBase + "testerpresent" + delayValue + durationValue + sprEnabled + srcValue);
