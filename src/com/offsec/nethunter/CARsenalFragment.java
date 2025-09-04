@@ -1752,16 +1752,18 @@ public class CARsenalFragment extends Fragment {
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private EditText SelectedFile;
         private EditText SelectedMessage;
-        private Spinner ecuResetTypeSpinner;
+        private Spinner ecuResetTypeSpinner, sessionTypeSpinner, securityLevelSpinner;
         private String selected_caniface = "";
         private TextInputLayout seedContainer, minContainer, maxContainer, srcContainer, dstContainer;
         private TextInputLayout delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer;
         private TextInputLayout whitelistContainer, indexContainer, arbIDContainer, dataContainer, blacklistContainer;
         private TextInputLayout dtypeContainer, stypeContainer, messageContainer, timeoutContainer, autoBlacklistContainer;
-        private TextInputLayout durationContainer, mindidContainer, maxdidContainer;
+        private TextInputLayout durationContainer, mindidContainer, maxdidContainer, numberContainer;
         private ViewGroup loopContainer, padContainer, outputContainer, fileContainer, reverseContainer;
         private ViewGroup requestsContainer, candumpContainer, responsesContainer, skipverifyContainer;
-        private ViewGroup sprContainer, ecuResetTypeContainer;
+        private ViewGroup sprContainer, ecuResetTypeContainer, sessionTypeContainer, securityLevelContainer;
+        private TextInputLayout sessionTypeInputContainer, securityLevelInputContainer;
+
 
         private ArrayAdapter<String> createDisabledFirstItemAdapter(String[] items) {
             return new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, items) {
@@ -1829,11 +1831,21 @@ public class CARsenalFragment extends Fragment {
             SelectedMessage = rootView.findViewById(R.id.caribou_message);
             fileContainer = rootView.findViewById(R.id.file_container);
             SelectedFile = rootView.findViewById(R.id.caribou_file);
-
+            numberContainer = rootView.findViewById(R.id.number_container);
 
             // Spinner for ECU Reset Type
             ecuResetTypeContainer = rootView.findViewById(R.id.spinner_row_ecureset);
             ecuResetTypeSpinner = rootView.findViewById(R.id.ecureset_type_spinner);
+
+            // Spinner for security_seed (sessionType)
+            sessionTypeContainer = rootView.findViewById(R.id.spinner_row_stype);
+            sessionTypeSpinner = rootView.findViewById(R.id.stype_spinner);
+            sessionTypeInputContainer = rootView.findViewById(R.id.stype_input_container);
+
+            // Spinner for security_seed (securityLevel)
+            securityLevelContainer = rootView.findViewById(R.id.spinner_row_level);
+            securityLevelSpinner = rootView.findViewById(R.id.level_spinner);
+            securityLevelInputContainer = rootView.findViewById(R.id.level_input_container);
 
             String[] ecuResetOptions = {
                     "Select ECU Reset Type",  // disabled first entry
@@ -1847,6 +1859,70 @@ public class CARsenalFragment extends Fragment {
             ArrayAdapter<String> ecuResetAdapter = createDisabledFirstItemAdapter(ecuResetOptions);
             ecuResetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             ecuResetTypeSpinner.setAdapter(ecuResetAdapter);
+
+            // Spinner for security_seed (sessionType)
+            String[] sessionTypeOptions = {
+                    "Select Session Type",
+                    "1=defaultSession",
+                    "2=programmingSession",
+                    "3=extendedSession",
+                    "4=safetySession",
+                    "0x40-0x5F=OEM",
+                    "0x60-0x7E=Supplier",
+                    "0x0,0x5-0x3F,0x7F=ISOSAEReserved"
+            };
+
+            ArrayAdapter<String> sessionTypeAdapter = createDisabledFirstItemAdapter(sessionTypeOptions);
+            sessionTypeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            sessionTypeSpinner.setAdapter(sessionTypeAdapter);
+
+            sessionTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    if (position > 0) {
+                        String selected = (String) sessionTypeSpinner.getSelectedItem();
+                        if (selected.contains("-") || selected.contains(",")) {
+                            sessionTypeInputContainer.setVisibility(View.VISIBLE);
+                        } else {
+                            sessionTypeInputContainer.setVisibility(View.GONE);
+                        }
+                    } else {
+                        sessionTypeInputContainer.setVisibility(View.GONE);
+                    }
+                }
+                @Override public void onNothingSelected(AdapterView<?> parent) {}
+            });
+
+            // Spinner for security_seed (securityLevel)
+            String[] securityLevelOptions = {
+                    "Select Security Level",
+                    "0x1-0x41=OEM",
+                    "0x5F=EOLPyrotechnics",
+                    "0x61-0x7E=Supplier",
+                    "0x0,0x43-0x5E,0x7F=ISOSAEReserved"
+            };
+
+            ArrayAdapter<String> securityLevelAdapter = createDisabledFirstItemAdapter(securityLevelOptions);
+            securityLevelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            securityLevelSpinner.setAdapter(securityLevelAdapter);
+
+            securityLevelSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    if (position > 0) {
+                        String selected = (String) securityLevelSpinner.getSelectedItem();
+                        if (selected.contains("-") || selected.contains(",")) {
+                            securityLevelInputContainer.setVisibility(View.VISIBLE);
+                        } else {
+                            securityLevelInputContainer.setVisibility(View.GONE);
+                        }
+                    } else {
+                        securityLevelInputContainer.setVisibility(View.GONE);
+                    }
+                }
+                @Override public void onNothingSelected(AdapterView<?> parent) {}
+            });
+
 
             // Browse File
             ImageButton browseButton = rootView.findViewById(R.id.cariboufilebrowse);
@@ -1883,7 +1959,7 @@ public class CARsenalFragment extends Fragment {
             subModulesMap.put("Listener", new String[]{"Sub-Modules", "None"});
             subModulesMap.put("module_template", new String[]{"Sub-Modules", "None"});
             subModulesMap.put("Send", new String[]{"Sub-Modules", "file", "message"});
-            subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services", "subservices", "ecu_reset", "testerpresent", "dump_dids", "auto"});
+            subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services", "subservices", "ecu_reset", "testerpresent", "security_seed", "dump_dids", "auto"});
             subModulesMap.put("XCP", new String[]{"Sub-Modules", "discovery", "info", "commands", "dump"});
 
             ArrayAdapter<String> moduleAdapter = createDisabledFirstItemAdapter(modules);
@@ -1961,6 +2037,9 @@ public class CARsenalFragment extends Fragment {
                     durationContainer.setVisibility(View.GONE);
                     sprContainer.setVisibility(View.GONE);
                     ecuResetTypeContainer.setVisibility(View.GONE);
+                    numberContainer.setVisibility(View.GONE);
+                    securityLevelContainer.setVisibility(View.GONE);
+                    sessionTypeContainer.setVisibility(View.GONE);
 
                     // Show only for specific submodules
                     if ("Dump".equals(selectedModule)) {
@@ -2054,6 +2133,15 @@ public class CARsenalFragment extends Fragment {
                             dstContainer.setVisibility(View.VISIBLE);
                             ecuResetTypeContainer.setVisibility(View.VISIBLE);
                         }
+                        if ("security_seed".equals(selectedSubModule)) {
+                            delayContainer.setVisibility(View.VISIBLE);
+                            numberContainer.setVisibility(View.VISIBLE);
+                            ecuResetTypeContainer.setVisibility(View.VISIBLE);
+                            sessionTypeContainer.setVisibility(View.VISIBLE);
+                            securityLevelContainer.setVisibility(View.VISIBLE);
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
+                        }
                         if ("testerpresent".equals(selectedSubModule)) {
                             durationContainer.setVisibility(View.VISIBLE);
                             delayContainer.setVisibility(View.VISIBLE);
@@ -2145,14 +2233,48 @@ public class CARsenalFragment extends Fragment {
         }
 
         private String getVisibleSpinnerValue(Spinner spinner, ViewGroup container, String prefix) {
-            if (container.getVisibility() == View.VISIBLE && container.isEnabled()) {
+            if (container != null && container.getVisibility() == View.VISIBLE && container.isEnabled()) {
                 int pos = spinner.getSelectedItemPosition();
-                if (pos > 0) { // ignore "Select ECU Reset Type"
+                if (pos > 0) { // skip the disabled placeholder (like "Select...")
                     String selected = (String) spinner.getSelectedItem();
-                    // only keep digit before '='
-                    String digit = selected.split("=")[0];
-                    return prefix + digit;
+
+                    // If option contains "=", take the part before "="
+                    if (selected.contains("=")) {
+                        selected = selected.split("=")[0].trim();
+                    }
+
+                    return prefix + selected;
                 }
+            }
+            return "";
+        }
+
+        private String getVisibleSpinnerOrInputValue(
+                Spinner spinner,
+                ViewGroup spinnerContainer,
+                TextInputLayout inputContainer,
+                String prefix
+        ) {
+            if (spinnerContainer.getVisibility() == View.VISIBLE && spinner.getSelectedItemPosition() > 0) {
+                String selected = (String) spinner.getSelectedItem();
+
+                // Case 1: Range or list → user must type value
+                if (selected.contains("-") || selected.contains(",")) {
+                    if (inputContainer.getVisibility() == View.VISIBLE) {
+                        String input = inputContainer.getEditText().getText().toString().trim();
+                        if (!input.isEmpty()) {
+                            return prefix + input;  // e.g. " 0x40"
+                        }
+                    }
+                    return ""; // no input provided
+                }
+
+                // Case 2: Single discrete value like "1=defaultSession"
+                if (selected.contains("=")) {
+                    return prefix + selected.split("=")[0]; // take part before '=' → "1"
+                }
+
+                return prefix + selected; // fallback
             }
             return "";
         }
@@ -2389,9 +2511,23 @@ public class CARsenalFragment extends Fragment {
             String delayValue = getVisibleParam(delayContainer.getEditText(), " -d ");
             String durationValue = getVisibleParam(durationContainer.getEditText(), " --duration ");
             String timeoutValue = getVisibleParam(timeoutContainer.getEditText(), " -t ");
+            String numberValue = getVisibleParam(numberContainer.getEditText(), " --num ");
             String blacklistValue = getVisibleParam(blacklistContainer.getEditText(), " --blacklist ");
             String autoBlacklistValue = getVisibleParam(autoBlacklistContainer.getEditText(), " --autoblacklist ");
             String ecuResetValue = getVisibleSpinnerValue(ecuResetTypeSpinner, ecuResetTypeContainer, " ");
+            String sessiontypeValue = getVisibleSpinnerOrInputValue(
+                    sessionTypeSpinner,
+                    sessionTypeContainer,
+                    sessionTypeInputContainer,
+                    " "
+            );
+
+            String levelValue = getVisibleSpinnerOrInputValue(
+                    securityLevelSpinner,
+                    securityLevelContainer,
+                    securityLevelInputContainer,
+                    " "
+            );
 
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds ";
 
@@ -2410,6 +2546,10 @@ public class CARsenalFragment extends Fragment {
                     break;
                 case "testerpresent":
                     run_cmd(cmdBase + "testerpresent" + delayValue + durationValue + sprEnabled + srcValue);
+                    break;
+                case "security_seed":
+                    String resetValue = getVisibleSpinnerValue(ecuResetTypeSpinner, ecuResetTypeContainer, " --reset ");
+                    run_cmd(cmdBase + "security_seed" + resetValue + delayValue + numberValue + sessiontypeValue + levelValue + srcValue + dstValue);
                     break;
                 case "dump_dids":
                     run_cmd(cmdBase + "dump_dids" + timeoutValue + mindidValue + maxdidValue + srcValue + dstValue);
