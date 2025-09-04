@@ -2271,6 +2271,8 @@ public class CARsenalFragment extends Fragment {
         private static final long LONG_DELAY = 2000;
         private FrameLayout floatingContainer;
         private String selected_caniface = "";
+        private TextInputEditText udsimConfigEdit;
+        private ImageButton udsimBrowseBtn;
 
         @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
@@ -2317,6 +2319,15 @@ public class CARsenalFragment extends Fragment {
                         Uri.parse("package:" + requireContext().getPackageName()));
                 startActivity(intent);
             }
+
+            udsimConfigEdit = rootView.findViewById(R.id.udsim_config_path);
+            udsimBrowseBtn = rootView.findViewById(R.id.udsim_config_browse);
+
+            udsimBrowseBtn.setOnClickListener(v -> {
+                RootFileBrowserDialog browser = new RootFileBrowserDialog(requireContext(), udsimConfigEdit::setText);
+                browser.show();
+            });
+
 
             WebView icsimView = ICSIMWebViewHolder.getICSIMWebView(requireContext());
             WebView controlsView = ICSIMWebViewHolder.getControlsWebView(requireContext());
@@ -2391,9 +2402,20 @@ public class CARsenalFragment extends Fragment {
 
         private void runICSIM(WebView icsimView, WebView controlsView, Spinner levelList, WebView udsimView) {
             if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces")) {
+
+                String udsimConfig = udsimConfigEdit.getText().toString().trim();
+                String combinedCmd = "su -c 'sh " + ICSIM_SCRIPT_PATH + " " + selected_caniface;
                 String levelValue = getVisibleParam(levelList);
-                String icsim_start = "su -c 'sh " + ICSIM_SCRIPT_PATH + " " + selected_caniface + levelValue + ";sh " + UDSIM_SCRIPT_PATH + " " + selected_caniface + "'";
-                run_cmd(icsim_start);
+
+                if (!levelValue.isEmpty()) {
+                    combinedCmd += " " + levelValue;
+                }
+                combinedCmd += " && sh " + UDSIM_SCRIPT_PATH + " " + selected_caniface;
+                if (!udsimConfig.isEmpty()) {
+                    combinedCmd += " -c \"" + udsimConfig + "\"";
+                }
+                combinedCmd += "'";
+                run_cmd(combinedCmd);
                 showToast("Running ICSim and UDSim...");
 
                 new Handler().postDelayed(() -> {
@@ -2401,6 +2423,7 @@ public class CARsenalFragment extends Fragment {
                     controlsView.loadUrl("http://localhost:6081/vnc.html?autoconnect=true&resize=scale");
                     udsimView.loadUrl("http://localhost:6082/vnc.html?autoconnect=true&resize=scale");
                 }, SHORT_DELAY + LONG_DELAY);
+
             } else {
                 showToast("Please set a CAN interface!");
             }

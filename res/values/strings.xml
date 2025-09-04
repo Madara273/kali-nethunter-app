@@ -229,7 +229,7 @@
 
     <!-- Kernel -->
     <string name="kernel_description">Flash your custom kernel straight from Android. Still in experimental state. Some systems does not support runtime flashing. In that case, it is recommended to flash the kernel through recovery. Your device\'s actual codename may not be in the kernel repo, in that case, use the list below to find available device names.</string>
- 
+
     <!-- chroot stuff -->
     <array name="f_chrootmanager_build_chroot_arm_opts">
         <item>arm64</item>
@@ -808,6 +808,8 @@
     <!-- ICSim -->
     <string name="sim">Simulator</string>
     <string name="Configuration">Configuration</string>
+    <string name="UDSimConfigFile">UDSim Config File</string>
+    <string name="UDSimConfigPath">/opt/car_hacking/udsim_vcan_config</string>
     <!-- MSF Automotive -->
     <string name="msfautomotive">MSF Automotive</string>
     <string name="elmrelay">ELM327 Relay Configuration</string>
