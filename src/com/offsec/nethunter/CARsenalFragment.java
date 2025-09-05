@@ -1752,10 +1752,18 @@ public class CARsenalFragment extends Fragment {
         private final ExecutorService executorService = Executors.newCachedThreadPool();
         private EditText SelectedFile;
         private EditText SelectedMessage;
+        private Spinner ecuResetTypeSpinner, ecuResetMethodeSpinner, sessionTypeSpinner, securityLevelSpinner;
         private String selected_caniface = "";
-        private TextInputLayout seedContainer, minContainer, maxContainer, srcContainer, dstContainer, messageContainer;
+        private TextInputLayout seedContainer, minContainer, maxContainer, srcContainer, dstContainer;
         private TextInputLayout delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer;
-        private ViewGroup loopContainer, padContainer, outputContainer, fileContainer, reverseContainer, candumpContainer;
+        private TextInputLayout whitelistContainer, indexContainer, arbIDContainer, dataContainer, blacklistContainer;
+        private TextInputLayout dtypeContainer, stypeContainer, messageContainer, timeoutContainer, autoBlacklistContainer;
+        private TextInputLayout durationContainer, mindidContainer, maxdidContainer, numberContainer, interDelayContainer, iterationsContainer;
+        private TextInputLayout memLengthContainer, memSizeContainer, addrByteSizeContainer, memLengthByteSizeContainer;
+        private TextInputLayout sessionTypeInputContainer, securityLevelInputContainer, sessionSeqContainer, seedTargetContainer;
+        private ViewGroup loopContainer, padContainer, outputContainer, fileContainer, reverseContainer;
+        private ViewGroup requestsContainer, candumpContainer, responsesContainer, skipverifyContainer;
+        private ViewGroup sprContainer, ecuResetTypeContainer, ecuResetMethodeContainer, sessionTypeContainer, securityLevelContainer;
 
         private ArrayAdapter<String> createDisabledFirstItemAdapter(String[] items) {
             return new ArrayAdapter<String>(requireContext(), android.R.layout.simple_spinner_item, items) {
@@ -1792,22 +1800,153 @@ public class CARsenalFragment extends Fragment {
             maxContainer = rootView.findViewById(R.id.max_container);
             srcContainer = rootView.findViewById(R.id.src_container);
             dstContainer = rootView.findViewById(R.id.dst_container);
+            mindidContainer = rootView.findViewById(R.id.min_did_container);
+            maxdidContainer = rootView.findViewById(R.id.max_did_container);
+            stypeContainer = rootView.findViewById(R.id.stype_container);
+            dtypeContainer = rootView.findViewById(R.id.dtype_container);
             delayContainer = rootView.findViewById(R.id.delay_container);
             lengthContainer = rootView.findViewById(R.id.length_container);
             startAddrContainer = rootView.findViewById(R.id.start_addr_container);
             separateLineContainer = rootView.findViewById(R.id.separate_line_container);
             idContainer = rootView.findViewById(R.id.id_container);
-            clearAllFields();
-
+            whitelistContainer = rootView.findViewById(R.id.whitelist_arbID_container);
+            indexContainer = rootView.findViewById(R.id.index_container);
+            arbIDContainer = rootView.findViewById(R.id.arbID_container);
+            dataContainer = rootView.findViewById(R.id.data_container);
+            blacklistContainer = rootView.findViewById(R.id.blacklist_container);
+            autoBlacklistContainer = rootView.findViewById(R.id.autoBlacklist_container);
+            timeoutContainer = rootView.findViewById(R.id.timeout_container);
+            durationContainer = rootView.findViewById(R.id.duration_container);
+            memLengthContainer = rootView.findViewById(R.id.memLength_container);
+            memSizeContainer = rootView.findViewById(R.id.memSize_container);
+            addrByteSizeContainer = rootView.findViewById(R.id.addrByteSize_container);
+            memLengthByteSizeContainer = rootView.findViewById(R.id.memLengthByteSize_container);
+            sessionSeqContainer = rootView.findViewById(R.id.sessionSeq_container);
+            seedTargetContainer = rootView.findViewById(R.id.seedTarget_container);
+            interDelayContainer = rootView.findViewById(R.id.interDelay_container);
+            iterationsContainer = rootView.findViewById(R.id.iterations_container);
+            sprContainer = rootView.findViewById(R.id.spr_container);
+            skipverifyContainer = rootView.findViewById(R.id.skipverify_container);
             loopContainer = rootView.findViewById(R.id.loop_container);
             padContainer = rootView.findViewById(R.id.pad_container);
             reverseContainer = rootView.findViewById(R.id.reverse_container);
             outputContainer = rootView.findViewById(R.id.output_container);
+            responsesContainer = rootView.findViewById(R.id.responses_container);
+            requestsContainer = rootView.findViewById(R.id.requests_container);
             candumpContainer = rootView.findViewById(R.id.candump_container);
             messageContainer = rootView.findViewById(R.id.message_container);
             SelectedMessage = rootView.findViewById(R.id.caribou_message);
             fileContainer = rootView.findViewById(R.id.file_container);
             SelectedFile = rootView.findViewById(R.id.caribou_file);
+            numberContainer = rootView.findViewById(R.id.number_container);
+
+            // Spinner for ECU Reset Type
+            ecuResetTypeContainer = rootView.findViewById(R.id.spinner_row_ecureset);
+            ecuResetTypeSpinner = rootView.findViewById(R.id.ecureset_type_spinner);
+
+            // Spinner for ECU Reset Methode
+            ecuResetMethodeContainer = rootView.findViewById(R.id.spinner_row_ecuresetmethode);
+            ecuResetMethodeSpinner = rootView.findViewById(R.id.ecureset_methode_spinner);
+
+            // Spinner for security_seed (sessionType)
+            sessionTypeContainer = rootView.findViewById(R.id.spinner_row_stype);
+            sessionTypeSpinner = rootView.findViewById(R.id.stype_spinner);
+            sessionTypeInputContainer = rootView.findViewById(R.id.stype_input_container);
+
+            // Spinner for security_seed (securityLevel)
+            securityLevelContainer = rootView.findViewById(R.id.spinner_row_level);
+            securityLevelSpinner = rootView.findViewById(R.id.level_spinner);
+            securityLevelInputContainer = rootView.findViewById(R.id.level_input_container);
+
+            // Spinner for ECU Reset Type
+            String[] ecuResetOptions = {
+                    "Select ECU Reset Type",  // disabled first entry
+                    "1=hard",
+                    "2=key off/on",
+                    "3=soft",
+                    "4=enable rapid power shutdown",
+                    "5=disable rapid power shutdown"
+            };
+
+            ArrayAdapter<String> ecuResetAdapter = createDisabledFirstItemAdapter(ecuResetOptions);
+            ecuResetAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            ecuResetTypeSpinner.setAdapter(ecuResetAdapter);
+
+            // Spinner for EcuResetMethode
+            String[] ecuResetMethodeOptions = {
+                    "Select ECU Reset Methode",  // disabled first entry
+                    "0=once before seed request start",
+                    "1=before each seed request (default)"
+            };
+
+            ArrayAdapter<String> ecuResetMethodeAdapter = createDisabledFirstItemAdapter(ecuResetMethodeOptions);
+            ecuResetMethodeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            ecuResetMethodeSpinner.setAdapter(ecuResetMethodeAdapter);
+
+            // Spinner for security_seed (sessionType)
+            String[] sessionTypeOptions = {
+                    "Select Session Type",
+                    "1=defaultSession",
+                    "2=programmingSession",
+                    "3=extendedSession",
+                    "4=safetySession",
+                    "0x40-0x5F=OEM",
+                    "0x60-0x7E=Supplier",
+                    "0x0,0x5-0x3F,0x7F=ISOSAEReserved"
+            };
+
+            ArrayAdapter<String> sessionTypeAdapter = createDisabledFirstItemAdapter(sessionTypeOptions);
+            sessionTypeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            sessionTypeSpinner.setAdapter(sessionTypeAdapter);
+
+            sessionTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    if (position > 0) {
+                        String selected = (String) sessionTypeSpinner.getSelectedItem();
+                        if (selected.contains("-") || selected.contains(",")) {
+                            sessionTypeInputContainer.setVisibility(View.VISIBLE);
+                        } else {
+                            sessionTypeInputContainer.setVisibility(View.GONE);
+                        }
+                    } else {
+                        sessionTypeInputContainer.setVisibility(View.GONE);
+                    }
+                }
+                @Override public void onNothingSelected(AdapterView<?> parent) {}
+            });
+
+            // Spinner for security_seed (securityLevel)
+            String[] securityLevelOptions = {
+                    "Select Security Level",
+                    "0x1-0x41=OEM",
+                    "0x5F=EOLPyrotechnics",
+                    "0x61-0x7E=Supplier",
+                    "0x0,0x43-0x5E,0x7F=ISOSAEReserved"
+            };
+
+            ArrayAdapter<String> securityLevelAdapter = createDisabledFirstItemAdapter(securityLevelOptions);
+            securityLevelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            securityLevelSpinner.setAdapter(securityLevelAdapter);
+
+            securityLevelSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    if (position > 0) {
+                        String selected = (String) securityLevelSpinner.getSelectedItem();
+                        if (selected.contains("-") || selected.contains(",")) {
+                            securityLevelInputContainer.setVisibility(View.VISIBLE);
+                        } else {
+                            securityLevelInputContainer.setVisibility(View.GONE);
+                        }
+                    } else {
+                        securityLevelInputContainer.setVisibility(View.GONE);
+                    }
+                }
+                @Override public void onNothingSelected(AdapterView<?> parent) {}
+            });
+
+
             // Browse File
             ImageButton browseButton = rootView.findViewById(R.id.cariboufilebrowse);
             browseButton.setOnClickListener(v -> {
@@ -1836,14 +1975,16 @@ public class CARsenalFragment extends Fragment {
             final Spinner subModuleSpinner = rootView.findViewById(R.id.submodule_spinner);
             final Button startButton = rootView.findViewById(R.id.start_button);
 
-            final String[] modules = {"Modules", "Dump", "Listener", "Fuzz", "Send", "UDS", "XCP"};
+            final String[] modules = {"Modules", "Dump", "Fuzzer", "Listener", "module_template", "Send", "UDS", "UDS_Fuzz", "XCP"};
             final Map<String, String[]> subModulesMap = new HashMap<>();
             subModulesMap.put("Dump", new String[]{"Sub-Modules", "None"});
+            subModulesMap.put("Fuzzer", new String[]{"Sub-Modules", "brute", "identify", "mutate", "random", "replay"});
             subModulesMap.put("Listener", new String[]{"Sub-Modules", "None"});
-            subModulesMap.put("Fuzz", new String[]{"Sub-Modules", "brute", "identify", "mutate", "random", "replay"});
+            subModulesMap.put("module_template", new String[]{"Sub-Modules", "None"});
             subModulesMap.put("Send", new String[]{"Sub-Modules", "file", "message"});
-            subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services"});
-            subModulesMap.put("XCP", new String[]{"Sub-Modules", "discovery", "info", "dump"});
+            subModulesMap.put("UDS", new String[]{"Sub-Modules", "discovery", "services", "subservices", "ecu_reset", "testerpresent", "security_seed", "dump_dids", "read_mem", "auto"});
+            subModulesMap.put("UDS_Fuzz", new String[]{"Sub-Modules", "delay_fuzzer", "seed_randomness_fuzzer"});
+            subModulesMap.put("XCP", new String[]{"Sub-Modules", "discovery", "info", "commands", "dump"});
 
             ArrayAdapter<String> moduleAdapter = createDisabledFirstItemAdapter(modules);
             moduleAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -1891,6 +2032,8 @@ public class CARsenalFragment extends Fragment {
                     maxContainer.setVisibility(View.GONE);
                     srcContainer.setVisibility(View.GONE);
                     dstContainer.setVisibility(View.GONE);
+                    mindidContainer.setVisibility(View.GONE);
+                    maxdidContainer.setVisibility(View.GONE);
                     seedContainer.setVisibility(View.GONE);
                     outputContainer.setVisibility(View.GONE);
                     messageContainer.setVisibility(View.GONE);
@@ -1903,13 +2046,75 @@ public class CARsenalFragment extends Fragment {
                     separateLineContainer.setVisibility(View.GONE);
                     startAddrContainer.setVisibility(View.GONE);
                     delayContainer.setVisibility(View.GONE);
+                    whitelistContainer.setVisibility(View.GONE);
+                    responsesContainer.setVisibility(View.GONE);
+                    requestsContainer.setVisibility(View.GONE);
+                    indexContainer.setVisibility(View.GONE);
+                    arbIDContainer.setVisibility(View.GONE);
+                    dataContainer.setVisibility(View.GONE);
+                    blacklistContainer.setVisibility(View.GONE);
+                    autoBlacklistContainer.setVisibility(View.GONE);
+                    skipverifyContainer.setVisibility(View.GONE);
+                    timeoutContainer.setVisibility(View.GONE);
+                    stypeContainer.setVisibility(View.GONE);
+                    dtypeContainer.setVisibility(View.GONE);
+                    durationContainer.setVisibility(View.GONE);
+                    sprContainer.setVisibility(View.GONE);
+                    ecuResetTypeContainer.setVisibility(View.GONE);
+                    ecuResetMethodeContainer.setVisibility(View.GONE);
+                    numberContainer.setVisibility(View.GONE);
+                    securityLevelContainer.setVisibility(View.GONE);
+                    sessionTypeContainer.setVisibility(View.GONE);
+                    memLengthContainer.setVisibility(View.GONE);
+                    memSizeContainer.setVisibility(View.GONE);
+                    addrByteSizeContainer.setVisibility(View.GONE);
+                    memLengthByteSizeContainer.setVisibility(View.GONE);
+                    sessionSeqContainer.setVisibility(View.GONE);
+                    seedTargetContainer.setVisibility(View.GONE);
+                    interDelayContainer.setVisibility(View.GONE);
+                    iterationsContainer.setVisibility(View.GONE);
 
                     // Show only for specific submodules
                     if ("Dump".equals(selectedModule)) {
                         if ("None".equals(selectedSubModule)) {
                             candumpContainer.setVisibility(View.VISIBLE);
                             outputContainer.setVisibility(View.VISIBLE);
+                            fileContainer.setVisibility(View.VISIBLE);
                             separateLineContainer.setVisibility(View.VISIBLE);
+                            whitelistContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    if ("Fuzzer".equals(selectedModule)) {
+                        if ("brute".equals(selectedSubModule) || "mutate".equals(selectedSubModule)) {
+                            outputContainer.setVisibility(View.VISIBLE);
+                            fileContainer.setVisibility(View.VISIBLE);
+                            delayContainer.setVisibility(View.VISIBLE);
+                            responsesContainer.setVisibility(View.VISIBLE);
+                            indexContainer.setVisibility(View.VISIBLE);
+                            arbIDContainer.setVisibility(View.VISIBLE);
+                            dataContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("mutate".equals(selectedSubModule)) {
+                            seedContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("identify".equals(selectedSubModule) || "replay".equals(selectedSubModule)) {
+                            fileContainer.setVisibility(View.VISIBLE);
+                            responsesContainer.setVisibility(View.VISIBLE);
+                            delayContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("replay".equals(selectedSubModule)) {
+                            requestsContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("random".equals(selectedSubModule)) {
+                            idContainer.setVisibility(View.VISIBLE);
+                            indexContainer.setVisibility(View.VISIBLE);
+                            minContainer.setVisibility(View.VISIBLE);
+                            maxContainer.setVisibility(View.VISIBLE);
+                            seedContainer.setVisibility(View.VISIBLE);
+                            dataContainer.setVisibility(View.VISIBLE);
+                            delayContainer.setVisibility(View.VISIBLE);
+                            outputContainer.setVisibility(View.VISIBLE);
+                            fileContainer.setVisibility(View.VISIBLE);
                         }
                     }
                     if ("Listener".equals(selectedModule)) {
@@ -1917,17 +2122,9 @@ public class CARsenalFragment extends Fragment {
                             reverseContainer.setVisibility(View.VISIBLE);
                         }
                     }
-                    if ("Fuzz".equals(selectedModule)) {
-                        if ("brute".equals(selectedSubModule) || "mutate".equals(selectedSubModule)) {
+                    if ("module_template".equals(selectedModule)) {
+                        if ("None".equals(selectedSubModule)) {
                             idContainer.setVisibility(View.VISIBLE);
-                        }
-                        if ("identify".equals(selectedSubModule) || "replay".equals(selectedSubModule)) {
-                            outputContainer.setVisibility(View.VISIBLE);
-                        }
-                        if ("random".equals(selectedSubModule)) {
-                            minContainer.setVisibility(View.VISIBLE);
-                            seedContainer.setVisibility(View.VISIBLE);
-                            outputContainer.setVisibility(View.VISIBLE);
                         }
                     }
                     if ("Send".equals(selectedModule)) {
@@ -1944,32 +2141,102 @@ public class CARsenalFragment extends Fragment {
                         }
                     }
                     if ("UDS".equals(selectedModule)) {
-                        if ("discovery".equals(selectedSubModule)) {
+                        if ("discovery".equals(selectedSubModule) || "auto".equals(selectedSubModule)) {
                             minContainer.setVisibility(View.VISIBLE);
                             maxContainer.setVisibility(View.VISIBLE);
+                            blacklistContainer.setVisibility(View.VISIBLE);
+                            autoBlacklistContainer.setVisibility(View.VISIBLE);
+                            skipverifyContainer.setVisibility(View.VISIBLE);
                             delayContainer.setVisibility(View.VISIBLE);
                         }
-                        if ("services".equals(selectedSubModule)) {
+                        if ("services".equals(selectedSubModule) || "subservices".equals(selectedSubModule) || "dump_dids".equals(selectedSubModule)) {
+                            timeoutContainer.setVisibility(View.VISIBLE);
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
+                            mindidContainer.setVisibility(View.VISIBLE);
+                            maxdidContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("subservices".equals(selectedSubModule)) {
+                            stypeContainer.setVisibility(View.VISIBLE);
+                            dtypeContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("ecu_reset".equals(selectedSubModule)) {
+                            timeoutContainer.setVisibility(View.VISIBLE);
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
+                            ecuResetTypeContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("security_seed".equals(selectedSubModule)) {
+                            delayContainer.setVisibility(View.VISIBLE);
+                            numberContainer.setVisibility(View.VISIBLE);
+                            ecuResetTypeContainer.setVisibility(View.VISIBLE);
+                            sessionTypeContainer.setVisibility(View.VISIBLE);
+                            securityLevelContainer.setVisibility(View.VISIBLE);
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("testerpresent".equals(selectedSubModule)) {
+                            durationContainer.setVisibility(View.VISIBLE);
+                            delayContainer.setVisibility(View.VISIBLE);
+                            sprContainer.setVisibility(View.VISIBLE);
+                            srcContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("read_mem".equals(selectedSubModule)) {
+                            timeoutContainer.setVisibility(View.VISIBLE);
+                            startAddrContainer.setVisibility(View.VISIBLE);
+                            memLengthContainer.setVisibility(View.VISIBLE);
+                            memSizeContainer.setVisibility(View.VISIBLE);
+                            addrByteSizeContainer.setVisibility(View.VISIBLE);
+                            memLengthByteSizeContainer.setVisibility(View.VISIBLE);
+                            outputContainer.setVisibility(View.VISIBLE);
+                            fileContainer.setVisibility(View.VISIBLE);
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("auto".equals(selectedSubModule)) {
+                            timeoutContainer.setVisibility(View.VISIBLE);
+                            mindidContainer.setVisibility(View.VISIBLE);
+                            maxdidContainer.setVisibility(View.VISIBLE);
+                        }
+                    }
+                    if ("UDS_Fuzz".equals(selectedModule)) {
+                        if ("delay_fuzzer".equals(selectedSubModule)) {
+                            ecuResetTypeContainer.setVisibility(View.VISIBLE);
+                            delayContainer.setVisibility(View.VISIBLE);
+                            sessionSeqContainer.setVisibility(View.VISIBLE);
+                            seedTargetContainer.setVisibility(View.VISIBLE);
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("seed_randomness_fuzzer".equals(selectedSubModule)) {
+                            ecuResetTypeContainer.setVisibility(View.VISIBLE);
+                            ecuResetMethodeContainer.setVisibility(View.VISIBLE);
+                            delayContainer.setVisibility(View.VISIBLE);
+                            sessionSeqContainer.setVisibility(View.VISIBLE);
+                            interDelayContainer.setVisibility(View.VISIBLE);
+                            iterationsContainer.setVisibility(View.VISIBLE);
                             srcContainer.setVisibility(View.VISIBLE);
                             dstContainer.setVisibility(View.VISIBLE);
                         }
                     }
                     if ("XCP".equals(selectedModule)) {
                         if ("discovery".equals(selectedSubModule)) {
-                            srcContainer.setVisibility(View.VISIBLE);
-                            dstContainer.setVisibility(View.VISIBLE);
-                            outputContainer.setVisibility(View.VISIBLE);
-                        }
-                        if ("info".equals(selectedSubModule)) {
-                            startAddrContainer.setVisibility(View.VISIBLE);
-                            lengthContainer.setVisibility(View.VISIBLE);
-                        }
-                        if ("dump".equals(selectedSubModule)) {
-                            startAddrContainer.setVisibility(View.VISIBLE);
-                            lengthContainer.setVisibility(View.VISIBLE);
                             minContainer.setVisibility(View.VISIBLE);
                             maxContainer.setVisibility(View.VISIBLE);
+                            blacklistContainer.setVisibility(View.VISIBLE);
+                            autoBlacklistContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("info".equals(selectedSubModule) || "commands".equals(selectedSubModule)) {
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("dump".equals(selectedSubModule)) {
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
+                            startAddrContainer.setVisibility(View.VISIBLE);
+                            lengthContainer.setVisibility(View.VISIBLE);
                             outputContainer.setVisibility(View.VISIBLE);
+                            fileContainer.setVisibility(View.VISIBLE);
                         }
                     }
                 }
@@ -1991,17 +2258,23 @@ public class CARsenalFragment extends Fragment {
                     case "Dump":
                         runDump(subModule);
                         break;
+                    case "Fuzzer":
+                        runFuzzer(subModule);
+                        break;
                     case "Listener":
                         runListener(subModule);
                         break;
-                    case "Fuzz":
-                        runFuzzer(subModule);
+                    case "module_template":
+                        runModuleTemplate(subModule);
                         break;
                     case "Send":
                         runSend(subModule);
                         break;
                     case "UDS":
                         runUDS(subModule);
+                        break;
+                    case "UDS_Fuzz":
+                        runUDSFuzz(subModule);
                         break;
                     case "XCP":
                         runXCP(subModule);
@@ -2012,22 +2285,6 @@ public class CARsenalFragment extends Fragment {
             });
 
             return rootView;
-        }
-
-        private void clearAllFields() {
-            TextInputLayout[] containers = new TextInputLayout[] {
-                    seedContainer, minContainer, maxContainer, srcContainer, dstContainer,
-                    delayContainer, lengthContainer, startAddrContainer, idContainer, separateLineContainer
-            };
-
-            for (TextInputLayout container : containers) {
-                if (container != null) {
-                    EditText editText = container.getEditText();
-                    if (editText != null) {
-                        editText.setText("");
-                    }
-                }
-            }
         }
 
         private String getVisibleParam(EditText editText, String prefix) {
@@ -2043,12 +2300,62 @@ public class CARsenalFragment extends Fragment {
             return "";
         }
 
+        private String getVisibleSpinnerValue(Spinner spinner, ViewGroup container, String prefix) {
+            if (container != null && container.getVisibility() == View.VISIBLE && container.isEnabled()) {
+                int pos = spinner.getSelectedItemPosition();
+                if (pos > 0) { // skip the disabled placeholder (like "Select...")
+                    String selected = (String) spinner.getSelectedItem();
+
+                    // If option contains "=", take the part before "="
+                    if (selected.contains("=")) {
+                        selected = selected.split("=")[0].trim();
+                    }
+
+                    return prefix + selected;
+                }
+            }
+            return "";
+        }
+
+        private String getVisibleSpinnerOrInputValue(
+                Spinner spinner,
+                ViewGroup spinnerContainer,
+                TextInputLayout inputContainer
+        ) {
+            if (spinnerContainer.getVisibility() == View.VISIBLE && spinner.getSelectedItemPosition() > 0) {
+                String selected = (String) spinner.getSelectedItem();
+
+                // Case 1: Range or list → user must type value
+                if (selected.contains("-") || selected.contains(",")) {
+                    if (inputContainer.getVisibility() == View.VISIBLE) {
+                        EditText editText = inputContainer.getEditText();
+                        if (editText != null) {
+                            String input = editText.getText().toString().trim();
+                            if (!input.isEmpty()) {
+                                return " " + input;  // e.g. " 0x40"
+                            }
+                        }
+                    }
+                    return ""; // no input provided
+                }
+
+                // Case 2: Single discrete value like "1=defaultSession"
+                if (selected.contains("=")) {
+                    return " " + selected.split("=")[0]; // take part before '=' → "1"
+                }
+
+                return " " + selected; // fallback
+            }
+            return "";
+        }
+
         private void runDump(String dump_module) {
             if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
                 showToast("Please choose a CAN Interface!");
                 return;
             }
 
+            String whitelistValue = getVisibleParam(whitelistContainer.getEditText(), " ");
             String separateLineValue = getVisibleParam(separateLineContainer.getEditText(), " -s ");
             String outputEnabled = "";
             if (outputContainer.getVisibility() == View.VISIBLE) {
@@ -2065,16 +2372,89 @@ public class CARsenalFragment extends Fragment {
             if (candumpContainer.getVisibility() == View.VISIBLE) {
                 SwitchCompat candumpSwitch = candumpContainer.findViewById(R.id.btn_toggle_candump);
                 if (candumpSwitch != null && candumpSwitch.isChecked()) {
-                    candumpEnabled = " -t";
+                    candumpEnabled = " -c";
                 }
             }
 
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " dump";
 
             if (dump_module.equals("None")) {
-                run_cmd(cmdBase + separateLineValue + candumpEnabled + outputEnabled);
+                run_cmd(cmdBase + separateLineValue + candumpEnabled + outputEnabled + whitelistValue);
             } else {
                 showToast("Unknown dump submodule: " + dump_module);
+            }
+        }
+
+        private void runFuzzer(String fuzzer_module) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
+                showToast("Please choose a CAN Interface!");
+                return;
+            }
+
+            String outputEnabled = "";
+            if (outputContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat outputSwitch = outputContainer.findViewById(R.id.btn_toggle_output);
+                if (outputSwitch != null && outputSwitch.isChecked()) {
+                    String filePath = SelectedFile.getText().toString().trim();
+                    if (!filePath.isEmpty()) {
+                        outputEnabled = " -f " + filePath;
+                    }
+                }
+            }
+
+            String responsesEnabled = "";
+            if (responsesContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat responsesSwitch = responsesContainer.findViewById(R.id.btn_toggle_responses);
+                if (responsesSwitch != null && responsesSwitch.isChecked()) {
+                    responsesEnabled = " -responses";
+                }
+            }
+
+            String requestsEnabled = "";
+            if (requestsContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat requestsSwitch = requestsContainer.findViewById(R.id.btn_toggle_requests);
+                if (requestsSwitch != null && requestsSwitch.isChecked()) {
+                    requestsEnabled = " -requests";
+                }
+            }
+
+            String selected_file = "";
+            if (fileContainer.getVisibility() == View.VISIBLE) {
+                String text = SelectedFile.getText().toString().trim();
+                if (!text.isEmpty()) {
+                    selected_file = text;
+                }
+            }
+
+            String idValue = getVisibleParam(idContainer.getEditText(), " -id ");
+            String seedValue = getVisibleParam(seedContainer.getEditText(), " -seed ");
+            String minValue = getVisibleParam(minContainer.getEditText(), " -min ");
+            String maxValue = getVisibleParam(minContainer.getEditText(), " -max ");
+            String delayValue = getVisibleParam(delayContainer.getEditText(), " -delay ");
+            String indexValue = getVisibleParam(indexContainer.getEditText(), " -index ");
+            String arbIDValue = getVisibleParam(arbIDContainer.getEditText(), " ");
+            String dataValue = getVisibleParam(dataContainer.getEditText(), " ");
+
+            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer ";
+
+            switch (fuzzer_module) {
+                case "brute":
+                    run_cmd(cmdBase + "brute" + responsesEnabled + indexValue + delayValue + outputEnabled + arbIDValue + dataValue);
+                    break;
+                case "identify":
+                    run_cmd(cmdBase + "identify" + responsesEnabled + delayValue + " " + selected_file);
+                    break;
+                case "mutate":
+                    run_cmd(cmdBase + "mutate" + responsesEnabled + seedValue + indexValue + delayValue + outputEnabled + arbIDValue + dataValue);
+                    break;
+                case "random":
+                    run_cmd(cmdBase + "random" + indexValue + idValue + minValue + maxValue + seedValue + delayValue + dataValue + outputEnabled);
+                    break;
+                case "replay":
+                    run_cmd(cmdBase + "replay" + responsesEnabled + requestsEnabled + delayValue + " " + selected_file);
+                    break;
+                default:
+                    showToast("Unknown fuzzer submodule: " + fuzzer_module);
             }
         }
 
@@ -2101,46 +2481,20 @@ public class CARsenalFragment extends Fragment {
             }
         }
 
-        private void runFuzzer(String fuzzer_module) {
+        private void runModuleTemplate(String moduleTemplate_module) {
             if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
                 showToast("Please choose a CAN Interface!");
                 return;
             }
 
-            String outputEnabled = "";
-            if (outputContainer.getVisibility() == View.VISIBLE) {
-                SwitchCompat outputSwitch = outputContainer.findViewById(R.id.btn_toggle_output);
-                if (outputSwitch != null && outputSwitch.isChecked()) {
-                    String filePath = SelectedFile.getText().toString().trim();
-                    if (!filePath.isEmpty()) {
-                        outputEnabled = " -f " + filePath;
-                    }
-                }
-            }
-            String idValue = getVisibleParam(idContainer.getEditText(), " ");
-            String seedValue = getVisibleParam(seedContainer.getEditText(), " --seed ");
-            String minValue = getVisibleParam(minContainer.getEditText(), " -min ");
+            String idValue = getVisibleParam(idContainer.getEditText(), " -id ");
 
-            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer ";
+            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " module_template ";
 
-            switch (fuzzer_module) {
-                case "brute":
-                    run_cmd(cmdBase + "brute" + idValue);
-                    break;
-                case "identify":
-                    run_cmd(cmdBase + "identify" + outputEnabled);
-                    break;
-                case "mutate":
-                    run_cmd(cmdBase + "mutate" + idValue);
-                    break;
-                case "random":
-                    run_cmd(cmdBase + "random" + minValue + seedValue + outputEnabled);
-                    break;
-                case "replay":
-                    run_cmd(cmdBase + "replay" + outputEnabled);
-                    break;
-                default:
-                    showToast("Unknown fuzzer submodule: " + fuzzer_module);
+            if (moduleTemplate_module.equals("None")) {
+                run_cmd(cmdBase + idValue);
+            } else {
+                showToast("Unknown module_template submodule: " + moduleTemplate_module);
             }
         }
 
@@ -2200,23 +2554,128 @@ public class CARsenalFragment extends Fragment {
                 return;
             }
 
+            String skipverifyEnabled = "";
+            if (skipverifyContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat skipverifySwitch = skipverifyContainer.findViewById(R.id.btn_toggle_skipverify);
+                if (skipverifySwitch != null && skipverifySwitch.isChecked()) {
+                    skipverifyEnabled = " --skipverify";
+                }
+            }
+
+            String sprEnabled = "";
+            if (sprContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat sprSwitch = sprContainer.findViewById(R.id.btn_toggle_spr);
+                if (sprSwitch != null && sprSwitch.isChecked()) {
+                    sprEnabled = " -spr";
+                }
+            }
+
+            String outputEnabled = "";
+            if (outputContainer.getVisibility() == View.VISIBLE) {
+                SwitchCompat outputSwitch = outputContainer.findViewById(R.id.btn_toggle_output);
+                if (outputSwitch != null && outputSwitch.isChecked()) {
+                    String filePath = SelectedFile.getText().toString().trim();
+                    if (!filePath.isEmpty()) {
+                        outputEnabled = " --outfile " + filePath;
+                    }
+                }
+            }
+
+            String dtypeValue = getVisibleParam(dtypeContainer.getEditText(), " ");
+            String stypeValue = getVisibleParam(stypeContainer.getEditText(), " ");
             String srcValue = getVisibleParam(srcContainer.getEditText(), " ");
             String dstValue = getVisibleParam(dstContainer.getEditText(), " ");
+            String mindidValue = getVisibleParam(mindidContainer.getEditText(), " --min_did ");
+            String maxdidValue = getVisibleParam(maxdidContainer.getEditText(), " --max_did ");
             String minValue = getVisibleParam(minContainer.getEditText(), " -min ");
             String maxValue = getVisibleParam(maxContainer.getEditText(), " -max ");
             String delayValue = getVisibleParam(delayContainer.getEditText(), " -d ");
+            String durationValue = getVisibleParam(durationContainer.getEditText(), " --duration ");
+            String timeoutValue = getVisibleParam(timeoutContainer.getEditText(), " -t ");
+            String numberValue = getVisibleParam(numberContainer.getEditText(), " --num ");
+            String blacklistValue = getVisibleParam(blacklistContainer.getEditText(), " --blacklist ");
+            String autoBlacklistValue = getVisibleParam(autoBlacklistContainer.getEditText(), " --autoblacklist ");
+            String startAddrValue = getVisibleParam(startAddrContainer.getEditText(), " --start_addr ");
+            String memLengthValue = getVisibleParam(memLengthContainer.getEditText(), " --mem_length ");
+            String memSizeValue = getVisibleParam(memSizeContainer.getEditText(), " --mem_size ");
+            String addrByteSizeValue = getVisibleParam(addrByteSizeContainer.getEditText(), " --address_byte_size ");
+            String memLengthByteSizeValue = getVisibleParam(memLengthByteSizeContainer.getEditText(), " --memory_length_byte_size ");
+            String ecuResetValue = getVisibleSpinnerValue(ecuResetTypeSpinner, ecuResetTypeContainer, " ");
+            String sessiontypeValue = getVisibleSpinnerOrInputValue(
+                    sessionTypeSpinner,
+                    sessionTypeContainer,
+                    sessionTypeInputContainer
+            );
+
+            String levelValue = getVisibleSpinnerOrInputValue(
+                    securityLevelSpinner,
+                    securityLevelContainer,
+                    securityLevelInputContainer
+            );
 
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds ";
 
             switch (uds_module) {
                 case "discovery":
-                    run_cmd(cmdBase + "discovery" + minValue + maxValue + delayValue);
+                    run_cmd(cmdBase + "discovery" + minValue + maxValue + delayValue + blacklistValue + autoBlacklistValue + skipverifyEnabled);
                     break;
                 case "services":
-                    run_cmd(cmdBase + "services" + srcValue + dstValue);
+                    run_cmd(cmdBase + "services" + timeoutValue + srcValue + dstValue);
+                    break;
+                case "subservices":
+                    run_cmd(cmdBase + "subservices" + timeoutValue + dtypeValue + srcValue + dstValue);
+                    break;
+                case "ecu_reset":
+                    run_cmd(cmdBase + "ecu_reset" + timeoutValue + ecuResetValue + stypeValue + srcValue + dstValue);
+                    break;
+                case "testerpresent":
+                    run_cmd(cmdBase + "testerpresent" + delayValue + durationValue + sprEnabled + srcValue);
+                    break;
+                case "security_seed":
+                    String resetValue = getVisibleSpinnerValue(ecuResetTypeSpinner, ecuResetTypeContainer, " --reset ");
+                    run_cmd(cmdBase + "security_seed" + resetValue + delayValue + numberValue + sessiontypeValue + levelValue + srcValue + dstValue);
+                    break;
+                case "dump_dids":
+                    run_cmd(cmdBase + "dump_dids" + timeoutValue + mindidValue + maxdidValue + srcValue + dstValue);
+                    break;
+                case "read_mem":
+                    run_cmd(cmdBase + "read_mem" + timeoutValue + startAddrValue + memLengthValue + memSizeValue + addrByteSizeValue + memLengthByteSizeValue + outputEnabled + srcValue + dstValue);
+                    break;
+                case "auto":
+                    run_cmd(cmdBase + "auto" + minValue + maxValue + blacklistValue + autoBlacklistValue + skipverifyEnabled + delayValue + timeoutValue + mindidValue + maxdidValue);
                     break;
                 default:
                     showToast("Unknown UDS submodule: " + uds_module);
+            }
+        }
+
+        private void runUDSFuzz(String uds_fuzz_module) {
+            if (selected_caniface == null || selected_caniface.isEmpty() || selected_caniface.equals("Interfaces")) {
+                showToast("Please choose a CAN Interface!");
+                return;
+            }
+
+            String ecuResetValue = getVisibleSpinnerValue(ecuResetTypeSpinner, ecuResetTypeContainer, " --reset ");
+            String ecuResetMethodeValue = getVisibleSpinnerValue(ecuResetMethodeSpinner, ecuResetMethodeContainer, " --reset_method ");
+            String delayValue = getVisibleParam(delayContainer.getEditText(), " -d ");
+            String sessionSeqValue = getVisibleParam(sessionSeqContainer.getEditText(), " ");
+            String seedTargetValue = getVisibleParam(seedTargetContainer.getEditText(), " ");
+            String srcValue = getVisibleParam(srcContainer.getEditText(), " ");
+            String dstValue = getVisibleParam(dstContainer.getEditText(), " ");
+            String interDelayValue = getVisibleParam(interDelayContainer.getEditText(), " --inter_delay ");
+            String iterationsValue = getVisibleParam(iterationsContainer.getEditText(), " --iter ");
+
+            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " uds_fuzz ";
+
+            switch (uds_fuzz_module) {
+                case "delay_fuzzer":
+                    run_cmd(cmdBase + "delay_fuzzer" + ecuResetValue + delayValue + sessionSeqValue + seedTargetValue + srcValue + dstValue);
+                    break;
+                case "seed_randomness_fuzzer":
+                    run_cmd(cmdBase + "seed_randomness_fuzzer" + iterationsValue + ecuResetValue + interDelayValue + ecuResetMethodeValue + delayValue + sessionSeqValue + srcValue + dstValue);
+                    break;
+                default:
+                    showToast("Unknown UDS_Fuzz submodule: " + uds_fuzz_module);
             }
         }
 
@@ -2236,25 +2695,31 @@ public class CARsenalFragment extends Fragment {
                     }
                 }
             }
+
             String startAddrValue = getVisibleParam(startAddrContainer.getEditText(), " ");
             String lengthValue = getVisibleParam(lengthContainer.getEditText(), " ");
             String srcValue = getVisibleParam(srcContainer.getEditText(), " ");
             String dstValue = getVisibleParam(dstContainer.getEditText(), " ");
             String minValue = getVisibleParam(minContainer.getEditText(), " -min ");
             String maxValue = getVisibleParam(maxContainer.getEditText(), " -max ");
+            String blacklistValue = getVisibleParam(blacklistContainer.getEditText(), " -blacklist ");
+            String autoBlacklistValue = getVisibleParam(autoBlacklistContainer.getEditText(), " -autoblacklist ");
 
 
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp ";
 
             switch (xcp_module) {
                 case "discovery":
-                    run_cmd(cmdBase + "discovery" + outputEnabled + srcValue + dstValue);
+                    run_cmd(cmdBase + "discovery" + minValue + maxValue + blacklistValue + autoBlacklistValue);
                     break;
                 case "info":
-                    run_cmd(cmdBase + "info" + startAddrValue + lengthValue);
+                    run_cmd(cmdBase + "info" + srcValue + dstValue);
+                    break;
+                case "commands":
+                    run_cmd(cmdBase + "commands" + srcValue + dstValue);
                     break;
                 case "dump":
-                    run_cmd(cmdBase + "dump" + startAddrValue + lengthValue + minValue + maxValue + outputEnabled);
+                    run_cmd(cmdBase + "dump" + srcValue + dstValue + startAddrValue + lengthValue + outputEnabled);
                     break;
                 default:
                     showToast("Unknown XCP submodule: " + xcp_module);
@@ -2272,7 +2737,6 @@ public class CARsenalFragment extends Fragment {
         private FrameLayout floatingContainer;
         private String selected_caniface = "";
         private TextInputEditText udsimConfigEdit;
-        private ImageButton udsimBrowseBtn;
 
         @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
@@ -2321,7 +2785,7 @@ public class CARsenalFragment extends Fragment {
             }
 
             udsimConfigEdit = rootView.findViewById(R.id.udsim_config_path);
-            udsimBrowseBtn = rootView.findViewById(R.id.udsim_config_browse);
+            ImageButton udsimBrowseBtn = rootView.findViewById(R.id.udsim_config_browse);
 
             udsimBrowseBtn.setOnClickListener(v -> {
                 RootFileBrowserDialog browser = new RootFileBrowserDialog(requireContext(), udsimConfigEdit::setText);
@@ -2403,7 +2867,9 @@ public class CARsenalFragment extends Fragment {
         private void runICSIM(WebView icsimView, WebView controlsView, Spinner levelList, WebView udsimView) {
             if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces")) {
 
-                String udsimConfig = udsimConfigEdit.getText().toString().trim();
+                String udsimConfig = (udsimConfigEdit != null && udsimConfigEdit.getText() != null)
+                        ? udsimConfigEdit.getText().toString().trim()
+                        : "";
                 String combinedCmd = "su -c 'sh " + ICSIM_SCRIPT_PATH + " " + selected_caniface;
                 String levelValue = getVisibleParam(levelList);
 
@@ -2555,9 +3021,7 @@ public class CARsenalFragment extends Fragment {
             floatingContainer.addView(closeBtn);
             ViewCompat.setElevation(closeBtn, 16f);
 
-            closeBtn.setOnClickListener(v -> {
-                removeFloatingWebViews(icsimView, udsimView);
-            });
+            closeBtn.setOnClickListener(v -> removeFloatingWebViews(icsimView, udsimView));
 
             final WindowManager.LayoutParams layoutParams = new WindowManager.LayoutParams(
                     floatingInitialWidth, floatingInitialHeight,
@@ -3100,43 +3564,49 @@ public class CARsenalFragment extends Fragment {
 
                     if (context instanceof Activity) {
                         Activity activity = (Activity) context;
-                        FrameLayout icsimContainer = activity.findViewById(R.id.icsim_container);
-                        FrameLayout controlsContainer = activity.findViewById(R.id.controls_container);
-                        FrameLayout udsimContainer = activity.findViewById(R.id.udsim_container);
 
-                        WebView icsimView = SIMFragment.ICSIMWebViewHolder.getICSIMWebView(context);
-                        WebView controlsView = SIMFragment.ICSIMWebViewHolder.getControlsWebView(context);
-                        WebView udsimView = SIMFragment.ICSIMWebViewHolder.getUDSIMWebView(context);
+                        TabLayout tabLayout = activity.findViewById(R.id.tabLayoutCAN);
+                        int selectedTabIndex = tabLayout.getSelectedTabPosition();
 
-                        // Remove from any old parent
-                        if (icsimView.getParent() != null) ((ViewGroup) icsimView.getParent()).removeView(icsimView);
-                        if (controlsView.getParent() != null) ((ViewGroup) controlsView.getParent()).removeView(controlsView);
-                        if (udsimView.getParent() != null) ((ViewGroup) udsimView.getParent()).removeView(udsimView);
+                        if (selectedTabIndex == 4) { // Only run ICSim refresh on Simulator tab
+                            FrameLayout icsimContainer = activity.findViewById(R.id.icsim_container);
+                            FrameLayout controlsContainer = activity.findViewById(R.id.controls_container);
+                            FrameLayout udsimContainer = activity.findViewById(R.id.udsim_container);
 
-                        // Re-add to containers
-                        if (icsimContainer != null && controlsContainer != null && udsimContainer != null) {
-                            icsimContainer.addView(icsimView, new FrameLayout.LayoutParams(
-                                    FrameLayout.LayoutParams.MATCH_PARENT,
-                                    FrameLayout.LayoutParams.MATCH_PARENT
-                            ));
-                            controlsContainer.addView(controlsView, new FrameLayout.LayoutParams(
-                                    FrameLayout.LayoutParams.MATCH_PARENT,
-                                    FrameLayout.LayoutParams.MATCH_PARENT
-                            ));
-                            udsimContainer.addView(udsimView, new FrameLayout.LayoutParams(
-                                    FrameLayout.LayoutParams.MATCH_PARENT,
-                                    FrameLayout.LayoutParams.MATCH_PARENT
-                            ));
+                            WebView icsimView = SIMFragment.ICSIMWebViewHolder.getICSIMWebView(context);
+                            WebView controlsView = SIMFragment.ICSIMWebViewHolder.getControlsWebView(context);
+                            WebView udsimView = SIMFragment.ICSIMWebViewHolder.getUDSIMWebView(context);
 
-                            // Reload only if ICSIM process is running
-                            String output = exe.RunAsChrootOutput("ps aux | pgrep 'icsim'");
-                            if (output != null && !output.isEmpty()) {
-                                icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale&view_only=true");
-                                controlsView.loadUrl("http://localhost:6081/vnc.html?autoconnect=true&resize=scale");
-                                udsimView.loadUrl("http://localhost:6082/vnc.html?autoconnect=true&resize=scale");
+                            // Remove from any old parent
+                            if (icsimView.getParent() != null) ((ViewGroup) icsimView.getParent()).removeView(icsimView);
+                            if (controlsView.getParent() != null) ((ViewGroup) controlsView.getParent()).removeView(controlsView);
+                            if (udsimView.getParent() != null) ((ViewGroup) udsimView.getParent()).removeView(udsimView);
+
+                            // Re-add to containers
+                            if (icsimContainer != null && controlsContainer != null && udsimContainer != null) {
+                                icsimContainer.addView(icsimView, new FrameLayout.LayoutParams(
+                                        FrameLayout.LayoutParams.MATCH_PARENT,
+                                        FrameLayout.LayoutParams.MATCH_PARENT
+                                ));
+                                controlsContainer.addView(controlsView, new FrameLayout.LayoutParams(
+                                        FrameLayout.LayoutParams.MATCH_PARENT,
+                                        FrameLayout.LayoutParams.MATCH_PARENT
+                                ));
+                                udsimContainer.addView(udsimView, new FrameLayout.LayoutParams(
+                                        FrameLayout.LayoutParams.MATCH_PARENT,
+                                        FrameLayout.LayoutParams.MATCH_PARENT
+                                ));
+
+                                // Reload only if ICSIM process is running
+                                String output = exe.RunAsChrootOutput("ps aux | pgrep 'icsim'");
+                                if (output != null && !output.isEmpty()) {
+                                    icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale&view_only=true");
+                                    controlsView.loadUrl("http://localhost:6081/vnc.html?autoconnect=true&resize=scale");
+                                    udsimView.loadUrl("http://localhost:6082/vnc.html?autoconnect=true&resize=scale");
+                                }
+
+                                Toast.makeText(context, "Refreshing ICSim and UDSim display...", Toast.LENGTH_SHORT).show();
                             }
-
-                            Toast.makeText(context, "Refreshing ICSim and UDSim display...", Toast.LENGTH_SHORT).show();
                         }
                     }
                 });
