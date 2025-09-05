@@ -2149,14 +2149,15 @@ public class CARsenalFragment extends Fragment {
                             skipverifyContainer.setVisibility(View.VISIBLE);
                             delayContainer.setVisibility(View.VISIBLE);
                         }
-                        if ("services".equals(selectedSubModule) || "subservices".equals(selectedSubModule) || "dump_dids".equals(selectedSubModule)) {
+                        if ("services".equals(selectedSubModule) || "dump_dids".equals(selectedSubModule)) {
                             timeoutContainer.setVisibility(View.VISIBLE);
                             srcContainer.setVisibility(View.VISIBLE);
                             dstContainer.setVisibility(View.VISIBLE);
-                            mindidContainer.setVisibility(View.VISIBLE);
-                            maxdidContainer.setVisibility(View.VISIBLE);
                         }
                         if ("subservices".equals(selectedSubModule)) {
+                            timeoutContainer.setVisibility(View.VISIBLE);
+                            srcContainer.setVisibility(View.VISIBLE);
+                            dstContainer.setVisibility(View.VISIBLE);
                             stypeContainer.setVisibility(View.VISIBLE);
                             dtypeContainer.setVisibility(View.VISIBLE);
                         }
@@ -2180,6 +2181,10 @@ public class CARsenalFragment extends Fragment {
                             delayContainer.setVisibility(View.VISIBLE);
                             sprContainer.setVisibility(View.VISIBLE);
                             srcContainer.setVisibility(View.VISIBLE);
+                        }
+                        if ("dump_dids".equals(selectedSubModule)) {
+                            mindidContainer.setVisibility(View.VISIBLE);
+                            maxdidContainer.setVisibility(View.VISIBLE);
                         }
                         if ("read_mem".equals(selectedSubModule)) {
                             timeoutContainer.setVisibility(View.VISIBLE);
@@ -2379,7 +2384,7 @@ public class CARsenalFragment extends Fragment {
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " dump";
 
             if (dump_module.equals("None")) {
-                run_cmd(cmdBase + separateLineValue + candumpEnabled + outputEnabled + whitelistValue);
+                run_cmd(cmdBase + outputEnabled + candumpEnabled + separateLineValue + whitelistValue);
             } else {
                 showToast("Unknown dump submodule: " + dump_module);
             }
@@ -2439,19 +2444,19 @@ public class CARsenalFragment extends Fragment {
 
             switch (fuzzer_module) {
                 case "brute":
-                    run_cmd(cmdBase + "brute" + responsesEnabled + indexValue + delayValue + outputEnabled + arbIDValue + dataValue);
+                    run_cmd(cmdBase + "brute" + outputEnabled + responsesEnabled + indexValue + delayValue + arbIDValue + dataValue);
                     break;
                 case "identify":
                     run_cmd(cmdBase + "identify" + responsesEnabled + delayValue + " " + selected_file);
                     break;
                 case "mutate":
-                    run_cmd(cmdBase + "mutate" + responsesEnabled + seedValue + indexValue + delayValue + outputEnabled + arbIDValue + dataValue);
+                    run_cmd(cmdBase + "mutate" + responsesEnabled + outputEnabled + seedValue + indexValue + delayValue + arbIDValue + dataValue);
                     break;
                 case "random":
-                    run_cmd(cmdBase + "random" + indexValue + idValue + minValue + maxValue + seedValue + delayValue + dataValue + outputEnabled);
+                    run_cmd(cmdBase + "random" + idValue + dataValue + outputEnabled + minValue + maxValue + indexValue + seedValue + delayValue);
                     break;
                 case "replay":
-                    run_cmd(cmdBase + "replay" + responsesEnabled + requestsEnabled + delayValue + " " + selected_file);
+                    run_cmd(cmdBase + "replay" + requestsEnabled + responsesEnabled + delayValue + " " + selected_file);
                     break;
                 default:
                     showToast("Unknown fuzzer submodule: " + fuzzer_module);
@@ -2489,7 +2494,7 @@ public class CARsenalFragment extends Fragment {
 
             String idValue = getVisibleParam(idContainer.getEditText(), " -id ");
 
-            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " module_template ";
+            String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " module_template";
 
             if (moduleTemplate_module.equals("None")) {
                 run_cmd(cmdBase + idValue);
@@ -2522,17 +2527,17 @@ public class CARsenalFragment extends Fragment {
             if (loopContainer.getVisibility() == View.VISIBLE) {
                 SwitchCompat loopSwitch = loopContainer.findViewById(R.id.btn_toggle_loop);
                 if (loopSwitch != null && loopSwitch.isChecked()) {
-                    loopEnabled = " -l";
+                    loopEnabled = " --loop";
                 }
             }
             String padEnabled = "";
             if (padContainer.getVisibility() == View.VISIBLE) {
                 SwitchCompat padSwitch = padContainer.findViewById(R.id.btn_toggle_pad);
                 if (padSwitch != null && padSwitch.isChecked()) {
-                    padEnabled = " -p";
+                    padEnabled = " --pad";
                 }
             }
-            String delayValue = getVisibleParam(delayContainer.getEditText(), " -d ");
+            String delayValue = getVisibleParam(delayContainer.getEditText(), " --delay ");
 
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " send ";
 
@@ -2623,10 +2628,10 @@ public class CARsenalFragment extends Fragment {
                     run_cmd(cmdBase + "services" + timeoutValue + srcValue + dstValue);
                     break;
                 case "subservices":
-                    run_cmd(cmdBase + "subservices" + timeoutValue + dtypeValue + srcValue + dstValue);
+                    run_cmd(cmdBase + "subservices" + timeoutValue + dtypeValue + stypeValue + srcValue + dstValue);
                     break;
                 case "ecu_reset":
-                    run_cmd(cmdBase + "ecu_reset" + timeoutValue + ecuResetValue + stypeValue + srcValue + dstValue);
+                    run_cmd(cmdBase + "ecu_reset" + timeoutValue + ecuResetValue + srcValue + dstValue);
                     break;
                 case "testerpresent":
                     run_cmd(cmdBase + "testerpresent" + delayValue + durationValue + sprEnabled + srcValue);
