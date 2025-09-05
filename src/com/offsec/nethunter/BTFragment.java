@@ -1,6 +1,5 @@
 package com.offsec.nethunter;
 
-import android.os.Handler;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -10,9 +9,10 @@ import android.graphics.Color;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.Parcelable;
-import android.preference.PreferenceManager;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -47,14 +47,17 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.text.SimpleDateFormat;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.ArrayList;
 import java.util.Objects;
 
 public class BTFragment extends Fragment {
-    private ViewPager mViewPager;
     private SharedPreferences sharedpreferences;
-    private Context context;
     private Activity activity;
     private final ShellExecuter exe = new ShellExecuter(); // Fixed issue with undefined 'exe'
     private static final String ARG_SECTION_NUMBER = "section_number";
@@ -70,7 +73,7 @@ public class BTFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        context = getContext();
+        Context context = getContext();
         activity = getActivity();
     }
 
@@ -79,7 +82,7 @@ public class BTFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.bt, container, false);
         BTFragment.TabsPagerAdapter tabsPagerAdapter = new TabsPagerAdapter(getChildFragmentManager());
 
-        mViewPager = rootView.findViewById(R.id.pagerBt);
+        ViewPager mViewPager = rootView.findViewById(R.id.pagerBt);
         mViewPager.setAdapter(tabsPagerAdapter);
         mViewPager.setOffscreenPageLimit(4);
         mViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
@@ -102,23 +105,21 @@ public class BTFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
-
-        switch (item.getItemId()) {
-            case R.id.setup:
-                if (iswatch) RunSetupWatch();
-                else RunSetup();
-                return true;
-            case R.id.update:
-                if (iswatch) {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Updates have to be done manually through adb shell. If anything gone wrong at first run, please run Setup again.", Toast.LENGTH_LONG).show();
-                } else {
-                    RunUpdate();
-                }
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        int id = item.getItemId();
+        if (id == R.id.setup) {
+            if (iswatch) RunSetupWatch();
+            else RunSetup();
+            return true;
+        } else if (id == R.id.update) {
+            if (iswatch) {
+                Toast.makeText(requireActivity().getApplicationContext(), "Updates have to be done manually through adb shell. If anything gone wrong at first run, please run Setup again.", Toast.LENGTH_LONG).show();
+            } else {
+                RunUpdate();
+            }
+            return true;
+        } else {
+            return super.onOptionsItemSelected(item);
         }
     }
 
@@ -133,11 +134,11 @@ public class BTFragment extends Fragment {
         builder.setPositiveButton("Install", (dialog, which) -> {
             if (iswatch) RunSetupWatch();
             else RunSetup();
-            sharedpreferences.edit().putBoolean("setup_done", true).apply();
+            sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
         });
         builder.setNegativeButton("Disable message", (dialog, which) -> {
             dialog.dismiss();
-            sharedpreferences.edit().putBoolean("setup_done", true).apply();
+            sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
         });
         builder.show();
     }
@@ -150,11 +151,11 @@ public class BTFragment extends Fragment {
         builder.setMessage("This seems to be the first run. Install the Bluetooth tools?");
         builder.setPositiveButton("Yes", (dialog, which) -> {
                 RunSetupWatch();
-                sharedpreferences.edit().putBoolean("setup_done", true).apply();
+                sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
         });
         builder.setNegativeButton("No", (dialog, which) -> {
                 dialog.dismiss();
-                sharedpreferences.edit().putBoolean("setup_done", true).apply();
+                sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
         });
         builder.show();
     }
@@ -165,7 +166,7 @@ public class BTFragment extends Fragment {
         }
         run_cmd("echo -ne \"\\033]0;BT Arsenal Setup\\007\" && clear;" +
                 "apt update && apt install screen bluetooth bluez bluez-tools bluez-obexd libbluetooth3 sox spooftooph libglib2.0*-dev " +
-                "libsystemd-dev python3-dbus python3-bluez python3-pyudev python3-evdev libbluetooth-dev redfang bluelog blueranger -y;" +
+                "libsystemd-dev python3-dbus python3-bluez python3-pyudev python3-evdev libbluetooth-dev redfang bluelog blueranger espeak -y;" +
                 "if [[ -f /usr/sbin/bluebinder ]]; then echo 'Bluebinder is installed!'; else wget https://raw.githubusercontent.com/yesimxev/bluebinder/master/prebuilt/armhf/bluebinder -P /usr/sbin/ && chmod +x /usr/sbin/bluebinder;fi;" +
                 "if [[ -f /usr/lib/libgbinder.so.1.1.25 ]]; then echo 'libgbinder.so.1.1.25 is installed!'; else wget https://raw.githubusercontent.com/yesimxev/libgbinder/master/prebuilt/armhf/libgbinder.so.1.1.25 -P /usr/lib/ &&" +
                 " ln -s libgbinder.so.1.1.25 /usr/lib/libgbinder.so.1.1 && ln -s libgbinder.so.1.1 /usr/lib/libgbinder.so.1 && ln -s libgbinder.so.1 /usr/lib/libgbinder.so;fi;" +
@@ -178,7 +179,7 @@ public class BTFragment extends Fragment {
                 "if [[ ! \"`grep 'noplugin=input' /etc/init.d/bluetooth`\" == \"\" ]]; then echo 'Bluetooth service is patched!'; else echo 'Patching Bluetooth service..' && " +
                 "sed -i -e 's/# NOPLUGIN_OPTION=.*/NOPLUGIN_OPTION=\"--noplugin=input\"/g' /etc/init.d/bluetooth;fi;" +
                 "echo 'Everything is installed! Closing in 3secs..'; sleep 3 && exit ");
-        sharedpreferences.edit().putBoolean("setup_done", true).apply();
+        sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
     }
 
     public void RunSetup() {
@@ -200,7 +201,7 @@ public class BTFragment extends Fragment {
                         "if [[ -f /root/badbt/btk_server.py ]]; then echo 'BadBT is installed!'; else git clone https://github.com/yesimxev/badbt /root/badbt && cp /root/badbt/org.thanhle.btkbservice.conf /etc/dbus-1/system.d/;fi;" +
                         "if [[ ! \"`grep 'noplugin=input' /etc/init.d/bluetooth`\" == \"\" ]]; then echo 'Bluetooth service is patched!'; else echo 'Patching Bluetooth service..' && " +
                         "sed -i -e 's/.*NOPLUGIN_OPTION=\"\"/NOPLUGIN_OPTION=\"--noplugin=input\"/g' /etc/init.d/bluetooth;fi; echo 'Everything is installed!' && echo '\nPress any key to continue...' && read -s -n 1 && exit ");
-                sharedpreferences.edit().putBoolean("setup_done", true).apply();
+                sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
     }
 
     public void RunUpdate() {
@@ -212,7 +213,7 @@ public class BTFragment extends Fragment {
                 "then cd /root/carwhisperer/;git pull && make && make install;cd /root/bluebinder/;git pull && make && make install;cd /root/libgbinder/;git pull && make && " +
                 "make install-dev;cd /root/libglibutil/;git pull && make && make install-dev;cd /root/bt_audit; git pull; cd src && make;" +
                 "cp rfcomm_scan /usr/bin/;cd /root/badbt/;git pull;fi; echo 'Done! Closing in 3secs..'; sleep 3 && exit ");
-        sharedpreferences.edit().putBoolean("setup_done", true).apply();
+        sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
     }
 
     public static class TabsPagerAdapter extends FragmentPagerAdapter {
@@ -270,7 +271,6 @@ public class BTFragment extends Fragment {
         private Context context;
         final ShellExecuter exe = new ShellExecuter();
         private String selected_iface;
-        private Boolean iswatch;
         String selected_addr;
         String selected_class;
         String selected_name;
@@ -280,12 +280,14 @@ public class BTFragment extends Fragment {
             super.onCreate(savedInstanceState);
             context = getContext();
         }
+
         @Override
         public void onResume(){
             super.onResume();
             Toast.makeText(requireActivity().getApplicationContext(), "Status updated", Toast.LENGTH_SHORT).show();
             Executors.newSingleThreadExecutor().execute(() -> refresh(requireView().getRootView()));
         }
+
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
@@ -298,7 +300,7 @@ public class BTFragment extends Fragment {
             final TextView BTIface = rootView.findViewById(R.id.bt_if);
             final TextView BTService = rootView.findViewById(R.id.bt_service);
 
-            iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
+            Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
             if (iswatch) {
                 BTMainDesc.setVisibility(View.GONE);
                 BTIface.setText(R.string.bt_interface);
@@ -306,7 +308,7 @@ public class BTFragment extends Fragment {
             }
 
             // First run
-            Boolean setupdone = sharedpreferences.getBoolean("setup_done", false);
+            Boolean setupdone = sharedpreferences.getBoolean("bt_setup_done", false);
             if (!setupdone.equals(true)) {
                 if (iswatch) SetupDialogWatch();
                 else SetupDialog();
@@ -322,16 +324,17 @@ public class BTFragment extends Fragment {
             }
 
             // Bluetooth interfaces
-            final String[] outputHCI = {""};
-            Executors.newSingleThreadExecutor().execute(() -> outputHCI[0] = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig | grep hci | cut -d: -f1"));
-            final ArrayList<String> hciIfaces = new ArrayList<>();
-            if (outputHCI[0].isEmpty()) {
-                hciIfaces.add("None");
-                ifaces.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, hciIfaces));
-            } else {
-                final String[] ifacesArray = outputHCI[0].split("\n");
-                ifaces.setAdapter(new ArrayAdapter<>(requireContext(),android.R.layout.simple_list_item_1, ifacesArray));
-            }
+            Executors.newSingleThreadExecutor().execute(() -> {
+                String outputHCI = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig | grep hci | cut -d: -f1");
+                ArrayList<String> hciIfaces = new ArrayList<>();
+                if (outputHCI.isEmpty()) {
+                    hciIfaces.add("None");
+                } else {
+                    String[] ifacesArray = outputHCI.split("\n");
+                    hciIfaces.addAll(Arrays.asList(ifacesArray));
+                }
+                requireActivity().runOnUiThread(() -> ifaces.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, hciIfaces)));
+            });
 
             ifaces.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
@@ -366,7 +369,11 @@ public class BTFragment extends Fragment {
                         confirmbuilder.setMessage("Your device does not support hwbinder, vhci, or bt_smd. Make sure your kernel config has the recommended drivers enabled in order to use internal bluetooth.");
                         confirmbuilder.setPositiveButton("Sure", (dialogInterface, i) -> {
                             bluebinderButton.setEnabled(false);
-                            bluebinderButton.setTextColor(Color.parseColor("#40FFFFFF"));
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                                bluebinderButton.setTextColor(getResources().getColor(R.color.translucent_white, requireContext().getTheme()));
+                            } else {
+                                bluebinderButton.setTextColor(Color.WHITE);
+                            }
                             dialogInterface.cancel();
                         });
                         confirmbuilder.setNegativeButton("Try anyway", (dialogInterface, i) -> dialogInterface.cancel());
@@ -382,24 +389,29 @@ public class BTFragment extends Fragment {
                         else {
                             File bluebinder = new File(NhPaths.CHROOT_PATH() + "/usr/sbin/bluebinder");
                             if (bluebinder.exists()) {
-                                // TODO - Enable this for only specific devices 1/2
                                 //Ensure all services are disabled before enabling airplane mode for bluebinder
-                                //exe.RunAsRoot(new String[]{
-                                    //"svc bluetooth disable",
-                                    //"svc wifi disable",
-                                    //"settings put global airplane_mode_on 1;am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true",
-				    //"pm disable com.android.bluetooth"
-                                //});
+                                exe.RunAsRoot(new String[]{
+                                        //"svc bluetooth disable",
+                                        //"svc wifi disable",
+                                        "settings put global bluetooth_on 0",
+                                        // 10 = STATE_OFF | 12 = STATE_TURNING_OFF
+                                        "am broadcast -a android.bluetooth.adapter.action.STATE_CHANGED --ei android.bluetooth.adapter.extra.STATE 10 --ei android.bluetooth.adapter.extra.PREVIOUS_STATE 12",
+                                        "settings put global airplane_mode_on 1",
+                                        "am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true"
+                                        //"pm disable com.android.bluetooth"
+                                });
 
                                 // Run the Bluebinder script
                                 run_cmd("echo -ne \"\\033]0;Bluebinder\\007\" && clear;bluebinder || bluebinder;exit");
                                 Toast.makeText(requireActivity().getApplicationContext(), "Starting bluebinder...", Toast.LENGTH_SHORT).show();
 
-                                // TODO - Enable this for only specific devices 2/2
                                 // Delay to disable airplane mode and re-enable Wi-Fi after 9 seconds
-                                /*new Handler().postDelayed(() -> exe.RunAsRoot(new String[]{
-                                    "settings put global airplane_mode_on 0;am broadcast -a android.intent.action.AIRPLANE_MODE --ez state false",
-                                    "svc wifi enable"
+                                new Handler().postDelayed(() -> exe.RunAsRoot(new String[]{
+                                        "settings put global bluetooth_on 1",
+                                        // 12 = STATE_ON | 10 = STATE_TURNING_ON
+                                        "am broadcast -a android.bluetooth.adapter.action.STATE_CHANGED --ei android.bluetooth.adapter.extra.STATE 12 --ei android.bluetooth.adapter.extra.PREVIOUS_STATE 10",
+                                        "settings put global airplane_mode_on 0",
+                                        "am broadcast -a android.intent.action.AIRPLANE_MODE --ez state false"
                                 }), 9000); // 9000 milliseconds delay*/
                             } else {
                                 Toast.makeText(requireActivity().getApplicationContext(), "Bluebinder is not installed. Launching setup..", Toast.LENGTH_SHORT).show();
@@ -414,8 +426,8 @@ public class BTFragment extends Fragment {
                     }
                     else {
                         exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd pkill bluebinder;exit"});
-			exe.RunAsRoot(new String[]{"pm enable com.android.bluetooth"});
-			exe.RunAsRoot(new String[]{"svc bluetooth enable"});
+                        exe.RunAsRoot(new String[]{"pm enable com.android.bluetooth"});
+                        exe.RunAsRoot(new String[]{"svc bluetooth enable"});
                     }
                     refresh(rootView);
                 }
@@ -820,7 +832,8 @@ public class BTFragment extends Fragment {
         private Context context;
         private String selected_mode;
         final ShellExecuter exe = new ShellExecuter();
-        private Boolean iswatch;
+        private static final String TTS_DIRECTORY = NhPaths.SD_PATH + "/nh_files/CarWhisperer/TTS";
+        private static final String TTS_TEMP_FILE = "/root/tts_output.wav";
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -836,7 +849,7 @@ public class BTFragment extends Fragment {
             SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
             final TextView CWdesc = rootView.findViewById(R.id.carwhisp_desc);
-            iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
+            Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
             if (iswatch) {
                 CWdesc.setVisibility(View.GONE);
             }
@@ -846,9 +859,46 @@ public class BTFragment extends Fragment {
 
             // Target address
             final EditText cw_address = rootView.findViewById(R.id.hci_address);
+            
+            // TTS Fields
+            final Spinner ttsDropdown = rootView.findViewById(R.id.tts_message_dropdown);
+            Spinner ttsVoiceSpinner = rootView.findViewById(R.id.tts_voice_spinner);
+            Spinner ttsSpeedSpinner = rootView.findViewById(R.id.tts_speed_spinner);
+            final EditText ttsInput = rootView.findViewById(R.id.tts_input);
+            final Button ttsGenerate = rootView.findViewById(R.id.generate_tts);
+
+            // Hide the TTS input field by default
+            ttsInput.setVisibility(View.GONE);
+
+            // Create TTS output directory
+            new File(TTS_DIRECTORY).mkdirs();
 
             // Set target
             Button SetTarget = rootView.findViewById(R.id.set_target);
+
+            // Populate dropdown
+            String[] ttsOptions = getResources().getStringArray(R.array.tts_phrases);
+            ArrayAdapter<String> ttsAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, ttsOptions);
+            ttsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            ttsDropdown.setAdapter(ttsAdapter);
+
+            // Handle selection
+            ttsDropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    String selected = ttsOptions[position];
+                    if ("Custom TTS message".equals(selected)) {
+                        ttsInput.setVisibility(View.VISIBLE);
+                    } else {
+                        ttsInput.setVisibility(View.GONE);
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                    ttsInput.setVisibility(View.GONE);
+                }
+            });
 
             SetTarget.setOnClickListener( v -> {
                 String selected_address = PreferencesData.getString(context, "selected_address", "");
@@ -889,6 +939,49 @@ public class BTFragment extends Fragment {
                 startActivityForResult(Intent.createChooser(intent, "Select audio file"),1001);
                 });
 
+            // Text-to-Speech Generation
+            ttsGenerate.setOnClickListener(v -> {
+                String selectedPhrase = ttsDropdown.getSelectedItem().toString();
+                String finalInput;
+
+                if ("Custom message".equals(selectedPhrase)) {
+                    finalInput = ttsInput.getText().toString().trim();
+                    if (finalInput.isEmpty()) {
+                        Toast.makeText(requireActivity().getApplicationContext(), "Enter text to convert", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                } else {
+                    finalInput = selectedPhrase;
+                }
+
+                if (selectedPhrase.equals("Choose Message")){
+                    Toast.makeText(requireContext(), "Please select a TTS Message", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                // Get selected voice and speed
+                String selectedVoice = ttsVoiceSpinner.getSelectedItem().toString();
+                String selectedSpeed = ttsSpeedSpinner.getSelectedItem().toString();
+
+                if (selectedVoice.equals("Voice model") || selectedSpeed.equals("Voice speed")) {
+                    Toast.makeText(requireContext(), "Please select both voice model and speed", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                String outTmp = "/root/tts_output.wav";
+                String timestamp = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(new Date());
+                String outFinal = TTS_DIRECTORY + "/tts_" + timestamp + ".wav";
+
+                String escapedInput = finalInput.replace("\"", "\\\"");
+
+                String ttsCmd = "espeak -v " + selectedVoice + " -s " + selectedSpeed + " \"" + escapedInput + "\" -w " + outTmp + " && " +
+                        "cp " + outTmp + " " + outFinal + " && chmod 777 " + outFinal + " && sleep 1 && exit";
+
+                run_cmd(ttsCmd);
+                Toast.makeText(requireActivity().getApplicationContext(), "TTS audio generated at: " + outFinal, Toast.LENGTH_LONG).show();
+                injectfilename.setText(outFinal);
+            });
+
             // Launch
             Button StartCWButton = rootView.findViewById(R.id.start_cw);
             StartCWButton.setOnClickListener( v -> {
@@ -920,33 +1013,50 @@ public class BTFragment extends Fragment {
             // Stream or play audio
             ImageButton PlayAudioButton = rootView.findViewById(R.id.play_audio);
             ImageButton StopAudioButton = rootView.findViewById(R.id.stop_audio);
-            AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 8000, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, 20000, AudioTrack.MODE_STREAM);
-            PlayAudioButton.setOnClickListener( v -> {
-                File cw_listenfile = new File(NhPaths.SD_PATH + "/rec.raw");
-                if (cw_listenfile.length() == 0) {
+            AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 22000, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, 20000, AudioTrack.MODE_STREAM);
+            PlayAudioButton.setOnClickListener(v -> {
+                String selectedPath = injectfilename.getText().toString().trim();
+                File cw_listenfile;
+                if (!selectedPath.isEmpty() && new File(selectedPath).exists()) {
+                    cw_listenfile = new File(selectedPath);
+                } else {
+                    cw_listenfile = new File(NhPaths.SD_PATH + "/nh_files/CarWhisperer/rec.raw");
+                }
+
+                if (!cw_listenfile.exists() || cw_listenfile.length() == 0) {
                     Toast.makeText(getContext(), "File not found!", Toast.LENGTH_SHORT).show();
                 } else {
                     Executors.newSingleThreadExecutor().execute(() -> {
-                        InputStream s = null;
-                        try {
-                            s = new FileInputStream(cw_listenfile);
-                        } catch (NullPointerException | IOException e) {
-                            e.printStackTrace();
-                        }
-                        audioTrack.play();
-                        // Reading data.
-                        byte[] data = new byte[200];
-                        int n;
-                        try {
-                            while (true) {
-                                assert s != null;
-                                if ((n = s.read(data)) == -1) break;
-                                synchronized (audioTrack) {
-                                    audioTrack.write(data, 0, n);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                            try (InputStream s = Files.newInputStream(cw_listenfile.toPath())) {
+                                audioTrack.play();
+                                byte[] data = new byte[200];
+                                int n;
+                                while ((n = s.read(data)) != -1) {
+                                    synchronized (audioTrack) {
+                                        audioTrack.write(data, 0, n);
+                                    }
                                 }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            } finally {
+                                audioTrack.release();
                             }
-                        } catch (IOException e) {
-                            e.printStackTrace();
+                        } else {
+                            try (InputStream s = new FileInputStream(cw_listenfile)) {
+                                audioTrack.play();
+                                byte[] data = new byte[200];
+                                int n;
+                                while ((n = s.read(data)) != -1) {
+                                    synchronized (audioTrack) {
+                                        audioTrack.write(data, 0, n);
+                                    }
+                                }
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            } finally {
+                                audioTrack.release();
+                            }
                         }
                     });
                 }
@@ -958,6 +1068,7 @@ public class BTFragment extends Fragment {
             return rootView;
         }
     }
+
     public static class BadBtFragment extends BTFragment {
         private Context context;
         private String selected_badbtmode;
@@ -1049,7 +1160,6 @@ public class BTFragment extends Fragment {
                 public void onNothingSelected(AdapterView<?> parentView) {
                 }
             });
-
 
             // Refresh
             refresh_badbt(rootView);
@@ -1331,14 +1441,14 @@ public class BTFragment extends Fragment {
             EditText injectfilename = requireActivity().findViewById(R.id.injectfilename);
             String FilePath = Objects.requireNonNull(data.getData()).getPath();
             assert FilePath != null;
-            FilePath = FilePath.replace("/document/primary:", "/sdcard/");
+            FilePath = FilePath.replace("/document/primary:", NhPaths.SD_PATH);
             injectfilename.setText(FilePath);
         }
         if (requestCode == 1002 && resultCode == Activity.RESULT_OK) {
             EditText badbtstring = requireActivity().findViewById(R.id.editBadBT);
             String FilePath = Objects.requireNonNull(data.getData()).getPath();
             assert FilePath != null;
-            FilePath = FilePath.replace("/document/primary:", "/sdcard/");
+            FilePath = FilePath.replace("/document/primary:", NhPaths.SD_PATH);
             final ShellExecuter exe = new ShellExecuter();
             String fileContent = exe.RunAsRootOutput("cat " + FilePath);
             badbtstring.setText(fileContent);
@@ -1348,14 +1458,14 @@ public class BTFragment extends Fragment {
     public static class PreferencesData {
         public static void saveString(Context context, String key, String value) {
             if (context != null) {
-                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+                SharedPreferences sharedPrefs = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
                 sharedPrefs.edit().putString(key, value).apply();
             }
         }
 
         public static String getString(Context context, String key, String defaultValue) {
             if (context != null) {
-                SharedPreferences sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
+                SharedPreferences sharedPrefs = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
                 return sharedPrefs.getString(key, defaultValue);
             }
             return defaultValue;

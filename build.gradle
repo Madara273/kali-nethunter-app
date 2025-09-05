@@ -1,19 +1,22 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 apply plugin: 'com.android.application'
+apply plugin: 'org.jetbrains.kotlin.android'
 
 buildscript {
     repositories {
-        mavenCentral()
         google()
+        mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.4.2'
+        classpath 'com.android.tools.build:gradle:8.5.2'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.10"
     }
 }
 
 repositories {
     google()
     mavenCentral()
-    maven { url "https://maven.google.com" }
     maven { url "https://repo.grails.org/grails/plugins" }
     // Snowfall
     maven { url 'https://jitpack.io' }
@@ -21,28 +24,47 @@ repositories {
 
 android {
     namespace "com.offsec.nethunter"
-    compileSdk 33
+    //noinspection GradleDependency
+    compileSdk 34
 
     buildFeatures {
         dataBinding true
+        aidl true
+        buildConfig true
+        //compose true
         // for view binding:
         // viewBinding true
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+        coreLibraryDesugaringEnabled true
     }
 
     defaultConfig {
         minSdk 21
         //noinspection ExpiredTargetSdkVersion
-        targetSdk 28
+        targetSdk 29
         //noinspection HighAppVersionCode
-        versionCode 2025020200
-        versionName "2025.2"
+        versionCode 2025030100
+        versionName '2025.3'
         multiDexEnabled true
         applicationId "com.offsec.nethunter"
+        externalNativeBuild {
+            cmake {
+                arguments "-DANDROID_PLATFORM=android-24"
+                cppFlags ""
+            }
+        }
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', "x86_64"
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
     }
 
     signingConfigs {
@@ -85,25 +107,35 @@ android {
     }
 }
 
+kotlin {
+    jvmToolchain(17)
+    compilerOptions {
+        jvmTarget.set(JvmTarget.JVM_17)
+    }
+}
+
 dependencies {
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
     implementation 'org.thoughtcrime.ssl.pinning:AndroidPinning:1.0.0'
     implementation 'com.google.android.gms:play-services-location:21.3.0'
     implementation 'joda-time:joda-time:2.14.0'
-    implementation 'com.google.guava:guava:33.1.0-android'
-    implementation 'androidx.lifecycle:lifecycle-extensions:2.2.0'
-    implementation 'androidx.appcompat:appcompat:1.6.1'
-    implementation 'com.google.android.material:material:1.6.1'
+    implementation 'com.google.guava:guava:33.4.8-android'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel:2.9.2'
+    implementation 'androidx.lifecycle:lifecycle-livedata:2.9.2'
+    implementation 'androidx.appcompat:appcompat:1.7.1'
+    implementation 'com.google.android.material:material:1.13.0-rc01'
     implementation 'androidx.preference:preference:1.2.1'
+    implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.2.10'
     // Snowfall
     implementation 'com.github.jetradarmobile:android-snowfall:1.2.1'
-    // debugImplementation because LeakCanary should only run in debug builds.
+    implementation 'androidx.navigation:navigation-runtime:2.9.3'
     //debugImplementation 'com.squareup.leakcanary:leakcanary-android:3.0-alpha-8'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 }
 
 java {
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }

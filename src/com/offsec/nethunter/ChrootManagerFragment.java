@@ -3,7 +3,6 @@ package com.offsec.nethunter;
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -35,7 +34,6 @@ import com.offsec.nethunter.utils.SharePrefTag;
 import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -220,7 +218,7 @@ public class ChrootManagerFragment extends Fragment {
                                         NhPaths.showMessage(context, "Copied file is empty. Please select a valid backup.");
                                         return;
                                     }
-                                    try (InputStream checkIn = new FileInputStream(outFile)) {
+                                    try (InputStream checkIn = Files.newInputStream(outFile.toPath())) {
                                         byte[] magic = new byte[6];
                                         if (checkIn.read(magic) == 6) {
                                             if (!(magic[0] == (byte) 0xFD && magic[1] == '7' && magic[2] == 'z' && magic[3] == 'X' && magic[4] == 'Z' && magic[5] == 0x00)) {
@@ -424,7 +422,7 @@ public class ChrootManagerFragment extends Fragment {
                     .setItems(options, (dialog, which) -> {
                         String arch = getDeviceArch();
                         String type = (which == 0) ? "minimal" : "full";
-                        String fileName = "kalifs-" + arch + "-" + type + ".tar.xz";
+                        String fileName = "kali-nethunter-rootfs-" + type + "-" + arch + ".tar.xz";
                         File downloadDir = context.getFilesDir();
                         File targetFile;
                         try {
@@ -638,9 +636,9 @@ public class ChrootManagerFragment extends Fragment {
     }
 
     private String getDeviceArch() {
-        String abi = Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0
+        String abi = (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0)
                 ? Build.SUPPORTED_ABIS[0]
-                : Build.CPU_ABI;
+                : "arm64"; // Fallback to arm64 if not available
         if (abi.contains("arm64")) return "arm64";
         if (abi.contains("armeabi")) return "armhf";
         // Default fallback
@@ -680,7 +678,7 @@ public class ChrootManagerFragment extends Fragment {
             MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
             adb.setTitle("Metapackage Install & Upgrade");
             LayoutInflater inflater = activity.getLayoutInflater();
-            @SuppressLint("InflateParams") final ScrollView sv = (ScrollView) inflater.inflate(R.layout.metapackagechooser, null);
+            final ScrollView sv = (ScrollView) inflater.inflate(R.layout.metapackagechooser, null);
             adb.setView(sv);
             final Button metapackageButton = sv.findViewById(R.id.metapackagesWeb);
             metapackageButton.setOnClickListener(v -> {
@@ -899,7 +897,7 @@ public class ChrootManagerFragment extends Fragment {
     }
 
     private void broadcastBackPressedIntent(Boolean isEnabled){
-        backPressedintent.setAction(AppNavHomeActivity.NethunterReceiver.BACKPRESSED);
+        backPressedintent.setAction(BuildConfig.APPLICATION_ID + ".BACKPRESSED");
         backPressedintent.putExtra("isEnable", isEnabled);
         context.sendBroadcast(backPressedintent);
         setHasOptionsMenu(isEnabled);

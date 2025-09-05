@@ -14,7 +14,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-
 public class KaliServicesData {
 	private static KaliServicesData instance;
 	public static boolean isDataInitiated = false;
@@ -119,7 +118,7 @@ public class KaliServicesData {
 		kaliServicesExecutor.setListener(new KaliServicesExecutor.KaliServicesExecutorListener() {
 			@Override
 			public void onTaskFinished(List<KaliServicesModel> kaliServicesModelList) {
-
+				// No implementation needed
 			}
 
 			public void onExecutorPrepare() {
@@ -141,7 +140,7 @@ public class KaliServicesData {
 		kaliServicesExecutor.setListener(new KaliServicesExecutor.KaliServicesExecutorListener() {
 			@Override
 			public void onTaskFinished(List<KaliServicesModel> kaliServicesModelList) {
-
+				// No implementation needed
 			}
 
 			public void onExecutorPrepare() {
@@ -163,7 +162,7 @@ public class KaliServicesData {
 		kaliServicesExecutor.setListener(new KaliServicesExecutor.KaliServicesExecutorListener() {
 			@Override
 			public void onTaskFinished(List<KaliServicesModel> kaliServicesModelList) {
-
+				// No implementation needed
 			}
 
 			public void onExecutorPrepare() {
@@ -185,7 +184,7 @@ public class KaliServicesData {
 		kaliServicesExecutor.setListener(new KaliServicesExecutor.KaliServicesExecutorListener() {
 			@Override
 			public void onTaskFinished(List<KaliServicesModel> kaliServicesModelList) {
-
+				// No implementation needed
 			}
 
 			public void onExecutorPrepare() {
@@ -213,7 +212,7 @@ public class KaliServicesData {
 			kaliServicesExecutor.setListener(new KaliServicesExecutor.KaliServicesExecutorListener() {
 				@Override
 				public void onTaskFinished(List<KaliServicesModel> kaliServicesModelList) {
-
+					// No implementation needed
 				}
 
 				public void onExecutorPrepare() {
@@ -241,7 +240,7 @@ public class KaliServicesData {
 		kaliServicesExecutor.setListener(new KaliServicesExecutor.KaliServicesExecutorListener() {
 			@Override
 			public void onTaskFinished(List<KaliServicesModel> kaliServicesModelList) {
-
+				// No implementation needed
 			}
 
 			public void onExecutorPrepare() {
@@ -264,7 +263,7 @@ public class KaliServicesData {
 		kaliServicesExecutor.setListener(new KaliServicesExecutor.KaliServicesExecutorListener() {
 			@Override
 			public void onTaskFinished(List<KaliServicesModel> kaliServicesModelList) {
-
+				// No implementation needed
 			}
 
 			public void onExecutorPrepare() {

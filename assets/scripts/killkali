@@ -1,27 +1,22 @@
 #!/system/bin/sh
 
-SCRIPT_PATH=$(readlink -f $0)
-. ${SCRIPT_PATH%/*}/bootkali_log
-. ${SCRIPT_PATH%/*}/bootkali_env
+SCRIPT_PATH=$(readlink -f "$0")
+. "${SCRIPT_PATH%/*}/bootkali_log"
+. "${SCRIPT_PATH%/*}/bootkali_env"
 
 #################################
 #### DEFINE GLOBAL VARIABLES ####
 #################################
 
 ## Validate busybox path.
-if [ -z "$BUSYBOX" ]; then
-    bklog "[-] No busybox_nh is installed or busybox is not granted execute permission, if you did have it installed, please symlink it to /system/bin and grant it the permission."
+if [ -z "$BUSYBOX" ] || [ ! -x "$BUSYBOX" ]; then
+    bklog "[-] Busybox is either not installed or not executable. Please ensure it is symlinked to /system/bin and has execute permissions."
     exit 1
 fi
 
 ## Validate kali Chroot path.
-if [ ! -d "$MNT" ]; then
-    bklog "[-] \"$MNT\" directory not exist!"
-    bklog "[!] Click the button [INSTALL KALI CHROOT] down below now!"
-    exit 2
-fi
-if [ -z "$MNT" ]; then
-    bklog "[-] The \$MNT variable is not defined, please run nethunter app first."
+if [ -z "$MNT" ] || [ ! -d "$MNT" ]; then
+    bklog "[-] The \$MNT variable is either undefined or points to a non-existent directory. Please run the NetHunter app first."
     exit 2
 fi
 
@@ -34,14 +29,9 @@ isAllunmounted=0
 ########## Kill all running kali services and processes ##########
 f_kill_pids() {
     bklog "[!] Killing all running kali services .."
-    local lsof_full=$($BUSYBOX lsof | awk '{print $1}' | grep -c '^lsof')
-    if [ "${lsof_full}" -eq 0 ]; then
-        local pids=$($BUSYBOX lsof | grep "$MNT" | awk '{print $1}' | uniq)
-    else
-        local pids=$($BUSYBOX lsof | grep "$MNT" | awk '{print $2}' | uniq)
-    fi
-    if [ -n "${pids}" ]; then
-        kill -9 ${pids} 2> /dev/null
+    local pids=$($BUSYBOX lsof | grep "$MNT" | awk '{print $2}' | uniq)
+    if [ -n "$pids" ]; then
+        kill -9 $pids 2> /dev/null
         return $?
     fi
     return 0
@@ -52,38 +42,38 @@ f_restore_setup() {
     bklog "[!] Restoring the setup to previous state.."
 
     ## set shmmax to 128mb to free memory ##
-    $BUSYBOX sysctl -w kernel.shmmax=134217728
+    #$BUSYBOX sysctl -w kernel.shmmax=134217728
 
     ## remove all the remaining chroot vnc session pid and log files..##
     bklog "[!] Removing all the remaining chroot vnc session pid and log files.."
-    rm -rf $MNT/tmp/.X11* $MNT/tmp/.X*-lock $MNT/root/.vnc/*.pid $MNT/root/.vnc/*.log > /dev/null 2>&1
+    rm -rf "$MNT/tmp/.X11*" "$MNT/tmp/.X*-lock" "$MNT/root/.vnc/*.pid" "$MNT/root/.vnc/*.log" > /dev/null 2>&1
 }
 
 ########## umount the fs one by one ##########
 f_umount_fs() {
-    if $BUSYBOX mountpoint -q $MNT/$1; then
+    if $BUSYBOX mountpoint -q "$MNT/$1"; then
         if $BUSYBOX umount -l "$MNT/$1" || $BUSYBOX umount -f "$MNT/$1"; then
             bklog "[+] umounted $MNT/$1"
-            if [ ! "$1" = "dev/pts" -a ! "$1" = "dev/shm" ]; then
-                if rm -rf $MNT/$1; then
-                    bklog "[+] removed $MNT/$1"
-                else
+            if [ "$1" != "dev/pts" ] && [ "$1" != "dev/shm" ]; then
+                if ! rm -rf "$MNT/$1"; then
                     bklog "[-] Failed to remove $MNT/$1"
                     isAllunmounted=1
+                else
+                    bklog "[+] removed $MNT/$1"
                 fi
             fi
         else
-            bklog "[-] failed to umounted $MNT/$1"
+            bklog "[-] failed to umount $MNT/$1"
             isAllunmounted=1
         fi
     else
-        if [ -d $MNT/$1 ]; then
+        if [ -d "$MNT/$1" ]; then
             bklog "[+] $MNT/$1 is unmounted already."
-            if rm -rf $MNT/$1; then
-                bklog "[+] removed $MNT/$1"
-            else
+            if ! rm -rf "$MNT/$1"; then
                 bklog "[-] Failed to remove $MNT/$1"
                 isAllunmounted=1
+            else
+                bklog "[+] removed $MNT/$1"
             fi
         fi
     fi
@@ -125,7 +115,7 @@ case $res in
     exit 1
 esac
 
-if [ -z "$(cat /proc/mounts | grep $MNT)" ]; then
+if [ -z "$(grep "$MNT" /proc/mounts)" ]; then
     bklog "[+] All done."
     isAllunmounted=0
 else

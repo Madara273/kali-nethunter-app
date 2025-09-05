@@ -133,7 +133,7 @@ location of your Java installation."
     fi
 else
     JAVACMD=java
-    which java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
+    command -v java >/dev/null 2>&1 || die "ERROR: JAVA_HOME is not set and no 'java' command could be found in your PATH.
 
 Please set the JAVA_HOME variable in your environment to match the
 location of your Java installation."
@@ -164,10 +164,12 @@ fi
 
 # For Cygwin or MSYS, switch paths to Windows format before running java
 if "$cygwin" || "$msys" ; then
-    APP_HOME=$( cygpath --path --mixed "$APP_HOME" )
-    CLASSPATH=$( cygpath --path --mixed "$CLASSPATH" )
-
-    JAVACMD=$( cygpath --unix "$JAVACMD" )
+    APP_HOME_MIXED=$( cygpath --path --mixed "$APP_HOME" )
+    CLASSPATH_MIXED=$( cygpath --path --mixed "$CLASSPATH" )
+    JAVACMD_UNIX=$( cygpath --unix "$JAVACMD" )
+    APP_HOME=$APP_HOME_MIXED
+    CLASSPATH=$CLASSPATH_MIXED
+    JAVACMD=$JAVACMD_UNIX
 
     # Now convert the arguments - kludge to limit ourselves to /bin/sh
     for arg do

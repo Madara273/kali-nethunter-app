@@ -1,7 +1,6 @@
 package com.offsec.nethunter.gps;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -34,10 +33,11 @@ import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.Priority;
 import com.offsec.nethunter.AppNavHomeActivity;
-import com.offsec.nethunter.KaliGpsServiceFragment;
 import com.offsec.nethunter.R;
 import com.offsec.nethunter.utils.NhPaths;
+import com.offsec.nethunter.utils.PermissionCheck;
 
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -51,6 +51,7 @@ import java.net.Inet4Address;
 import java.net.UnknownHostException;
 import java.net.InetAddress;
 import java.util.Date;
+import java.util.Locale;
 
 public class LocationUpdateService extends Service {
     private FusedLocationProviderClient fusedLocationClient;
@@ -138,7 +139,7 @@ public class LocationUpdateService extends Service {
     public String formatAltitude(Location location) {
         StringBuilder s = new StringBuilder();
         if (location.hasAltitude())
-            s.append(String.format("%.4f,M", location.getAltitude()));
+            s.append(String.format(Locale.getDefault(),"%.4f,M", location.getAltitude()));
         else
             s.append(",");
         return s.toString();
@@ -163,7 +164,6 @@ public class LocationUpdateService extends Service {
     /**
      * Formats the time from the #Location into a string.
      */
-    @SuppressLint("DefaultLocale")
     public static String formatTime(Location location) {
         DateTimeFormatter dtf = DateTimeFormat.forPattern("HHmmss");
         return dtf.print(new DateTime(location.getTime()));
@@ -181,12 +181,12 @@ public class LocationUpdateService extends Service {
         double longitude = location.getLongitude();
         char ewSuffix = longitude < 0 ? 'W' : 'E';
         longitude = Math.abs(longitude);
-        @SuppressLint("DefaultLocale") String lat = String.format("%02d%02d.%04d,%c",
+        String lat = String.format(Locale.getDefault(),"%02d%02d.%04d,%c",
                 (int) latitude,
                 (int) (latitude * 60) % 60,
                 (int) (latitude * 60 * 10000) % 10000,
                 nsSuffix);
-        @SuppressLint("DefaultLocale") String lon = String.format("%03d%02d.%04d,%c",
+        String lon = String.format(Locale.getDefault(),"%03d%02d.%04d,%c",
                 (int) longitude,
                 (int) (longitude * 60) % 60,
                 (int) (longitude * 60 * 10000) % 10000,
@@ -229,35 +229,48 @@ public class LocationUpdateService extends Service {
         locationUpdatesStarted = true;
         Log.d(TAG, "In startLocationUpdates");
 
-        final LocationRequest lr = new LocationRequest.Builder(LocationRequest.PRIORITY_HIGH_ACCURACY, 1000L / 2L)
+        final LocationRequest lr = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000L / 2L)
                 .setMinUpdateIntervalMillis(100L)
                 .setMaxUpdateDelayMillis(600L)
                 .setDurationMillis(1000 * 3600 * 2)
                 .build();
 
-        Log.d(TAG, "Requesting permissions marshmallow");
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED) {
+        Log.d(TAG, "Requesting permissions ..");
+        if (PermissionCheck.hasPermissions(this, new String[]{
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_COARSE_LOCATION
+        })) {
+            Log.d(TAG, "Location permissions not granted. Requesting permissions.");
+            return;
+        }
 
-            // Initialize fusedLocationClient if not already initialized
-            if (fusedLocationClient == null) {
-                fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-            }
+        // Initialize fusedLocationClient if not already initialized
+        if (fusedLocationClient == null) {
+            fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        }
 
-            // Register with Location services, so we can construct fake NMEA data
-            fusedLocationClient.requestLocationUpdates(lr, locationListener, null);
+        // Register with Location services, so we can construct fake NMEA data
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        fusedLocationClient.requestLocationUpdates(lr, locationListener, null);
 
-            // Try to register for actual NMEA data straight from the GPS
-            LocationManager locationManager = (LocationManager) getSystemService(Service.LOCATION_SERVICE);
-            try {
-                Method addNmeaListener =
-                        LocationManager.class.getMethod("addNmeaListener", GpsStatus.NmeaListener.class);
-                addNmeaListener.invoke(locationManager, nmeaListener);
-                Log.d(TAG, "addNmeaListener success");
-            } catch (Exception exception) {
-                Log.d(TAG, "Failed to add NMEA listener: " + exception.getMessage());
-            }
+        // Try to register for actual NMEA data straight from the GPS
+        LocationManager locationManager = (LocationManager) getSystemService(Service.LOCATION_SERVICE);
+        try {
+            Method addNmeaListener =
+                    LocationManager.class.getMethod("addNmeaListener", GpsStatus.NmeaListener.class);
+            addNmeaListener.invoke(locationManager, nmeaListener);
+            Log.d(TAG, "addNmeaListener success");
+        } catch (Exception exception) {
+            Log.d(TAG, "Failed to add NMEA listener: " + exception.getMessage());
         }
 
         // turn on a Persistent Notification so we can continue to get location updates even when backgrounded
@@ -266,18 +279,25 @@ public class LocationUpdateService extends Service {
         Intent resultIntent = new Intent(this, AppNavHomeActivity.class);
         resultIntent.putExtra("menuFragment", R.id.gps_item);
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-        stackBuilder.addNextIntentWithParentStack(resultIntent);
+        stackBuilder.addNextIntent(resultIntent);
         PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
                 .setAutoCancel(false)
-                .setSmallIcon(R.drawable.ic_stat_ic_nh_notification)
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
                 .setContentText(notificationText)
                 .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
                 .setContentTitle(notificationTitle)
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setContentIntent(resultPendingIntent);
         Notification notification = builder.build();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "POST_NOTIFICATIONS permission not granted. Requesting permission.");
+            requestPostNotificationsPermission(this);
+            return;
+        }
         notificationManagerCompat.notify(NOTIFY_ID, notification);
 
         this.startForeground(NOTIFY_ID, notification);
@@ -343,7 +363,7 @@ public class LocationUpdateService extends Service {
             ageStr = (age / 60) + "m";
         else
             ageStr = (age / 3600) + "h";
-        String updatedText = String.format("Latitude: %1.5f  Longitude: %1.5f  +/- %1.1fm  Source: %s  Age: %s  Satellites: %d",
+        String updatedText = String.format(Locale.getDefault(),"Latitude: %1.5f  Longitude: %1.5f  +/- %1.1fm  Source: %s  Age: %s  Satellites: %d",
                 lastLocationLatitude, lastLocationLongitude, lastLocationAccuracy,
                 lastLocationSourcePublished, ageStr, lastLocationSats);
 
@@ -359,19 +379,19 @@ public class LocationUpdateService extends Service {
         PendingIntent resultPendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE);
 
         RemoteViews contentView = new RemoteViews(getPackageName(), R.layout.gps_notification);
-        contentView.setTextViewText(R.id.gps_notification_latitude, String.format("%1.5f", lastLocationLatitude));
-        contentView.setTextViewText(R.id.gps_notification_longitude, String.format("%1.5f", lastLocationLongitude));
-        contentView.setTextViewText(R.id.gps_notification_accuracy, String.format("%1.1fm", lastLocationAccuracy));
+        contentView.setTextViewText(R.id.gps_notification_latitude, String.format(Locale.getDefault(),"%1.5f", lastLocationLatitude));
+        contentView.setTextViewText(R.id.gps_notification_longitude, String.format(Locale.getDefault(),"%1.5f", lastLocationLongitude));
+        contentView.setTextViewText(R.id.gps_notification_accuracy, String.format(Locale.getDefault(),"%1.1fm", lastLocationAccuracy));
         contentView.setTextViewText(R.id.gps_notification_source, lastLocationSourcePublished);
         contentView.setTextViewText(R.id.gps_notification_age, ageStr);
         if (lastLocationSourcePublished.equals("GPS"))
-            contentView.setTextViewText(R.id.gps_notification_sats, String.format("%d", lastLocationSats));
+            contentView.setTextViewText(R.id.gps_notification_sats, String.format(Locale.getDefault(),"%d", lastLocationSats));
         else
             contentView.setTextViewText(R.id.gps_notification_sats, "-");
 
         NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), CHANNEL_ID)
                 .setAutoCancel(false)
-                .setSmallIcon(R.drawable.ic_stat_ic_nh_notification)
+                .setSmallIcon(android.R.drawable.ic_dialog_info)
                 .setContent(contentView)
                 .setStyle(new NotificationCompat.DecoratedCustomViewStyle())
                 .setCustomContentView(contentView)
@@ -379,8 +399,10 @@ public class LocationUpdateService extends Service {
                 .setPriority(NotificationCompat.PRIORITY_LOW)
                 .setContentIntent(resultPendingIntent);
         Notification notification = builder.build();
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "POST_NOTIFICATIONS permission not granted. Notification not sent.");
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "POST_NOTIFICATIONS permission not granted. Requesting permission.");
+            requestPostNotificationsPermission(this);
             return;
         }
         notificationManagerCompat.notify(NOTIFY_ID, notification);
@@ -510,7 +532,7 @@ public class LocationUpdateService extends Service {
         // from: https://github.com/ya-isakov/blue-nmea-mirror/blob/master/src/Source.java
         String time = formatTime(location);
         String position = formatPosition(location);
-        String accuracy = String.format("%.4f", location.getAccuracy()/19.0); // why 19.0?  see https://gitlab.com/gpsd/gpsd/-/blob/master/libgpsd_core.c, P_UERE_NO_DGPS
+        String accuracy = String.format(Locale.getDefault(),"%.4f", location.getAccuracy()/19.0); // why 19.0?  see https://gitlab.com/gpsd/gpsd/-/blob/master/libgpsd_core.c, P_UERE_NO_DGPS
         String innerSentence = String.format("GPGGA,%s,%s,1,%s,%s,%s,,,,", time, position, formatSatellites(location),
                 accuracy, formatAltitude(location));
 

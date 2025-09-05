@@ -101,21 +101,20 @@ public class BadusbFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.start_service:
-                start();
-                return true;
-            case R.id.stop_service:
-                stop();
-                return true;
-            case R.id.source_button:
-                Intent i = new Intent(activity, EditSourceActivity.class);
-                i.putExtra("path", sourcePath);
-                startActivity(i);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
+        int id = item.getItemId();
+        if (id == R.id.start_service) {
+            start();
+            return true;
+        } else if (id == R.id.stop_service) {
+            stop();
+            return true;
+        } else if (id == R.id.source_button) {
+            Intent i = new Intent(activity, EditSourceActivity.class);
+            i.putExtra("path", sourcePath);
+            startActivity(i);
+            return true;
         }
+        return super.onOptionsItemSelected(item);
     }
 
     private void updateOptions() {

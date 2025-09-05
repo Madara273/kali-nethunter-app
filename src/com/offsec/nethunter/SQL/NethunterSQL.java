@@ -10,16 +10,19 @@ import android.text.TextUtils;
 
 import com.offsec.nethunter.BuildConfig;
 import com.offsec.nethunter.models.NethunterModel;
-import com.offsec.nethunter.utils.NhPaths;
+import com.offsec.nethunter.utils.VulkanChecker;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
 public class NethunterSQL extends SQLiteOpenHelper {
+    private final Context context;
     private static final String DATABASE_NAME = "NethunterFragment";
     private static NethunterSQL instance;
     public static final String TAG = "NethunterSQL";
@@ -27,16 +30,16 @@ public class NethunterSQL extends SQLiteOpenHelper {
     private static final ArrayList<String> COLUMNS = new ArrayList<>();
     private static final String[][] nethunterData = {
             {"1", "Kernel Version", "uname -a", "\\n", "1"},
-            {"2", "Busybox Version", Environment.getDataDirectory().getAbsolutePath() + "/data/com.offsec.nethunter/scripts/bin/busybox_nh | head -n1", "\\n", "1"},
+            {"2", "Busybox Version", "busybox_nh | head -n1", "\\n", "1"},
             {"3", "Root Status", "su -v", "\\n", "1"},
             {"4", "HID Status", "[ -n \"$(ls /dev/hidg* 2>/dev/null)\" ] && ls /dev/hidg* || { echo \"HID interface not found.\"; if [[ $(uname -r | cut -d. -f1) -ge 4 ]]; then echo \"Please enable in USB Arsenal.\"; fi }", "\\n", "1"},
-            {"5", "CAN Status", NhPaths.BUSYBOX + " ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$' || echo \"CAN interface not found.\nPlease enable in CAN Arsenal.\"", "\\n", "1"},
-            {"6", "NetHunter Terminal Status", "[ \"$(pm list packages | grep 'com.offsec.nhterm')\" ] && echo \"NetHunter Terminal is installed.\" || echo \"NetHunter Terminal is NOT yet installed.\"", "\\n", "1"},
-            {"7", "Network Interface Status", " ip -o addr show | " + NhPaths.BUSYBOX + " awk '{print $2, $3, $4}'", "\\n", "1"},
-            {"8", "External IP", NhPaths.BUSYBOX + " which wget > /dev/null 2>&1 && " + NhPaths.BUSYBOX + " wget -qO - icanhazip.com || " + NhPaths.BUSYBOX + " curl -s ipv4.icanhazip.com", "\\n", "0"}
+            {"5", "CAN Status", "busybox_nh ip -o link show | awk -F': ' '{print $2}' | grep -E '^(can|vcan|slcan)[0-9]+$' || echo \"CAN interface not found.\nPlease enable in CARsenal.\"", "\\n", "1"},
+            {"6", "NetHunter Terminal Status", "[ \"$(pm list packages | grep 'com.offsec.nhterm')\" ] && echo \"NetHunter Terminal is installed.\" || echo \"NetHunter Terminal is NOT installed.\"", "\\n", "1"},
+            {"7", "Network Interface Status", "ip -o addr show | busybox_nh awk '{print $2, $3, $4}'", "\\n", "1"},
+            {"8", "External IP", "busybox_nh which wget > /dev/null 2>&1 && busybox_nh wget -qO - icanhazip.com || curl -s ipv4.icanhazip.com", "\\n", "0"}
     };
 
-    public static synchronized NethunterSQL getInstance(Context context){
+    public static synchronized NethunterSQL getInstance(Context context) {
         if (instance == null) {
             instance = new NethunterSQL(context.getApplicationContext());
         }
@@ -45,6 +48,7 @@ public class NethunterSQL extends SQLiteOpenHelper {
 
     private NethunterSQL(Context context) {
         super(context, DATABASE_NAME, null, 1);
+        this.context = context;
         COLUMNS.add("id");
         COLUMNS.add("TitleName");
         COLUMNS.add("CommandforResult");
@@ -89,6 +93,15 @@ public class NethunterSQL extends SQLiteOpenHelper {
             String columnValue2 = columnIndex2 != -1 ? cursor.getString(columnIndex2) : null;
             String columnValue3 = columnIndex3 != -1 ? cursor.getString(columnIndex3) : null;
             String columnValue4 = columnIndex4 != -1 ? cursor.getString(columnIndex4) : null;
+
+            // Check for GPU Info row
+            if ("GPU Info".equals(columnValue1) && "vulkan_check".equals(columnValue2)) {
+                boolean supported = VulkanChecker.isVulkanSupported(context);
+                columnValue2 = supported ? "Vulkan supported" : "Vulkan NOT supported";
+                columnValue4 = "0"; // Prevent accidental execution as a shell command
+            } else if ("vulkan_check".equals(columnValue2)) {
+                columnValue2 = "Invalid command: vulkan_check";
+            }
 
             nethunterModelArrayList.add(new NethunterModel(
                     columnValue1,
@@ -184,11 +197,12 @@ public class NethunterSQL extends SQLiteOpenHelper {
                 File currentDB = new File(currentDBPath);
                 File backupDB = new File(storedDBpath);
                 if (currentDB.exists()) {
-                    FileChannel src = new FileInputStream(currentDB).getChannel();
-                    FileChannel dst = new FileOutputStream(backupDB).getChannel();
-                    dst.transferFrom(src, 0, src.size());
-                    src.close();
-                    dst.close();
+                    try (FileInputStream fis = new FileInputStream(currentDB);
+                         FileChannel src = fis.getChannel();
+                         FileOutputStream fos = new FileOutputStream(backupDB);
+                         FileChannel dst = fos.getChannel()) {
+                        dst.transferFrom(src, 0, src.size());
+                    }
                 }
             }
         } catch (Exception e) {
@@ -199,7 +213,7 @@ public class NethunterSQL extends SQLiteOpenHelper {
     }
 
     public String restoreData(String storedDBpath) {
-        if (!new File(storedDBpath).exists()){
+        if (!new File(storedDBpath).exists()) {
             return "db file not found.";
         }
         if (!verifyDB(storedDBpath)) {
@@ -213,11 +227,18 @@ public class NethunterSQL extends SQLiteOpenHelper {
                 File currentDB = new File(currentDBPath);
                 File backupDB = new File(storedDBpath);
                 if (backupDB.exists()) {
-                    FileChannel src = new FileInputStream(backupDB).getChannel();
-                    FileChannel dst = new FileOutputStream(currentDB).getChannel();
-                    dst.transferFrom(src, 0, src.size());
-                    src.close();
-                    dst.close();
+                    try (FileInputStream fis = new FileInputStream(backupDB);
+                         FileChannel src = fis.getChannel();
+                         FileOutputStream fos = new FileOutputStream(currentDB);
+                         FileChannel dst = fos.getChannel()) {
+                        dst.transferFrom(src, 0, src.size());
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                        return "File not found: " + e.getMessage();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        return "I/O error: " + e.getMessage();
+                    }
                 }
             }
         } catch (Exception e) {

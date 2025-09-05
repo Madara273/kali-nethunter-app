@@ -150,59 +150,56 @@ public class KaliServicesFragment extends Fragment {
         final TextView titleTextView = promptView.findViewById(R.id.f_kaliservices_adb_tv_title1);
         final EditText storedpathEditText = promptView.findViewById(R.id.f_kaliservices_adb_et_storedpath);
 
-        switch (item.getItemId()){
-            case R.id.f_kaliservices_menu_backupDB:
-                titleTextView.setText(R.string.kaliservices_full_path_save_db);
-                storedpathEditText.setText(MessageFormat.format("{0}/FragmentKaliServices", NhPaths.APP_SD_SQLBACKUP_PATH));
-                MaterialAlertDialogBuilder adbBackup = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                adbBackup.setView(promptView);
-                adbBackup.setCancelable(true);
-                adbBackup.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-                adbBackup.setPositiveButton("OK", (dialog, which) -> { });
-                final AlertDialog adBackup = adbBackup.create();
-                adBackup.setOnShowListener(dialog -> {
-                    final Button buttonOK = adBackup.getButton(DialogInterface.BUTTON_POSITIVE);
-                    buttonOK.setOnClickListener(v -> {
-                        String returnedResult = KaliServicesData.getInstance().backupData(KaliServicesSQL.getInstance(context), storedpathEditText.getText().toString());
-                        if (returnedResult == null){
-                            NhPaths.showMessage(context, "db is successfully backup to " + storedpathEditText.getText().toString());
-                        } else {
-                            dialog.dismiss();
-                            new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to backup the DB.").setMessage(returnedResult).create().show();
-                        }
+        int id = item.getItemId();
+        if (id == R.id.f_kaliservices_menu_backupDB) {
+            titleTextView.setText(R.string.kaliservices_full_path_save_db);
+            storedpathEditText.setText(MessageFormat.format("{0}/FragmentKaliServices", NhPaths.APP_SD_SQLBACKUP_PATH));
+            MaterialAlertDialogBuilder adbBackup = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
+            adbBackup.setView(promptView);
+            adbBackup.setCancelable(true);
+            adbBackup.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+            adbBackup.setPositiveButton("OK", (dialog, which) -> { });
+            final AlertDialog adBackup = adbBackup.create();
+            adBackup.setOnShowListener(dialog -> {
+                final Button buttonOK = adBackup.getButton(DialogInterface.BUTTON_POSITIVE);
+                buttonOK.setOnClickListener(v -> {
+                    String returnedResult = KaliServicesData.getInstance().backupData(KaliServicesSQL.getInstance(context), storedpathEditText.getText().toString());
+                    if (returnedResult == null) {
+                        NhPaths.showMessage(context, "db is successfully backup to " + storedpathEditText.getText().toString());
+                    } else {
                         dialog.dismiss();
-                    });
+                        new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to backup the DB.").setMessage(returnedResult).create().show();
+                    }
+                    dialog.dismiss();
                 });
-                adBackup.show();
-                break;
-            case R.id.f_kaliservices_menu_restoreDB:
-                titleTextView.setText(R.string.kaliservices_full_path_restore_db);
-                storedpathEditText.setText(MessageFormat.format("{0}/FragmentKaliServices", NhPaths.APP_SD_SQLBACKUP_PATH));
-                MaterialAlertDialogBuilder adbRestore = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                adbRestore.setView(promptView);
-                adbRestore.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-                adbRestore.setPositiveButton("OK", (dialog, which) -> { });
-                final AlertDialog adRestore = adbRestore.create();
-                adRestore.setOnShowListener(dialog -> {
-                    final Button buttonOK = adRestore.getButton(DialogInterface.BUTTON_POSITIVE);
-                    buttonOK.setOnClickListener(v -> {
-                        String returnedResult = KaliServicesData.getInstance().restoreData(KaliServicesSQL.getInstance(context), storedpathEditText.getText().toString());
-                        if (returnedResult == null) {
-                            NhPaths.showMessage(context, "db is successfully restored to " + storedpathEditText.getText().toString());
-                        } else {
-                            dialog.dismiss();
-                            new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to restore the DB.").setMessage(returnedResult).create().show();
-                        }
+            });
+            adBackup.show();
+        } else if (id == R.id.f_kaliservices_menu_restoreDB) {
+            titleTextView.setText(R.string.kaliservices_full_path_restore_db);
+            storedpathEditText.setText(MessageFormat.format("{0}/FragmentKaliServices", NhPaths.APP_SD_SQLBACKUP_PATH));
+            MaterialAlertDialogBuilder adbRestore = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
+            adbRestore.setView(promptView);
+            adbRestore.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+            adbRestore.setPositiveButton("OK", (dialog, which) -> { });
+            final AlertDialog adRestore = adbRestore.create();
+            adRestore.setOnShowListener(dialog -> {
+                final Button buttonOK = adRestore.getButton(DialogInterface.BUTTON_POSITIVE);
+                buttonOK.setOnClickListener(v -> {
+                    String returnedResult = KaliServicesData.getInstance().restoreData(KaliServicesSQL.getInstance(context), storedpathEditText.getText().toString());
+                    if (returnedResult == null) {
+                        NhPaths.showMessage(context, "db is successfully restored to " + storedpathEditText.getText().toString());
+                    } else {
                         dialog.dismiss();
-                    });
+                        new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to restore the DB.").setMessage(returnedResult).create().show();
+                    }
+                    dialog.dismiss();
                 });
-                adRestore.show();
-                break;
-            case R.id.f_kaliservices_menu_ResetToDefault:
-                KaliServicesData.getInstance().resetData(KaliServicesSQL.getInstance(context));
-                break;
-            default:
-                throw new IllegalStateException("Unexpected value: " + item.getItemId());
+            });
+            adRestore.show();
+        } else if (id == R.id.f_kaliservices_menu_ResetToDefault) {
+            KaliServicesData.getInstance().resetData(KaliServicesSQL.getInstance(context));
+        } else {
+            throw new IllegalStateException("Unexpected value: " + id);
         }
         return super.onOptionsItemSelected(item);
     }
@@ -323,7 +320,7 @@ public class KaliServicesFragment extends Fragment {
                             }
                             @Override
                             public void onNothingSelected(AdapterView<?> parent) {
-
+                                // Do nothing
                             }
                         });
                         //if Insert After
@@ -337,14 +334,14 @@ public class KaliServicesFragment extends Fragment {
                             }
                             @Override
                             public void onNothingSelected(AdapterView<?> parent) {
-
+                                // Do nothing
                             }
                         });
                     }
                 }
                 @Override
                 public void onNothingSelected(AdapterView<?> parent) {
-
+                    // Do nothing
                 }
             });
 

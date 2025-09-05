@@ -249,4 +249,4 @@ if __name__ == "__main__":
     src.close()
     dest.close()
     os.remove("tmp.txt")
-    print(("File saved to location: " + (args.hunterscript)))
+    print(("File saved to location: " + args.hunterscript))

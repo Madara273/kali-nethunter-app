@@ -1,6 +1,5 @@
 package com.offsec.nethunter;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -103,7 +102,6 @@ public class USBArsenalFragment extends Fragment {
         return inflater.inflate(R.layout.usbarsenal, container, false);
     }
 
-    @SuppressLint("SetTextI18n")
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -172,7 +170,7 @@ public class USBArsenalFragment extends Fragment {
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-
+                // Do nothing
             }
         });
 
@@ -191,7 +189,7 @@ public class USBArsenalFragment extends Fragment {
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-
+                // Do nothing
             }
         });
 
@@ -203,7 +201,7 @@ public class USBArsenalFragment extends Fragment {
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-
+                // Do nothing
             }
         });
 
@@ -215,7 +213,7 @@ public class USBArsenalFragment extends Fragment {
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-
+                // Do nothing
             }
         });
 
@@ -352,7 +350,7 @@ public class USBArsenalFragment extends Fragment {
                     usbNetworkInfoEditTextGroup[3].getText().toString(),
                     usbNetworkInfoEditTextGroup[4].getText().toString()
             );
-            if(!USBArsenalSQL.getInstance(context).setUSBNetworkColumnData(getusbNetWorkModeSpinnerPosition(), usbArsenalUSBNetworkModel)){
+            if (!USBArsenalSQL.getInstance(context).setUSBNetworkColumnData(getusbNetWorkModeSpinnerPosition(), usbArsenalUSBNetworkModel)) {
                 NhPaths.showMessage(context, "Failed saving configs to DB, please check if your input is valid.");
             } else {
                 NhPaths.showMessage(context, "Saved.");
@@ -411,7 +409,7 @@ public class USBArsenalFragment extends Fragment {
                     case USBArsenalHandlerThread.RELOAD_USBIFACE:
                         uiHandler.post(() -> {
                             if (resultObject.toString().isEmpty()) {
-                                usbStatusTextView.setText("No USB function has been enabled");
+                                usbStatusTextView.setText(R.string.usb_no_usb_function_enabled);
                                 imageMounterLL.setVisibility(View.GONE);
                                 mountedImageHintTextView.setVisibility(View.VISIBLE);
                             } else {
@@ -447,7 +445,7 @@ public class USBArsenalFragment extends Fragment {
                         break;
                     case USBArsenalHandlerThread.RELOAD_MOUNTSTATUS:
                         uiHandler.post(() -> {
-                            if (resultObject.toString().isEmpty()){ mountedImageTextView.setText("No image is mounted."); }
+                            if (resultObject.toString().isEmpty()){ mountedImageTextView.setText(R.string.usb_no_image_mounted); }
                             else {mountedImageTextView.setText(resultObject.toString());}
                         });
                         break;
@@ -483,7 +481,7 @@ public class USBArsenalFragment extends Fragment {
                         if ((int)resultObject == 0){
                             if (newInquiry.isEmpty()) {
                                 NhPaths.showMessage(context, "Inquiry string reset to default successfully.");
-                                currentInquiryHintTextView.setText("Linux File-CD/Stor gadget (kernel default)");
+                                currentInquiryHintTextView.setText(R.string.usb_linux_file_cd_storage_gadget);
                             } else {
                                 NhPaths.showMessage(context, "Inquiry string changed to '" + newInquiry + "' successfully.");
                                 currentInquiryHintTextView.setText(newInquiry);
@@ -531,7 +529,6 @@ public class USBArsenalFragment extends Fragment {
         super.onCreateOptionsMenu(menu, inflater);
     }
 
-    @SuppressLint({"NonConstantResourceId", "SetTextI18n"})
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         final LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
@@ -540,64 +537,61 @@ public class USBArsenalFragment extends Fragment {
         final TextView titleTextView = promptView.findViewById(R.id.f_kaliservices_adb_tv_title1);
         final EditText storedpathEditText = promptView.findViewById(R.id.f_kaliservices_adb_et_storedpath);
 
-        switch (item.getItemId()){
-            case R.id.f_usbarsenal_menu_backupDB:
-                titleTextView.setText("Full path to where you want to save the database:");
-                storedpathEditText.setText(NhPaths.APP_SD_SQLBACKUP_PATH + "/FragmentUSBArsenal");
-                MaterialAlertDialogBuilder adbBackup = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                adbBackup.setView(promptView);
-                adbBackup.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-                adbBackup.setPositiveButton("OK", (dialog, which) -> { });
-                final AlertDialog adBackup = adbBackup.create();
-                adBackup.setOnShowListener(dialog -> {
-                    final Button buttonOK = adBackup.getButton(DialogInterface.BUTTON_POSITIVE);
-                    buttonOK.setOnClickListener(v -> {
-                        String returnedResult = USBArsenalSQL.getInstance(context).backupData(storedpathEditText.getText().toString());
-                        if (returnedResult == null){
-                            NhPaths.showMessage(context, "db successfully backed up to " + storedpathEditText.getText().toString());
-                        } else {
-                            dialog.dismiss();
-                            new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to backup the DB.").setMessage(returnedResult).create().show();
-                        }
+        int itemId = item.getItemId();
+        if (itemId == R.id.f_usbarsenal_menu_backupDB) {
+            titleTextView.setText(R.string.usb_full_path_db_save);
+            storedpathEditText.setText(String.format("%s/FragmentUSBArsenal", NhPaths.APP_SD_SQLBACKUP_PATH));
+            MaterialAlertDialogBuilder adbBackup = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
+            adbBackup.setView(promptView);
+            adbBackup.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+            adbBackup.setPositiveButton("OK", (dialog, which) -> { });
+            final AlertDialog adBackup = adbBackup.create();
+            adBackup.setOnShowListener(dialog -> {
+                final Button buttonOK = adBackup.getButton(DialogInterface.BUTTON_POSITIVE);
+                buttonOK.setOnClickListener(v -> {
+                    String returnedResult = USBArsenalSQL.getInstance(context).backupData(storedpathEditText.getText().toString());
+                    if (returnedResult == null) {
+                        NhPaths.showMessage(context, "db successfully backed up to " + storedpathEditText.getText().toString());
+                    } else {
                         dialog.dismiss();
-                    });
+                        new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to backup the DB.").setMessage(returnedResult).create().show();
+                    }
+                    dialog.dismiss();
                 });
-                adBackup.show();
-                break;
-            case R.id.f_usbarsenal_menu_restoreDB:
-                titleTextView.setText("Full path of the db file from where you want to restore:");
-                storedpathEditText.setText(NhPaths.APP_SD_SQLBACKUP_PATH + "/FragmentUSBArsenal");
-                MaterialAlertDialogBuilder adbRestore = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                adbRestore.setView(promptView);
-                adbRestore.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-                adbRestore.setPositiveButton("OK", (dialog, which) -> { });
-                final AlertDialog adRestore = adbRestore.create();
-                adRestore.setOnShowListener(dialog -> {
-                    final Button buttonOK = adRestore.getButton(DialogInterface.BUTTON_POSITIVE);
-                    buttonOK.setOnClickListener(v -> {
-                        String returnedResult = USBArsenalSQL.getInstance(context).restoreData(storedpathEditText.getText().toString());
-                        if (returnedResult == null) {
-                            NhPaths.showMessage(context, "db is successfully restored to " + storedpathEditText.getText().toString());
-                            refreshUSBSwitchInfos(gettargetOSSpinnerString(), getusbFuncSpinnerString());
-                            refreshUSBNetworkInfos(getusbNetWorkModeSpinnerPosition());
-                        } else {
-                            dialog.dismiss();
-                            new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to restore the DB.").setMessage(returnedResult).create().show();
-                        }
+            });
+            adBackup.show();
+        } else if (itemId == R.id.f_usbarsenal_menu_restoreDB) {
+            titleTextView.setText(R.string.usb_full_path_db_restore);
+            storedpathEditText.setText(String.format("%s/FragmentUSBArsenal", NhPaths.APP_SD_SQLBACKUP_PATH));
+            MaterialAlertDialogBuilder adbRestore = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
+            adbRestore.setView(promptView);
+            adbRestore.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
+            adbRestore.setPositiveButton("OK", (dialog, which) -> { });
+            final AlertDialog adRestore = adbRestore.create();
+            adRestore.setOnShowListener(dialog -> {
+                final Button buttonOK = adRestore.getButton(DialogInterface.BUTTON_POSITIVE);
+                buttonOK.setOnClickListener(v -> {
+                    String returnedResult = USBArsenalSQL.getInstance(context).restoreData(storedpathEditText.getText().toString());
+                    if (returnedResult == null) {
+                        NhPaths.showMessage(context, "db is successfully restored to " + storedpathEditText.getText().toString());
+                        refreshUSBSwitchInfos(gettargetOSSpinnerString(), getusbFuncSpinnerString());
+                        refreshUSBNetworkInfos(getusbNetWorkModeSpinnerPosition());
+                    } else {
                         dialog.dismiss();
-                    });
+                        new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to restore the DB.").setMessage(returnedResult).create().show();
+                    }
+                    dialog.dismiss();
                 });
-                adRestore.show();
-                break;
-            case R.id.f_usbarsenal_menu_ResetToDefault:
-                if (USBArsenalSQL.getInstance(context).resetData()) {
-                    NhPaths.showMessage(context, "db is successfully reset to default.");
-                    refreshUSBSwitchInfos(gettargetOSSpinnerString(), getusbFuncSpinnerString());
-                    refreshUSBNetworkInfos(getusbNetWorkModeSpinnerPosition());
-                } else {
-                    NhPaths.showMessage_long(context, "Failed to reset the db to default.");
-                }
-                break;
+            });
+            adRestore.show();
+        } else if (itemId == R.id.f_usbarsenal_menu_ResetToDefault) {
+            if (USBArsenalSQL.getInstance(context).resetData()) {
+                NhPaths.showMessage(context, "db is successfully reset to default.");
+                refreshUSBSwitchInfos(gettargetOSSpinnerString(), getusbFuncSpinnerString());
+                refreshUSBNetworkInfos(getusbNetWorkModeSpinnerPosition());
+            } else {
+                NhPaths.showMessage_long(context, "Failed to reset the db to default.");
+            }
         }
         return super.onOptionsItemSelected(item);
     }

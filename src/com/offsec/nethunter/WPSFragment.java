@@ -237,12 +237,8 @@ public class WPSFragment extends Fragment {
                 if (iswatch) {
                     //WearOS needs a sort of interface reset
                     Handler handler = new Handler();
-                    handler.postDelayed(() -> {
-                        exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting off"});
-                    }, 10000);
-                    handler.postDelayed(() -> {
-                        exe.RunAsRoot(new String[]{"ifconfig wlan0 up"});
-                    }, 11000);
+                    handler.postDelayed(() -> exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting off"}), 10000);
+                    handler.postDelayed(() -> exe.RunAsRoot(new String[]{"ip link set wlan0 up"}), 11000);
                 }
                 run_cmd("python3 /sdcard/nh_files/modules/oneshot.py -b " + selected_network +
                         " -i " + selectedInterface + pixieCMD + pixieforceCMD + bruteCMD + customPINCMD + customPIN + delayCMD + delayTIME + pbcCMD);

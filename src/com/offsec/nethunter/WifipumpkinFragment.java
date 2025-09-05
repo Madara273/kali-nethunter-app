@@ -7,6 +7,8 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -28,7 +30,6 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.NhPaths;
@@ -36,14 +37,20 @@ import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
+import androidx.core.view.MenuHost;
+import androidx.core.view.MenuProvider;
+import androidx.lifecycle.Lifecycle;
 
 public class WifipumpkinFragment extends Fragment {
     private ViewPager2 mViewPager;
@@ -57,6 +64,17 @@ public class WifipumpkinFragment extends Fragment {
     private Activity activity;
     final ShellExecuter exe = new ShellExecuter();
     private String template_src;
+
+    private final ActivityResultLauncher<String> pickZipLauncher =
+            registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
+                if (uri == null) return;
+                // Keep existing logic
+                String FilePath = Objects.requireNonNull(uri.getPath());
+                FilePath = exe.RunAsRootOutput("echo " + FilePath + " | sed -e 's/\\/document\\/primary:/\\/sdcard\\//g'");
+                String FilePy = exe.RunAsRootOutput(
+                        NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd unzip -Z1 '" + FilePath + "' | grep .py | awk -F'.' '{print $1}'");
+                run_cmd("wifipumpkin3 -x \"use misc.custom_captiveflask; install " + FilePy + " \\\"" +  FilePath + "\\\"; back; exit\";exit");
+            });
 
     public static WifipumpkinFragment newInstance(int sectionNumber) {
         WifipumpkinFragment fragment = new WifipumpkinFragment();
@@ -73,22 +91,6 @@ public class WifipumpkinFragment extends Fragment {
         activity = getActivity();
         String configFilePath = NhPaths.APP_SD_FILES_PATH + "/modules/start-wp3.sh";
     }
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater menuinflater) {
-        menuinflater.inflate(R.menu.bt, menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.setup:
-            case R.id.update:
-                RunSetup();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -99,7 +101,7 @@ public class WifipumpkinFragment extends Fragment {
         CheckBox PreviewCheckbox = rootView.findViewById(R.id.preview_checkbox);
 
         // First run
-        Boolean setupwp3done = sharedpreferences.getBoolean("set_setup_done", false);
+        Boolean setupwp3done = sharedpreferences.getBoolean("wp3_setup_done", false);
         String packages = exe.RunAsChrootOutput("if [[ -f /usr/bin/wifipumpkin3 || -f /usr/bin/dnschef ]];then echo Good;else echo Nope;fi");
 
         // if (!setupwp3done.equals(true))
@@ -149,8 +151,9 @@ public class WifipumpkinFragment extends Fragment {
                     myBrowser.getSettings().setJavaScriptEnabled(true); // Enable JavaScript Support
                     myBrowser.setWebViewClient(new WebViewClient());
                     myBrowser.getSettings().setAllowFileAccess(true);
-                    myBrowser.loadDataWithBaseURL("file:///sdcard/nh_files/templates/" + selected_template + "/static", template_src, "text/html", "UTF-8", null);
-                    myBrowser.loadUrl(template_src);
+                    String externalStoragePath = Environment.getExternalStorageDirectory().getPath();
+                    myBrowser.loadDataWithBaseURL("file://" + externalStoragePath + "/nh_files/templates/" + selected_template + "/static", template_src, "text/html", "UTF-8", null);
+                    myBrowser.loadUrl(externalStoragePath + "/nh_files/templates/" + selected_template + "/templates/login.html");
                     TemplateString[0] = selected_template;
                 }
             }
@@ -165,8 +168,8 @@ public class WifipumpkinFragment extends Fragment {
         // Check wlan0 AP mode
         TextView APmode = rootView.findViewById(R.id.wlan0ap);
         String Wlan0AP = exe.RunAsRootOutput("iw list | grep '* AP'");
-        if (Wlan0AP.contains("* AP")) APmode.setText("Supported");
-        else APmode.setText("Not supported");
+        if (Wlan0AP.contains("* AP")) APmode.setText(R.string.wp3_ap_mode_supported);
+        else APmode.setText(R.string.wp3_ap_mode_not_supported);
 
         // Refresh
         refresh_wp3_templates(rootView);
@@ -233,54 +236,50 @@ public class WifipumpkinFragment extends Fragment {
 
         // Load from file
         final Button injectStringButton = rootView.findViewById(R.id.templatebrowse);
-        injectStringButton.setOnClickListener( v -> {
-            Intent intent = new Intent();
-            intent.addCategory(Intent.CATEGORY_OPENABLE);
-            intent.setType("application/zip");
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-            startActivityForResult(Intent.createChooser(intent, "Select zip file"),1001);
-        });
+        injectStringButton.setOnClickListener(v -> pickZipLauncher.launch("application/zip"));
         return rootView;
     }
 
-    public void onActivityResult(int requestCode, int resultCode,
-                                 Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1001 && (resultCode == Activity.RESULT_OK)) {
-            ShellExecuter exe = new ShellExecuter();
-            String FilePath = Objects.requireNonNull(data.getData()).getPath();
-            FilePath = exe.RunAsRootOutput("echo " + FilePath + " | sed -e 's/\\/document\\/primary:/\\/sdcard\\//g'");
-            String FilePy = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd unzip -Z1 '" + FilePath + "' | grep .py | awk -F'.' '{print $1}'");
-            run_cmd("wifipumpkin3 -x \"use misc.custom_captiveflask; install " + FilePy + " \"" +  FilePath + "\"; back; exit\";exit");
-        }
-    }
-    /*@Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater menuinflater) {
-        menuinflater.inflate(R.menu.wifipumpkin, menu);
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        MenuHost menuHost = requireActivity();
+        menuHost.addMenuProvider(new MenuProvider() {
+            @Override
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
+                menuInflater.inflate(R.menu.bt, menu);
+            }
+
+            @Override
+            public boolean onMenuItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+                if (id == R.id.setup || id == R.id.update) {
+                    RunSetup();
+                    return true;
+                }
+                return false;
+            }
+        }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle presses on the action bar items
-        switch (item.getItemId()) {
-            case R.id.start_service:
-                startWP3();
-                return true;
-            case R.id.stop_service:
-                //stopWP3();
-                return true;
-            case R.id.first_run:
-                Firstrun();
-                return true;
-            case R.id.source_button:
-                Intent i = new Intent(activity, EditSourceActivity.class);
-                i.putExtra("path", configFilePath);
-                startActivity(i);
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }*/
+    private final ActivityResultLauncher<Intent> pickFileLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
+                    ShellExecuter exe = new ShellExecuter();
+                    String FilePath = Objects.requireNonNull(result.getData().getData()).getPath();
+                    FilePath = exe.RunAsRootOutput("echo " + FilePath + " | sed -e 's/\\/document\\/primary:/\\/sdcard\\//g'");
+                    String FilePy = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd unzip -Z1 '" + FilePath + "' | grep .py | awk -F'.' '{print $1}'");
+                    run_cmd("wifipumpkin3 -x \"use misc.custom_captiveflask; install " + FilePy + " \\\"" + FilePath + "\\\"; back; exit\";exit");
+                }
+            });
+
+    private void launchFilePicker() {
+        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/zip");
+        pickFileLauncher.launch(Intent.createChooser(intent, "Select zip file"));
+    }
 
     // First setup
     public void SetupDialog() {
@@ -297,42 +296,22 @@ public class WifipumpkinFragment extends Fragment {
 
     public void RunSetup() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        run_cmd("echo -ne \"\\033]0;Wifipumpkin3 Setup\\007\" && clear;apt update && apt install wifipumpkin3 dnschef -y;" +
+        run_cmd("echo -ne \"\\033]0;Wifipumpkin3 Setup\\007\" && clear;apt update && apt install wifipumpkin3 dnschef -y; wp3" +
                 "echo 'Done!'; echo 'Closing in 3secs..'; sleep 3 && exit ");
-        sharedpreferences.edit().putBoolean("set_setup_done", true).apply();
-    }
-
-    public void LinkTemplates() {
-        String cmd =
-                "echo -ne \"\\033]0;Wifipumpkin3 Templates\\007\" && clear;" +
-                        "TEMPL_DIR='/root/.config/wifipumpkin3/config/templates';" +
-                        "TARGET='/sdcard/nh_files/templates';" +
-                        "if [ -L \"$TEMPL_DIR\" ]; then " +
-                        "if [ \"$(readlink \"$TEMPL_DIR\")\" != \"$TARGET\" ]; then " +
-                        "rm \"$TEMPL_DIR\"; " +
-                        "ln -s \"$TARGET\" \"$TEMPL_DIR\"; " +
-                        "fi; " +
-                        "elif [ -d \"$TEMPL_DIR\" ]; then " +
-                        "mv \"$TEMPL_DIR\" \"${TEMPL_DIR}_orig\"; " +
-                        "ln -s \"$TARGET\" \"$TEMPL_DIR\"; " +
-                        "elif [ ! -e \"$TEMPL_DIR\" ]; then " +
-                        "ln -s \"$TARGET\" \"$TEMPL_DIR\"; " +
-                        "fi; " +
-                        "echo 'Done!'; echo 'Closing in 3secs..'; sleep 3 && exit";
-        run_cmd(cmd);
-        sharedpreferences.edit().putBoolean("set_setup_done", true).apply();
+        sharedpreferences.edit().putBoolean("wp3_setup_done", true).apply();
     }
 
     // Refresh templates
     private void refresh_wp3_templates(View WifipumpkinFragment) {
         Spinner TemplatesSpinner = WifipumpkinFragment.findViewById(R.id.templates);
-        final String outputTemplates = "None\n" + exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd ls /root/.config/wifipumpkin3/config/templates | tail -n +10");
+        final String outputTemplates = "None\n" + exe.RunAsChrootOutput("ls -1 /usr/share/wifipumpkin3/config/templates | sort");
         final String[] TemplatesArray = outputTemplates.split("\n");
         TemplatesSpinner.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, TemplatesArray));
     }
+
     private void checkiptables() {
         ShellExecuter exe = new ShellExecuter();
-        String iptables_ver = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd iptables -V | grep iptables");
+        String iptables_ver = exe.RunAsChrootOutput("iptables -V | grep iptables");
         String old_kali = "https://old.kali.org/kali/pool/main/i/iptables/";
         if (iptables_ver.equals("iptables v1.6.2")) {
             MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
@@ -354,22 +333,13 @@ public class WifipumpkinFragment extends Fragment {
         builder.setTitle("Script to execute:");
         builder.setPositiveButton("Start", (dialog, which) -> {
             switch (selectedScriptIndex) {
-                // launching mana on the terminal so it doesn't die suddenly
                 case 0:
                     NhPaths.showMessage(context, "Starting MANA NAT FULL");
-                    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
-                        run_cmd(NhPaths.makeTermTitle("MANA-FULL") + "/usr/share/mana-toolkit/run-mana/start-nat-full-lollipop.sh");
-                    } else {
-                        run_cmd(NhPaths.makeTermTitle("MANA-FULL") + "/usr/share/mana-toolkit/run-mana/start-nat-full-kitkat.sh");
-                    }
+                    run_cmd(NhPaths.makeTermTitle("MANA-FULL") + "/usr/share/mana-toolkit/run-mana/start-nat-full-lollipop.sh");
                     break;
                 case 1:
                     NhPaths.showMessage(context, "Starting MANA NAT SIMPLE");
-                    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
-                        run_cmd(NhPaths.makeTermTitle("MANA-SIMPLE") + "/usr/share/mana-toolkit/run-mana/start-nat-simple-lollipop.sh");
-                    } else {
-                        run_cmd(NhPaths.makeTermTitle("MANA-SIMPLE") + "/usr/share/mana-toolkit/run-mana/start-nat-simple-kitkat.sh");
-                    }
+                    run_cmd(NhPaths.makeTermTitle("MANA-SIMPLE") + "/usr/share/mana-toolkit/run-mana/start-nat-simple-lollipop.sh");
                     break;
                 case 2:
                     NhPaths.showMessage(context, "Starting MANA Bettercap");
@@ -377,13 +347,10 @@ public class WifipumpkinFragment extends Fragment {
                     break;
                 case 3:
                     NhPaths.showMessage(context, "Starting MANA NAT SIMPLE && BDF");
-                    if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
-                        run_cmd(NhPaths.makeTermTitle("MANA-BDF") + "/usr/share/mana-toolkit/run-mana/start-nat-simple-bdf-lollipop.sh");
-                    } else {
-                        run_cmd(NhPaths.makeTermTitle("MANA-BDF") + "/usr/share/mana-toolkit/run-mana/start-nat-simple-bdf-kitkat.sh");
-                    }
-                    // we wait ~10 secs before launching msf
-                    new android.os.Handler().postDelayed(
+                    run_cmd(NhPaths.makeTermTitle("MANA-BDF") + "/usr/share/mana-toolkit/run-mana/start-nat-simple-bdf-lollipop.sh");
+
+                    // Delay launching msfconsole
+                    new android.os.Handler(Looper.getMainLooper()).postDelayed(
                             () -> {
                                 NhPaths.showMessage(context, "Starting MSF with BDF resource.rc");
                                 run_cmd(NhPaths.makeTermTitle("MSF") + "msfconsole -q -r /usr/share/bdfproxy/bdfproxy_msf_resource.rc");
@@ -407,27 +374,7 @@ public class WifipumpkinFragment extends Fragment {
         });
         builder.setSingleChoiceItems(scripts, selectedScriptIndex, (dialog, which) -> selectedScriptIndex = which);
         builder.show();
-
     }
-
-    public void Firstrun() {
-        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        run_cmd("echo -ne \"\\033]0;Mana first setup\\007\"" +
-                "apt update && apt install mana-toolkit hostapd hostapd-wpe");
-        sharedpreferences.edit().putBoolean("setup_done", true).apply();
-    }
-
-    /* private void stopWP3() {
-        ShellExecuter exe = new ShellExecuter();
-        String[] command = new String[1];
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            command[0] = NhPaths.APP_SCRIPTS_PATH + "/bootkali mana-lollipop stop'";
-        } else {
-            command[0] = NhPaths.APP_SCRIPTS_PATH + "/bootkali mana-kitkat stop'";
-        }
-        exe.RunAsRoot(command);
-        NhPaths.showMessage(context, "Mana Stopped");
-    } */
 
     public class HostapdFragmentWPE extends Fragment {
         private Context context;
@@ -459,7 +406,7 @@ public class WifipumpkinFragment extends Fragment {
                 File file = new File(configFilePath);
                 String source;
                 try {
-                    source = Files.asCharSource(file, Charsets.UTF_8).read();
+                    source = Files.asCharSource(file, StandardCharsets.UTF_8).read();
                 } catch (IOException e) {
                     NhPaths.showMessage(context, "Failed to read the configuration file.");
                     e.printStackTrace();
@@ -477,16 +424,14 @@ public class WifipumpkinFragment extends Fragment {
                 EditText channel = view.findViewById(R.id.wpe_channel);
                 EditText privatekey = view.findViewById(R.id.wpe_private_key);
 
-                if (source != null) {
-                    source = updateConfig(source, "interface", ifc.getText().toString());
-                    source = updateConfig(source, "bssid", bssid.getText().toString());
-                    source = updateConfig(source, "ssid", ssid.getText().toString());
-                    source = updateConfig(source, "channel", channel.getText().toString());
-                    source = updateConfig(source, "private_key_passwd", privatekey.getText().toString());
+                source = updateConfig(source, "interface", ifc.getText().toString());
+                source = updateConfig(source, "bssid", bssid.getText().toString());
+                source = updateConfig(source, "ssid", ssid.getText().toString());
+                source = updateConfig(source, "channel", channel.getText().toString());
+                source = updateConfig(source, "private_key_passwd", privatekey.getText().toString());
 
-                    exe.SaveFileContents(source, configFilePath);
-                    NhPaths.showMessage(context, "Source updated");
-                }
+                exe.SaveFileContents(source, configFilePath);
+                NhPaths.showMessage(context, "Source updated");
             });
             return rootView;
         }
