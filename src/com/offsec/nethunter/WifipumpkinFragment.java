@@ -296,7 +296,7 @@ public class WifipumpkinFragment extends Fragment {
 
     public void RunSetup() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        run_cmd("echo -ne \"\\033]0;Wifipumpkin3 Setup\\007\" && clear;apt update && apt install wifipumpkin3 dnschef -y; wp3" +
+        run_cmd("echo -ne \"\\033]0;Wifipumpkin3 Setup\\007\" && clear;apt update && apt install wifipumpkin3 dnschef -y; wp3; " +
                 "echo 'Done!'; echo 'Closing in 3secs..'; sleep 3 && exit ");
         sharedpreferences.edit().putBoolean("wp3_setup_done", true).apply();
     }
