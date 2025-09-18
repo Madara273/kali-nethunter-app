@@ -78,7 +78,6 @@ import java.util.concurrent.Executors;
 public class CopyBootFilesExecutor {
     public static final String TAG = "CopyBootFilesExecutor";
     private String objects = "";
-    private String tag = TAG;
 
     private void ensureNhFilesOnSdcard() {
         File nhFilesDir = new File(NhPaths.SD_PATH, "nh_files");
@@ -113,46 +112,33 @@ public class CopyBootFilesExecutor {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final AssetManager assetManager;
     // Debug logging: 0=off, 1=on
-    public final int NH_SYSTEM_LOGGING = 0;
+    public int NH_SYSTEM_LOGGING = 0;
 
     // Logging wrapper attached to 'NH_SYSTEM_LOGGING' variable ("1" = enabled, "0" = disabled)
     // Howto add logging around this wrapper with the switch;
     //   logDebug(TAG, "Your debug message here");
     //
-    private void logDebug(String message, Throwable throwable) {
-        switch (NH_SYSTEM_LOGGING) {
-            case 1: // Logging enabled (low)
-                if (throwable != null) {
-                    logDebug(CopyBootFilesExecutor.TAG, message, throwable);
-                } else {
-                    logDebug(CopyBootFilesExecutor.TAG, message);
-                }
-                break;
-            case 0: // Logging disabled
-            default:
-                // Do nothing
-                break;
-        }
-    }
-
     private void logDebug(String tag, String message, Throwable throwable) {
+        if (NH_SYSTEM_LOGGING != 1) return;
+
         if (throwable != null) {
             Log.d(tag, message, throwable);
         } else {
             Log.d(tag, message);
         }
-        //Enable if debugging
-        //logToast(message); // Show toast for debug messages
+        logToast(message);
     }
 
     private void logToast(String message) {
-        Toast.makeText(requireActivity().getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+        mainHandler.post(() ->
+                Toast.makeText(requireActivity().getApplicationContext(), message, Toast.LENGTH_SHORT).show()
+        );
     }
 
     private Context requireActivity() {
         Context ctx = context.get();
         if (ctx == null) {
-            throw new IllegalStateException("Context is not available");
+            throw new IllegalStateException("Context reference is null. Ensure the executor is initialized with a valid context.");
         }
         return ctx;
     }
@@ -174,6 +160,7 @@ public class CopyBootFilesExecutor {
     public void execute() {
         mainHandler.post(this::onPreExecute);
         executor.execute(() -> {
+            ensureBusyboxNh();
             String res = doInBackground();
             mainHandler.post(() -> onPostExecute(res));
         });
@@ -200,9 +187,8 @@ public class CopyBootFilesExecutor {
         }
     }
 
-    private void logDebug(String s) {
-        this.tag = CopyBootFilesExecutor.TAG;
-        logDebug(s, (Throwable) null);
+    private void logDebug(String message) {
+        logDebug(TAG, message, null);
     }
 
     private String doInBackground() {
@@ -283,6 +269,35 @@ public class CopyBootFilesExecutor {
         return result;
     }
 
+    private void ensureBusyboxNh() {
+        try {
+            if (!CheckForRoot.isRoot()) {
+                logDebug(TAG, "Root not available; skipping busybox_nh ensure.");
+                return;
+            }
+
+            final String source = NhPaths.APP_SCRIPTS_BIN_PATH + "/busybox_nh";
+            final String target = "/system/bin/busybox_nh";
+
+            // Remount partitions as RW (best-effort)
+            exe.RunAsRoot(new String[]{
+                    "mount -o remount,rw /",
+                    "mount -o remount,rw /system",
+                    "mount -o remount,rw /system/bin"
+            });
+
+            // Recreate symlink if missing or wrong
+            String checkCmd = "[ -L " + target + " ] && [ \"$(readlink " + target + ")\" = \"" + source + "\" ]";
+            if (exe.RunAsRootReturnValue(checkCmd) != 0) {
+                exe.RunAsRootReturnValue("rm -f " + target);
+                Symlink("busybox_nh");
+            }
+            logDebug(TAG, "busybox_nh symlink ensured at: " + target);
+        } catch (Exception e) {
+            logDebug(TAG, "ensureBusyboxNh() failed: " + e.getMessage(), e);
+        }
+    }
+
     private void setPermissions(String... paths) {
         for (String path : paths) {
             exe.RunAsRoot("find " + path + " -type f -exec chmod 700 {} \\;");
@@ -323,7 +338,7 @@ public class CopyBootFilesExecutor {
         try {
             copyAssetFolderRecursive(assetFolder, destFolder);
         } catch (IOException e) {
-            logDebug("Error copying asset folder: " + assetFolder + " to " + destFolder, e);
+            logDebug("Error copying asset folder: " + assetFolder + " to " + destFolder, String.valueOf(e));
         }
     }
 
@@ -392,14 +407,14 @@ public class CopyBootFilesExecutor {
                         : "Failed to set permissions for: " + outFile.getAbsolutePath());
             }
         } catch (IOException e) {
-            logDebug("Error copying asset file: " + assetFile + " to " + destFile, e);
+            logDebug("Error copying asset file: " + assetFile + " to " + destFile, String.valueOf(e));
         } catch (SecurityException e) {
-            logDebug("Security exception while copying asset file: " + assetFile + " to " + destFile, e);
+            logDebug("Security exception while copying asset file: " + assetFile + " to " + destFile, String.valueOf(e));
         }
     }
 
-    private void logDebug(String tag, String s) {
-        Log.d(tag, s);
+    private void logDebug(String tag, String message) {
+        logDebug(tag, message, null);
     }
 
     private void CheckEncrypted() {
@@ -415,7 +430,7 @@ public class CopyBootFilesExecutor {
     }
 
     private void Symlink(String filename) {
-        // Symlink "bootkali*" and "killkali"; copy "busybox_nh"
+        // Symlink `bootkali`, `killkali`, and `busybox_nh`
         if (!(filename.startsWith("bootkali") || filename.equals("killkali") || filename.equals("busybox_nh"))) {
             logDebug("Skipping symlink/copy for: " + filename);
             return;
@@ -426,15 +441,10 @@ public class CopyBootFilesExecutor {
 
         if (filename.equals("busybox_nh")) {
             String sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/busybox_nh";
-            String targetPath = "/system/bin/" + filename;
-            logDebug("Copying " + sourcePath + " to " + targetPath);
-            int result = exe.RunAsRootReturnValue(
-                    "cp -p " + sourcePath + " " + targetPath +
-                            " && chown root:root " + targetPath +
-                            " && chmod 0755 " + targetPath
-            );
+            logDebug("command output: ln -s " + sourcePath + " /system/bin/" + filename);
+            int result = exe.RunAsRootReturnValue("ln -s " + sourcePath + " /system/bin/" + filename);
             if (result != 0) {
-                logDebug("Failed to copy: " + filename);
+                logDebug("Failed to create symlink for: " + filename);
             }
         } else {
             String sourcePath = NhPaths.APP_SCRIPTS_PATH + "/" + filename;
@@ -559,14 +569,6 @@ public class CopyBootFilesExecutor {
 
     public Activity getActivity() {
         return activity;
-    }
-
-    public String getTag() {
-        return tag;
-    }
-
-    public void setTag(String tag) {
-        this.tag = tag;
     }
 
     public interface CopyBootFilesExecutorListener {
