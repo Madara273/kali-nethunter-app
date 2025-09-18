@@ -96,29 +96,30 @@ public class ModulesFragment extends Fragment implements MenuProvider {
     }
 
     public boolean onMenuItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_sort:
-                if (isAdded() && getView() != null) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-                    builder.setTitle("Sort Modules")
-                            .setItems(new String[]{"Alphabetical", "Reverse"}, (dialog, which) -> {
-                                currentSortOrder = which;
-                                refreshModules(requireView());
-                            })
-                            .show();
-                }
-                return true;
-            case R.id.action_enable_faulty_check:
-                if (isAdded()) {
-                    boolean isChecked = !item.isChecked();
-                    item.setChecked(isChecked);
-                    SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putBoolean("enable_faulty_check", isChecked).apply();
-                }
-                return true;
-            default:
-                return false;
+        int id = item.getItemId();
+
+        if (id == R.id.action_sort) {
+            if (isAdded() && getView() != null) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                builder.setTitle("Sort Modules")
+                        .setItems(new String[]{"Alphabetical", "Reverse"}, (dialog, which) -> {
+                            currentSortOrder = which;
+                            refreshModules(requireView());
+                        })
+                        .show();
+            }
+            return true;
+        } else if (id == R.id.action_enable_faulty_check) {
+            if (isAdded()) {
+                boolean isChecked = !item.isChecked();
+                item.setChecked(isChecked);
+                SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean("enable_faulty_check", isChecked).apply();
+            }
+            return true;
+        } else {
+            return false;
         }
     }
 
