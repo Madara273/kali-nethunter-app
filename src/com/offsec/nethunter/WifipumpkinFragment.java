@@ -1,5 +1,6 @@
 package com.offsec.nethunter;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -53,7 +54,6 @@ import androidx.core.view.MenuProvider;
 import androidx.lifecycle.Lifecycle;
 
 public class WifipumpkinFragment extends Fragment {
-    private ViewPager2 mViewPager;
     private SharedPreferences sharedpreferences;
     private Integer selectedScriptIndex = 0;
     private final CharSequence[] scripts = {"mana-nat-full", "mana-nat-simple", "mana-nat-bettercap", "mana-nat-simple-bdf", "hostapd-wpe", "hostapd-wpe-karma"};
@@ -89,7 +89,6 @@ public class WifipumpkinFragment extends Fragment {
         super.onCreate(savedInstanceState);
         context = getContext();
         activity = getActivity();
-        String configFilePath = NhPaths.APP_SD_FILES_PATH + "/modules/start-wp3.sh";
     }
 
     @Override
@@ -129,6 +128,7 @@ public class WifipumpkinFragment extends Fragment {
         WebView myBrowser = rootView.findViewById(R.id.mybrowser);
         final String[] TemplateString = {""};
         TemplatesSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @SuppressLint("SetJavaScriptEnabled")
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
                 selected_template = parentView.getItemAtPosition(pos).toString();
@@ -409,7 +409,7 @@ public class WifipumpkinFragment extends Fragment {
                     source = Files.asCharSource(file, StandardCharsets.UTF_8).read();
                 } catch (IOException e) {
                     NhPaths.showMessage(context, "Failed to read the configuration file.");
-                    e.printStackTrace();
+                    Log.e(TAG, "Failed to read hostapd-wpe configuration: " + configFilePath, e);
                     return;
                 }
 
@@ -596,8 +596,6 @@ public class WifipumpkinFragment extends Fragment {
             context = getContext();
             if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
                 configFilePath = NhPaths.CHROOT_PATH() + "/usr/share/mana-toolkit/run-mana/start-nat-full-lollipop.sh";
-            } else {
-                configFilePath = NhPaths.CHROOT_PATH() + "/usr/share/mana-toolkit/run-mana/start-nat-full-kitkat.sh";
             }
         }
 
@@ -637,8 +635,6 @@ public class WifipumpkinFragment extends Fragment {
             context = getContext();
             if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
                 configFilePath = NhPaths.CHROOT_PATH() + "/usr/share/mana-toolkit/run-mana/start-nat-simple-lollipop.sh";
-            } else {
-                configFilePath = NhPaths.CHROOT_PATH() + "/usr/share/mana-toolkit/run-mana/start-nat-simple-kitkat.sh";
             }
         }
 
@@ -759,8 +755,6 @@ public class WifipumpkinFragment extends Fragment {
             context = getContext();
             if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
                 configFilePath = NhPaths.CHROOT_PATH() + "/usr/share/mana-toolkit/run-mana/start-nat-simple-bdf-lollipop.sh";
-            } else {
-                configFilePath = NhPaths.CHROOT_PATH() + "/usr/share/mana-toolkit/run-mana/start-nat-simple-bdf-kitkat.sh";
             }
         }
 
