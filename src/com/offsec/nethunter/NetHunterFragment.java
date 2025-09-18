@@ -250,16 +250,26 @@ public class NetHunterFragment extends Fragment {
     }
 
     private void ensureNhFilesOnSdcard() {
-        File nhFilesDir = new File("/sdcard/nh_files");
-        if (nhFilesDir.exists() && nhFilesDir.isDirectory()) {
-            Log.i("NetHunterFragment", "nh_files is found!");
-        } else {
+        Log.i("NetHunterFragment", "Deferring nh_files check/copy by 10s to wait for storage permission.");
+        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
+            if (!isStoragePermissionGranted()) {
+                Log.w("NetHunterFragment", "Storage permission not granted after delay; skipping nh_files copy.");
+                return;
+            }
+
+            File nhFilesDir = new File("/sdcard/nh_files");
+            if (nhFilesDir.exists() && nhFilesDir.isDirectory()) {
+                Log.i("NetHunterFragment", "nh_files is found!");
+                return;
+            }
+
             Log.w("NetHunterFragment", "/sdcard/nh_files not found. Attempting to copy from /data/data/com.offsec.nethunter/nh_files/");
             try {
                 String cmd = "cp -r /data/data/com.offsec.nethunter/nh_files /sdcard/";
                 Log.i("NetHunterFragment", "Running root shell: " + cmd);
                 String output = new ShellExecuter().RunAsRootOutput(cmd);
                 Log.i("NetHunterFragment", "Shell output: " + output);
+
                 File nhFilesDirAfter = new File("/sdcard/nh_files");
                 if (nhFilesDirAfter.exists() && nhFilesDirAfter.isDirectory()) {
                     Log.i("NetHunterFragment", "Successfully copied nh_files to /sdcard/");
@@ -269,6 +279,18 @@ public class NetHunterFragment extends Fragment {
             } catch (Exception e) {
                 Log.e("NetHunterFragment", "Exception while copying nh_files: ", e);
             }
+        }, 10_000);
+    }
+
+    private boolean isStoragePermissionGranted() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            return android.os.Environment.isExternalStorageManager();
+        } else {
+            Context ctx = getContext();
+            if (ctx == null) return false;
+            return androidx.core.content.ContextCompat.checkSelfPermission(
+                    ctx, android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED;
         }
     }
 

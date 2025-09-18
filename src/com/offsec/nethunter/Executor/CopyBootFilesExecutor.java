@@ -41,7 +41,6 @@ import java.util.concurrent.Executors;
 public class CopyBootFilesExecutor {
     public static final String TAG = "CopyBootFilesExecutor";
     private String objects = "";
-
     private final Handler progressHandler = new Handler(Looper.getMainLooper());
     private String lastMessage = "";
     private final Runnable progressRunnable = () -> logDebug(TAG, "Progress: " + lastMessage);
@@ -134,15 +133,6 @@ public class CopyBootFilesExecutor {
         if (!CheckForRoot.isRoot()) {
             prefs.edit().putBoolean(AppNavHomeActivity.CHROOT_INSTALLED_TAG, false).apply();
             return "Root permission is required!!";
-        }
-        if (prefs.getBoolean("files_copied", false)) {
-            File nhFilesDir = new File(NhPaths.SD_PATH, "nh_files");
-            if (nhFilesDir.exists() && nhFilesDir.isDirectory()) {
-                logDebug("Files already copied, skipping copy operation.");
-                return result;
-            } else {
-                ensureNhFilesOnSdcard();
-            }
         } else {
             logDebug("Proceeding with copy and symlink operations.");
         }
@@ -152,7 +142,6 @@ public class CopyBootFilesExecutor {
         copyAssetFolder("etc/init.d", NhPaths.APP_INITD_PATH);
         copyAssetFolder("scripts", NhPaths.APP_SCRIPTS_PATH);
         copyAssetFolder("nh_files", NhPaths.APP_NHFILES_PATH);
-        ensureNhFilesOnSdcard();
 
         publishProgress("Fixing permissions for new files");
         setPermissions(NhPaths.APP_SCRIPTS_PATH, NhPaths.APP_INITD_PATH);
@@ -207,16 +196,6 @@ public class CopyBootFilesExecutor {
             publishProgress("Failed to copy nh_files to SD card!");
         }
         return result;
-    }
-
-    private void ensureNhFilesOnSdcard() {
-        File nhFilesDir = new File(NhPaths.SD_PATH, "nh_files");
-        if (!nhFilesDir.exists() || !nhFilesDir.isDirectory()) {
-            copyAssetFolder("nh_files", NhPaths.SD_PATH + "/nh_files");
-            logDebug(TAG, "\"nh_files\" directory copied to: " + nhFilesDir.getAbsolutePath());
-        } else {
-            logDebug(TAG, "\"nh_files\" already exists at: " + nhFilesDir.getAbsolutePath());
-        }
     }
 
     private void ensureBusyboxNh() {
