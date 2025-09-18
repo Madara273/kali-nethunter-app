@@ -1,11 +1,9 @@
 package com.offsec.nethunter;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -22,10 +20,12 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.MenuHost;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
-import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.lifecycle.Lifecycle;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.offsec.nethunter.bridge.Bridge;
@@ -35,10 +35,9 @@ import com.offsec.nethunter.utils.ShellExecuter;
 import java.text.MessageFormat;
 
 public class SETFragment extends Fragment {
-    private SharedPreferences sharedpreferences;
-    private NhPaths nh;
-    private Activity activity;
+    protected SharedPreferences sharedpreferences;
     private static final String ARG_SECTION_NUMBER = "section_number";
+    private MenuProvider menuProvider;
 
     public static SETFragment newInstance(int sectionNumber) {
         SETFragment fragment = new SETFragment();
@@ -51,52 +50,62 @@ public class SETFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Context context = getContext();
-        activity = getActivity();
+        sharedpreferences = requireContext().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-
         View rootView = inflater.inflate(R.layout.set, container, false);
-        SETFragment.TabsPagerAdapter tabsPagerAdapter = new TabsPagerAdapter(getChildFragmentManager());
-
-        ViewPager mViewPager = rootView.findViewById(R.id.pagerBt);
+        TabsPagerAdapter tabsPagerAdapter = new TabsPagerAdapter(this);
+        ViewPager2 mViewPager = rootView.findViewById(R.id.pagerSet);
         mViewPager.setAdapter(tabsPagerAdapter);
         mViewPager.setOffscreenPageLimit(3);
-        mViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+        mViewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
-                activity.invalidateOptionsMenu();
+                if (isAdded()) {
+                    requireActivity().invalidateOptionsMenu();
+                }
             }
         });
-        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        setHasOptionsMenu(true);
         return rootView;
     }
 
     @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater menuinflater) {
-        menuinflater.inflate(R.menu.bt, menu);
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        if (!(this instanceof MainFragment)) {
+            MenuHost menuHost = requireActivity();
+            menuProvider = new MenuProvider() {
+                @Override
+                public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
+                    menuInflater.inflate(R.menu.bt, menu);
+                }
+                @Override
+                public boolean onMenuItemSelected(@NonNull MenuItem item) {
+                    int id = item.getItemId();
+                    if (id == R.id.setup) { RunSetup(); return true; }
+                    if (id == R.id.update) { RunUpdate(); return true; }
+                    return false;
+                }
+            };
+            menuHost.addMenuProvider(menuProvider, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
+        }
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.setup) {
-            RunSetup();
-            return true;
-        } else if (id == R.id.update) {
-            RunUpdate();
-            return true;
-        } else {
-            return super.onOptionsItemSelected(item);
+    public void onDestroyView() {
+        super.onDestroyView();
+        // Remove the menu provider to avoid leaks and unexpected behavior
+        if (menuProvider != null) {
+            MenuHost menuHost = requireActivity();
+            menuHost.removeMenuProvider(menuProvider);
+            menuProvider = null; // Clear the reference
         }
     }
 
     public void SetupDialog() {
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
-        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         builder.setTitle("Welcome to SET!");
         builder.setMessage("In order to make sure everything is working, an initial setup needs to be done.");
         builder.setPositiveButton("Check & Install", (dialog, which) -> {
@@ -107,48 +116,23 @@ public class SETFragment extends Fragment {
     }
 
     public void RunSetup() {
-        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         run_cmd("echo -ne \"\\033]0;SET Setup\\007\" && clear;if [[ -d /root/setoolkit ]]; then echo 'SET is already installed'" +
                 ";else git clone https://github.com/yesimxev/social-engineer-toolkit /root/setoolkit && echo 'Successfully installed SET!';fi; echo 'Closing in 3secs..'; sleep 3 && exit ");
         sharedpreferences.edit().putBoolean("set_setup_done", true).apply();
     }
 
     public void RunUpdate() {
-        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         run_cmd("echo -ne \"\\033]0;SET Update\\007\" && clear;if [[ -d /root/setoolkit ]]; then cd /root/setoolkit && git pull && echo 'Successfully updated SET! Closing in 3secs..';else echo 'Please run SETUP first!';fi; sleep 3 && exit ");
         sharedpreferences.edit().putBoolean("set_setup_done", true).apply();
     }
 
-    public static class TabsPagerAdapter extends FragmentPagerAdapter {
-        TabsPagerAdapter(FragmentManager fm) {
-            super(fm);
-        }
-
-        @NonNull
-        @Override
-        public Fragment getItem(int i) {
-            return new MainFragment();
-        }
-
-        @Override
-        public Parcelable saveState() {
-            return null;
-        }
-
-        @Override
-        public int getCount() {
-            return 1;
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            return "Email Template";
-        }
+    public static class TabsPagerAdapter extends FragmentStateAdapter {
+        TabsPagerAdapter(@NonNull Fragment fragment) { super(fragment); }
+        @NonNull @Override public Fragment createFragment(int position) { return new MainFragment(); }
+        @Override public int getItemCount() { return 1; }
     }
 
     public static class MainFragment extends SETFragment {
-        private Context context;
-        private NhPaths nh;
         final ShellExecuter exe = new ShellExecuter();
         private String selected_template;
         private String template_src;
@@ -157,7 +141,6 @@ public class SETFragment extends Fragment {
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
-            context = getContext();
         }
 
         @Override
@@ -165,7 +148,6 @@ public class SETFragment extends Fragment {
                                  Bundle savedInstanceState) {
 
             View rootView = inflater.inflate(R.layout.set_main, container, false);
-            SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
             EditText PhishName = rootView.findViewById(R.id.set_name);
             EditText PhishSubject = rootView.findViewById(R.id.set_subject);
 
@@ -241,15 +223,15 @@ public class SETFragment extends Fragment {
             return rootView;
         }
 
-        private void refresh(View SETFragment) {
-            WebView myBrowser = SETFragment.findViewById(R.id.mybrowser);
+        private void refresh(View SETFragmentView) {
+            WebView myBrowser = SETFragmentView.findViewById(R.id.mybrowser);
             final String template_path = NhPaths.SD_PATH + "/" + template_tempfile;
 
             // Setting fields
-            EditText PhishLink = SETFragment.findViewById(R.id.set_link);
-            EditText PhishName = SETFragment.findViewById(R.id.set_name);
-            EditText PhishPic = SETFragment.findViewById(R.id.set_pic);
-            EditText PhishSubject = SETFragment.findViewById(R.id.set_subject);
+            EditText PhishLink = SETFragmentView.findViewById(R.id.set_link);
+            EditText PhishName = SETFragmentView.findViewById(R.id.set_name);
+            EditText PhishPic = SETFragmentView.findViewById(R.id.set_pic);
+            EditText PhishSubject = SETFragmentView.findViewById(R.id.set_subject);
 
             exe.RunAsRoot(new String[]{"cp " + template_src + " " + NhPaths.SD_PATH});
 
@@ -290,6 +272,8 @@ public class SETFragment extends Fragment {
 
     public void run_cmd(String cmd) {
         Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
-        activity.startActivity(intent);
+        if (isAdded()) {
+            requireActivity().startActivity(intent);
+        }
     }
 }
