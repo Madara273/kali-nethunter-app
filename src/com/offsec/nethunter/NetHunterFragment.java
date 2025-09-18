@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -40,6 +41,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -58,6 +60,8 @@ public class NetHunterFragment extends Fragment {
     private Context context;
     private Activity activity;
     private NethunterRecyclerViewAdapter nethunterRecyclerViewAdapter;
+    private static final AtomicBoolean NH_FILES_COPY_SCHEDULED = new AtomicBoolean(false);
+    private final android.os.Handler nhHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private Button refreshButton;
     private MenuItem snowfallButton;
     private Button addButton;
@@ -77,10 +81,10 @@ public class NetHunterFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ensureNhFilesOnSdcard();
         setHasOptionsMenu(true);
         this.context = getContext();
         this.activity = getActivity();
-        ensureNhFilesOnSdcard();
     }
 
     @Nullable
@@ -238,6 +242,7 @@ public class NetHunterFragment extends Fragment {
     @Override
     public void onDestroyView() {
         super.onDestroyView();
+        //nhHandler.removeCallbacks(nhFilesCopyRunnable);
         refreshButton = null;
         addButton = null;
         deleteButton = null;
@@ -250,41 +255,48 @@ public class NetHunterFragment extends Fragment {
     }
 
     private void ensureNhFilesOnSdcard() {
+        if (nhFilesExists()) {
+            Log.i("NetHunterFragment", "nh_files is found!");
+            return;
+        }
+        if (!NH_FILES_COPY_SCHEDULED.compareAndSet(false, true)) {
+            Log.d("NetHunterFragment", "nh_files copy already scheduled; skipping.");
+            return;
+        }
         Log.i("NetHunterFragment", "Deferring nh_files check/copy by 10s to wait for storage permission.");
-        new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(() -> {
-            if (!isStoragePermissionGranted()) {
-                Log.w("NetHunterFragment", "Storage permission not granted after delay; skipping nh_files copy.");
-                return;
-            }
-
-            File nhFilesDir = new File("/sdcard/nh_files");
-            if (nhFilesDir.exists() && nhFilesDir.isDirectory()) {
-                Log.i("NetHunterFragment", "nh_files is found!");
-                return;
-            }
-
-            Log.w("NetHunterFragment", "/sdcard/nh_files not found. Attempting to copy from /data/data/com.offsec.nethunter/nh_files/");
+        nhHandler.postDelayed(() -> {
             try {
+                if (!isStoragePermissionGranted()) {
+                    Log.w("NetHunterFragment", "Storage permission not granted after delay; skipping nh_files copy.");
+                    return;
+                }
+                if (nhFilesExists()) {
+                    Log.i("NetHunterFragment", "nh_files is found!");
+                    return;
+                }
                 String cmd = "cp -r /data/data/com.offsec.nethunter/nh_files /sdcard/";
-                Log.i("NetHunterFragment", "Running root shell: " + cmd);
-                String output = new ShellExecuter().RunAsRootOutput(cmd);
-                Log.i("NetHunterFragment", "Shell output: " + output);
-
-                File nhFilesDirAfter = new File("/sdcard/nh_files");
-                if (nhFilesDirAfter.exists() && nhFilesDirAfter.isDirectory()) {
+                new ShellExecuter().RunAsRootOutput(cmd);
+                if (nhFilesExists()) {
                     Log.i("NetHunterFragment", "Successfully copied nh_files to /sdcard/");
                 } else {
                     Log.e("NetHunterFragment", "Failed to copy nh_files. Directory still not found.");
                 }
             } catch (Exception e) {
                 Log.e("NetHunterFragment", "Exception while copying nh_files: ", e);
+            } finally {
+                NH_FILES_COPY_SCHEDULED.set(false);
             }
         }, 10_000);
     }
 
+    private synchronized boolean nhFilesExists() {
+        File nhFilesDir = new File("/sdcard/nh_files");
+        return nhFilesDir.exists() && nhFilesDir.isDirectory();
+    }
+
     private boolean isStoragePermissionGranted() {
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
-            return android.os.Environment.isExternalStorageManager();
+            return Environment.isExternalStorageManager();
         } else {
             Context ctx = getContext();
             if (ctx == null) return false;
