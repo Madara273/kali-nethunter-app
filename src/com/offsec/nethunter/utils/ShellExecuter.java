@@ -24,10 +24,6 @@ public class ShellExecuter {
     private final SimpleDateFormat timeStamp = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
     private final static String TAG = "ShellExecuter";
 
-    public void setCustomEnv(Map<String, String> env) {
-        Map<String, String> customEnv = new HashMap<>(env);
-    }
-
     public ShellExecuter() {
     }
 
@@ -54,7 +50,7 @@ public class ShellExecuter {
             try {
                 p.waitFor();
             } catch (InterruptedException e) {
-                Log.e(TAG, "Process was interrupted", e);
+                Log.e(TAG, "Process was interrupted while executing: " + command, e);
                 Thread.currentThread().interrupt();
             }
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
@@ -82,7 +78,7 @@ public class ShellExecuter {
             try {
                 process.waitFor();
             } catch (InterruptedException e) {
-                Log.e(TAG, "Process was interrupted", e);
+                Log.e(TAG, "Process was interrupted while executing root command", e);
                 Thread.currentThread().interrupt();
             }
         } catch (IOException e) {
@@ -115,7 +111,7 @@ public class ShellExecuter {
                 try (BufferedReader br = new BufferedReader(new InputStreamReader(stderr))) {
                     String line;
                     if ((line = br.readLine()) != null) {
-                        Log.e("Shell Error:", line);
+                        Log.e(TAG, "Shell Error: " + line);
                         throw new RuntimeException(line);
                     }
                 }
@@ -123,13 +119,13 @@ public class ShellExecuter {
             try {
                 process.waitFor();
             } catch (InterruptedException e) {
-                Log.e(TAG, "Process was interrupted", e);
+                Log.e(TAG, "Process was interrupted while executing root command", e);
                 Thread.currentThread().interrupt();
             }
             process.destroy();
             return output.toString();
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RuntimeException("Unexpected error while executing root command", ex);
         }
     }
 
@@ -151,21 +147,21 @@ public class ShellExecuter {
             while ((line = br.readLine()) != null) {
                 output.append(line).append('\n');
             }
-            /* remove the last \n */
             if (output.length() > 0)
                 output = new StringBuilder(output.substring(0, output.length() - 1));
             br.close();
             br = new BufferedReader(new InputStreamReader(stderr));
             while ((line = br.readLine()) != null) {
-                Log.e("Shell Error:", line);
+                Log.e(TAG, "Shell Error: " + line);
             }
             br.close();
             process.waitFor();
             process.destroy();
         } catch (IOException e) {
-            Log.e(TAG, "IOException occurred while executing command", e);
+            Log.e(TAG, "IOException occurred while executing command: " + command, e);
         } catch (InterruptedException ex) {
-            Log.d(TAG, "An InterruptedException was caught: " + ex.getMessage());
+            Log.e(TAG, "Process was interrupted while executing command: " + command, ex);
+            Thread.currentThread().interrupt();
         }
         return output.toString();
     }
@@ -329,7 +325,7 @@ public class ShellExecuter {
                 output.append(line).append("\n");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error reading file: " + _path, e);
         }
         return output.toString();
     }
@@ -359,7 +355,7 @@ public class ShellExecuter {
                 output.append(line).append("\n");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error reading file: " + duckyOutputFile, e);
         }
         return output.toString();
     }
@@ -416,10 +412,11 @@ public class ShellExecuter {
             try {
                 process.waitFor();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Log.e(TAG, "Process was interrupted", e);
+                Thread.currentThread().interrupt();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            Log.e(TAG, "Error executing root commands array", e);
         }
     }
 
