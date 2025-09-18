@@ -2,17 +2,14 @@ package com.offsec.nethunter.Executor;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 
 import com.offsec.nethunter.NetHunterFragment;
 import com.offsec.nethunter.SQL.NethunterSQL;
 import com.offsec.nethunter.models.NethunterModel;
 import com.offsec.nethunter.utils.ShellExecuter;
-import com.offsec.nethunter.utils.VulkanChecker;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -72,14 +69,6 @@ public class NethunterExecutor {
     public NethunterExecutor(int actionCode, NethunterSQL nethunterSQL) {
         this.actionCode = actionCode;
         this.nethunterSQL = nethunterSQL;
-    }
-
-    public static void checkVulkanSupportOnStart(NetHunterFragment netHunterFragment) {
-        if (VulkanChecker.isVulkanSupported(netHunterFragment.getContext())) {
-            Log.d("NethunterExecutor", "Vulkan is supported on this device.");
-        } else {
-            Log.d("NethunterExecutor", "Vulkan is NOT supported on this device.");
-        }
     }
 
     public void execute(List<NethunterModel> nethunterModelList) {

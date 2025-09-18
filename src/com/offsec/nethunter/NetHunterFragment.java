@@ -77,7 +77,6 @@ public class NetHunterFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        NethunterExecutor.checkVulkanSupportOnStart(this);
         setHasOptionsMenu(true);
         this.context = getContext();
         this.activity = getActivity();
