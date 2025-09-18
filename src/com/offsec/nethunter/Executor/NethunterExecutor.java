@@ -12,6 +12,7 @@ import com.offsec.nethunter.utils.VulkanChecker;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -101,7 +102,8 @@ public class NethunterExecutor {
         switch (actionCode) {
             case GETITEMRESULTS:
                 if (nethunterModelList != null) {
-                    for (NethunterModel model : nethunterModelList) {
+                    List<NethunterModel> snapshot = new ArrayList<>(nethunterModelList);
+                    for (NethunterModel model : snapshot) {
                         model.setResult(model.getRunOnCreate().equals("1")
                                 ? new ShellExecuter().RunAsRootOutput(model.getCommand()).split("\\n")
                                 : "Please click RUN button manually.".split("\\n"));
@@ -148,9 +150,10 @@ public class NethunterExecutor {
                 break;
             case DELETEDATA:
                 if (nethunterModelList != null) {
-                    Collections.sort(selectedPositionsIndex, Collections.reverseOrder());
-                    for (Integer selectedPosition : selectedPositionsIndex) {
-                        nethunterModelList.remove((int) selectedPosition);
+                    List<Integer> idxSnapshot = new ArrayList<>(selectedPositionsIndex);
+                    Collections.sort(idxSnapshot, Collections.reverseOrder());
+                    for (Integer positionsIndex : idxSnapshot) {
+                        nethunterModelList.remove((int) positionsIndex);
                     }
                     nethunterSQL.deleteData(selectedTargetIds);
                 }

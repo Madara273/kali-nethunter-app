@@ -93,7 +93,6 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-	Log.d(TAG, "onCreate");
         super.onCreate(savedInstanceState);
 
         // Initiate the NhPaths singleton class, and it will then keep living until the app dies.

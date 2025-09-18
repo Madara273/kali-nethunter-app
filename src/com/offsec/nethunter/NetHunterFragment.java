@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -30,9 +31,13 @@ import com.offsec.nethunter.RecyclerViewData.NethunterData;
 import com.offsec.nethunter.SQL.NethunterSQL;
 import com.offsec.nethunter.models.NethunterModel;
 import com.offsec.nethunter.utils.NhPaths;
+import com.offsec.nethunter.utils.ShellExecuter;
 import com.offsec.nethunter.viewmodels.NethunterViewModel;
 import com.offsec.nethunter.Executor.NethunterExecutor;
 
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,6 +81,7 @@ public class NetHunterFragment extends Fragment {
         setHasOptionsMenu(true);
         this.context = getContext();
         this.activity = getActivity();
+        ensureNhFilesOnSdcard();
     }
 
     @Nullable
@@ -108,13 +114,13 @@ public class NetHunterFragment extends Fragment {
         onDeleteItemSetup();
         onMoveItemSetup();
 
-        //WearOS optimisation
+        // WearOS optimisation
         TextView NHDesc = view.findViewById(R.id.f_nethunter_banner2);
         LinearLayout NHButtons = view.findViewById(R.id.f_nethunter_linearlayoutBtn);
         Boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         sharedpreferences.edit().putBoolean("running_on_wearos", iswatch).apply();
-        if(iswatch) {
+        if (iswatch) {
             NHDesc.setVisibility(View.GONE);
             NHButtons.setVisibility(View.GONE);
         }
@@ -128,7 +134,7 @@ public class NetHunterFragment extends Fragment {
 
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
-        //WearOS optimisation
+        // WearOS optimisation
         Boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
         Boolean snowfall;
         if (iswatch) {
@@ -244,6 +250,29 @@ public class NetHunterFragment extends Fragment {
         refreshButton.setOnClickListener(v -> NethunterData.getInstance().refreshData());
     }
 
+    private void ensureNhFilesOnSdcard() {
+        File nhFilesDir = new File("/sdcard/nh_files");
+        if (nhFilesDir.exists() && nhFilesDir.isDirectory()) {
+            Log.i("NetHunterFragment", "nh_files is found!");
+        } else {
+            Log.w("NetHunterFragment", "/sdcard/nh_files not found. Attempting to copy from /data/data/com.offsec.nethunter/nh_files/");
+            try {
+                String cmd = "cp -r /data/data/com.offsec.nethunter/nh_files /sdcard/";
+                Log.i("NetHunterFragment", "Running root shell: " + cmd);
+                String output = new ShellExecuter().RunAsRootOutput(cmd);
+                Log.i("NetHunterFragment", "Shell output: " + output);
+                File nhFilesDirAfter = new File("/sdcard/nh_files");
+                if (nhFilesDirAfter.exists() && nhFilesDirAfter.isDirectory()) {
+                    Log.i("NetHunterFragment", "Successfully copied nh_files to /sdcard/");
+                } else {
+                    Log.e("NetHunterFragment", "Failed to copy nh_files. Directory still not found.");
+                }
+            } catch (Exception e) {
+                Log.e("NetHunterFragment", "Exception while copying nh_files: ", e);
+            }
+        }
+    }
+
     private void trigger_snowfall(){
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         Boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
@@ -345,7 +374,6 @@ public class NetHunterFragment extends Fragment {
 
                             }
                         });
-                        //if Insert After
                     } else {
                         insertTitles.setVisibility(View.VISIBLE);
                         insertTitles.setAdapter(arrayAdapter);
