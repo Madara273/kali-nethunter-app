@@ -3,7 +3,6 @@ package com.offsec.nethunter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -54,7 +53,7 @@ public class KernelFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.kernel, container, false);
-        SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
         // Device information
         final TextView Device = rootView.findViewById(R.id.device);
@@ -223,15 +222,5 @@ public class KernelFragment extends Fragment {
     public void run_cmd_android(String cmd) {
         Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/android-su", cmd);
         activity.startActivity(intent);
-    }
-    public static class PreferencesData {
-        public static void saveString(Context context, String key, String value) {
-            SharedPreferences sharedPrefs = context.getSharedPreferences("default_preferences", Context.MODE_PRIVATE);
-            sharedPrefs.edit().putString(key, value).apply();
-        }
-        public static String getString(Context context, String key, String defaultValue) {
-            SharedPreferences sharedPrefs = context.getSharedPreferences("default_preferences", Context.MODE_PRIVATE);
-            return sharedPrefs.getString(key, defaultValue);
-        }
     }
 }
