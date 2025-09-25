@@ -36,9 +36,12 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.MenuHost;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.lifecycle.Lifecycle;
 import androidx.viewpager.widget.ViewPager;
 
 public class HidFragment extends Fragment {
@@ -80,77 +83,70 @@ public class HidFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.hid, container, false);
-        HidFragment.TabsPagerAdapter tabsPagerAdapter = new TabsPagerAdapter(getChildFragmentManager());
-
+        TabsPagerAdapter tabsPagerAdapter = new TabsPagerAdapter(getChildFragmentManager());
         mViewPager = rootView.findViewById(R.id.pagerHid);
         mViewPager.setAdapter(tabsPagerAdapter);
-
         configFilePath = NhPaths.CHROOT_PATH() + "/var/www/html/powersploit-payload";
 
         mViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-            @Override
-            public void onPageSelected(int position) {
-                activity.invalidateOptionsMenu();
+            @Override public void onPageSelected(int position) {
+                requireActivity().invalidateOptionsMenu();
             }
         });
-        setHasOptionsMenu(true);
+
+        MenuHost menuHost = requireActivity();
+        menuHost.addMenuProvider(new MenuProvider() {
+            @Override
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+                inflater.inflate(R.menu.hid, menu);
+            }
+            @Override
+            public void onPrepareMenu(@NonNull Menu menu) {
+                if (mViewPager == null) return;
+                int pageNum = mViewPager.getCurrentItem();
+                MenuItem sourceButton = menu.findItem(R.id.source_button);
+                boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
+                if (sourceButton != null) {
+                    sourceButton.setVisible(pageNum == 0 && !iswatch);
+                }
+            }
+            @Override
+            public boolean onMenuItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+                if (id == R.id.start_service) {
+                    if (isHIDenable) start(); else {
+                        if (new File("/config/usb_gadget/g1").exists())
+                            NhPaths.showMessage_long(context,"HID interfaces are not enabled! Please enable in USB Arsenal.");
+                        else if (new File("/dev/hidg0").exists()) {
+                            NhPaths.showMessage_long(context, "Fixing HID interface permissions..");
+                            exe.RunAsRoot(new String[]{"chmod 666 /dev/hidg*"});
+                        } else {
+                            NhPaths.showMessage_long(context,"HID interfaces are not patched or enabled, please check your kernel configuration.");
+                        }
+                    }
+                    return true;
+                } else if (id == R.id.stop_service) {
+                    reset();
+                    return true;
+                } else if (id == R.id.admin) {
+                    openDialog();
+                    return true;
+                } else if (id == R.id.chooseLanguage) {
+                    openLanguageDialog();
+                    return true;
+                } else if (id == R.id.source_button) {
+                    Intent i = new Intent(activity, EditSourceActivity.class);
+                    i.putExtra("path", configFilePath);
+                    startActivity(i);
+                    return true;
+                }
+                return false;
+            }
+        }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
+
         sharedpreferences = activity.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
         check_HID_enable();
         return rootView;
-    }
-
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.hid, menu);
-    }
-
-    @Override
-    public void onPrepareOptionsMenu(Menu menu) {
-        int pageNum = mViewPager.getCurrentItem();
-        final MenuItem sourceButton = menu.findItem(R.id.source_button);
-        //WearOS optimisation
-        boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
-        if (pageNum == 0) {
-            sourceButton.setVisible(!iswatch);
-        } else {
-            sourceButton.setVisible(false);
-        }
-        activity.invalidateOptionsMenu();
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.start_service) {
-            if (isHIDenable) {
-                start();
-            } else {
-                if (new File("/config/usb_gadget/g1").exists())
-                    NhPaths.showMessage_long(context,"HID interfaces are not enabled! Please enable in USB Arsenal.");
-                else if (new File("/dev/hidg0").exists()) {
-                    NhPaths.showMessage_long(context, "Fixing HID interface permissions..");
-                    exe.RunAsRoot(new String[]{"chmod 666 /dev/hidg*"});
-                }
-                else NhPaths.showMessage_long(context,"HID interfaces are not patched or enabled, please check your kernel configuration.");
-            }
-            return true;
-        } else if (id == R.id.stop_service) {
-            reset();
-            return true;
-        } else if (id == R.id.admin) {
-            openDialog();
-            return true;
-        } else if (id == R.id.chooseLanguage) {
-            openLanguageDialog();
-            return true;
-        } else if (id == R.id.source_button) {
-            Intent i = new Intent(activity, EditSourceActivity.class);
-            i.putExtra("path", configFilePath);
-            startActivity(i);
-            return true;
-        } else {
-            return super.onOptionsItemSelected(item);
-        }
     }
 
     private void start() {
@@ -620,9 +616,6 @@ public class HidFragment extends Fragment {
                 String regExPatPayloadUrl = "DownloadString\\(\"(.*)\"\\)";
                 Pattern patternPayloadUrl = Pattern.compile(regExPatPayloadUrl, Pattern.MULTILINE);
                 final Matcher matcherPayloadUrl = patternPayloadUrl.matcher(textUrl);
-
-                String[] lines = text.split("\n");
-                final String line = lines[lines.length - 1];
 
                 payloadUrl.post(() -> {
                     if (matcherPayloadUrl.find()) {
