@@ -82,6 +82,7 @@
         android:usesCleartextTraffic="true"
         android:windowSoftInputMode="adjustResize"
         android:requestLegacyExternalStorage="true"
+        android:enableOnBackInvokedCallback="true"
         tools:targetApi="n">
         <activity
             android:name=".AppNavHomeActivity"
@@ -127,6 +128,14 @@
                 <action android:name="android.intent.action.ACTION_SHUTDOWN" />
             </intent-filter>
         </receiver>
+        <!-- <receiver
+            android:name=".boot.BootReceiver"
+            android:enabled="true"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+            </intent-filter>
+        </receiver> -->
         <service
             android:name=".audio.AudioPlaybackService"
             android:label="@string/playback_service_label" />
