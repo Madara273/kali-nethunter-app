@@ -192,9 +192,6 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
                             .setView(dialogView)
                             .create();
 
-                    Button closeButton = dialogView.findViewById(R.id.dialog_close_button);
-                    closeButton.setOnClickListener(v -> dialog.dismiss());
-
                     dialog.show();
                     return true;
                 } else if (id == R.id.action_rtlsdr || id == R.id.action_rtlamr ||
