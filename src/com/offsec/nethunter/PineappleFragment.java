@@ -1,7 +1,6 @@
 package com.offsec.nethunter;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -23,6 +22,7 @@ public class PineappleFragment extends Fragment {
     private Context context;
     private static final String ARG_SECTION_NUMBER = "section_number";
     public PineappleFragment() {
+        // Required empty public constructor
     }
 
     public static PineappleFragment newInstance(int sectionNumber) {
@@ -42,7 +42,7 @@ public class PineappleFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.pineapple, container, false);
-        SharedPreferences sharedpreferences = context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
+        context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
 
         Log.d(TAG, NhPaths.APP_SCRIPTS_PATH);
 
