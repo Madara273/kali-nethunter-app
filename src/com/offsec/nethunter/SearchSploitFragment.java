@@ -38,6 +38,8 @@ import java.util.Locale;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.view.MenuHost;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 
 public class SearchSploitFragment extends Fragment {
@@ -77,7 +79,6 @@ public class SearchSploitFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.searchsploit, container, false);
 
-        setHasOptionsMenu(true);
         database = new SearchSploitSQL(context);
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
         builder.setTitle("Exploit Database Archive");
@@ -159,42 +160,50 @@ public class SearchSploitFragment extends Fragment {
     }
 
     @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.searchsploit, menu);
-    }
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-    @Override
-    public boolean onOptionsItemSelected(final MenuItem item) {
-        if (item.getItemId() == R.id.rawSearch_ON) {
-            if (getView() == null) return true;
-            if (!withFilters) {
-                assert getView() != null;
-                requireView().findViewById(R.id.search_filters).setVisibility(View.VISIBLE);
-                withFilters = true;
-                item.setTitle("Enable Raw search");
-                loadExploits();
-                hideSoftKeyboard(getView());
-            } else {
-                MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                builder.setTitle("Raw search warning");
-
-                builder.setMessage("The exploit db is pretty big (+30K exploits), activating raw search will make the search slow.\nIs useful to do global searches when you don't find a exploit.")
-                        .setNegativeButton("Cancel", (dialog, id) -> dialog.dismiss())
-                        .setPositiveButton("Enable", (dialog, id) -> {
-                            getView().findViewById(R.id.search_filters).setVisibility(View.GONE);
-                            item.setTitle("Disable Raw search");
-                            withFilters = false;
-                            loadExploits();
-                            hideSoftKeyboard(getView());
-                        });
-
-                AlertDialog ad = builder.create();
-                ad.setCancelable(false);
-                ad.show();
+        MenuHost menuHost = requireActivity();
+        menuHost.addMenuProvider(new MenuProvider() {
+            @Override
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+                inflater.inflate(R.menu.searchsploit, menu);
+                MenuItem raw = menu.findItem(R.id.rawSearch_ON);
+                if (raw != null) {
+                    raw.setTitle(withFilters ? "Enable Raw search" : "Disable Raw search");
+                }
             }
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+
+            @Override
+            public boolean onMenuItemSelected(@NonNull MenuItem item) {
+                if (item.getItemId() == R.id.rawSearch_ON) {
+                    if (!withFilters) {
+                        view.findViewById(R.id.search_filters).setVisibility(View.VISIBLE);
+                        withFilters = true;
+                        item.setTitle("Enable Raw search");
+                        loadExploits();
+                        hideSoftKeyboard(view);
+                    } else {
+                        MaterialAlertDialogBuilder builder =
+                                new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
+                        builder.setTitle("Raw search warning");
+                        builder.setMessage("The exploit db is pretty big (+30K exploits), activating raw search will make the search slow.\nIs useful to do global searches when you don't find a exploit.")
+                                .setNegativeButton("Cancel", (d,i)->d.dismiss())
+                                .setPositiveButton("Enable", (d,i)->{
+                                    view.findViewById(R.id.search_filters).setVisibility(View.GONE);
+                                    item.setTitle("Disable Raw search");
+                                    withFilters = false;
+                                    loadExploits();
+                                    hideSoftKeyboard(view);
+                                })
+                                .setCancelable(false)
+                                .show();
+                    }
+                    return true;
+                }
+                return false;
+            }
+        }, getViewLifecycleOwner(), androidx.lifecycle.Lifecycle.State.RESUMED);
     }
 
     private static void hideSoftKeyboard(final View caller) {
