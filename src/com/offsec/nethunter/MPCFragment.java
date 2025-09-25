@@ -2,7 +2,6 @@ package com.offsec.nethunter;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.LinkAddress;
 import android.net.LinkProperties;
@@ -40,6 +39,7 @@ public class MPCFragment extends Fragment {
     private NetworkRequest.Builder builder;
 
     public MPCFragment() {
+        // Required empty public constructor
     }
 
     public static MPCFragment newInstance(int sectionNumber) {
@@ -62,7 +62,7 @@ public class MPCFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.payload_maker, container, false);
-        SharedPreferences sharedpreferences = context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
+        context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
 
         // Payload Type Spinner
         Spinner typeSpinner = rootView.findViewById(R.id.mpc_type_spinner);
@@ -201,7 +201,7 @@ public class MPCFragment extends Fragment {
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                //Another interface callback
+                // Another interface callback
             }
         });
 
