@@ -82,7 +82,6 @@ public class NetHunterFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ensureNhFilesOnSdcard();
-        setHasOptionsMenu(true);
         this.context = getContext();
         this.activity = getActivity();
     }
@@ -96,7 +95,120 @@ public class NetHunterFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        NethunterViewModel nethunterViewModel = new ViewModelProvider(this).get(NethunterViewModel.class);
+
+        androidx.core.view.MenuHost menuHost = requireActivity();
+        menuHost.addMenuProvider(new androidx.core.view.MenuProvider() {
+            @Override
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+                inflater.inflate(R.menu.nethunter, menu);
+                MenuItem searchItem = menu.findItem(R.id.f_nethunter_action_search);
+                sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+
+                boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
+                boolean snowfall = iswatch
+                        ? sharedpreferences.getBoolean("snowfall_enabled", false)
+                        : sharedpreferences.getBoolean("snowfall_enabled", true);
+
+                if (iswatch) searchItem.setVisible(false);
+
+                snowfallButton = menu.findItem(R.id.f_nethunter_action_snowfall);
+                if (snowfall) snowfallButton.setIcon(R.drawable.snowflake_trigger);
+                else snowfallButton.setIcon(R.drawable.snowflake_trigger_bw);
+
+                SearchView searchView = (SearchView) searchItem.getActionView();
+                if (searchView != null) {
+                    searchView.setOnSearchClickListener(v -> menu.setGroupVisible(R.id.f_nethunter_menu_group1, false));
+                    searchView.setOnCloseListener(() -> {
+                        menu.setGroupVisible(R.id.f_nethunter_menu_group1, true);
+                        return false;
+                    });
+                    searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                        @Override public boolean onQueryTextSubmit(String query) { return false; }
+                        @Override public boolean onQueryTextChange(String newText) {
+                            if (nethunterRecyclerViewAdapter != null) {
+                                nethunterRecyclerViewAdapter.getFilter().filter(newText);
+                            }
+                            return false;
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public boolean onMenuItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+                LayoutInflater li = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                if (id == R.id.f_nethunter_menu_backupDB) {
+                    View promptView = li.inflate(R.layout.nethunter_custom_dialog_view, null);
+                    TextView titleTextView = promptView.findViewById(R.id.f_nethunter_adb_tv_title1);
+                    EditText storedpathEditText = promptView.findViewById(R.id.f_nethunter_adb_et_storedpath);
+                    titleTextView.setText(R.string.nethunter_full_path_savedb);
+                    storedpathEditText.setText(String.format("%s/FragmentNethunter", NhPaths.APP_SD_SQLBACKUP_PATH));
+                    MaterialAlertDialogBuilder adbBackup = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+                            .setView(promptView)
+                            .setNegativeButton("Cancel", (d,w)->d.cancel())
+                            .setPositiveButton("OK", (d,w)->{});
+                    AlertDialog adBackup = adbBackup.create();
+                    adBackup.setOnShowListener(dlg -> {
+                        Button ok = adBackup.getButton(DialogInterface.BUTTON_POSITIVE);
+                        ok.setOnClickListener(v -> {
+                            String returnedResult = NethunterData.getInstance()
+                                    .backupData(NethunterSQL.getInstance(context), storedpathEditText.getText().toString());
+                            if (returnedResult == null){
+                                NhPaths.showMessage(context, "db is successfully backup to " + storedpathEditText.getText().toString());
+                            } else {
+                                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat)
+                                        .setTitle("Failed to backup the DB.")
+                                        .setMessage(returnedResult)
+                                        .create().show();
+                            }
+                            adBackup.dismiss();
+                        });
+                    });
+                    adBackup.show();
+                    return true;
+                } else if (id == R.id.f_nethunter_menu_restoreDB) {
+                    View promptView = li.inflate(R.layout.nethunter_custom_dialog_view, null);
+                    TextView titleTextView = promptView.findViewById(R.id.f_nethunter_adb_tv_title1);
+                    EditText storedpathEditText = promptView.findViewById(R.id.f_nethunter_adb_et_storedpath);
+                    titleTextView.setText(R.string.nethunter_full_path_restoredb);
+                    storedpathEditText.setText(String.format("%s/FragmentNethunter", NhPaths.APP_SD_SQLBACKUP_PATH));
+                    MaterialAlertDialogBuilder adbRestore = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+                            .setView(promptView)
+                            .setNegativeButton("Cancel", (d,w)->d.cancel())
+                            .setPositiveButton("OK", (d,w)->{});
+                    AlertDialog adRestore = adbRestore.create();
+                    adRestore.setOnShowListener(dlg -> {
+                        Button ok = adRestore.getButton(DialogInterface.BUTTON_POSITIVE);
+                        ok.setOnClickListener(v -> {
+                            String returnedResult = NethunterData.getInstance()
+                                    .restoreData(NethunterSQL.getInstance(context), storedpathEditText.getText().toString());
+                            if (returnedResult == null){
+                                NhPaths.showMessage(context, "db is successfully restored to " + storedpathEditText.getText().toString());
+                            } else {
+                                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat)
+                                        .setTitle("Failed to restore the DB.")
+                                        .setMessage(returnedResult)
+                                        .create().show();
+                            }
+                            adRestore.dismiss();
+                        });
+                    });
+                    adRestore.show();
+                    return true;
+                } else if (id == R.id.f_nethunter_menu_ResetToDefault) {
+                    NethunterData.getInstance().resetData(NethunterSQL.getInstance(context));
+                    return true;
+                } else if (id == R.id.f_nethunter_action_snowfall) {
+                    trigger_snowfall();
+                    return true;
+                }
+                return false;
+            }
+        }, getViewLifecycleOwner(), androidx.lifecycle.Lifecycle.State.RESUMED);
+
+
+    NethunterViewModel nethunterViewModel = new ViewModelProvider(this).get(NethunterViewModel.class);
         nethunterViewModel.init(context);
 
         nethunterViewModel.getLiveDataNethunterModelList().observe(getViewLifecycleOwner(), nethunterModelList -> nethunterRecyclerViewAdapter.notifyDataSetChanged());
@@ -127,110 +239,6 @@ public class NetHunterFragment extends Fragment {
             NHDesc.setVisibility(View.GONE);
             NHButtons.setVisibility(View.GONE);
         }
-    }
-
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.nethunter, menu);
-        final MenuItem searchItem = menu.findItem(f_nethunter_action_search);
-
-        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-
-        // WearOS optimisation
-        Boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
-        Boolean snowfall;
-        if (iswatch) {
-            snowfall = sharedpreferences.getBoolean("snowfall_enabled", false);
-            searchItem.setVisible(false);
-        } else {
-            snowfall = sharedpreferences.getBoolean("snowfall_enabled", true);
-        }
-        final SearchView searchView = (SearchView) searchItem.getActionView();
-        assert searchView != null;
-        searchView.setOnSearchClickListener(v -> menu.setGroupVisible(R.id.f_nethunter_menu_group1, false));
-        searchView.setOnCloseListener(() -> {
-            menu.setGroupVisible(R.id.f_nethunter_menu_group1, true);
-            return false;
-        });
-
-        // Snowfall
-        snowfallButton = menu.findItem(f_nethunter_action_snowfall);
-        if (snowfall) snowfallButton.setIcon(R.drawable.snowflake_trigger);
-        else snowfallButton.setIcon(R.drawable.snowflake_trigger_bw);
-
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                nethunterRecyclerViewAdapter.getFilter().filter(newText);
-                return false;
-            }
-        });
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        final LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        final View promptView = inflater.inflate(R.layout.nethunter_custom_dialog_view, null);
-        final TextView titleTextView = promptView.findViewById(R.id.f_nethunter_adb_tv_title1);
-        final EditText storedpathEditText = promptView.findViewById(R.id.f_nethunter_adb_et_storedpath);
-
-        int id = item.getItemId();
-        if (id == R.id.f_nethunter_menu_backupDB) {
-            titleTextView.setText(R.string.nethunter_full_path_savedb);
-            storedpathEditText.setText(String.format("%s/FragmentNethunter", NhPaths.APP_SD_SQLBACKUP_PATH));
-            MaterialAlertDialogBuilder adbBackup = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-            adbBackup.setView(promptView);
-            adbBackup.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-            adbBackup.setPositiveButton("OK", (dialog, which) -> { });
-            final androidx.appcompat.app.AlertDialog adBackup = adbBackup.create();
-            adBackup.setOnShowListener(dialog -> {
-                final Button buttonOK = adBackup.getButton(DialogInterface.BUTTON_POSITIVE);
-                buttonOK.setOnClickListener(v -> {
-                    String returnedResult = NethunterData.getInstance().backupData(NethunterSQL.getInstance(context), storedpathEditText.getText().toString());
-                    if (returnedResult == null){
-                        NhPaths.showMessage(context, "db is successfully backup to " + storedpathEditText.getText().toString());
-                    } else {
-                        dialog.dismiss();
-                        new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to backup the DB.").setMessage(returnedResult).create().show();
-                    }
-                    dialog.dismiss();
-                });
-            });
-            adBackup.show();
-        } else if (id == R.id.f_nethunter_menu_restoreDB) {
-            titleTextView.setText(R.string.nethunter_full_path_restoredb);
-            storedpathEditText.setText(String.format("%s/FragmentNethunter", NhPaths.APP_SD_SQLBACKUP_PATH));
-            MaterialAlertDialogBuilder adbRestore = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-            adbRestore.setView(promptView);
-            adbRestore.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-            adbRestore.setPositiveButton("OK", (dialog, which) -> { });
-            final androidx.appcompat.app.AlertDialog adRestore = adbRestore.create();
-            adRestore.setOnShowListener(dialog -> {
-                final Button buttonOK = adRestore.getButton(DialogInterface.BUTTON_POSITIVE);
-                buttonOK.setOnClickListener(v -> {
-                    String returnedResult = NethunterData.getInstance().restoreData(NethunterSQL.getInstance(context), storedpathEditText.getText().toString());
-                    if (returnedResult == null) {
-                        NhPaths.showMessage(context, "db is successfully restored to " + storedpathEditText.getText().toString());
-                    } else {
-                        dialog.dismiss();
-                        new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to restore the DB.").setMessage(returnedResult).create().show();
-                    }
-                    dialog.dismiss();
-                });
-            });
-            adRestore.show();
-        } else if (id == R.id.f_nethunter_menu_ResetToDefault) {
-            NethunterData.getInstance().resetData(NethunterSQL.getInstance(context));
-        } else if (id == f_nethunter_action_snowfall) {
-            trigger_snowfall();
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -306,7 +314,7 @@ public class NetHunterFragment extends Fragment {
         }
     }
 
-    private void trigger_snowfall(){
+    private void trigger_snowfall() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         Boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
         Boolean snowfall;
@@ -326,7 +334,7 @@ public class NetHunterFragment extends Fragment {
         }
     }
 
-    private void onAddItemSetup(){
+    private void onAddItemSetup() {
         addButton.setOnClickListener(v -> {
             List<NethunterModel> nethunterModelList = NethunterData.getInstance().nethunterModelListFull;
             if (nethunterModelList == null) return;
