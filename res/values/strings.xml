@@ -823,7 +823,7 @@
         ]]>
     </string>
 
-    <string name="credits_text"><![CDATA[
+    <string name="credits_text" formatted="false"><![CDATA[
         <div style="text-align:center;"><b><u>CREDITS</u></b></div>
         <ul>
             <li><a href="https://github.com/fenugrec"> Fenugrec</a> - Freediag tool.</li>
