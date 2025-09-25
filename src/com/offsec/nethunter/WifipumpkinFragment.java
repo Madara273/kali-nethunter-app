@@ -9,7 +9,6 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -48,15 +47,12 @@ import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.viewpager2.widget.ViewPager2;
 import androidx.core.view.MenuHost;
 import androidx.core.view.MenuProvider;
 import androidx.lifecycle.Lifecycle;
 
 public class WifipumpkinFragment extends Fragment {
     private SharedPreferences sharedpreferences;
-    private Integer selectedScriptIndex = 0;
-    private final CharSequence[] scripts = {"mana-nat-full", "mana-nat-simple", "mana-nat-bettercap", "mana-nat-simple-bdf", "hostapd-wpe", "hostapd-wpe-karma"};
     private static final String TAG = "WifipumpkinFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
     private String selected_template;
@@ -95,12 +91,11 @@ public class WifipumpkinFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.wifipumpkin_hostapd, container, false);
         final Button StartButton = rootView.findViewById(R.id.wp3start_button);
-        SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         boolean iswatch = requireContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
         CheckBox PreviewCheckbox = rootView.findViewById(R.id.preview_checkbox);
 
-        // First run
-        Boolean setupwp3done = sharedpreferences.getBoolean("wp3_setup_done", false);
+        // First run;
         String packages = exe.RunAsChrootOutput("if [[ -f /usr/bin/wifipumpkin3 || -f /usr/bin/dnschef ]];then echo Good;else echo Nope;fi");
 
         // if (!setupwp3done.equals(true))
@@ -166,10 +161,31 @@ public class WifipumpkinFragment extends Fragment {
         checkiptables();
 
         // Check wlan0 AP mode
+        String iwPath;
+        String abi = Build.SUPPORTED_ABIS[0];
+        if (abi.contains("arm64")) {
+            iwPath = NhPaths.APP_SCRIPTS_BIN_PATH + "/iw";
+        } else {
+            iwPath = NhPaths.APP_SCRIPTS_BIN_PATH + "/iw-armeabi";
+        }
+
+        // Fallback to system iw if the binary is not usable
+        File iwFile = new File(iwPath);
+        if (!iwFile.exists() || !iwFile.canExecute()) {
+            Log.w(TAG, "Bundled iw binary not usable, falling back to system iw");
+            iwPath = "iw";
+        }
+
+        Log.d(TAG, "Using iw binary: " + iwPath);
+
+        // Check wlan0 AP mode using selected iw
         TextView APmode = rootView.findViewById(R.id.wlan0ap);
-        String Wlan0AP = exe.RunAsRootOutput("iw list | grep '* AP'");
-        if (Wlan0AP.contains("* AP")) APmode.setText(R.string.wp3_ap_mode_supported);
-        else APmode.setText(R.string.wp3_ap_mode_not_supported);
+        String Wlan0AP = exe.RunAsRootOutput(iwPath + " list | grep '* AP'");
+        if (Wlan0AP.contains("* AP")) {
+            APmode.setText(R.string.wp3_ap_mode_supported);
+        } else {
+            APmode.setText(R.string.wp3_ap_mode_not_supported);
+        }
 
         // Refresh
         refresh_wp3_templates(rootView);
@@ -263,24 +279,6 @@ public class WifipumpkinFragment extends Fragment {
         }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
     }
 
-    private final ActivityResultLauncher<Intent> pickFileLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
-                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                    ShellExecuter exe = new ShellExecuter();
-                    String FilePath = Objects.requireNonNull(result.getData().getData()).getPath();
-                    FilePath = exe.RunAsRootOutput("echo " + FilePath + " | sed -e 's/\\/document\\/primary:/\\/sdcard\\//g'");
-                    String FilePy = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd unzip -Z1 '" + FilePath + "' | grep .py | awk -F'.' '{print $1}'");
-                    run_cmd("wifipumpkin3 -x \"use misc.custom_captiveflask; install " + FilePy + " \\\"" + FilePath + "\\\"; back; exit\";exit");
-                }
-            });
-
-    private void launchFilePicker() {
-        Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("application/zip");
-        pickFileLauncher.launch(Intent.createChooser(intent, "Select zip file"));
-    }
-
     // First setup
     public void SetupDialog() {
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
@@ -312,7 +310,6 @@ public class WifipumpkinFragment extends Fragment {
     private void checkiptables() {
         ShellExecuter exe = new ShellExecuter();
         String iptables_ver = exe.RunAsChrootOutput("iptables -V | grep iptables");
-        String old_kali = "https://old.kali.org/kali/pool/main/i/iptables/";
         if (iptables_ver.equals("iptables v1.6.2")) {
             MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
             builder.setTitle("You need to upgrade iptables!");
@@ -326,54 +323,6 @@ public class WifipumpkinFragment extends Fragment {
             });
             builder.show();
         }
-    }
-
-    private void startWP3() {
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-        builder.setTitle("Script to execute:");
-        builder.setPositiveButton("Start", (dialog, which) -> {
-            switch (selectedScriptIndex) {
-                case 0:
-                    NhPaths.showMessage(context, "Starting MANA NAT FULL");
-                    run_cmd(NhPaths.makeTermTitle("MANA-FULL") + "/usr/share/mana-toolkit/run-mana/start-nat-full-lollipop.sh");
-                    break;
-                case 1:
-                    NhPaths.showMessage(context, "Starting MANA NAT SIMPLE");
-                    run_cmd(NhPaths.makeTermTitle("MANA-SIMPLE") + "/usr/share/mana-toolkit/run-mana/start-nat-simple-lollipop.sh");
-                    break;
-                case 2:
-                    NhPaths.showMessage(context, "Starting MANA Bettercap");
-                    run_cmd(NhPaths.makeTermTitle("MANA-BETTERCAP") + "/usr/bin/start-nat-transproxy-lollipop.sh");
-                    break;
-                case 3:
-                    NhPaths.showMessage(context, "Starting MANA NAT SIMPLE && BDF");
-                    run_cmd(NhPaths.makeTermTitle("MANA-BDF") + "/usr/share/mana-toolkit/run-mana/start-nat-simple-bdf-lollipop.sh");
-
-                    // Delay launching msfconsole
-                    new android.os.Handler(Looper.getMainLooper()).postDelayed(
-                            () -> {
-                                NhPaths.showMessage(context, "Starting MSF with BDF resource.rc");
-                                run_cmd(NhPaths.makeTermTitle("MSF") + "msfconsole -q -r /usr/share/bdfproxy/bdfproxy_msf_resource.rc");
-                            }, 10000);
-                    break;
-                case 4:
-                    NhPaths.showMessage(context, "Starting HOSTAPD-WPE");
-                    run_cmd(NhPaths.makeTermTitle("HOSTAPD-WPE") + "ip link set wlan1 up && /usr/sbin/hostapd-wpe /sdcard/nh_files/configs/hostapd-wpe.conf");
-                    break;
-                case 5:
-                    NhPaths.showMessage(context, "Starting HOSTAPD-WPE with Karma");
-                    run_cmd(NhPaths.makeTermTitle("HOSTAPD-WPE-KARMA") + "ip link set wlan1 up && /usr/sbin/hostapd-wpe -k /sdcard/nh_files/configs/hostapd-wpe.conf");
-                    break;
-                default:
-                    NhPaths.showMessage(context, "Invalid script!");
-                    return;
-            }
-            NhPaths.showMessage(context, getString(R.string.attack_launched));
-        });
-        builder.setNegativeButton("Quit", (dialog, which) -> {
-        });
-        builder.setSingleChoiceItems(scripts, selectedScriptIndex, (dialog, which) -> selectedScriptIndex = which);
-        builder.show();
     }
 
     public class HostapdFragmentWPE extends Fragment {
