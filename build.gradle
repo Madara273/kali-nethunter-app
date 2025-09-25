@@ -10,7 +10,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.5.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.10"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.20"
     }
 }
 
@@ -121,7 +121,7 @@ dependencies {
     implementation 'org.thoughtcrime.ssl.pinning:AndroidPinning:1.0.0'
     implementation 'com.google.android.gms:play-services-location:21.3.0'
     implementation 'joda-time:joda-time:2.14.0'
-    implementation 'com.google.guava:guava:33.4.8-android'
+    implementation 'com.google.guava:guava:33.5.0-android'
     implementation 'androidx.lifecycle:lifecycle-viewmodel:2.9.4'
     implementation 'androidx.lifecycle:lifecycle-livedata:2.9.4'
     implementation 'androidx.appcompat:appcompat:1.7.1'
@@ -130,7 +130,7 @@ dependencies {
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.2.20'
     // Snowfall
     implementation 'com.github.jetradarmobile:android-snowfall:1.2.1'
-    implementation 'androidx.navigation:navigation-runtime:2.9.4'
+    implementation 'androidx.navigation:navigation-runtime:2.9.5'
     //debugImplementation 'com.squareup.leakcanary:leakcanary-android:3.0-alpha-8'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 }
