@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
+    android:id="@+id/fragment_chrootmanager"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:id="@+id/fragment_chrootmanager">
+    android:orientation="vertical">
 
     <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/f_chrootmanager_viewholder"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintTop_toTopOf="parent"
-        android:id="@+id/f_chrootmanager_viewholder">
+        app:layout_constraintTop_toTopOf="parent">
 
         <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/colorPrimaryDark"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="4dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:background="@color/colorPrimaryDark">
 
             <Button
                 android:id="@+id/f_chrootmanager_edit_btn"
@@ -35,30 +35,30 @@
                 android:layout_margin="8dp"
                 android:gravity="center"
                 android:text="@string/data_local_nhsystem"
+                android:textColor="@android:color/background_light"
                 android:singleLine="false"
                 android:textSize="12sp"
-                android:textColor="@android:color/background_light"
                 android:enabled="false" />
         </androidx.appcompat.widget.LinearLayoutCompat>
 
         <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/colorPrimaryDark"
             android:layout_marginTop="4dp"
             android:layout_marginBottom="4dp"
             android:layout_marginLeft="4dp"
             android:layout_marginRight="4dp"
+            android:background="@color/colorPrimaryDark"
             android:gravity="center">
 
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@color/colorPrimary"
                 android:layout_marginTop="4dp"
                 android:layout_marginBottom="4dp"
                 android:layout_marginLeft="4dp"
                 android:layout_marginRight="4dp"
+                android:background="@color/colorPrimary"
                 android:orientation="horizontal">
 
                 <com.google.android.material.textview.MaterialTextView
@@ -75,33 +75,45 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:background="@color/colorPrimary"
                 android:layout_marginTop="4dp"
                 android:layout_marginBottom="4dp"
                 android:layout_marginLeft="4dp"
                 android:layout_marginRight="4dp"
+                android:background="@color/colorPrimary"
                 android:orientation="horizontal">
 
                 <com.google.android.material.textview.MaterialTextView
                     android:id="@+id/f_chrootmanager_mountresult_tv"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="@string/loading_dot_dot_dot"
-                    android:textColor="@android:color/background_light"
                     android:layout_margin="8dp"
-                    android:gravity="center" />
+                    android:gravity="center"
+                    android:text="@string/loading_dot_dot_dot"
+                    android:textColor="@android:color/background_light" />
             </LinearLayout>
         </androidx.appcompat.widget.LinearLayoutCompat>
     </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <!-- Progress bar inserted here -->
+    <ProgressBar
+        android:id="@+id/f_chrootmanager_progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="4dp"
+        android:indeterminate="true"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/f_chrootmanager_viewholder"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <com.google.android.material.textview.MaterialTextView
         android:id="@+id/f_chrootmanager_viewlogger"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginStart="4dp"
-        android:layout_marginBottom="4dp"
         android:layout_marginTop="4dp"
         android:layout_marginEnd="4dp"
+        android:layout_marginBottom="4dp"
         android:alpha="100"
         android:background="@color/colorPrimaryDark"
         android:fadeScrollbars="true"
@@ -111,11 +123,11 @@
         android:scrollbars="vertical"
         android:singleLine="false"
         android:textSize="12sp"
+        app:layout_constraintTop_toBottomOf="@id/f_chrootmanager_progress"
         app:layout_constraintBottom_toTopOf="@id/f_chrootmanager_btn_scrollView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/f_chrootmanager_viewholder" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0" />
 
     <HorizontalScrollView
         android:id="@+id/f_chrootmanager_btn_scrollView"
@@ -128,89 +140,89 @@
         app:layout_constraintBottom_toBottomOf="parent">
 
         <LinearLayout
+            android:id="@+id/f_chrootmanager_btn_linearlayout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:orientation="horizontal"
-            android:id="@+id/f_chrootmanager_btn_linearlayout">
+            android:orientation="horizontal">
 
             <Button
                 android:id="@+id/f_chrootmanager_install_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintStart_toEndOf="@+id/f_chrootmanager_unmount_btn"
-                app:layout_constraintBottom_toBottomOf="parent"
                 android:text="@string/chroot_manager_install"
                 android:layout_marginStart="2dp"
-                android:layout_marginBottom="2dp"
                 android:layout_marginTop="2dp"
                 android:layout_marginEnd="2dp"
-                android:visibility="gone" />
+                android:layout_marginBottom="2dp"
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@+id/f_chrootmanager_unmount_btn"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
             <Button
                 android:id="@+id/f_chrootmanager_addmetapkg_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintStart_toEndOf="@+id/f_chrootmanager_install_btn"
-                app:layout_constraintBottom_toBottomOf="parent"
                 android:text="@string/chroot_manager_add_metapackage"
                 android:layout_marginStart="2dp"
-                android:layout_marginBottom="2dp"
                 android:layout_marginTop="2dp"
                 android:layout_marginEnd="2dp"
-                android:visibility="gone" />
+                android:layout_marginBottom="2dp"
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@+id/f_chrootmanager_install_btn"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
             <Button
                 android:id="@+id/f_chrootmanager_backupchroot_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintStart_toEndOf="@+id/f_chrootmanager_addmetapkg_btn"
-                app:layout_constraintBottom_toBottomOf="parent"
                 android:text="@string/chroot_manager_backup"
                 android:layout_marginStart="2dp"
-                android:layout_marginBottom="2dp"
                 android:layout_marginTop="2dp"
                 android:layout_marginEnd="2dp"
-                android:visibility="gone" />
+                android:layout_marginBottom="2dp"
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@+id/f_chrootmanager_addmetapkg_btn"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
             <Button
                 android:id="@+id/f_chrootmanager_mount_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintBottom_toBottomOf="parent"
                 android:text="@string/chroot_manager_start"
                 android:layout_marginStart="2dp"
-                android:layout_marginBottom="2dp"
                 android:layout_marginTop="2dp"
                 android:layout_marginEnd="2dp"
-                android:visibility="gone" />
+                android:layout_marginBottom="2dp"
+                android:visibility="gone"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
             <Button
                 android:id="@+id/f_chrootmanager_unmount_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintStart_toEndOf="@+id/f_chrootmanager_mount_btn"
-                app:layout_constraintBottom_toBottomOf="parent"
                 android:text="@string/chroot_manager_stop"
                 android:layout_marginStart="2dp"
-                android:layout_marginBottom="2dp"
                 android:layout_marginTop="2dp"
                 android:layout_marginEnd="2dp"
-                android:visibility="gone" />
+                android:layout_marginBottom="2dp"
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@+id/f_chrootmanager_mount_btn"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
             <Button
                 android:id="@+id/f_chrootmanager_removechroot_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                app:layout_constraintStart_toEndOf="@+id/f_chrootmanager_backupchroot_btn"
-                app:layout_constraintBottom_toBottomOf="parent"
                 android:text="@string/chroot_manager_remove"
                 android:layout_marginStart="2dp"
-                android:layout_marginBottom="2dp"
                 android:layout_marginTop="2dp"
                 android:layout_marginEnd="2dp"
-                android:visibility="gone" />
+                android:layout_marginBottom="2dp"
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@+id/f_chrootmanager_backupchroot_btn"
+                app:layout_constraintBottom_toBottomOf="parent" />
         </LinearLayout>
     </HorizontalScrollView>
 </androidx.constraintlayout.widget.ConstraintLayout>
