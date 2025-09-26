@@ -29,7 +29,6 @@ public class RunAtBootService extends Service {
     private static final String TAG = "Nethunter: Startup";
     private NotificationCompat.Builder n = null;
     private SharedPreferences sharedPreferences;
-
     private HandlerThread workerThread;
     private Handler workerHandler;
 

@@ -109,13 +109,13 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
         // Release WakeLock
         if (wakeLock != null && wakeLock.isHeld()) {
             wakeLock.release();
-            Log.d("AudioFragment", "WakeLock released.");
+            //Log.d("AudioFragment", "WakeLock released.");
         }
         wakeLock = null;
 
         // Clean handler callbacks (do not reassign final handler)
         handler.removeCallbacksAndMessages(null);
-        Log.d("AudioFragment", "Handler callbacks removed.");
+        //Log.d("AudioFragment", "Handler callbacks removed.");
 
         // Cancel notifications
         if (notifManager != null) {
@@ -125,8 +125,7 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
 
         // Update state
         playState.setValue(AudioPlayState.STOPPED);
-
-        Log.d("AudioFragment", "AudioPlaybackService destroyed and cleaned up.");
+        //Log.d("AudioFragment", "AudioPlaybackService destroyed and cleaned up.");
     }
 
     @SuppressLint("InlinedApi")
@@ -207,11 +206,9 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
     public String getServerPref() {
         return sharedPrefs.getString("server", "");
     }
-
     public int getPortPref() {
         return sharedPrefs.getInt("port", -1);
     }
-
     public boolean getAutostartPref() {
         return sharedPrefs.getBoolean("auto_start", false);
     }
@@ -227,7 +224,6 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
     public long getBufferHeadroom() {
         return headroomUsec;
     }
-
     public long getTargetLatency() {
         return latencyUsec;
     }
@@ -273,7 +269,6 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
     public LiveData<AudioPlayState> playState() {
         return playState;
     }
-
     public Throwable getError() {
         return playWorker == null ? null : playWorker.getError();
     }

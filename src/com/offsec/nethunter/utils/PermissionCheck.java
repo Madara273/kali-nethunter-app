@@ -57,9 +57,9 @@ public class PermissionCheck {
                 allGranted = false;
             }
         }
-        if (allGranted) {
-            Log.d(TAG, "All permissions are granted.");
-        }
+        //if (allGranted) {
+            //Log.d(TAG, "All permissions are granted.");
+        //}
         return allGranted;
     }
 
