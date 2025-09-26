@@ -316,7 +316,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
 
     @Override
     public boolean onReceiverReattach(KaliGPSUpdates.Receiver receiver) {
-        Log.d(TAG, "onReceiverReattach");
+        //Log.d(TAG, "onReceiverReattach");
         if (LocationUpdateService.isInstanceCreated()) {
             // there is already a service running, we should re-attach to it
             this.locationUpdateReceiver = receiver;
