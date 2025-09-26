@@ -46,6 +46,7 @@ import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
@@ -530,37 +531,49 @@ public class SettingsFragment extends Fragment {
 
         final String[] busybox_file = {null};
 
-        // Version Spinner
-        String commandBB = new File(busyboxPath).exists() ? ("ls " + new File(busyboxPath).getParent() + " | grep busybox_nh- | cut -f 2 -d '-'") : "echo ''";
-        String outputBB = exe.RunAsRootOutput(commandBB);
-        final String[] bbArray = outputBB.isEmpty() ? new String[0] : outputBB.split("\n");
+        // Version Spinner (only files starting with 'busybox_nh')
+        String binDir = new File(busyboxPath).getParent();
+        String[] bbFiles = new String[0];
+        if (binDir != null) {
+            File dirFile = new File(binDir);
+            String[] list = dirFile.list((d, name) -> {
+                String lname = name.toLowerCase(Locale.ROOT);
+                return name.startsWith("busybox_nh")
+                        && !lname.contains("arm64")
+                        && !lname.contains("armeabi");
+            });
+            if (list != null) {
+                Arrays.sort(list);
+                bbFiles = list;
+            }
+        }
         Spinner busybox_spinner = rootView.findViewById(R.id.bb_spinner);
-        ArrayAdapter<String> usersadapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, bbArray);
+        ArrayAdapter<String> usersadapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, bbFiles);
         busybox_spinner.setAdapter(usersadapter);
 
-        // Select Version
+        // Select Version -> store the full filename (e.g., busybox_nh-1.32)
         busybox_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                String selected_version = parentView.getItemAtPosition(pos).toString();
-                if (selected_version.equals("1.25")) {
-                    busybox_file[0] = "busybox_nh-1.25";
-                } else if (selected_version.equals("1.32")) {
-                    busybox_file[0] = "busybox_nh-1.32";
-                }
+                String selectedName = parentView.getItemAtPosition(pos).toString();
+                busybox_file[0] = selectedName;
             }
             @Override
             public void onNothingSelected(AdapterView<?> parentView) {
+                busybox_file[0] = null;
             }
         });
 
-        // Apply button
+        // Apply button stays compatible because it already uses the filename:
         final Button BusyboxButton = rootView.findViewById(R.id.select_bb);
         String finalBusyboxPath = busyboxPath;
         BusyboxButton.setOnClickListener(v -> {
             if (busybox_file[0] != null) {
                 File busybox = new File(new File(finalBusyboxPath).getParent() + "/" + busybox_file[0]);
-                exe.RunAsRoot(new String[]{"if [ \"$(getprop ro.build.system_root_image)\" == \"true\" ]; then export SYSTEM=/; else export SYSTEM=/system;fi;mount -o rw,remount $SYSTEM && rm /system/bin/busybox_nh;ln -s " + busybox + " /system/bin/busybox_nh"});
+                exe.RunAsRoot(new String[]{
+                        "if [ \"$(getprop ro.build.system_root_image)\" == \"true\" ]; then export SYSTEM=/; else export SYSTEM=/system;fi;" +
+                                "mount -o rw,remount $SYSTEM && rm /system/bin/busybox_nh;ln -s " + busybox + " /system/bin/busybox_nh"
+                });
                 Toast.makeText(requireActivity().getApplicationContext(), "NetHunter BusyBox version has been successfully modified", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please select a BusyBox version first!", Toast.LENGTH_SHORT).show();
