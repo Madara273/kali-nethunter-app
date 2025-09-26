@@ -3,6 +3,7 @@ package com.offsec.nethunter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -45,6 +46,8 @@ import androidx.fragment.app.Fragment;
 public class SearchSploitFragment extends Fragment {
     public static final String TAG = "SearchSploitFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
+    private static final String PREFS_NAME = "nethunter_prefs";
+    private static final String PREF_FIRST_RUN_KEY = "searchsploit_first_run";
     private Boolean withFilters = true;
     private String sel_type;
     private String sel_platform;
@@ -54,7 +57,6 @@ public class SearchSploitFragment extends Fragment {
     private Boolean isLoaded = false;
     private ListView searchSploitListView;
     private List<SearchSploit> full_exploitList;
-    // Create and handle database
     private SearchSploitSQL database;
     private Context context;
     private Activity activity;
@@ -139,7 +141,7 @@ public class SearchSploitFragment extends Fragment {
                                 dst.transferFrom(src, 0, src.size());
                             }
                             Log.d("importDB", "Successfully imported " + DATABASE_NAME);
-                            main(rootView);
+                            initUi(rootView);
                         } catch (Exception e) {
                             Log.d("importDB", e.toString());
                         }
@@ -153,8 +155,7 @@ public class SearchSploitFragment extends Fragment {
         });
         //prevents menu stuck
         new android.os.Handler().postDelayed(
-                () -> main(rootView), 250);
-
+                () -> initUi(rootView), 250);
 
         return rootView;
     }
@@ -162,6 +163,9 @@ public class SearchSploitFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
+        // First run setup
+        maybeShowFirstRunSetup();
 
         MenuHost menuHost = requireActivity();
         menuHost.addMenuProvider(new MenuProvider() {
@@ -176,7 +180,8 @@ public class SearchSploitFragment extends Fragment {
 
             @Override
             public boolean onMenuItemSelected(@NonNull MenuItem item) {
-                if (item.getItemId() == R.id.rawSearch_ON) {
+                int id = item.getItemId();
+                if (id == R.id.rawSearch_ON) {
                     if (!withFilters) {
                         view.findViewById(R.id.search_filters).setVisibility(View.VISIBLE);
                         withFilters = true;
@@ -184,10 +189,9 @@ public class SearchSploitFragment extends Fragment {
                         loadExploits();
                         hideSoftKeyboard(view);
                     } else {
-                        MaterialAlertDialogBuilder builder =
-                                new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                        builder.setTitle("Raw search warning");
-                        builder.setMessage("The exploit db is pretty big (+30K exploits), activating raw search will make the search slow.\nIs useful to do global searches when you don't find a exploit.")
+                        new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+                                .setTitle("Raw search warning")
+                                .setMessage("The exploit db is pretty big (+30K exploits), activating raw search will make the search slow.\nIs useful to do global searches when you don't find a exploit.")
                                 .setNegativeButton("Cancel", (d,i)->d.dismiss())
                                 .setPositiveButton("Enable", (d,i)->{
                                     view.findViewById(R.id.search_filters).setVisibility(View.GONE);
@@ -200,10 +204,87 @@ public class SearchSploitFragment extends Fragment {
                                 .show();
                     }
                     return true;
+                } else if (id == R.id.action_setup_searchsploit) {
+                    showSetupDialog();
+                    return true;
                 }
                 return false;
             }
         }, getViewLifecycleOwner(), androidx.lifecycle.Lifecycle.State.RESUMED);
+    }
+
+    private void maybeShowFirstRunSetup() {
+        if (!isAdded()) return;
+        SharedPreferences sp = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        boolean firstRun = sp.getBoolean(PREF_FIRST_RUN_KEY, true);
+        if (!firstRun) return;
+
+        // Mark as shown so it only appears on first run
+        sp.edit().putBoolean(PREF_FIRST_RUN_KEY, false).apply();
+        showSetupDialog();
+
+        new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat)
+                .setTitle("SearchSploit setup")
+                .setMessage("SearchSploit needs two dependencies to work, install now?\nThis will run:\napt install exploitdb python3-six")
+                .setNegativeButton("Cancel", (d,i)-> d.dismiss())
+                .setPositiveButton("Setup", (d,i)-> runSearchSploitSetup())
+                .setCancelable(false)
+                .show();
+    }
+
+    private void showSetupDialog() {
+        if (!isAdded()) return;
+        new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat)
+                .setTitle("SearchSploit setup")
+                .setMessage("Install required packages in chroot now?\nThis will run:\napt update && apt install exploitdb python3-six")
+                .setNegativeButton("Cancel", (d,i)-> d.dismiss())
+                .setPositiveButton("Setup", (d,i)-> runSearchSploitSetup())
+                .setCancelable(false)
+                .show();
+    }
+
+    private void runSearchSploitSetup() {
+        if (!isAdded()) return;
+
+        final AlertDialog progress = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat)
+                .setTitle("Setting up")
+                .setMessage("Installing dependencies...\nPlease wait")
+                .setCancelable(false)
+                .create();
+        progress.show();
+
+        new Thread(() -> {
+            String cmd = "apt update && apt install exploitdb python3-six -y";
+            String result = null;
+            boolean ok = false;
+            Exception err = null;
+            try {
+                ShellExecuter exe = new ShellExecuter();
+                Log.d(TAG, "SearchSploit setup: executing chroot cmd: " + cmd);
+                result = exe.RunAsChrootOutput(cmd);
+                ok = (result != null);
+            } catch (Exception e) {
+                err = e;
+                Log.e(TAG, "SearchSploit setup failed", e);
+            }
+
+            final boolean success = ok;
+            final String out = result;
+            final Exception ex = err;
+
+            requireActivity().runOnUiThread(() -> {
+                try {
+                    progress.dismiss();
+                } catch (Exception ignored) {}
+                if (success) {
+                    NhPaths.showMessage_long(requireContext(), "Setup completed");
+                    Log.d(TAG, "SearchSploit setup output:\n" + out);
+                } else {
+                    NhPaths.showMessage_long(requireContext(), "Setup failed. Check logs.");
+                    if (ex != null) Log.e(TAG, "SearchSploit setup error", ex);
+                }
+            });
+        }).start();
     }
 
     private static void hideSoftKeyboard(final View caller) {
@@ -213,9 +294,9 @@ public class SearchSploitFragment extends Fragment {
         }, 100);
     }
 
-    private void main(final View rootView) {
+    private void initUi(final View rootView) {
         searchSploitListView = rootView.findViewById(R.id.searchResultsList);
-        Long exploitCount = database.getCount();
+        long exploitCount = database.getCount();
         Button searchSearchSploit = rootView.findViewById(R.id.serchsploit_loadDB);
         if (exploitCount == 0) {
             searchSearchSploit.setVisibility(View.VISIBLE);
@@ -382,7 +463,7 @@ class ExploitLoader extends BaseAdapter {
         // set service name
         vH.description.setText(_desc);
         vH.type.setText(_type);
-	    vH.platform.setText(_platform);
+        vH.platform.setText(_platform);
         vH.author.setText(_author);
         vH.date.setText(_date);
         vH.viewSource.setOnClickListener(v -> {
@@ -392,11 +473,12 @@ class ExploitLoader extends BaseAdapter {
             _mContext.startActivity(i);
 
         });
+
         vH.sendHid.setOnClickListener(v -> {
             start("/usr/share/exploitdb/" + _file);
             //_mContext.startActivity(i);
-
         });
+
         vH.openWeb.setOnClickListener(v -> {
             Intent i = new Intent(Intent.ACTION_VIEW);
             i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

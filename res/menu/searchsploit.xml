@@ -4,4 +4,8 @@
         android:id="@+id/rawSearch_ON"
         android:title="Enable Raw search"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_setup_searchsploit"
+        android:title="Install dependencies"
+        app:showAsAction="never" />
 </menu>
