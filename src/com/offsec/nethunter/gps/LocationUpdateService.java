@@ -84,7 +84,7 @@ public class LocationUpdateService extends Service {
     // this gets called if we launch via an Intent or from the command line, instead of the app
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand");
+        //Log.d(TAG, "onStartCommand");
         requestUpdates(null); // request updates, but no widget to receive them as we don't have the app running
         return Service.START_NOT_STICKY;
     }
@@ -202,13 +202,13 @@ public class LocationUpdateService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d(TAG, "onBind");
+        //Log.d(TAG, "onBind");
         this.startService(intent);
         return binder;
     }
 
     public void requestUpdates(KaliGPSUpdates.Receiver receiver) {
-        Log.d(TAG, "In requestUpdates");
+        //Log.d(TAG, "In requestUpdates");
         if (receiver != null)
             this.updateReceiver = receiver;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -217,7 +217,7 @@ public class LocationUpdateService extends Service {
     }
 
     public void stopUpdates() {
-        Log.d(TAG, "In stopUpdates");
+        //Log.d(TAG, "In stopUpdates");
         stopSelf();
     }
 
@@ -227,7 +227,7 @@ public class LocationUpdateService extends Service {
         if (locationUpdatesStarted)
             return;
         locationUpdatesStarted = true;
-        Log.d(TAG, "In startLocationUpdates");
+        //Log.d(TAG, "In startLocationUpdates");
 
         final LocationRequest lr = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000L / 2L)
                 .setMinUpdateIntervalMillis(100L)
@@ -235,7 +235,7 @@ public class LocationUpdateService extends Service {
                 .setDurationMillis(1000 * 3600 * 2)
                 .build();
 
-        Log.d(TAG, "Requesting permissions ..");
+        //Log.d(TAG, "Requesting permissions ..");
         if (PermissionCheck.hasPermissions(this, new String[]{
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION
@@ -268,7 +268,7 @@ public class LocationUpdateService extends Service {
             Method addNmeaListener =
                     LocationManager.class.getMethod("addNmeaListener", GpsStatus.NmeaListener.class);
             addNmeaListener.invoke(locationManager, nmeaListener);
-            Log.d(TAG, "addNmeaListener success");
+            //Log.d(TAG, "addNmeaListener success");
         } catch (Exception exception) {
             Log.d(TAG, "Failed to add NMEA listener: " + exception.getMessage());
         }
@@ -302,7 +302,7 @@ public class LocationUpdateService extends Service {
 
         this.startForeground(NOTIFY_ID, notification);
         // start a timer that will update our Notification every second
-        Log.d(TAG, "starting Notification Update Timer");
+        //Log.d(TAG, "starting Notification Update Timer");
         startTimers();
     }
 
@@ -406,13 +406,13 @@ public class LocationUpdateService extends Service {
             return;
         }
         notificationManagerCompat.notify(NOTIFY_ID, notification);
-        Log.d(TAG, "Notification Sent: " + updatedText);
+        //Log.d(TAG, "Notification Sent: " + updatedText);
     }
 
     private final GpsStatus.NmeaListener nmeaListener = (l, s) -> {
-        if(!s.startsWith("$GPGGA")) {
+        if (!s.startsWith("$GPGGA")) {
             // if we're using the real GPS as our source, go ahead and send these extra information strings to gpsd
-            if("GPS".equals(lastLocationSourcePublished))
+            if ("GPS".equals(lastLocationSourcePublished))
                 sendUdpPacket(s);
             return;
         }
@@ -436,7 +436,7 @@ public class LocationUpdateService extends Service {
     private final LocationListener locationListener = location -> {
         String nmeaSentence = nmeaSentenceFromLocation(location);
 
-        Log.d(TAG, "Constructed NMEA: "+nmeaSentence);
+        //Log.d(TAG, "Constructed NMEA: "+nmeaSentence);
         // we will only publish these constructed sentences if we aren't currently getting real ones from the NmeaListener
         if(lastLocationSourceReceived.equals("LocationListener"))
             publishLocation(nmeaSentence, "Network");
@@ -548,7 +548,7 @@ public class LocationUpdateService extends Service {
             Method removeNmeaListener =
                     LocationManager.class.getMethod("removeNmeaListener", GpsStatus.NmeaListener.class);
             removeNmeaListener.invoke(locationManager, nmeaListener);
-            Log.d(TAG, "removeNmeaListener success");
+            //Log.d(TAG, "removeNmeaListener success");
         } catch (Exception exception) {
             // ignore
         }
@@ -567,7 +567,7 @@ public class LocationUpdateService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "OnDestroy");
+        //Log.d(TAG, "OnDestroy");
         instance = null;
         firstupdate = true;
 

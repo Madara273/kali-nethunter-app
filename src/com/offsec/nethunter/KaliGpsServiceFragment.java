@@ -74,11 +74,12 @@ import java.util.concurrent.TimeUnit;
 public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.Receiver {
     private static final String TAG = "KaliGpsServiceFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
+    private TextView gpsTextView;
+    private androidx.core.widget.NestedScrollView gpsScroll;
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private CheckBox sdrcheckbox, sdramrcheckbox, sdradsbcheckbox, mousejackcheckbox;
     private LinearLayout satelliteSignalContainer;
     private KaliGPSUpdates.Provider gpsProvider = null;
-    private TextView gpsTextView;
     private TextInputEditText satellitesEditText;
     private Context context;
     private boolean wantKismet = false;
@@ -206,7 +207,9 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         super.onViewCreated(view, savedInstanceState);
         satellitesEditText = view.findViewById(R.id.gps_current_satellites);
         gpsTextView = view.findViewById(R.id.gps_textview);
+        gpsScroll = view.findViewById(R.id.gps_scroll);
         gpsTextView.setMovementMethod(new android.text.method.ScrollingMovementMethod());
+        gpsTextView.setVerticalScrollBarEnabled(true);
         TextView gpsHelpView = view.findViewById(R.id.gps_help);
         switch_gps_provider = view.findViewById(R.id.switch_gps_provider);
         satelliteSignalContainer = view.findViewById(R.id.satellite_signal_container);
@@ -226,7 +229,7 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         if (gpsHelpView != null && !wantHelpView) {
             gpsHelpView.setVisibility(View.GONE);
         }
-        Log.d(TAG, "reattachedToRunningService: " + reattachedToRunningService);
+        //Log.d(TAG, "reattachedToRunningService: " + reattachedToRunningService);
         if (reattachedToRunningService) {
             if (switch_gps_provider != null) {
                 setCheckedQuietly(switch_gps_provider, true);
@@ -238,7 +241,7 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         if (switch_gps_provider != null) {
             switch_gps_provider.setOnCheckedChangeListener((compoundButton, isChecked) -> {
                 if (switch_gps_provider.getTag() != null) return;
-                Log.d(TAG, "switch_gps_provider clicked: " + isChecked);
+                //Log.d(TAG, "switch_gps_provider clicked: " + isChecked);
                 if (isChecked) {
                     startGpsProvider();
                 } else {
@@ -295,6 +298,17 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         });
     }
 
+    private void scrollToBottom() {
+        if (gpsScroll != null) {
+            gpsScroll.post(() -> gpsScroll.fullScroll(android.view.View.FOCUS_DOWN));
+        } else if (gpsTextView != null && gpsTextView.getLayout() != null) {
+            gpsTextView.post(() -> {
+                int y = gpsTextView.getLayout().getLineTop(gpsTextView.getLineCount()) - gpsTextView.getHeight();
+                gpsTextView.scrollTo(0, Math.max(y, 0));
+            });
+        }
+    }
+
     private void startGpsProvider() {
         if (gpsProvider != null) {
             gpsTextView.append("Starting Android GPS Publisher\n");
@@ -311,6 +325,7 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
                 int scrollAmount = gpsTextView.getLayout().getLineTop(gpsTextView.getLineCount()) - gpsTextView.getHeight();
                 gpsTextView.scrollTo(0, Math.max(scrollAmount, 0));
             });
+            scrollToBottom();
         }
     }
 
@@ -403,9 +418,9 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
     private void check_gpsd() {
         ShellExecuter exe = new ShellExecuter();
         String command = "pgrep gpsd";
-        Log.d(TAG, "command = " + command);
+        //Log.d(TAG, "command = " + command);
         String response = exe.RunAsRootOutput(command);
-        Log.d(TAG, "response = '" + response + "'");
+        //Log.d(TAG, "response = '" + response + "'");
         setCheckedQuietly(switch_gpsd, !response.isEmpty());
     }
 
@@ -439,6 +454,7 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
             int scrollAmount = gpsTextView.getLayout().getLineTop(gpsTextView.getLineCount()) - gpsTextView.getHeight();
             gpsTextView.scrollTo(0, Math.max(scrollAmount, 0));
         });
+        scrollToBottom();
 
         // Extract and display satellite count
         int satelliteCount = extractSatelliteCount(nmeaSentences);
