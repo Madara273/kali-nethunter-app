@@ -64,6 +64,10 @@ public class WifipumpkinFragment extends Fragment {
     private final ActivityResultLauncher<String> pickZipLauncher =
             registerForActivityResult(new ActivityResultContracts.GetContent(), uri -> {
                 if (uri == null) return;
+                if (!isWp3Installed()) {
+                    NhPaths.showMessage(context, "Install wifipumpkin3 first.");
+                    return;
+                }
                 // Keep existing logic
                 String FilePath = Objects.requireNonNull(uri.getPath());
                 FilePath = exe.RunAsRootOutput("echo " + FilePath + " | sed -e 's/\\/document\\/primary:/\\/sdcard\\//g'");
@@ -116,7 +120,13 @@ public class WifipumpkinFragment extends Fragment {
         final CheckBox Wlan0to1Checkbox = rootView.findViewById(R.id.wlan0to1_checkbox);
 
         // Templates spinner
-        refresh_wp3_templates(rootView);
+        boolean wp3Installed = isWp3Installed();
+        if (wp3Installed) {
+            refresh_wp3_templates(rootView);
+        } else {
+            setupTemplatesSpinnerEmpty(rootView);
+            SetupDialog();
+        }
         Spinner TemplatesSpinner = rootView.findViewById(R.id.templates);
 
         // Select Template
@@ -158,7 +168,9 @@ public class WifipumpkinFragment extends Fragment {
         });
 
         // Check iptables version
-        checkiptables();
+        if (wp3Installed) {
+            checkiptables();
+        }
 
         // Check wlan0 AP mode
         String iwPath;
@@ -188,7 +200,9 @@ public class WifipumpkinFragment extends Fragment {
         }
 
         // Refresh
-        refresh_wp3_templates(rootView);
+        if (wp3Installed) {
+            refresh_wp3_templates(rootView);
+        }
         ImageButton RefreshTemplates = rootView.findViewById(R.id.refreshTemplates);
         RefreshTemplates.setOnClickListener(v -> refresh_wp3_templates(rootView));
 
@@ -256,6 +270,15 @@ public class WifipumpkinFragment extends Fragment {
         return rootView;
     }
 
+    private boolean isWp3Installed() {
+        try {
+            requireActivity().getPackageManager().getPackageInfo("com.offsec.wifipumpkin3", 0);
+            return true;
+        } catch (PackageManager.NameNotFoundException e) {
+            return false;
+        }
+    }
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
@@ -300,16 +323,27 @@ public class WifipumpkinFragment extends Fragment {
     }
 
     // Refresh templates
-    private void refresh_wp3_templates(View WifipumpkinFragment) {
-        Spinner TemplatesSpinner = WifipumpkinFragment.findViewById(R.id.templates);
-        final String outputTemplates = "None\n" + exe.RunAsChrootOutput("ls -1 /usr/share/wifipumpkin3/config/templates | sort");
-        final String[] TemplatesArray = outputTemplates.split("\n");
-        TemplatesSpinner.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, TemplatesArray));
+    private void refresh_wp3_templates(View root) {
+        if (!isWp3Installed()) {
+            setupTemplatesSpinnerEmpty(root);
+            return;
+        }
+        Spinner spinner = root.findViewById(R.id.templates);
+        String out = exe.RunAsChrootOutput("ls -1 /usr/share/wifipumpkin3/config/templates 2>/dev/null | sort");
+        String outputTemplates = (out == null || out.trim().isEmpty()) ? "None" : "None\n" + out.trim();
+        String[] items = outputTemplates.split("\n");
+        spinner.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, items));
+    }
+
+    private void setupTemplatesSpinnerEmpty(View root) {
+        Spinner spinner = root.findViewById(R.id.templates);
+        spinner.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, new String[]{"None"}));
+        //spinner.setSelection(0);
     }
 
     private void checkiptables() {
-        ShellExecuter exe = new ShellExecuter();
-        String iptables_ver = exe.RunAsChrootOutput("iptables -V | grep iptables");
+        if (!isWp3Installed()) return;
+        String iptables_ver = exe.RunAsChrootOutput("iptables -V 2>/dev/null | grep iptables");
         if (iptables_ver.equals("iptables v1.6.2")) {
             MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
             builder.setTitle("You need to upgrade iptables!");
