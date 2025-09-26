@@ -160,7 +160,7 @@ public class AudioFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateAudioFragment");
+        //Log.d(TAG, "onCreateAudioFragment");
 
         // Retrieve the itemId passed in newInstance
         if (getArguments() != null) {
@@ -168,7 +168,7 @@ public class AudioFragment extends Fragment {
         }
 
         // Log or use the itemId as needed
-        Log.d(TAG, "Received itemId: " + itemId);
+        //Log.d(TAG, "Received itemId: " + itemId);
 
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.audio, container, false);
@@ -307,7 +307,7 @@ public class AudioFragment extends Fragment {
 
     private void updatePrefs(AudioPlaybackService service) {
         if (service == null) {
-            Log.e(TAG, "AudioPlaybackService is null in updatePrefs");
+            //Log.e(TAG, "AudioPlaybackService is null in updatePrefs");
             return;
         }
 
@@ -425,7 +425,7 @@ public class AudioFragment extends Fragment {
 
     public void play() {
         if (serverInput == null || portInput == null) {
-            Log.e(TAG, "UI elements are not initialized");
+            //Log.e(TAG, "UI elements are not initialized");
             return;
         }
         if (checkAndRequestAudioPermission()) return;
@@ -455,7 +455,7 @@ public class AudioFragment extends Fragment {
         } else {
             // Handle case where service is not bound
             errorText.setText(R.string.audio_service_not_bound);
-            Log.e(TAG, "Service not bound when attempting to play.");
+            //Log.e(TAG, "Service not bound when attempting to play.");
         }
     }
 

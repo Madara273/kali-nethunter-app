@@ -22,6 +22,7 @@ import java.net.UnknownHostException;
 import com.offsec.nethunter.exception.AudioStoppedException;
 
 public class AudioPlaybackWorker implements Runnable {
+    private static final String TAG = "AudioPlaybackWorker";
     /** How often we try to receive per second. */
     private static final int LOOPS_PER_SECOND = 8;
     private final String host;
@@ -76,6 +77,10 @@ public class AudioPlaybackWorker implements Runnable {
     public void run() {
         try {
             setup();
+            if (sock == null || !sock.isConnected()) {
+                stopWithError();
+                return;
+            }
 
             boolean didBuffer = false;
             boolean started = false;
@@ -111,13 +116,19 @@ public class AudioPlaybackWorker implements Runnable {
             if (stopped && e instanceof SocketException) {
                 handler.post(() -> listener.onPlaybackStopped(this));
             } else {
-                Log.e(AudioPlaybackWorker.class.getSimpleName(), "stopWithError: " + e.getMessage(), e);
+                //Log.e(AudioPlaybackWorker.class.getSimpleName(), "stopWithError: " + e.getMessage(), e);
                 error = e;
                 handler.post(() -> listener.onPlaybackError(this, e));
             }
         } finally {
             cleanup();
         }
+    }
+
+    private void stopWithError() {
+        Log.e(TAG, "stopWithError: " + "Socket not connected");
+        error = new Exception("Socket not connected");
+        handler.post(() -> listener.onPlaybackError(this, error));
     }
 
     private void setup() throws IOException {
@@ -136,6 +147,9 @@ public class AudioPlaybackWorker implements Runnable {
 
         connect();
 
+        if (sock == null || !sock.isConnected()) {
+            throw new ConnectException("Socket is not connected");
+        }
         audioData = sock.getInputStream();
 
         // Always using minimum buffer size for minimum lag.
@@ -267,7 +281,6 @@ public class AudioPlaybackWorker implements Runnable {
      * @throws AudioStoppedException If {@link #stopped} was set.
      */
     private void connect() throws IOException {
-
         // We may hang here to resolve a host name. No way to interrupt this so far.
         InetAddress[] addresses = InetAddress.getAllByName(host);
         if (addresses.length == 0) {
@@ -285,13 +298,7 @@ public class AudioPlaybackWorker implements Runnable {
                     sock = new Socket();
                 }
                 sock.setPerformancePreferences(0, 1, 0);
-                try {
-                    sock.connect(new InetSocketAddress(address, port));
-                } catch (ConnectException e) {
-                    Log.e(AudioPlaybackWorker.class.getSimpleName(), "Connection failed: " + e.getMessage(), e);
-                    handler.post(() -> listener.onPlaybackError(this, e));
-                    return;
-                }
+                sock.connect(new InetSocketAddress(address, port));
 
                 // We are now connected.
                 return;
