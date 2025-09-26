@@ -243,6 +243,17 @@ public class SearchSploitFragment extends Fragment {
                 .show();
     }
 
+    // SearchSploit setup function, this is handled in a separate thread
+    // so we avoid blocking the UI thread. Use this as an example for other
+    // functions and fragments later. Move the heavy calls/iw/template refresh calls e.g, OFF the UI thread.
+    //
+    // * Executors.newSingleThreadExecutor() → runs tasks sequentially, off the UI thread.
+    // * Future<?> refreshTask               → lets you cancel a running task if a new refresh is triggered.
+    // * executor.shutdownNow()              → prevents leaks when the fragment/activity is destroyed.
+    //
+    // * Logging stays the same, but now your UI won’t skip frames.
+    //
+    // - kimocoder
     private void runSearchSploitSetup() {
         if (!isAdded()) return;
 
