@@ -1,5 +1,6 @@
 package com.offsec.nethunter;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -30,12 +31,18 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
+import androidx.core.view.MenuHost;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
+import androidx.lifecycle.Lifecycle;
 import androidx.viewpager.widget.ViewPager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -59,7 +66,7 @@ import java.util.Objects;
 public class BTFragment extends Fragment {
     private SharedPreferences sharedpreferences;
     private Activity activity;
-    private final ShellExecuter exe = new ShellExecuter(); // Fixed issue with undefined 'exe'
+    private final ShellExecuter exe = new ShellExecuter();
     private static final String ARG_SECTION_NUMBER = "section_number";
 
     public static BTFragment newInstance(int sectionNumber) {
@@ -70,17 +77,36 @@ public class BTFragment extends Fragment {
         return fragment;
     }
 
+    private final ActivityResultLauncher<String> btConnectPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Bluetooth connect permission granted", Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(requireActivity().getApplicationContext(), "Bluetooth connect permission denied", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
+                ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.BLUETOOTH_CONNECT)
+                        != PackageManager.PERMISSION_GRANTED) {
+            btConnectPermissionLauncher.launch(Manifest.permission.BLUETOOTH_CONNECT);
+        }
+    }
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Context context = getContext();
+        getContext();
         activity = getActivity();
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.bt, container, false);
-        BTFragment.TabsPagerAdapter tabsPagerAdapter = new TabsPagerAdapter(getChildFragmentManager());
+        TabsPagerAdapter tabsPagerAdapter = new TabsPagerAdapter(getChildFragmentManager());
 
         ViewPager mViewPager = rootView.findViewById(R.id.pagerBt);
         mViewPager.setAdapter(tabsPagerAdapter);
@@ -94,33 +120,39 @@ public class BTFragment extends Fragment {
         if (activity != null) {
             sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         }
-        setHasOptionsMenu(true);
         return rootView;
     }
 
     @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater menuinflater) {
-        menuinflater.inflate(R.menu.bt, menu);
-    }
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
-        int id = item.getItemId();
-        if (id == R.id.setup) {
-            if (iswatch) RunSetupWatch();
-            else RunSetup();
-            return true;
-        } else if (id == R.id.update) {
-            if (iswatch) {
-                Toast.makeText(requireActivity().getApplicationContext(), "Updates have to be done manually through adb shell. If anything gone wrong at first run, please run Setup again.", Toast.LENGTH_LONG).show();
-            } else {
-                RunUpdate();
+        MenuHost menuHost = requireActivity();
+        menuHost.addMenuProvider(new MenuProvider() {
+            @Override
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
+                menuInflater.inflate(R.menu.bt, menu);
             }
-            return true;
-        } else {
-            return super.onOptionsItemSelected(item);
-        }
+
+            @Override
+            public boolean onMenuItemSelected(@NonNull MenuItem item) {
+                boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
+                int id = item.getItemId();
+                if (id == R.id.setup) {
+                    if (iswatch) RunSetupWatch();
+                    else RunSetup();
+                    return true;
+                } else if (id == R.id.update) {
+                    if (iswatch) {
+                        Toast.makeText(requireActivity().getApplicationContext(), "Updates have to be done manually through adb shell. If anything gone wrong at first run, please run Setup again.", Toast.LENGTH_LONG).show();
+                    } else {
+                        RunUpdate();
+                    }
+                    return true;
+                }
+                return false;
+            }
+        }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
     }
 
     public void SetupDialog() {
@@ -617,7 +649,7 @@ public class BTFragment extends Fragment {
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             context = getContext();
-            Activity activity = getActivity();
+            getActivity();
         }
 
         @Override
@@ -1418,7 +1450,7 @@ public class BTFragment extends Fragment {
 
             final TextView BadBTServerStatus = BTFragment.findViewById(R.id.BadBTServerStatus);
             final Button badbtserverButton = BTFragment.findViewById(R.id.badbtserver_button);
-            SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+            context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
             requireActivity().runOnUiThread(() -> {
                 String badbtserver_statusCMD = exe.RunAsRootOutput("ps -ef | grep btk_server");
