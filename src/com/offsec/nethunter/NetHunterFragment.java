@@ -207,7 +207,6 @@ public class NetHunterFragment extends Fragment {
             }
         }, getViewLifecycleOwner(), androidx.lifecycle.Lifecycle.State.RESUMED);
 
-
     NethunterViewModel nethunterViewModel = new ViewModelProvider(this).get(NethunterViewModel.class);
         nethunterViewModel.init(context);
 

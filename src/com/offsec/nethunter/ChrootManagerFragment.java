@@ -60,8 +60,8 @@ public class ChrootManagerFragment extends Fragment {
     public static final String TAG = "ChrootManager";
     private MenuProvider menuProvider;
     private static final String ARG_SECTION_NUMBER = "section_number";
-    public static final String PRIMARY_IMAGE_SERVER = "image-nethunter.kali.org";
-    public static final String SECONDARY_IMAGE_SERVER = "kali.download";
+    public static final String PRIMARY_IMAGE_SERVER = "kali.download";
+    public static final String SECONDARY_IMAGE_SERVER = "image-nethunter.kali.org";
     private static final String IMAGE_DIRECTORY = "/nethunter-images/current/rootfs/";
     private static final String INVALID_PATH_REGEX = "^\\.(.*$)|^\\.\\.(.*$)|^/+(.*$)|^.*/+(.*$)|^$";
     private static final String MINORFULL = "";
@@ -403,6 +403,9 @@ public class ChrootManagerFragment extends Fragment {
     }
 
     private void restoreChrootImage(String imagePath) {
+        File f = new File(imagePath);
+        android.util.Log.d(TAG, "restoreChrootImage: path=" + imagePath +
+                " exists=" + f.exists() + " size=" + (f.exists() ? f.length() : -1));
         chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.INSTALL_CHROOT);
         chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
             @Override public void onExecutorPrepare() {
@@ -413,11 +416,18 @@ public class ChrootManagerFragment extends Fragment {
             @Override public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
                 hideProgress();
                 setAllButtonEnable(true);
+                android.util.Log.d(TAG, "restoreChrootImage finished rc=" + resultCode +
+                        " outputLines=" + (resultString == null ? 0 : resultString.size()));
+                if (resultString != null && !resultString.isEmpty()) {
+                    int from = Math.max(0, resultString.size() - 10);
+                    android.util.Log.d(TAG, "Last lines:\n" +
+                            android.text.TextUtils.join("\n", resultString.subList(from, resultString.size())));
+                }
                 if (resultCode == 0) {
                     NhPaths.showMessage(context, "Chroot restored.");
                     compatCheck();
                 } else {
-                    NhPaths.showMessage(context, "Restore failed.");
+                    NhPaths.showMessage(context, "Restore failed (rc=" + resultCode + "). Check logcat tag ChrootMgrExec / ChrootManager.");
                 }
             }
         });
