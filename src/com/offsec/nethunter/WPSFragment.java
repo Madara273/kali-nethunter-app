@@ -103,8 +103,8 @@ public class WPSFragment extends Fragment {
             Log.d(TAG, "Using iw binary: " + iwPath);
 
             // Log iw --version output
-            String iwVersion = exe.RunAsRootOutput(iwPath + " --version");
-            Log.d(TAG, "iw version output: " + iwVersion);
+            //String iwVersion = exe.RunAsRootOutput(iwPath + " --version");
+            //Log.d(TAG, "iw version output: " + iwVersion);
 
             String output = exe.RunAsRootOutput(iwPath + " dev | awk '/Interface/ {print $2}' | grep '^wlan'");
             String[] interfaces = output.trim().isEmpty() ? new String[]{"wlan0"} : output.split("\n");
