@@ -31,7 +31,6 @@ import com.offsec.nethunter.models.KaliServicesModel;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.viewmodels.KaliServicesViewModel;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 

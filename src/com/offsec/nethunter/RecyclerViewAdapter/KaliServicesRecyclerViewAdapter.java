@@ -34,16 +34,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-
 public class KaliServicesRecyclerViewAdapter extends RecyclerView.Adapter<KaliServicesRecyclerViewAdapter.ItemViewHolder> implements Filterable {
 	public static final String TAG = "KaliServiceRecycleView";
 	private final Context context;
 	private final List<KaliServicesModel> kaliServicesModelList;
 
-	public KaliServicesRecyclerViewAdapter(Context context, List<KaliServicesModel> kaliServicesModelList){
-		this.context = context;
-		this.kaliServicesModelList = kaliServicesModelList;
-	}
+    public KaliServicesRecyclerViewAdapter(Context context, List<KaliServicesModel> kaliServicesModelList){
+        this.context = context;
+        this.kaliServicesModelList = kaliServicesModelList;
+    }
 
 	@NonNull
 	@Override
@@ -61,9 +60,8 @@ public class KaliServicesRecyclerViewAdapter extends RecyclerView.Adapter<KaliSe
 		itemViewHolder.mSwitch.setChecked(kaliServicesModelList.get(position).getStatus().startsWith("[+]"));
 		itemViewHolder.statustextView.setText(tempStatusTextView);
 		itemViewHolder.nametextView.setOnLongClickListener(v -> {
-			final ViewGroup nullParent = null;
 			final LayoutInflater mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-			final View promptViewEdit = mInflater.inflate(R.layout.kaliservices_edit_dialog_view, nullParent);
+			final View promptViewEdit = mInflater.inflate(R.layout.kaliservices_edit_dialog_view, null);
 			final EditText titleEditText = promptViewEdit.findViewById(R.id.f_kaliservices_edit_adb_et_title);
 			final EditText startCmdEditText = promptViewEdit.findViewById(R.id.f_kaliservices_edit_adb_et_startcommand);
 			final EditText stopCmdEditText = promptViewEdit.findViewById(R.id.f_kaliservices_edit_adb_et_stopcommand);
@@ -209,7 +207,7 @@ public class KaliServicesRecyclerViewAdapter extends RecyclerView.Adapter<KaliSe
 			} else {
 				String filterPattern = constraint.toString().toLowerCase().trim();
 				List<KaliServicesModel> tempKaliServicesModelList = new ArrayList<>();
-				for (KaliServicesModel kaliServicesModel: KaliServicesData.getInstance().kaliServicesModelListFull){
+				for (KaliServicesModel kaliServicesModel: KaliServicesData.getInstance().kaliServicesModelListFull) {
 					if (kaliServicesModel.getServiceName().toLowerCase().contains(filterPattern)){
 						tempKaliServicesModelList.add(kaliServicesModel);
 					}
@@ -219,29 +217,34 @@ public class KaliServicesRecyclerViewAdapter extends RecyclerView.Adapter<KaliSe
 			return results;
 		}
 
-		@Override
-		protected void publishResults(CharSequence constraint, FilterResults results) {
-			Objects.requireNonNull(KaliServicesData.getInstance().getKaliServicesModels().getValue()).clear();
-			KaliServicesData.getInstance().getKaliServicesModels().getValue().addAll((List<KaliServicesModel>) results.values);
-			KaliServicesData.getInstance().getKaliServicesModels().postValue(KaliServicesData.getInstance().getKaliServicesModels().getValue());
-		}
+        @SuppressWarnings("unchecked")
+        @Override
+        protected void publishResults(CharSequence constraint, FilterResults results) {
+            if (results.values == null) return;
+            List<KaliServicesModel> filtered = (List<KaliServicesModel>) results.values;
+            Objects.requireNonNull(KaliServicesData.getInstance().getKaliServicesModels().getValue()).clear();
+            KaliServicesData.getInstance().getKaliServicesModels().getValue().addAll(filtered);
+            KaliServicesData.getInstance().getKaliServicesModels().postValue(
+                    KaliServicesData.getInstance().getKaliServicesModels().getValue()
+            );
+        }
 	};
 
-	class ItemViewHolder extends RecyclerView.ViewHolder{
+    public class ItemViewHolder extends RecyclerView.ViewHolder {
 		private final TextView nametextView;
 		//private Button editbutton;
 		private final SwitchCompat mSwitch;
 		private final CheckBox runOnChrootStartCheckbox;
 		private final TextView statustextView;
 
-		private ItemViewHolder(View view){
+		private ItemViewHolder(View view) {
 			super(view);
 			nametextView = view.findViewById(R.id.f_kaliservices_recyclerview_servicetitle_tv);
 			//editbutton = view.findViewById(R.id.f_kaliservices_recyclerview_edit_btn);
 			runOnChrootStartCheckbox = view.findViewById(R.id.f_kaliservices_recyclerview_runonchrootstart_checkbox);
 			mSwitch = view.findViewById(R.id.f_kaliservices_recyclerview_switch_toggle);
 			statustextView = view.findViewById(R.id.f_kaliservices_recyclerview_serviceresult_tv);
-			//WearOS optimisation
+			// WearOS optimisation
 			SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 			boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
 			if (iswatch) {

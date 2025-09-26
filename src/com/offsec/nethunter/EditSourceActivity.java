@@ -51,20 +51,6 @@ public class EditSourceActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /* Not usable?
-    public void updateSource() {
-
-        EditText source = (EditText) findViewById(R.id.source);
-        String newSource = source.getText().toString();
-        Boolean isSaved = exe.SaveFileContents(newSource, configFilePath);
-        if(isSaved){
-            NhPaths.showMessage("Source updated");
-        } else {
-            NhPaths.showMessage("Source not updated");
-        }
-    }
-    */
-
     public void updateSource(View view) {
         EditText source = findViewById(R.id.source);
         String newSource = source.getText().toString();

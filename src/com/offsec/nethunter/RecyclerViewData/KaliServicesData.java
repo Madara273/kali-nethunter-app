@@ -70,7 +70,7 @@ public class KaliServicesData {
 		kaliServicesExecutor.setListener(new KaliServicesExecutor.KaliServicesExecutorListener() {
 			@Override
 			public void onTaskFinished(List<KaliServicesModel> kaliServicesModelList) {
-
+                // No implementation needed
 			}
 
 			public void onExecutorPrepare() {
@@ -94,7 +94,7 @@ public class KaliServicesData {
 		kaliServicesExecutor.setListener(new KaliServicesExecutor.KaliServicesExecutorListener() {
 			@Override
 			public void onTaskFinished(List<KaliServicesModel> kaliServicesModelList) {
-
+                // No implementation needed
 			}
 
 			public void onExecutorPrepare() {
