@@ -161,6 +161,8 @@ public class CopyBootFilesExecutor {
         Symlink("killkali");
         Symlink("busybox_nh");
         Symlink("curl");
+        Symlink("iw");
+
         disableMagiskNotification();
 
         prefs.edit()
@@ -359,7 +361,7 @@ public class CopyBootFilesExecutor {
     }
 
     private void Symlink(String filename) {
-        if (!(filename.startsWith("bootkali") || filename.equals("killkali") || filename.equals("busybox_nh") || filename.equals("curl"))) {
+        if (!(filename.startsWith("bootkali") || filename.equals("killkali") || filename.equals("busybox_nh") || filename.equals("curl") || filename.equals("iw"))) {
             logDebug("Skipping symlink/copy for: " + filename);
             return;
         }
@@ -369,6 +371,15 @@ public class CopyBootFilesExecutor {
 
         if (filename.equals("busybox_nh")) {
             String sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/busybox_nh";
+            logDebug("command output: ln -s " + sourcePath + " /system/bin/" + filename);
+            int result = exe.RunAsRootReturnValue("ln -s " + sourcePath + " /system/bin/" + filename);
+            if (result != 0) {
+                logDebug("Failed to create symlink for: " + filename);
+            }
+        }
+
+        if (filename.equals("iw")) {
+            String sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/iw";
             logDebug("command output: ln -s " + sourcePath + " /system/bin/" + filename);
             int result = exe.RunAsRootReturnValue("ln -s " + sourcePath + " /system/bin/" + filename);
             if (result != 0) {
