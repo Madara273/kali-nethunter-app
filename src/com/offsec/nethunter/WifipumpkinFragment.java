@@ -272,11 +272,28 @@ public class WifipumpkinFragment extends Fragment {
 
     private boolean isWp3Installed() {
         try {
-            requireActivity().getPackageManager().getPackageInfo("com.offsec.wifipumpkin3", 0);
-            return true;
-        } catch (PackageManager.NameNotFoundException e) {
-            return false;
+            String out = exe.RunAsChrootOutput(
+                    "[[ -f /usr/bin/wifipumpkin3 || -f /usr/bin/dnschef ]] && echo 1 || echo 0");
+            String v = (out == null) ? "" : out.trim();
+            if ("1".equals(v)) {
+                //Log.d(TAG, "isWp3Installed: chroot probe -> true");
+                return true;
+            }
+           // Log.d(TAG, "isWp3Installed: chroot probe -> false (v='" + v + "')");
+        } catch (Exception e) {
+            //Log.w(TAG, "isWp3Installed: chroot probe failed", e);
         }
+
+        try {
+            requireActivity().getPackageManager().getPackageInfo("com.offsec.wifipumpkin3", 0);
+            //Log.d(TAG, "isWp3Installed: android package present");
+            return true;
+        } catch (PackageManager.NameNotFoundException ignore) {
+            // no-op
+        }
+
+        //Log.d(TAG, "isWp3Installed: not installed");
+        return false;
     }
 
     @Override
@@ -324,21 +341,66 @@ public class WifipumpkinFragment extends Fragment {
 
     // Refresh templates
     private void refresh_wp3_templates(View root) {
-        if (!isWp3Installed()) {
-            setupTemplatesSpinnerEmpty(root);
-            return;
+        long t0 = System.currentTimeMillis();
+        //Log.d(TAG, "refresh_wp3_templates: start");
+        try {
+            boolean installed = isWp3Installed();
+            //Log.d(TAG, "refresh_wp3_templates: isWp3Installed=" + installed);
+            if (!installed) {
+                //Log.w(TAG, "refresh_wp3_templates: WP3 not installed, using empty spinner");
+                setupTemplatesSpinnerEmpty(root);
+                return;
+            }
+
+            if (root == null) {
+                //Log.e(TAG, "refresh_wp3_templates: root view is null");
+                return;
+            }
+
+            Spinner spinner = root.findViewById(R.id.templates);
+            if (spinner == null) {
+                //Log.e(TAG, "refresh_wp3_templates: Spinner R.id.templates not found");
+                return;
+            }
+
+            String cmd = "ls -1 /usr/share/wifipumpkin3/config/templates 2>/dev/null | sort";
+            //Log.d(TAG, "refresh_wp3_templates: executing chroot cmd: " + cmd);
+            String out = exe.RunAsChrootOutput(cmd);
+            //Log.d(TAG, "refresh_wp3_templates: rawOut=" + (out == null ? "null" : ("len=" + out.length())));
+
+            String trimmed = (out == null) ? "" : out.trim();
+            String outputTemplates = trimmed.isEmpty() ? "None" : "None\n" + trimmed;
+            String[] items = outputTemplates.split("\n");
+            //Log.d(TAG, "refresh_wp3_templates: itemsCount=" + items.length);
+
+            spinner.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, items));
+            //Log.d(TAG, "refresh_wp3_templates: adapter set");
+        } catch (Exception e) {
+            Log.e(TAG, "refresh_wp3_templates: error", e);
+            try {
+                setupTemplatesSpinnerEmpty(root);
+            } catch (Exception inner) {
+                Log.e(TAG, "refresh_wp3_templates: fallback setup failed", inner);
+            }
+        } finally {
+            Log.d(TAG, "refresh_wp3_templates: done in " + (System.currentTimeMillis() - t0) + "ms");
         }
-        Spinner spinner = root.findViewById(R.id.templates);
-        String out = exe.RunAsChrootOutput("ls -1 /usr/share/wifipumpkin3/config/templates 2>/dev/null | sort");
-        String outputTemplates = (out == null || out.trim().isEmpty()) ? "None" : "None\n" + out.trim();
-        String[] items = outputTemplates.split("\n");
-        spinner.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, items));
     }
 
     private void setupTemplatesSpinnerEmpty(View root) {
+        //Log.d(TAG, "setupTemplatesSpinnerEmpty: start");
+        if (root == null) {
+            //Log.e(TAG, "setupTemplatesSpinnerEmpty: root view is null");
+            return;
+        }
         Spinner spinner = root.findViewById(R.id.templates);
-        spinner.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, new String[]{"None"}));
-        //spinner.setSelection(0);
+        if (spinner == null) {
+            //Log.e(TAG, "setupTemplatesSpinnerEmpty: Spinner R.id.templates not found");
+            return;
+        }
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, new String[]{"None"});
+        spinner.setAdapter(adapter);
+        //Log.d(TAG, "setupTemplatesSpinnerEmpty: adapter set to ['None']");
     }
 
     private void checkiptables() {
