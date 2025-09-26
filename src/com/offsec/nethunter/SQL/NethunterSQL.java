@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.offsec.nethunter.BuildConfig;
 import com.offsec.nethunter.models.NethunterModel;
@@ -206,7 +207,7 @@ public class NethunterSQL extends SQLiteOpenHelper {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "backupData failed", e);
             return e.toString();
         }
         return null;
@@ -233,16 +234,16 @@ public class NethunterSQL extends SQLiteOpenHelper {
                          FileChannel dst = fos.getChannel()) {
                         dst.transferFrom(src, 0, src.size());
                     } catch (FileNotFoundException e) {
-                        e.printStackTrace();
+                        Log.e(TAG, "restoreData file not found: " + storedDBpath, e);
                         return "File not found: " + e.getMessage();
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        Log.e(TAG, "restoreData I/O error while copying db from: " + storedDBpath, e);
                         return "I/O error: " + e.getMessage();
                     }
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "restoreData unexpected error", e);
             return e.toString();
         }
         return null;

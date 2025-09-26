@@ -11,7 +11,7 @@ import com.offsec.nethunter.BuildConfig;
 
 import java.io.File;
 
-public class NhPaths implements SharedPreferences.OnSharedPreferenceChangeListener{
+public class NhPaths implements SharedPreferences.OnSharedPreferenceChangeListener {
     private static final String TAG = "NhPaths";
     private static NhPaths instance;
     private final SharedPreferences sharedPreferences;
@@ -112,7 +112,7 @@ public class NhPaths implements SharedPreferences.OnSharedPreferenceChangeListen
         return "echo -ne \"\\033]0;" + title + "\\007\" && clear;";
     }
 
-    public void onDestroy(){
+    public void onDestroy() {
         if (sharedPreferences != null){
             sharedPreferences.unregisterOnSharedPreferenceChangeListener(this);
         }
