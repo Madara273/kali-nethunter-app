@@ -56,7 +56,7 @@ public class CopyBootFilesExecutor {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final AssetManager assetManager;
-    public int NH_SYSTEM_LOGGING = 0;
+    public final int NH_SYSTEM_LOGGING = 0;
 
     private void logDebug(String tag, String message, Throwable throwable) {
         if (NH_SYSTEM_LOGGING != 1) return;
