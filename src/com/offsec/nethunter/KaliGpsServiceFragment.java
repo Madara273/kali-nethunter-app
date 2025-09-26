@@ -385,7 +385,6 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
     @Override
     public void onResume() {
         super.onResume();
-        Log.d(TAG, "onResume");
         if (LocationUpdateService.isInstanceCreated()) {
             // a LocationUpdateService is already running
             setCheckedQuietly(switch_gps_provider, true);

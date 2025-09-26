@@ -91,7 +91,6 @@ public class CARsenalFragment extends Fragment {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        Log.d(TAG, "onCreate called");
         sharedpreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         super.onCreate(savedInstanceState);
         activity = getActivity();
