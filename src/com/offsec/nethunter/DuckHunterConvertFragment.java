@@ -50,7 +50,7 @@ public class DuckHunterConvertFragment extends Fragment implements View.OnClickL
     private EditText editsource;
     private final ConvertDuckyBroadcastReceiver convertDuckyBroadcastReceiver = new ConvertDuckyBroadcastReceiver();
 
-    public DuckHunterConvertFragment(String inFilePath, String outFilePath){
+    public DuckHunterConvertFragment(String inFilePath) {
         this.duckyInputFile = inFilePath;
     }
 

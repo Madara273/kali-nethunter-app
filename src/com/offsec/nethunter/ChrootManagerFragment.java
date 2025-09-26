@@ -44,7 +44,6 @@ import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Objects;
 
-import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -439,32 +438,30 @@ public class ChrootManagerFragment extends Fragment {
         removeChrootButton.setOnClickListener(v -> new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
                 .setTitle("Warning!")
                 .setMessage("Remove folder?\n" + NhPaths.CHROOT_PATH())
-                .setPositiveButton("I'm sure.", (d,i)-> {
-                    new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
-                            .setTitle("Last chance")
-                            .setMessage("This cannot be undone.")
-                            .setPositiveButton("Delete",(dd,ii)-> {
-                                chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.REMOVE_CHROOT);
-                                chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
-                                    @Override public void onExecutorPrepare() {
-                                        showProgress(-1);
-                                        broadcastBackPressedIntent(false);
-                                        setAllButtonEnable(false);
-                                    }
-                                    @Override public void onExecutorProgressUpdate(int progress) { showProgress(progress); }
-                                    @Override public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
-                                        hideProgress();
-                                        broadcastBackPressedIntent(true);
-                                        setAllButtonEnable(true);
-                                        compatCheck();
-                                    }
-                                });
-                                resultViewerLoggerTextView.setText("");
-                                chrootManagerExecutor.execute(resultViewerLoggerTextView);
-                            })
-                            .setNegativeButton("Cancel", null)
-                            .show();
-                })
+                .setPositiveButton("I'm sure.", (d,i)-> new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+                        .setTitle("Last chance")
+                        .setMessage("This cannot be undone.")
+                        .setPositiveButton("Delete",(dd,ii)-> {
+                            chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.REMOVE_CHROOT);
+                            chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
+                                @Override public void onExecutorPrepare() {
+                                    showProgress(-1);
+                                    broadcastBackPressedIntent(false);
+                                    setAllButtonEnable(false);
+                                }
+                                @Override public void onExecutorProgressUpdate(int progress) { showProgress(progress); }
+                                @Override public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
+                                    hideProgress();
+                                    broadcastBackPressedIntent(true);
+                                    setAllButtonEnable(true);
+                                    compatCheck();
+                                }
+                            });
+                            resultViewerLoggerTextView.setText("");
+                            chrootManagerExecutor.execute(resultViewerLoggerTextView);
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show())
                 .setNegativeButton("Cancel", null)
                 .show());
     }
@@ -651,7 +648,7 @@ public class ChrootManagerFragment extends Fragment {
 
     private void updateOptionsMenuState(boolean enabled) {
         if (getActivity() == null) return;
-        MenuHost host = (MenuHost) getActivity();
+        MenuHost host = getActivity();
         initMenuProvider();
         if (enabled) host.addMenuProvider(menuProvider, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
         else host.removeMenuProvider(menuProvider);
