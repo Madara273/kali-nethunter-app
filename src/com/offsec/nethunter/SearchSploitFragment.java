@@ -48,6 +48,9 @@ public class SearchSploitFragment extends Fragment {
     private static final String ARG_SECTION_NUMBER = "section_number";
     private static final String PREFS_NAME = "nethunter_prefs";
     private static final String PREF_FIRST_RUN_KEY = "searchsploit_first_run";
+    private @Nullable AlertDialog setupConfirmDialog;
+    private @Nullable AlertDialog firstRunConfirmDialog;
+    private volatile boolean lastSetupSucceeded = false;
     private Boolean withFilters = true;
     private String sel_type;
     private String sel_platform;
@@ -219,11 +222,13 @@ public class SearchSploitFragment extends Fragment {
         boolean firstRun = sp.getBoolean(PREF_FIRST_RUN_KEY, true);
         if (!firstRun) return;
 
-        // Mark as shown so it only appears on first run
         sp.edit().putBoolean(PREF_FIRST_RUN_KEY, false).apply();
+
+        // Show the standard setup dialog (stores reference internally)
         showSetupDialog();
 
-        new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat)
+        // Show the first-run hint dialog and keep a reference
+        firstRunConfirmDialog = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat)
                 .setTitle("SearchSploit setup")
                 .setMessage("SearchSploit needs two dependencies to work, install now?\nThis will run:\napt install exploitdb python3-six")
                 .setNegativeButton("Cancel", (d,i)-> d.dismiss())
@@ -234,7 +239,8 @@ public class SearchSploitFragment extends Fragment {
 
     private void showSetupDialog() {
         if (!isAdded()) return;
-        new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat)
+        // Keep a reference so we can close it after successful install
+        setupConfirmDialog = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat)
                 .setTitle("SearchSploit setup")
                 .setMessage("Install required packages in chroot now?\nThis will run:\napt update && apt install exploitdb python3-six")
                 .setNegativeButton("Cancel", (d,i)-> d.dismiss())
@@ -262,6 +268,17 @@ public class SearchSploitFragment extends Fragment {
                 .setMessage("Installing dependencies...\nPlease wait")
                 .setCancelable(false)
                 .create();
+
+        // When the progress dialog closes, also close the confirm dialogs if install succeeded
+        progress.setOnDismissListener(d -> {
+            if (lastSetupSucceeded) {
+                safeDismiss(setupConfirmDialog);
+                setupConfirmDialog = null;
+                safeDismiss(firstRunConfirmDialog);
+                firstRunConfirmDialog = null;
+            }
+        });
+
         progress.show();
 
         new Thread(() -> {
@@ -284,9 +301,9 @@ public class SearchSploitFragment extends Fragment {
             final Exception ex = err;
 
             requireActivity().runOnUiThread(() -> {
-                try {
-                    progress.dismiss();
-                } catch (Exception ignored) {}
+                lastSetupSucceeded = success; // read by progress dismiss listener
+                try { progress.dismiss(); } catch (Exception ignored) {}
+
                 if (success) {
                     NhPaths.showMessage_long(requireContext(), "Setup completed");
                     Log.d(TAG, "SearchSploit setup output:\n" + out);
@@ -296,6 +313,12 @@ public class SearchSploitFragment extends Fragment {
                 }
             });
         }).start();
+    }
+
+    private void safeDismiss(@Nullable AlertDialog d) {
+        try {
+            if (d != null && d.isShowing()) d.dismiss();
+        } catch (Exception ignored) {}
     }
 
     private static void hideSoftKeyboard(final View caller) {
