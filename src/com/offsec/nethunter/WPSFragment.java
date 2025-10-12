@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -235,7 +236,7 @@ public class WPSFragment extends Fragment {
             if (!selected_network.isEmpty()) {
                 if (iswatch) {
                     //WearOS needs a sort of interface reset
-                    Handler handler = new Handler();
+                    Handler handler = new Handler(Looper.getMainLooper());
                     handler.postDelayed(() -> exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting off"}), 10000);
                     handler.postDelayed(() -> exe.RunAsRoot(new String[]{"ip link set wlan0 up"}), 11000);
                 }
@@ -264,8 +265,7 @@ public class WPSFragment extends Fragment {
         arrayList.add("Scanning..");
         WPSList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, arrayList));
         WPSList.setVisibility(View.VISIBLE);
-        Handler handler = new Handler();
-        handler.postDelayed(() -> {
+        WPSList.postDelayed(() -> {
             arrayList.clear();
             arrayList.add("Scanning...");
             WPSList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, arrayList));
