@@ -57,7 +57,6 @@ public class AudioFragment extends Fragment {
     private Throwable error;
     private boolean isServiceBound = false;
     private AudioPlaybackService boundService;
-    private int itemId;
 
     private final ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -73,46 +72,6 @@ public class AudioFragment extends Fragment {
             }
             playButton.setEnabled(true); // Enable play button when service is bound
             isServiceBound = true;
-        }
-
-        private void updatePlayStateInternal(AudioPlayState audioPlayState) {
-            if (audioPlayState == null) {
-                Log.e(TAG, "AudioPlayState is null in updatePlayStateInternal");
-                return;
-            }
-            Log.d(TAG, "Updating play state: " + audioPlayState);
-            playButton.setText(getPlayButtonText(audioPlayState));
-            playButton.setEnabled(true);
-
-            switch (audioPlayState) {
-                case STOPPED:
-                    appendErrorText("Disconnected State", android.R.color.holo_orange_light);
-                    appendDashes();
-                    playButton.setEnabled(true);
-                    break;
-                case STARTING:
-                    appendErrorText("Connection Starting", android.R.color.holo_green_dark);
-                    playButton.setEnabled(true);
-                    break;
-                case BUFFERING:
-                    appendErrorText("Establishing Connection", android.R.color.holo_orange_light);
-                    playButton.setEnabled(true);
-                    break;
-                case STARTED:
-                    appendErrorText("Everything is working fine! Enjoy!", android.R.color.holo_green_dark);
-                    appendDashes();
-                    playButton.setEnabled(true);
-                    break;
-                case STOPPING:
-                    appendErrorText("Connection Disconnecting", android.R.color.holo_red_light);
-                    playButton.setEnabled(false);
-                    break;
-            }
-
-            if (boundService != null && boundService.getError() != null) {
-                appendErrorText("An error occurred: " + boundService.getError().getMessage(), android.R.color.holo_red_dark);
-                appendDashes();
-            }
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -151,7 +110,7 @@ public class AudioFragment extends Fragment {
                     } else {
                         Log.d(TAG, "Permission denied: " + permission);
                         if (errorText != null) {
-                            errorText.setText("Audio permission denied. Cannot start playback.");
+                            errorText.setText(R.string.audio_permission_denied_cannot_start_playback);
                         }
                     }
                 }
@@ -164,7 +123,7 @@ public class AudioFragment extends Fragment {
 
         // Retrieve the itemId passed in newInstance
         if (getArguments() != null) {
-            itemId = getArguments().getInt("ITEM_ID", -1);
+            int itemId = getArguments().getInt("ITEM_ID", -1);
         }
 
         // Log or use the itemId as needed
@@ -274,22 +233,6 @@ public class AudioFragment extends Fragment {
             isServiceBound = false;
         }
         boundService = null;
-    }
-
-    private void setupDefaultAudioConfig() {
-        serverInput.setText(R.string.audio_serverinput);
-        portInput.setText(R.string.audio_portinput);
-
-        // Format values for buffer headroom and target latency as seconds
-        List<String> formattedBufferHeadroom = formatValuesAsSeconds(VALUES_BUFFER_HEADROOM);
-        List<String> formattedTargetLatency = formatValuesAsSeconds(VALUES_TARGET_LATENCY);
-
-        // Set up adapters with the formatted string values
-        ArrayAdapter<String> bufferAdapter = new ArrayAdapter<>(requireActivity(), android.R.layout.simple_spinner_dropdown_item, formattedBufferHeadroom);
-        bufferHeadroomSpinner.setAdapter(bufferAdapter);
-
-        ArrayAdapter<String> latencyAdapter = new ArrayAdapter<>(requireActivity(), android.R.layout.simple_spinner_dropdown_item, formattedTargetLatency);
-        targetLatencySpinner.setAdapter(latencyAdapter);
     }
 
     // Helper method to format values as seconds
@@ -463,14 +406,6 @@ public class AudioFragment extends Fragment {
         if (boundService != null) {
             boundService.stop();
         }
-    }
-
-    public ScrollView getFullScrollView() {
-        return fullScrollView;
-    }
-
-    public void setFullScrollView(ScrollView fullScrollView) {
-        this.fullScrollView = fullScrollView;
     }
 
     public void setError(Throwable error) {

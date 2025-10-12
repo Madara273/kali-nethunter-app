@@ -1395,6 +1395,7 @@
     <string name="usb_full_path_db_restore">Full path of the db file from where you want to restore:</string>
     <string name="wp3_ap_mode_supported">Supported</string>
     <string name="wp3_ap_mode_not_supported">Not supported</string>
+    <string name="audio_permission_denied_cannot_start_playback">Audio permission denied. Cannot start playback.</string>
 
     <!-- TTS Voice Model-->
     <string-array name="tts_voices">

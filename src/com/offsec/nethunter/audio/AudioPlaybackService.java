@@ -24,8 +24,6 @@ import androidx.core.app.ServiceCompat;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
-import android.util.Log;
-
 import static com.offsec.nethunter.audio.AudioPlayState.BUFFERING;
 import static com.offsec.nethunter.audio.AudioPlayState.STARTING;
 
