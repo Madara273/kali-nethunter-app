@@ -1,7 +1,6 @@
 package com.offsec.nethunter;
 
 import android.Manifest;
-import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -172,8 +171,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         prefs = getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
 
         // Start copying the app files to the corresponding path.
-        ProgressDialog progressDialog = new ProgressDialog(this);
-        copyBootFilesExecutor = new CopyBootFilesExecutor(getApplicationContext(), this, progressDialog);
+        copyBootFilesExecutor = new CopyBootFilesExecutor(getApplicationContext(), this);
         //setContentView(R.layout.base_layout);
         //ProgressBar progressBar = findViewById(R.id.progressBar);
         //copyBootFilesExecutor = new CopyBootFilesExecutor(getApplicationContext(), this, progressBar);
