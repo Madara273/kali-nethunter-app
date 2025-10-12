@@ -7,6 +7,8 @@ import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -157,8 +159,7 @@ public class SearchSploitFragment extends Fragment {
             }).start();
         });
         //prevents menu stuck
-        new android.os.Handler().postDelayed(
-                () -> initUi(rootView), 250);
+        rootView.postDelayed(() -> initUi(rootView), 250);
 
         return rootView;
     }
@@ -392,8 +393,7 @@ public class SearchSploitFragment extends Fragment {
                 }
             }
             if (exploitList == null) {
-                new android.os.Handler().postDelayed(
-                        this::loadExploits, 1500);
+                new Handler(Looper.getMainLooper()).postDelayed(this::loadExploits, 1500);
                 return;
             }
             numex.setText(String.format(Locale.getDefault(),"%d results", exploitList.size()));
@@ -485,7 +485,7 @@ class ExploitLoader extends BaseAdapter {
         final SearchSploit exploitItem = getItem(position);
 
         final String _file = exploitItem.getFile();
-        final Long _id = exploitItem.getId();
+        final long _id = exploitItem.getId();
         String _desc = exploitItem.getDescription();
         String _date = exploitItem.getDate();
         String _author = exploitItem.getAuthor();
