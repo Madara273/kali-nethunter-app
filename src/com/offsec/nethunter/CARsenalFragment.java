@@ -74,6 +74,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.Map;
 
+import androidx.core.widget.TextViewCompat;
+
 public class CARsenalFragment extends Fragment {
     private static final String TAG = "CANFragment";
     private static SharedPreferences sharedpreferences;
@@ -1828,7 +1830,6 @@ public class CARsenalFragment extends Fragment {
             skipverifyContainer = rootView.findViewById(R.id.skipverify_container);
             loopContainer = rootView.findViewById(R.id.loop_container);
             padContainer = rootView.findViewById(R.id.pad_container);
-            reverseContainer = rootView.findViewById(R.id.reverse_container);
             outputContainer = rootView.findViewById(R.id.output_container);
             responsesContainer = rootView.findViewById(R.id.responses_container);
             requestsContainer = rootView.findViewById(R.id.requests_container);
@@ -1838,6 +1839,7 @@ public class CARsenalFragment extends Fragment {
             fileContainer = rootView.findViewById(R.id.file_container);
             SelectedFile = rootView.findViewById(R.id.caribou_file);
             numberContainer = rootView.findViewById(R.id.number_container);
+            reverseContainer = rootView.findViewById(R.id.reverse_container);
 
             // Spinner for ECU Reset Type
             ecuResetTypeContainer = rootView.findViewById(R.id.spinner_row_ecureset);
@@ -2888,7 +2890,7 @@ public class CARsenalFragment extends Fragment {
                 run_cmd(combinedCmd);
                 showToast("Running ICSim and UDSim...");
 
-                new Handler().postDelayed(() -> {
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
                     icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale&view_only=true");
                     controlsView.loadUrl("http://localhost:6081/vnc.html?autoconnect=true&resize=scale");
                     udsimView.loadUrl("http://localhost:6082/vnc.html?autoconnect=true&resize=scale");
@@ -3368,7 +3370,7 @@ public class CARsenalFragment extends Fragment {
                     if (!line.contains("|")) {
                         TextView header = new TextView(requireContext());
                         header.setText(line);
-                        header.setTextAppearance(requireContext(), android.R.style.TextAppearance_Medium);
+                        TextViewCompat.setTextAppearance(header, android.R.style.TextAppearance_Medium);
                         header.setTypeface(null, Typeface.BOLD);
                         header.setPadding(0, 30, 0, 30);
 
