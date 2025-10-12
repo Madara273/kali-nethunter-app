@@ -35,6 +35,7 @@ import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.io.File;
+import java.lang.reflect.Method;
 import java.text.MessageFormat;
 
 public class SETFragment extends Fragment {
@@ -174,9 +175,8 @@ public class SETFragment extends Fragment {
             ws.setDomStorageEnabled(true);
             ws.setLoadsImagesAutomatically(true);
             ws.setJavaScriptEnabled(true);
-            // Allow file URL access to other file URLs and universal access (needed for local assets and any http deps)
-            ws.setAllowFileAccessFromFileURLs(true);
-            ws.setAllowUniversalAccessFromFileURLs(true);
+            // Avoid direct calls to deprecated APIs; invoke via reflection if available
+            enableFileUrlAccess(ws);
             ws.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
             myBrowser.setWebViewClient(new WebViewClient());
 
@@ -245,6 +245,19 @@ public class SETFragment extends Fragment {
             // Launch SET
             LaunchSET.setOnClickListener(v -> run_cmd("echo -ne \"\\033]0;SET\\007\" && clear;cd /root/setoolkit && ./setoolkit"));
             return rootView;
+        }
+
+        private void enableFileUrlAccess(WebSettings settings) {
+            try {
+                Method m1 = WebSettings.class.getMethod("setAllowFileAccessFromFileURLs", boolean.class);
+                m1.setAccessible(true);
+                m1.invoke(settings, true);
+            } catch (Throwable ignored) { }
+            try {
+                Method m2 = WebSettings.class.getMethod("setAllowUniversalAccessFromFileURLs", boolean.class);
+                m2.setAccessible(true);
+                m2.invoke(settings, true);
+            } catch (Throwable ignored) { }
         }
 
         private void refresh(View SETFragmentView) {
