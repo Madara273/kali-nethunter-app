@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.os.Looper;
 import android.widget.RemoteViews;
 
 import androidx.annotation.MainThread;
@@ -42,7 +43,7 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
     private NotificationManager notifManager;
     private PowerManager.WakeLock wakeLock;
     private PendingIntent togglePendingIntent;
-    private final Handler handler = new Handler();
+    private final Handler handler = new Handler(Looper.getMainLooper());
     @Nullable
     private AudioPlaybackWorker playWorker = null;
     @Nullable

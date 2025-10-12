@@ -3,6 +3,7 @@ package com.offsec.nethunter.audio;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.media.AudioAttributes;
 import android.os.Handler;
 import android.os.PowerManager.WakeLock;
 import androidx.annotation.MainThread;
@@ -152,11 +153,23 @@ public class AudioPlaybackWorker implements Runnable {
         }
         audioData = sock.getInputStream();
 
-        // Always using minimum buffer size for minimum lag.
-        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-                sampleRate, AudioFormat.CHANNEL_OUT_STEREO,
-                AudioFormat.ENCODING_PCM_16BIT, minBufferSize,
-                AudioTrack.MODE_STREAM);
+        // Always using minimum buffer size for minimum lag. Min SDK is 21, so use Builder API
+        AudioAttributes attrs = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build();
+        AudioFormat format = new AudioFormat.Builder()
+                .setSampleRate(sampleRate)
+                .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
+                .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                .build();
+        audioTrack = new AudioTrack.Builder()
+                .setAudioAttributes(attrs)
+                .setAudioFormat(format)
+                .setTransferMode(AudioTrack.MODE_STREAM)
+                .setBufferSizeInBytes(minBufferSize)
+                .build();
+
         if (audioTrack.getState() != AudioTrack.STATE_INITIALIZED) {
             throw new IllegalStateException(
                     "Could not initialize AudioTrack."

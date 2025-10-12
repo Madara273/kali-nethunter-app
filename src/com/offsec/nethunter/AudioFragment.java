@@ -356,14 +356,16 @@ public class AudioFragment extends Fragment {
 
     private void appendErrorText(String message, int colorId) {
         SpannableString spannable = new SpannableString(message + "\n");
-        spannable.setSpan(new ForegroundColorSpan(getResources().getColor(colorId)), 0, spannable.length(), 0);
-        errorText.append(spannable);
+        int color = ContextCompat.getColor(requireContext(), colorId);
+        spannable.setSpan(new ForegroundColorSpan(color), 0, spannable.length(), 0);
+        if (errorText != null) errorText.append(spannable);
     }
 
     private void appendDashes() {
         SpannableString dashes = new SpannableString("------------------\n");
-        dashes.setSpan(new ForegroundColorSpan(getResources().getColor(android.R.color.holo_purple)), 0, dashes.length(), 0);
-        errorText.append(dashes);
+        int purple = ContextCompat.getColor(requireContext(), android.R.color.holo_purple);
+        dashes.setSpan(new ForegroundColorSpan(purple), 0, dashes.length(), 0);
+        if (errorText != null) errorText.append(dashes);
     }
 
     public void play() {
