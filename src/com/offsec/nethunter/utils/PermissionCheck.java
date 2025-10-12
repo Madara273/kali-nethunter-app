@@ -15,7 +15,6 @@ public class PermissionCheck {
     private final Activity activity;
     private final Context context;
     public static final int DEFAULT_PERMISSION_RQCODE = 1;
-    public static final int NH_TERM_PERMISSIONS_RQCODE = 2;
 
     // Unified permission arrays
     public static final String[] DEFAULT_PERMISSIONS = {
@@ -24,10 +23,6 @@ public class PermissionCheck {
             android.Manifest.permission.ACCESS_FINE_LOCATION,
             android.Manifest.permission.ACCESS_COARSE_LOCATION
             // Add more permissions as needed
-    };
-
-    public static final String[] NH_TERM_PERMISSIONS = {
-            // Add terminal-specific permissions if needed
     };
 
     // Example: Add more permission groups if needed
