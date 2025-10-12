@@ -10,9 +10,11 @@ import android.graphics.Color;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.media.AudioAttributes;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Looper;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -432,7 +434,7 @@ public class BTFragment extends Fragment {
                                 Toast.makeText(requireActivity().getApplicationContext(), "Starting bluebinder...", Toast.LENGTH_SHORT).show();
 
                                 // Delay to disable airplane mode and re-enable Wi-Fi after 9 seconds
-                                new Handler().postDelayed(() -> exe.RunAsRoot(new String[]{
+                                new Handler(Looper.getMainLooper()).postDelayed(() -> exe.RunAsRoot(new String[]{
                                         "settings put global bluetooth_on 1",
                                         // 12 = STATE_ON | 10 = STATE_TURNING_ON
                                         "am broadcast -a android.bluetooth.adapter.action.STATE_CHANGED --ei android.bluetooth.adapter.extra.STATE 12 --ei android.bluetooth.adapter.extra.PREVIOUS_STATE 10",
@@ -1063,7 +1065,23 @@ public class BTFragment extends Fragment {
             // Stream or play audio
             ImageButton PlayAudioButton = rootView.findViewById(R.id.play_audio);
             ImageButton StopAudioButton = rootView.findViewById(R.id.stop_audio);
-            AudioTrack audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC, 22000, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, 20000, AudioTrack.MODE_STREAM);
+            int sampleRate = 22000;
+            int minBuffer = AudioTrack.getMinBufferSize(sampleRate, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
+            AudioAttributes attrs = new AudioAttributes.Builder()
+                    .setUsage(AudioAttributes.USAGE_MEDIA)
+                    .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                    .build();
+            AudioFormat af = new AudioFormat.Builder()
+                    .setSampleRate(sampleRate)
+                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                    .build();
+            AudioTrack audioTrack = new AudioTrack.Builder()
+                    .setAudioAttributes(attrs)
+                    .setAudioFormat(af)
+                    .setTransferMode(AudioTrack.MODE_STREAM)
+                    .setBufferSizeInBytes(Math.max(minBuffer, 20000))
+                    .build();
             PlayAudioButton.setOnClickListener(v -> {
                 String selectedPath = injectfilename.getText().toString().trim();
                 File cw_listenfile;
@@ -1432,16 +1450,22 @@ public class BTFragment extends Fragment {
                 @Override
                 public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
                     selected_preset_uac = parentView.getItemAtPosition(pos).toString();
-                    if (selected_preset_uac.equals("Windows 7")) {
-                        uacCMD = "win7";
-                    } else if (selected_preset_uac.equals("Windows 8")) {
-                        uacCMD = "win8";
-                    } else if (selected_preset_uac.equals("Windows 10")) {
-                        uacCMD = "win10";
-                    } else if (selected_preset_uac.equals("Windows 11")) {
-                        uacCMD = "win11";
-                    } else if (selected_preset.equals("None")) {
-                        uacCMD = "-";
+                    switch (selected_preset_uac) {
+                        case "Windows 7":
+                            uacCMD = "win7";
+                            break;
+                        case "Windows 8":
+                            uacCMD = "win8";
+                            break;
+                        case "Windows 10":
+                            uacCMD = "win10";
+                            break;
+                        case "Windows 11":
+                            uacCMD = "win11";
+                            break;
+                        case "None":
+                            uacCMD = "-";
+                            break;
                     }
                 }
                 @Override
