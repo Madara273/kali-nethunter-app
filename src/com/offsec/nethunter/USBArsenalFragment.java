@@ -638,29 +638,45 @@ public class USBArsenalFragment extends Fragment {
     private void getImageFiles() {
         mountImgButton.setEnabled(false);
         unmountImgButton.setEnabled(false);
+
         ArrayList<String> result = new ArrayList<>();
-        File image_folder = new File(NhPaths.APP_SD_FILES_IMG_PATH);
-        if (!image_folder.exists()) {
+        File imageFolder = new File(NhPaths.APP_SD_FILES_IMG_PATH);
+
+        if (!imageFolder.exists()) {
             NhPaths.showMessage(context, "Creating directory for storing image files..");
-            if (!image_folder.mkdir()) {
-                NhPaths.showMessage(context, "Failed to create directory for storing image files at " + NhPaths.APP_SD_FILES_IMG_PATH);
+            if (!imageFolder.mkdir()) {
+                String msg = "Failed to create directory for storing image files at " + NhPaths.APP_SD_FILES_IMG_PATH;
+                NhPaths.showMessage(context, msg);
+                Log.e(TAG, msg);
+                ArrayAdapter<String> emptyAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_item, result);
+                emptyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                imgFileSpinner.setAdapter(emptyAdapter);
+                mountImgButton.setEnabled(true);
+                unmountImgButton.setEnabled(true);
                 return;
             }
         }
+
+        File[] filesInFolder = null;
         try {
-            File[] filesInFolder = image_folder.listFiles();
-            assert filesInFolder != null;
+            filesInFolder = imageFolder.listFiles();
+        } catch (SecurityException e) {
+            Log.e(TAG, "Unable to list files in " + imageFolder.getAbsolutePath(), e);
+        }
+
+        if (filesInFolder == null) {
+            Log.w(TAG, "No files found or access denied in " + imageFolder.getAbsolutePath());
+        } else {
             for (File file : filesInFolder) {
                 if (!file.isDirectory()) {
-                    if (file.getName().contains(".img") || file.getName().contains(".iso")) {
-                        result.add(file.getName());
+                    String name = file.getName();
+                    if (name.endsWith(".img") || name.endsWith(".iso")) {
+                        result.add(name);
                     }
                 }
             }
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-            Log.e(TAG, e.toString());
         }
+
         ArrayAdapter<String> imageAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_item, result);
         imageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         imgFileSpinner.setAdapter(imageAdapter);
