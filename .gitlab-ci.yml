@@ -11,6 +11,7 @@ before_script:
   - java -version
   - export GRADLE_USER_HOME=$(pwd)/.gradle
   - export PACKAGE=$(sed -n 's/.*package="\([^"]*\)".*/\1/p' ./AndroidManifest.xml)
+  - if test -z "${PACKAGE}"; then export PACKAGE=$(sed -n 's/.*applicationId[[:blank:]]*"\([^"]*\)".*/\1/p' ./build.gradle); fi
   - export VERSION_NAME=$(sed -n 's/.*versionName[[:blank:]]*"\([^"]*\)".*/\1/p' ./build.gradle)
   - export VERSION_CODE=$(sed -n 's/.*versionCode[[:blank:]]*\([0-9]*\).*/\1/p' ./build.gradle)
   - export APK_NAME="${PACKAGE}_${VERSION_CODE}"
