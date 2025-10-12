@@ -45,7 +45,7 @@ android {
     defaultConfig {
         minSdk 21
         //noinspection ExpiredTargetSdkVersion
-        targetSdk 29
+        targetSdk 30
         //noinspection HighAppVersionCode
         versionCode 2025090001
         versionName '2025.4-dev'
