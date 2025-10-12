@@ -16,6 +16,7 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.os.Looper;
 import android.widget.RemoteViews;
+import android.content.pm.ServiceInfo;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
@@ -172,7 +173,13 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
         playWorker.setBufferUsec(headroomUsec, latencyUsec);
         playWorkerThread = new Thread(playWorker);
 
-        startForeground(NOTIFICATION, createNotification(STARTING));
+        // Start as a typed foreground service for API 34+
+        ServiceCompat.startForeground(
+                this,
+                NOTIFICATION,
+                createNotification(STARTING),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+        );
         notifyState(STARTING);
         playWorkerThread.start();
 

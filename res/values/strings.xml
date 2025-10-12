@@ -1396,6 +1396,7 @@
     <string name="wp3_ap_mode_supported">Supported</string>
     <string name="wp3_ap_mode_not_supported">Not supported</string>
     <string name="audio_permission_denied_cannot_start_playback">Audio permission denied. Cannot start playback.</string>
+    <string name="notification_permission_denied">audio_notification_permission_denied</string>
 
     <!-- TTS Voice Model-->
     <string-array name="tts_voices">

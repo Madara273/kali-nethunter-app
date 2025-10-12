@@ -46,6 +46,7 @@ public class AudioFragment extends Fragment {
     private static final List<Long> VALUES_BUFFER_HEADROOM = Arrays.asList(0L, 15625L, 31250L, 62500L, 125000L, 250000L, 500000L, 1000000L, 2000000L);
     private static final List<Long> VALUES_TARGET_LATENCY = Arrays.asList(0L, 15625L, 31250L, 62500L, 125000L, 250000L, 500000L, 1000000L, 2000000L, 5000000L, 10000000L, -1L);
     private ActivityResultLauncher<String> audioPermissionLauncher;
+    private ActivityResultLauncher<String> notificationPermissionLauncher;
     private Button playButton;
     private Spinner bufferHeadroomSpinner;
     private Spinner targetLatencySpinner;
@@ -115,6 +116,22 @@ public class AudioFragment extends Fragment {
                     }
                 }
         );
+        notificationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    String permission = Manifest.permission.POST_NOTIFICATIONS;
+                    if (isGranted) {
+                        Log.d(TAG, "Permission granted: " + permission);
+                        // no immediate action; play() will continue when user taps again
+                    } else {
+                        Log.d(TAG, "Permission denied: " + permission);
+                        // We still try to play, but Android 13+ may block FGS without notifications allowed
+                        if (errorText != null) {
+                            errorText.setText(R.string.notification_permission_denied);
+                        }
+                    }
+                }
+        );
     }
 
     @Override
@@ -151,6 +168,7 @@ public class AudioFragment extends Fragment {
         playButton = view.findViewById(R.id.ButtonPlay);
         playButton.setEnabled(false);
         playButton.setOnClickListener(v -> {
+            if (checkAndRequestNotificationPermission()) return;
             if (checkAndRequestAudioPermission()) return;
             if (boundService != null) {
                 if (boundService.isPlaying()) {
@@ -195,6 +213,20 @@ public class AudioFragment extends Fragment {
             return true;
         }
         Log.d(TAG, "Permission check: " + permission + " GRANTED");
+        return false;
+    }
+
+    private boolean checkAndRequestNotificationPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            String permission = Manifest.permission.POST_NOTIFICATIONS;
+            if (ContextCompat.checkSelfPermission(requireContext(), permission)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Permission check: " + permission + " NOT GRANTED, requesting...");
+                notificationPermissionLauncher.launch(permission);
+                return true;
+            }
+            Log.d(TAG, "Permission check: " + permission + " GRANTED");
+        }
         return false;
     }
 
@@ -373,6 +405,7 @@ public class AudioFragment extends Fragment {
             //Log.e(TAG, "UI elements are not initialized");
             return;
         }
+        if (checkAndRequestNotificationPermission()) return;
         if (checkAndRequestAudioPermission()) return;
         String server = serverInput.getText().toString().trim();
         int port;
