@@ -1,7 +1,14 @@
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+//import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 apply plugin: 'com.android.application'
-apply plugin: 'org.jetbrains.kotlin.android'
+//apply plugin: 'org.jetbrains.kotlin.android'
+
+tasks.withType(JavaCompile).configureEach {
+    //options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
+    //options.deprecation = true
+    // Optional: fail the build on warnings
+    // options.compilerArgs += ['-Werror']
+}
 
 buildscript {
     repositories {
@@ -10,7 +17,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.5.2'
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.20"
+        //classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.20"
     }
 }
 
@@ -45,13 +52,13 @@ android {
     defaultConfig {
         minSdk 21
         //noinspection ExpiredTargetSdkVersion
-        targetSdk 31
+        targetSdk 34
         //noinspection HighAppVersionCode
         versionCode 2025090001
         versionName '2025.4-dev'
         multiDexEnabled true
         applicationId "com.offsec.nethunter"
-        externalNativeBuild {
+        /* externalNativeBuild {
             cmake {
                 arguments "-DANDROID_PLATFORM=android-24"
                 cppFlags ""
@@ -64,7 +71,7 @@ android {
     externalNativeBuild {
         cmake {
             path "CMakeLists.txt"
-        }
+        } */
     }
 
     signingConfigs {
@@ -107,12 +114,12 @@ android {
     }
 }
 
-kotlin {
+/* kotlin {
     jvmToolchain(17)
     compilerOptions {
         jvmTarget.set(JvmTarget.JVM_17)
     }
-}
+} */
 
 dependencies {
     implementation 'androidx.multidex:multidex:2.0.1'
@@ -127,16 +134,11 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation 'com.google.android.material:material:1.13.0'
     implementation 'androidx.preference:preference:1.2.1'
-    implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.2.20'
+    //implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.2.20'
     implementation 'androidx.viewpager2:viewpager2:1.1.0'
     // Snowfall
     implementation 'com.github.jetradarmobile:android-snowfall:1.2.1'
     implementation 'androidx.navigation:navigation-runtime:2.9.5'
     //debugImplementation 'com.squareup.leakcanary:leakcanary-android:3.0-alpha-8'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
-}
-
-java {
-    sourceCompatibility = JavaVersion.VERSION_1_8
-    targetCompatibility = JavaVersion.VERSION_1_8
 }
