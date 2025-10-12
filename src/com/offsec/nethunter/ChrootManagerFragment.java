@@ -150,6 +150,9 @@ public class ChrootManagerFragment extends Fragment {
             }
         }
 
+        // Add overflow menu with "Check Encryption"
+        addOverflowMenu();
+
         registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
@@ -201,6 +204,74 @@ public class ChrootManagerFragment extends Fragment {
                     }
                 }
         );
+    }
+
+    private void addOverflowMenu() {
+        if (getActivity() == null) return;
+        MenuHost menuHost = (MenuHost) getActivity();
+        // Remove previous provider if any to avoid duplicates
+        if (menuProvider != null) {
+            menuHost.removeMenuProvider(menuProvider);
+        }
+        menuProvider = new MenuProvider() {
+            @Override public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
+                menuInflater.inflate(R.menu.chroot_manager, menu);
+            }
+            @Override public boolean onMenuItemSelected(@NonNull MenuItem menuItem) {
+                int id = menuItem.getItemId();
+                if (id == R.id.menu_check_encryption) {
+                    showEncryptionStatusDialog();
+                    return true;
+                }
+                return false;
+            }
+        };
+        menuHost.addMenuProvider(menuProvider, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
+    }
+
+    private void showEncryptionStatusDialog() {
+        Activity act = getActivity();
+        if (act == null) return;
+        String state = safeGetprop("ro.crypto.state");
+        String type = safeGetprop("ro.crypto.type");
+        String userdata = safeGetprop("ro.crypto.userdata_block");
+        String verity = safeGetprop("ro.boot.verifiedbootstate");
+
+        String friendly;
+        if ("encrypted".equalsIgnoreCase(state)) friendly = "Encrypted";
+        else if ("unencrypted".equalsIgnoreCase(state)) friendly = "Not encrypted";
+        else friendly = "Unknown";
+
+        StringBuilder msg = new StringBuilder();
+        msg.append("Data encryption: ").append(friendly).append('\n');
+        msg.append("ro.crypto.state: ").append(emptyDash(state)).append('\n');
+        msg.append("ro.crypto.type: ").append(emptyDash(type)).append('\n');
+        if (!isEmpty(userdata)) msg.append("userdata block: ").append(userdata).append('\n');
+        if (!isEmpty(verity)) msg.append("verified boot: ").append(verity).append('\n');
+
+        new MaterialAlertDialogBuilder(act, R.style.DialogStyleCompat)
+                .setTitle("Encryption Status")
+                .setMessage(msg.toString().trim())
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
+    }
+
+    private boolean isEmpty(String s) { return s == null || s.trim().isEmpty(); }
+    private String emptyDash(String s) { return isEmpty(s) ? "-" : s; }
+
+    private String safeGetprop(String key) {
+        try {
+            // Prefer non-root getprop to avoid su prompts for a simple read
+            ShellExecuter sh = new ShellExecuter();
+            String v = sh.execute("getprop " + key);
+            if (v != null) v = v.trim();
+            if (!isEmpty(v)) return v;
+            // Fallback to root (some builds restrict getprop)
+            v = sh.RunAsRootOutput("getprop " + key);
+            return v == null ? "" : v.trim();
+        } catch (Exception e) {
+            return "";
+        }
     }
 
     @Override public void onStart() {
