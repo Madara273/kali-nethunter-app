@@ -56,6 +56,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.ArrayList;
 import android.net.Uri;
@@ -65,6 +66,7 @@ import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 
 public class BTFragment extends Fragment {
+    private static final ExecutorService EXEC = Executors.newSingleThreadExecutor();
     private SharedPreferences sharedpreferences;
     private Activity activity;
     private final ShellExecuter exe = new ShellExecuter();
@@ -307,7 +309,8 @@ public class BTFragment extends Fragment {
         public void onResume(){
             super.onResume();
             Toast.makeText(requireActivity().getApplicationContext(), "Status updated", Toast.LENGTH_SHORT).show();
-            Executors.newSingleThreadExecutor().execute(() -> refresh(requireView().getRootView()));
+            // Use shared executor to refresh status off the UI thread
+            EXEC.execute(() -> refresh(requireView().getRootView()));
         }
 
         @Override
@@ -346,7 +349,7 @@ public class BTFragment extends Fragment {
             }
 
             // Bluetooth interfaces
-            Executors.newSingleThreadExecutor().execute(() -> {
+            EXEC.execute(() -> {
                 String outputHCI = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig | grep hci | cut -d: -f1");
                 ArrayList<String> hciIfaces = new ArrayList<>();
                 if (outputHCI.isEmpty()) {
@@ -355,7 +358,7 @@ public class BTFragment extends Fragment {
                     String[] ifacesArray = outputHCI.split("\n");
                     hciIfaces.addAll(Arrays.asList(ifacesArray));
                 }
-                requireActivity().runOnUiThread(() -> ifaces.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, hciIfaces)));
+                if (isAdded()) requireActivity().runOnUiThread(() -> ifaces.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, hciIfaces)));
             });
 
             ifaces.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -373,7 +376,8 @@ public class BTFragment extends Fragment {
             // Refresh Status
             ImageButton RefreshStatus = rootView.findViewById(R.id.refreshStatus);
             RefreshStatus.setOnClickListener(v -> refresh(rootView));
-            Executors.newSingleThreadExecutor().execute(() -> refresh(rootView));
+            // Initial refresh
+            refresh(rootView);
 
             // Internal bluetooth support
             final Button bluebinderButton = rootView.findViewById(R.id.bluebinder_button);
@@ -467,32 +471,37 @@ public class BTFragment extends Fragment {
             });
 
             btButton.setOnClickListener( v -> {
-                String dbus_statusCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd service dbus status | grep dbus");
-                if (dbus_statusCMD.equals("dbus is running.")) {
-                    if (btButton.getText().equals("Start")) {
-                        exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd service bluetooth start"});
-                        refresh(rootView);
-                    } else if (btButton.getText().equals("Stop")) {
-                        exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd service bluetooth stop"});
-                        refresh(rootView);
+                EXEC.execute(() -> {
+                    String dbus_statusCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd service dbus status | grep dbus");
+                    if ("dbus is running.".equals(dbus_statusCMD)) {
+                        boolean start = "Start".contentEquals(btButton.getText());
+                        exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd service bluetooth " + (start ? "start" : "stop")});
+                        if (isAdded()) requireActivity().runOnUiThread(() -> refresh(rootView));
+                    } else {
+                        if (isAdded()) requireActivity().runOnUiThread(() -> Toast.makeText(requireActivity().getApplicationContext(), "Enable dbus service first!", Toast.LENGTH_SHORT).show());
                     }
-                } else {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Enable dbus service first!", Toast.LENGTH_SHORT).show();
-                }
+                });
             });
 
             hciButton.setOnClickListener( v -> {
-                if (hciButton.getText().equals("Start")) {
-                    if (selected_iface.equals("None")) {
-                        Toast.makeText(requireActivity().getApplicationContext(), "No interface, please refresh or check connections!", Toast.LENGTH_SHORT).show();
-                    } else {
-                        exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig " + selected_iface + " up noscan"});
-                        refresh(rootView);
-                    }
-                } else if (hciButton.getText().equals("Stop")) {
-                    exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig " + selected_iface + " down"});
-                    refresh(rootView);
+                if (selected_iface == null || selected_iface.equals("None")) {
+                    Toast.makeText(requireActivity().getApplicationContext(), "No interface, please refresh or check connections!", Toast.LENGTH_SHORT).show();
+                    return;
                 }
+                EXEC.execute(() -> {
+                    // Verify iface exists before issuing hciconfig
+                    String present = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig | grep '^" + selected_iface + ":'");
+                    if (present.isEmpty()) {
+                        if (isAdded()) requireActivity().runOnUiThread(() -> Toast.makeText(requireActivity().getApplicationContext(), "Selected interface not present", Toast.LENGTH_SHORT).show());
+                        return;
+                    }
+                    if ("Start".contentEquals(hciButton.getText())) {
+                        exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig " + selected_iface + " up noscan"});
+                    } else {
+                        exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig " + selected_iface + " down"});
+                    }
+                    if (isAdded()) requireActivity().runOnUiThread(() -> refresh(rootView));
+                });
             });
 
             // Scanning
@@ -502,37 +511,41 @@ public class BTFragment extends Fragment {
             ShellExecuter exe = new ShellExecuter();
             File ScanLog = new File(NhPaths.CHROOT_PATH() + "/root/blue.log");
             StartScanButton.setOnClickListener( v -> {
-                if (!selected_iface.equals("None")) {
-                    String hci_current = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig "+ selected_iface + " | grep 'UP RUNNING' | cut -f2 -d$'\\t'");
-                    if (hci_current.equals("UP RUNNING ")) {
-                        final String scantime = BTtime.getText().toString();
-                        Executors.newSingleThreadExecutor().execute(() -> {
-                            requireActivity().runOnUiThread(() -> {
-                                final ArrayList<String> scanning = new ArrayList<>();
-                                scanning.add("Scanning..");
-                                targets.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, scanning));
-                            });
-                            exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd rm /root/blue.log"});
-                            exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd timeout " + scantime + " bluelog -i " + selected_iface + " -ncqo /root/blue.log;hciconfig " + selected_iface + " noscan"});
-                             requireActivity().runOnUiThread(() -> {
-                                 String outputScanLog = exe.RunAsRootOutput("cat " + ScanLog);
-                                 final String[] targetsArray = outputScanLog.split("\n");
-                                 ArrayAdapter<String> targetsadapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, targetsArray);
-                                 if (!outputScanLog.isEmpty()) {
-                                     targets.setAdapter(targetsadapter);
-                                 } else {
-                                     final ArrayList<String> notargets = new ArrayList<>();
-                                     notargets.add("No devices found");
-                                     targets.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, notargets));
-                                 }
-                             });
-                        });
-                    } else
-                        Toast.makeText(requireActivity().getApplicationContext(), "Interface is down!", Toast.LENGTH_SHORT).show();
-                }
-                else {
+                if (selected_iface == null || selected_iface.equals("None")) {
                     Toast.makeText(requireActivity().getApplicationContext(), "No interface selected!", Toast.LENGTH_SHORT).show();
+                    return;
                 }
+                EXEC.execute(() -> {
+                    // Verify iface exists before scanning
+                    String present = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig | grep '^" + selected_iface + ":'");
+                    if (present.isEmpty()) {
+                        if (isAdded()) requireActivity().runOnUiThread(() -> Toast.makeText(requireActivity().getApplicationContext(), "Selected interface not present", Toast.LENGTH_SHORT).show());
+                        return;
+                    }
+                    String hci_current = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig "+ selected_iface + " | grep 'UP RUNNING' | cut -f2 -d$'\t'");
+                    if ("UP RUNNING ".equals(hci_current)) {
+                        if (isAdded()) requireActivity().runOnUiThread(() -> {
+                            final ArrayList<String> scanning = new ArrayList<>();
+                            scanning.add("Scanning..");
+                            targets.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, scanning));
+                        });
+                        exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd rm /root/blue.log"});
+                        exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd timeout " + BTtime.getText().toString() + " bluelog -i " + selected_iface + " -ncqo /root/blue.log;hciconfig " + selected_iface + " noscan"});
+                        String outputScanLog = exe.RunAsRootOutput("cat " + ScanLog);
+                        if (isAdded()) requireActivity().runOnUiThread(() -> {
+                            if (!outputScanLog.isEmpty()) {
+                                final String[] targetsArray = outputScanLog.split("\n");
+                                targets.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, targetsArray));
+                            } else {
+                                final ArrayList<String> notargets = new ArrayList<>();
+                                notargets.add("No devices found");
+                                targets.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, notargets));
+                            }
+                        });
+                    } else {
+                        if (isAdded()) requireActivity().runOnUiThread(() -> Toast.makeText(requireActivity().getApplicationContext(), "Interface is down!", Toast.LENGTH_SHORT).show());
+                    }
+                });
             });
 
             // Target selection
@@ -566,65 +579,70 @@ public class BTFragment extends Fragment {
             final Spinner ifaces = BTFragment.findViewById(R.id.hci_interface);
             SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
-            requireActivity().runOnUiThread(() -> {
+            EXEC.execute(() -> {
                 String outputHCI = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig | grep hci | cut -d: -f1");
-                final ArrayList<String> hciIfaces = new ArrayList<>();
-                if (outputHCI.isEmpty()) {
-                    hciIfaces.add("None");
-                    ifaces.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, hciIfaces));
-                } else {
-                    final String[] ifacesArray = outputHCI.split("\n");
-                    ifaces.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, ifacesArray));
-                    int lastiface = sharedpreferences.getInt("selected_iface", 0);
-                    ifaces.setSelection(lastiface);
-                }
+                String[] ifacesArray = outputHCI.isEmpty() ? new String[]{"None"} : outputHCI.split("\n");
+                int lastiface = sharedpreferences.getInt("selected_iface", 0);
+
                 String binder_statusCMD = exe.RunAsRootOutput("pidof bluebinder");
                 File bt_smd = new File("/sys/module/hci_smd/parameters/hcismd_set");
-                if (!bt_smd.exists()) {
-                    if (binder_statusCMD.isEmpty()) {
-                        Binderstatus.setText(R.string.bt_stopped);
-                        bluebinderButton.setText(R.string.bt_start);
-                    }
-                    else {
-                        Binderstatus.setText(R.string.bt_running);
-                        bluebinderButton.setText(R.string.bt_stop);
-                    }
-                } else {
-                    if (outputHCI.contains("hci0")) {
-                        Binderstatus.setText(R.string.bt_enabled);
-                        bluebinderButton.setText(R.string.bt_stop);
-                    } else {
-                        Binderstatus.setText(R.string.bt_disabled);
-                        bluebinderButton.setText(R.string.bt_start);
-                    }
-                }
+
                 String dbus_statusCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd service dbus status | grep dbus");
-                if (dbus_statusCMD.equals("dbus is running.")) {
-                    DBUSstatus.setText(R.string.bt_start);
-                    dbusButton.setText(R.string.bt_stop);
-                }
-                else {
-                    DBUSstatus.setText(R.string.bt_stopped);
-                    dbusButton.setText(R.string.bt_start);
-                }
                 String bt_statusCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd service bluetooth status | grep bluetooth");
-                if (bt_statusCMD.equals("bluetooth is running.")) {
-                    BTstatus.setText(R.string.bt_running);
-                    btButton.setText(R.string.bt_stop);
+
+                // Only query hciconfig for selected iface if it exists in list
+                String computedHciStatus = "";
+                if (selected_iface != null && !selected_iface.equals("None") && outputHCI.contains(selected_iface)) {
+                    computedHciStatus = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig "+ selected_iface + " | grep 'UP RUNNING' | cut -f2 -d$'\t'");
                 }
-                else {
-                    BTstatus.setText(R.string.bt_stopped);
-                    btButton.setText(R.string.bt_start);
-                }
-                String hci_statusCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig "+ selected_iface + " | grep 'UP RUNNING' | cut -f2 -d$'\\t'");
-                if (hci_statusCMD.equals("UP RUNNING ")) {
-                    HCIstatus.setText(R.string.bt_up);
-                    hciButton.setText(R.string.bt_stop);
-                }
-                else {
-                    HCIstatus.setText(R.string.bt_down);
-                    hciButton.setText(R.string.bt_start);
-                }
+                final String hci_statusCMD = computedHciStatus;
+
+                if (isAdded()) requireActivity().runOnUiThread(() -> {
+                    ifaces.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, ifacesArray));
+                    if (lastiface < ifacesArray.length) ifaces.setSelection(lastiface);
+
+                    if (!bt_smd.exists()) {
+                        if (binder_statusCMD.isEmpty()) {
+                            Binderstatus.setText(R.string.bt_stopped);
+                            bluebinderButton.setText(R.string.bt_start);
+                        } else {
+                            Binderstatus.setText(R.string.bt_running);
+                            bluebinderButton.setText(R.string.bt_stop);
+                        }
+                    } else {
+                        if (outputHCI.contains("hci0")) {
+                            Binderstatus.setText(R.string.bt_enabled);
+                            bluebinderButton.setText(R.string.bt_stop);
+                        } else {
+                            Binderstatus.setText(R.string.bt_disabled);
+                            bluebinderButton.setText(R.string.bt_start);
+                        }
+                    }
+
+                    if (dbus_statusCMD.equals("dbus is running.")) {
+                        DBUSstatus.setText(R.string.bt_start);
+                        dbusButton.setText(R.string.bt_stop);
+                    } else {
+                        DBUSstatus.setText(R.string.bt_stopped);
+                        dbusButton.setText(R.string.bt_start);
+                    }
+
+                    if (bt_statusCMD.equals("bluetooth is running.")) {
+                        BTstatus.setText(R.string.bt_running);
+                        btButton.setText(R.string.bt_stop);
+                    } else {
+                        BTstatus.setText(R.string.bt_stopped);
+                        btButton.setText(R.string.bt_start);
+                    }
+
+                    if ("UP RUNNING ".equals(hci_statusCMD)) {
+                        HCIstatus.setText(R.string.bt_up);
+                        hciButton.setText(R.string.bt_stop);
+                    } else {
+                        HCIstatus.setText(R.string.bt_down);
+                        hciButton.setText(R.string.bt_start);
+                    }
+                });
             });
         }
     }
@@ -745,12 +763,13 @@ public class BTFragment extends Fragment {
             String sdp_target = sdp_address.getText().toString();
             String sdp_interface = hci_interface.getText().toString();
 
-            requireActivity().runOnUiThread(() -> {
+            EXEC.execute(() -> {
                 if (!sdp_target.isEmpty()) {
                     String CMDout = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd sdptool -i " + sdp_interface + " browse " + sdp_target + " | sed '/^\\[/d' | sed '/^Linux/d'");
-                    output.setText(CMDout);
-                } else
-                    Toast.makeText(requireActivity().getApplicationContext(), "No target address!", Toast.LENGTH_SHORT).show();
+                    if (isAdded()) requireActivity().runOnUiThread(() -> output.setText(CMDout));
+                } else {
+                    if (isAdded()) requireActivity().runOnUiThread(() -> Toast.makeText(requireActivity().getApplicationContext(), "No target address!", Toast.LENGTH_SHORT).show());
+                }
             });
         }
     }
@@ -830,22 +849,32 @@ public class BTFragment extends Fragment {
             final TextView currentClassType = BTFragment.findViewById(R.id.currentClassType);
             final TextView currentName = BTFragment.findViewById(R.id.currentName);
 
-            requireActivity().runOnUiThread(() -> {
-                String selectedIface = spoof_interface.getText().toString();
+            String selectedIface = spoof_interface.getText().toString().trim();
+            if (selectedIface.isEmpty()) {
+                Toast.makeText(requireActivity().getApplicationContext(), "No interface set!", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            EXEC.execute(() -> {
+                // Ensure iface exists
+                String present = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig | grep '^" + selectedIface + ":'");
+                if (present.isEmpty()) {
+                    if (isAdded()) requireActivity().runOnUiThread(() -> Toast.makeText(requireActivity().getApplicationContext(), "Selected interface not present", Toast.LENGTH_SHORT).show());
+                    return;
+                }
                 String currentAddress_CMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig " + selectedIface + " | awk '/Address/ { print $3 }'");
                 if (!currentAddress_CMD.isEmpty()) {
-                    currentAddress.setText(currentAddress_CMD);
-
                     String currentClassCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig " + selectedIface + " -a | awk '/Class:/ { print $2 }' | sed '/^Class:/d'");
-                    currentClass.setText(currentClassCMD);
-
                     String currentClassTypeCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig " + selectedIface + " -a | awk '/Device Class:/ { print $3, $4, $5 }'");
-                    currentClassType.setText(currentClassTypeCMD);
-
                     String currentNameCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd hciconfig " + selectedIface + " -a | grep Name | cut -d\\' -f2");
-                    currentName.setText(currentNameCMD);
-                } else
-                    Toast.makeText(requireActivity().getApplicationContext(), "Interface is down!", Toast.LENGTH_SHORT).show();
+                    if (isAdded()) requireActivity().runOnUiThread(() -> {
+                        currentAddress.setText(currentAddress_CMD);
+                        currentClass.setText(currentClassCMD);
+                        currentClassType.setText(currentClassTypeCMD);
+                        currentName.setText(currentNameCMD);
+                    });
+                } else {
+                    if (isAdded()) requireActivity().runOnUiThread(() -> Toast.makeText(requireActivity().getApplicationContext(), "Interface is down!", Toast.LENGTH_SHORT).show());
+                }
             });
         }
     }
@@ -1461,16 +1490,18 @@ public class BTFragment extends Fragment {
             final Button badbtserverButton = BTFragment.findViewById(R.id.badbtserver_button);
             context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
-            requireActivity().runOnUiThread(() -> {
+            EXEC.execute(() -> {
                 String badbtserver_statusCMD = exe.RunAsRootOutput("ps -ef | grep btk_server");
-                if (!badbtserver_statusCMD.contains("btk_server.py")) {
-                    BadBTServerStatus.setText(R.string.bt_stopped);
-                    badbtserverButton.setText(R.string.bt_start);
-                }
-                else {
-                    BadBTServerStatus.setText(R.string.bt_running);
-                    badbtserverButton.setText(R.string.bt_stop);
-                }
+                boolean running = badbtserver_statusCMD.contains("btk_server.py");
+                if (isAdded()) requireActivity().runOnUiThread(() -> {
+                    if (!running) {
+                        BadBTServerStatus.setText(R.string.bt_stopped);
+                        badbtserverButton.setText(R.string.bt_start);
+                    } else {
+                        BadBTServerStatus.setText(R.string.bt_running);
+                        badbtserverButton.setText(R.string.bt_stop);
+                    }
+                });
             });
         }
     }
