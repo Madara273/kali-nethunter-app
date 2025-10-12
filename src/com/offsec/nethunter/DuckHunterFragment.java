@@ -70,7 +70,7 @@ public class DuckHunterFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Context context = getContext();
+        getContext();
         activity = getActivity();
         duckyInputFile = NhPaths.APP_SD_FILES_PATH + "/modules/ducky_in.txt";
         duckyOutputFile = NhPaths.APP_SD_FILES_PATH + "/modules/ducky_out.sh";
@@ -180,9 +180,14 @@ public class DuckHunterFragment extends Fragment {
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+        executorService.shutdownNow();
+    }
+
+    @Override
     public void onDestroyView() {
         super.onDestroyView();
-        Menu menu = null;
         mViewPager = null;
     }
 
@@ -230,7 +235,8 @@ public class DuckHunterFragment extends Fragment {
                     if (new File("/config/usb_gadget/g1").exists()) {
                         NhPaths.showMessage_long(activity, "HID interfaces are not enabled! Please enable in USB Arsenal.");
                     } else if (new File("/dev/hidg0").exists()) {
-                        NhPaths.showMessage_long(activity, "Fixing HID interface permissions..");
+                        mainHandler.post(() ->
+                                NhPaths.showMessage_long(activity, "Fixing HID interface permissions.."));
                         exe.RunAsRoot(new String[]{"chmod 666 /dev/hidg*"});
                     } else {
                         NhPaths.showMessage_long(activity, "HID interfaces are not patched or enabled, please check your kernel configuration.");
