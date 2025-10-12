@@ -2,10 +2,10 @@ package com.offsec.nethunter.Executor;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.net.Uri;
@@ -19,9 +19,10 @@ import android.widget.Toast;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AlertDialog;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.offsec.nethunter.AppNavHomeActivity;
-import com.offsec.nethunter.BuildConfig;
 import com.offsec.nethunter.utils.CheckForRoot;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.SharePrefTag;
@@ -34,6 +35,7 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -47,7 +49,7 @@ public class CopyBootFilesExecutor {
     private final String buildTime;
     private Boolean shouldRun;
     private final Activity activity;
-    private final WeakReference<ProgressDialog> progressDialogRef;
+    private WeakReference<AlertDialog> progressDialogRef;
     private CopyBootFilesExecutorListener listener;
     private static final String result = "";
     private final SharedPreferences prefs;
@@ -82,14 +84,14 @@ public class CopyBootFilesExecutor {
         return ctx;
     }
 
-    public CopyBootFilesExecutor(Context context, Activity activity, ProgressDialog progressDialog) {
+    public CopyBootFilesExecutor(Context context, Activity activity) {
         this.context = new WeakReference<>(context);
         this.activity = activity;
-        this.progressDialogRef = new WeakReference<>(progressDialog);
+        this.progressDialogRef = new WeakReference<>(null);
         this.assetManager = context.getAssets();
-        this.prefs = context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
+        this.prefs = context.getSharedPreferences(context.getPackageName(), Context.MODE_PRIVATE);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd KK:mm:ss a zzz", Locale.getDefault());
-        this.buildTime = sdf.format(BuildConfig.BUILD_TIME);
+        this.buildTime = sdf.format(new Date());
         this.shouldRun = true;
     }
 
@@ -105,14 +107,15 @@ public class CopyBootFilesExecutor {
         boolean filesCopied = prefs.getBoolean("files_copied", false);
         if (!filesCopied) {
             logDebug(TAG, "COPYING NEW FILES", null);
-            ProgressDialog progressDialog = progressDialogRef.get();
-            if (progressDialog != null) {
-                progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                progressDialog.setTitle("New app build detected:");
-                progressDialog.setMessage("Copying new files...");
-                progressDialog.setCancelable(false);
-                progressDialog.show();
-            }
+            // Build a simple non-cancelable progress dialog using Material components
+            AlertDialog dialog = new MaterialAlertDialogBuilder(activity)
+                    .setTitle("New app build detected:")
+                    .setMessage("Copying new files...")
+                    .setCancelable(false)
+                    .create();
+            dialog.show();
+            // Store reference for dismissal later
+            setProgressDialog(dialog);
         } else {
             logDebug(TAG, "NO NEW FILES TO COPY. Skipping file copy.", null);
             shouldRun = false;
@@ -120,6 +123,10 @@ public class CopyBootFilesExecutor {
         if (listener != null) {
             listener.onExecutorPrepare();
         }
+    }
+
+    private void setProgressDialog(AlertDialog dialog) {
+        this.progressDialogRef = new WeakReference<>(dialog);
     }
 
     private void logDebug(String message) {
@@ -168,7 +175,7 @@ public class CopyBootFilesExecutor {
         prefs.edit()
                 .putBoolean("files_copied", true)
                 .putString(TAG, buildTime)
-                .putInt(SharePrefTag.VERSION_CODE_TAG, BuildConfig.VERSION_CODE)
+                .putInt(SharePrefTag.VERSION_CODE_TAG, getVersionCodeSafe())
                 .apply();
 
         publishProgress("Checking for chroot....");
@@ -352,12 +359,45 @@ public class CopyBootFilesExecutor {
         logDebug("Checking if /data is encrypted...");
         String encrypted = exe.RunAsRootOutput("getprop ro.crypto.state");
         logDebug("/data is " + encrypted);
-        if (encrypted.equals("encrypted")) {
-            logDebug("Fixing pam.d and inet in chroot");
-            exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd sed -i \"s/pam_keyinit.so/pam_keyinit.so #/\" /etc/pam.d/*"});
-            exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd echo 'APT::Sandbox::User \"root\";' > /etc/apt/apt.conf.d/01-android-nosandbox"});
-            exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd groupadd -g 3003 aid_inet;usermod -G nogroup -g aid_inet _apt"});
+        if (!"encrypted".equals(encrypted)) {
+            logDebug("Device is not encrypted. Skipping encrypted fixes.");
+            return;
         }
+
+        // Ensure chroot exists before we attempt fixes inside it
+        if (exe.RunAsRootReturnValue("[ -d " + NhPaths.CHROOT_PATH() + " ]") != 0) {
+            logDebug("Chroot path not found: " + NhPaths.CHROOT_PATH());
+            return;
+        }
+
+        logDebug("Applying encrypted-device fixes inside chroot...");
+        // sed pam configs
+        chrootExec("sed -i 's/pam_keyinit\\.so/pam_keyinit.so #/' /etc/pam.d/*", "Patch pam_keyinit in /etc/pam.d/*");
+
+        // Ensure APT sandbox disabled
+        chrootExec("mkdir -p /etc/apt/apt.conf.d", "Ensure apt.conf.d exists");
+        chrootExec("/bin/sh -c 'printf %s\\n " +
+                        "\'APT::Sandbox::User \"root\";\'" +
+                        " > /etc/apt/apt.conf.d/01-android-nosandbox'",
+                "Write 01-android-nosandbox apt config");
+
+        // Networking group for '_apt'
+        // Prefer existing group with GID 3003 (commonly 'inet'); otherwise create 'aid_inet' with the same GID
+        chrootExec(
+                "sh -c '" +
+                        "GN=$(getent group 3003 | cut -d: -f1 || true); " +
+                        "if [ -z \"$GN\" ]; then " +
+                        "  if getent group aid_inet >/dev/null 2>&1; then GN=aid_inet; else groupadd -g 3003 -o aid_inet || true; GN=aid_inet; fi; " +
+                        "fi; " +
+                        "echo Using_network_group:\"$GN\"; " +
+                        "if id -u _apt >/dev/null 2>&1; then usermod -a -G \"$GN\" _apt || true; fi'",
+                "Ensure _apt is in a group with GID 3003 (inet/aid_inet)"
+        );
+
+        // Quick validation/logging
+        chrootExec("getent group 3003 || getent group aid_inet || true", "Show group with gid 3003 or aid_inet info");
+        chrootExec("id _apt || true", "Show _apt user info after group change");
+        chrootExec("grep -m1 'APT::Sandbox::User' /etc/apt/apt.conf.d/01-android-nosandbox || true", "Verify apt nosandbox config");
     }
 
     private void Symlink(String filename) {
@@ -454,13 +494,22 @@ public class CopyBootFilesExecutor {
         }
     }
 
-    private String renameAssetIfneeded(String asset) {
-        String cpuAbi;
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
-            cpuAbi = Build.SUPPORTED_ABIS[0];
+    // Helper to get the device's primary ABI without using deprecated fields on modern SDKs
+    private String getPrimaryAbi() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            if (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0) {
+                return Build.SUPPORTED_ABIS[0] != null ? Build.SUPPORTED_ABIS[0] : "";
+            }
+            return "";
         } else {
-            cpuAbi = Build.CPU_ABI;
+            @SuppressWarnings("deprecation")
+            String abi = Build.CPU_ABI;
+            return abi != null ? abi : "";
         }
+    }
+
+    private String renameAssetIfneeded(String asset) {
+        String cpuAbi = getPrimaryAbi();
 
         if (asset.matches("^.*-arm64$")) {
             if (cpuAbi.equals("arm64-v8a")) {
@@ -485,8 +534,8 @@ public class CopyBootFilesExecutor {
 
     private void onPostExecute(String objects) {
         this.objects = objects;
-        ProgressDialog progressDialog = progressDialogRef.get();
-        if (progressDialog != null) {
+        AlertDialog progressDialog = progressDialogRef.get();
+        if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
         if (listener != null) {
@@ -518,18 +567,54 @@ public class CopyBootFilesExecutor {
     private void disableMagiskNotification() {
         if (exe.RunAsRootReturnValue("[ -f " + NhPaths.MAGISK_DB_PATH + " ]") == 0) {
             logDebug(TAG, "Disabling Magisk notification and log for nethunter app.");
+            String pkg = getPackageNameSafe();
             if (exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_BIN_PATH +
                     "/sqlite3 " + NhPaths.MAGISK_DB_PATH + " \"SELECT * from policies\" | grep " +
-                    BuildConfig.APPLICATION_ID).startsWith(BuildConfig.APPLICATION_ID)) {
+                    pkg).startsWith(pkg)) {
                 exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_BIN_PATH +
                         "/sqlite3 " + NhPaths.MAGISK_DB_PATH + " \"UPDATE policies SET logging='0',notification='0' WHERE package_name='" +
-                        BuildConfig.APPLICATION_ID + "';\"");
+                        pkg + "';\"");
                 logDebug(TAG, "Updated magisk db successfully.");
             } else {
                 exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_BIN_PATH + "/sqlite3 " +
                         NhPaths.MAGISK_DB_PATH + " \"UPDATE policies SET logging='0',notification='0' WHERE uid='$(stat -c %u /data/data/" +
-                        BuildConfig.APPLICATION_ID + ")';\"");
+                        pkg + ")';\"");
             }
+        }
+    }
+
+    private String getPackageNameSafe() {
+        Context c = context.get();
+        return c != null ? c.getPackageName() : "";
+    }
+
+    @SuppressWarnings("deprecation")
+    private int getVersionCodeSafe() {
+        try {
+            Context c = context.get();
+            if (c == null) return 0;
+            PackageManager pm = c.getPackageManager();
+            PackageInfo pi = pm.getPackageInfo(c.getPackageName(), 0);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                return (int) pi.getLongVersionCode();
+            } else {
+                return pi.versionCode;
+            }
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    // Helper to run and log a command inside the chroot, capturing exit code/stdout/stderr
+    private void chrootExec(String cmd, String description) {
+        ShellExecuter.ShellResult res = exe.RunAsChrootWithResult(cmd);
+        String prefix = (description == null || description.isEmpty()) ? "ChrootExec" : description;
+        logDebug(prefix + " => exit=" + res.exitCode);
+        if (!res.stdout.isEmpty()) {
+            logDebug(prefix + " stdout: " + res.stdout);
+        }
+        if (!res.stderr.isEmpty()) {
+            logDebug(prefix + " stderr: " + res.stderr);
         }
     }
 }
