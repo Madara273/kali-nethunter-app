@@ -157,8 +157,8 @@ public class MacchangerFragment extends Fragment {
         SecureRandom random = new SecureRandom();
         byte[] macAddr = new byte[6];
         random.nextBytes(macAddr);
-        //the second-least-significant bit and the least-significant bit of the first octet of the address must be 1 and 0 respectively
-        mac1.setText(String.format("%02x", ((macAddr[0] & 0xfc) | 0x2)));
+        // set locally administered bit (bit1) and ensure unicast (bit0=0)
+        mac1.setText(String.format("%02x", ((macAddr[0] & 0xFE) | 0x02)));
         mac2.setText(String.format("%02x", macAddr[1]));
         mac3.setText(String.format("%02x", macAddr[2]));
         mac4.setText(String.format("%02x", macAddr[3]));
@@ -201,28 +201,47 @@ public class MacchangerFragment extends Fragment {
     private void setupInterfaceSpinner() {
         List<String> keys = new ArrayList<>(iFaceAndMacHashMap.keySet());
         Collections.sort(keys, Collections.reverseOrder());
-        String[] iFaceStrings = keys.toArray(new String[0]);
-        ArrayAdapter<String> iFaceArrayAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_item, iFaceStrings);
+        if (keys.isEmpty()) {
+            // No interfaces found; show hint and disable actions
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_item, new String[]{"No interfaces"});
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            interfaceSpinner.setAdapter(adapter);
+            setActionsEnabled(false);
+            currentMacTextView.setText("-");
+            return;
+        }
+        ArrayAdapter<String> iFaceArrayAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_item, keys.toArray(new String[0]));
         iFaceArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         interfaceSpinner.setAdapter(iFaceArrayAdapter);
-        interfaceSpinner.setSelection(lastSelectedIfacePosition);
+        interfaceSpinner.setSelection(Math.min(lastSelectedIfacePosition, keys.size() - 1));
+        setActionsEnabled(true);
         interfaceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 lastSelectedIfacePosition = position;
-                currentMacTextView.setText(iFaceAndMacHashMap.get(interfaceSpinner.getSelectedItem().toString().toLowerCase()));
-                changeMacButton.setText(MessageFormat.format("{0} {1}", getString(R.string.changeMAC), interfaceSpinner.getSelectedItem().toString().toUpperCase()));
-                resetMacButton.setText(MessageFormat.format("{0} {1}", getString(R.string.resetMAC), interfaceSpinner.getSelectedItem().toString().toUpperCase()));
+                String sel = (String) interfaceSpinner.getSelectedItem();
+                String mac = iFaceAndMacHashMap.get(sel.toLowerCase());
+                currentMacTextView.setText(mac == null || mac.isEmpty() ? "-" : mac);
+                changeMacButton.setText(MessageFormat.format("{0} {1}", getString(R.string.changeMAC), Objects.toString(sel, "").toUpperCase()));
+                resetMacButton.setText(MessageFormat.format("{0} {1}", getString(R.string.resetMAC), Objects.toString(sel, "").toUpperCase()));
             }
             @Override
             public void onNothingSelected(AdapterView<?> parent) {}
         });
     }
 
+    private void setActionsEnabled(boolean enabled) {
+        changeMacButton.setEnabled(enabled);
+        resetMacButton.setEnabled(enabled);
+        regenerateMacButton.setEnabled(enabled);
+        clearMacButton.setEnabled(enabled);
+    }
+
     private void setMacModeSpinner() {
         if (macModeSpinner.getSelectedItemPosition() == 0) {
             regenerateMacButton.setVisibility(View.VISIBLE);
             clearMacButton.setVisibility(View.GONE);
+            genRandomMACAddress();
         } else {
             regenerateMacButton.setVisibility(View.GONE);
             clearMacButton.setVisibility(View.VISIBLE);
@@ -244,9 +263,7 @@ public class MacchangerFragment extends Fragment {
         });
     }
 
-    private void setRegenerateMacButton() {
-        regenerateMacButton.setOnClickListener(v -> genRandomMACAddress());
-    }
+    private void setRegenerateMacButton() { regenerateMacButton.setOnClickListener(v -> genRandomMACAddress()); }
 
     private void setClearMacButton() {
         clearMacButton.setOnClickListener(v -> {
@@ -267,49 +284,70 @@ public class MacchangerFragment extends Fragment {
     }
 
     private static void getIfaceAndMacAddr() {
-        if (!iFaceAndMacHashMap.isEmpty()) iFaceAndMacHashMap.clear();
+        iFaceAndMacHashMap.clear();
+        // Prefer root-based sysfs listing to avoid SDK restrictions on MAC access
+        ShellExecuter exe = new ShellExecuter();
+        try {
+            String names = exe.RunAsRootOutput("ls -1 /sys/class/net | tr -d \r");
+            if (names != null) {
+                String[] ifaces = names.split("\n");
+                for (String n : ifaces) {
+                    if (n == null) continue;
+                    n = n.trim();
+                    if (n.isEmpty()) continue;
+                    if (n.equals("lo")) continue; // skip loopback
+                    String mac = exe.RunAsRootOutput("cat /sys/class/net/" + n + "/address | tr -d \r");
+                    if (mac == null) mac = "";
+                    iFaceAndMacHashMap.put(n.toLowerCase(), mac.trim());
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "Root-based iface listing failed: " + e.getMessage());
+        }
+        // Fallback: use Java API to get additional names if any, fill mac via sysfs
         try {
             List<NetworkInterface> allIface = Collections.list(NetworkInterface.getNetworkInterfaces());
             for (NetworkInterface iface : allIface) {
-                byte[] macBytes = iface.getHardwareAddress();
-                if (macBytes == null) {
-                    continue;
+                String name = iface.getName();
+                if (name == null || name.equals("lo")) continue;
+                if (!iFaceAndMacHashMap.containsKey(name.toLowerCase())) {
+                    String mac = exe.RunAsRootOutput("cat /sys/class/net/" + name + "/address | tr -d \r");
+                    if (mac == null) mac = "";
+                    iFaceAndMacHashMap.put(name.toLowerCase(), mac.trim());
                 }
-                StringBuilder macaddrStringBuilder = new StringBuilder();
-                for (byte b : macBytes) {
-                    macaddrStringBuilder.append(String.format("%02X:", b));
-                }
-                if (macaddrStringBuilder.length() > 0) {
-                    macaddrStringBuilder.deleteCharAt(macaddrStringBuilder.length() - 1);
-                }
-                iFaceAndMacHashMap.put(iface.getName().toLowerCase(), macaddrStringBuilder.toString());
             }
         } catch (Exception e) {
-            Log.e(TAG, Objects.requireNonNull(e.getMessage()));
+            Log.e(TAG, Objects.requireNonNullElse(e.getMessage(), "iface list error"));
         }
-        Log.d("DEBUG", iFaceAndMacHashMap.toString());
+        Log.d(TAG, "Interfaces:" + iFaceAndMacHashMap);
     }
 
     private void setResetMacButton() {
         resetMacButton.setOnClickListener(v -> executeTask(() -> {
-            String iface = interfaceSpinner.getSelectedItem().toString().toLowerCase();
+            String sel = (String) interfaceSpinner.getSelectedItem();
+            if (sel == null || sel.equals("No interfaces")) {
+                mainHandler.post(() -> showToast("No interface selected"));
+                return;
+            }
+            String iface = sel.toLowerCase();
             String originalMac = new ShellExecuter().RunAsRootOutput("cat /sys/class/net/" + iface + "/address");
             if (originalMac == null || originalMac.isEmpty()) {
                 Log.e(TAG, "Failed to retrieve the original MAC address for interface: " + iface);
                 mainHandler.post(() -> showToast("Failed to retrieve the original MAC address for " + iface));
                 return;
             }
+            String mac = originalMac.trim();
             mainHandler.post(() -> {
-                showToast("Restoring original MAC for " + iface + ": " + originalMac);
+                showToast("Restoring original MAC for " + iface + ": " + mac);
                 executeTask(() -> {
                     int result = new ShellExecuter().RunAsRootReturnValue(
                             "ip link set " + iface + " down && " +
-                                    "ip link set " + iface + " address " + originalMac + " && " +
+                                    "ip link set " + iface + " address " + mac + " && " +
                                     "ip link set " + iface + " up"
                     );
                     mainHandler.post(() -> {
                         if (result == 0) {
-                            showToast("MAC address of " + iface + " restored to " + originalMac);
+                            showToast("MAC address of " + iface + " restored to " + mac);
                         } else {
                             showToast("Failed to restore MAC address on " + iface);
                         }
@@ -322,10 +360,15 @@ public class MacchangerFragment extends Fragment {
 
     private void setChangeMacButton() {
         changeMacButton.setOnClickListener(v -> {
+            String sel = (String) interfaceSpinner.getSelectedItem();
+            if (sel == null || sel.equals("No interfaces")) {
+                showToast("No interface selected");
+                return;
+            }
             String macAddress = getMacAddress();
-            showToast("Changing MAC address on " + interfaceSpinner.getSelectedItem().toString().toLowerCase() + "...");
+            String iface = sel.toLowerCase();
+            showToast("Changing MAC address on " + iface + "...");
             executeTask(() -> {
-                String iface = interfaceSpinner.getSelectedItem().toString().toLowerCase();
                 int result = new ShellExecuter().RunAsRootReturnValue(
                         "ip link set " + iface + " down && " +
                                 "ip link set " + iface + " address " + macAddress + " && " +
@@ -343,7 +386,7 @@ public class MacchangerFragment extends Fragment {
         });
     }
 
-    // --- Helper Methods ---
+    // Helper Methods
     private String getMacAddress() {
         return mac1.getText().toString().toLowerCase() + ":" +
                 mac2.getText().toString().toLowerCase() + ":" +
@@ -353,11 +396,7 @@ public class MacchangerFragment extends Fragment {
                 mac6.getText().toString().toLowerCase();
     }
 
-    private void showToast(String message) {
-        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
-    }
+    private void showToast(String message) { Toast.makeText(context, message, Toast.LENGTH_SHORT).show(); }
 
-    private void executeTask(Runnable task) {
-        executorService.execute(task);
-    }
+    private void executeTask(Runnable task) { executorService.execute(task); }
 }
