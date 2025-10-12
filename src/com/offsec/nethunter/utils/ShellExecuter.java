@@ -482,4 +482,78 @@ public class ShellExecuter {
         // If you had any resources (like sockets or files), you would close them here
         Log.d(TAG, "ShellExecuter closed");
     }
+
+    // Run in chroot and capture stdout, stderr and real exit code from the chroot shell
+    public static class ShellResult {
+        public final int exitCode;
+        public final String stdout;
+        public final String stderr;
+        public ShellResult(int exitCode, String stdout, String stderr) {
+            this.exitCode = exitCode;
+            this.stdout = stdout == null ? "" : stdout;
+            this.stderr = stderr == null ? "" : stderr;
+        }
+    }
+
+    public ShellResult RunAsChrootWithResult(String command) {
+        final String MARKER = "__EC:";
+        StringBuilder out = new StringBuilder();
+        StringBuilder err = new StringBuilder();
+        int code = -1;
+        try {
+            Process process = Runtime.getRuntime().exec("su -mm");
+            OutputStream stdin = process.getOutputStream();
+            InputStream stderr = process.getErrorStream();
+            InputStream stdout = process.getInputStream();
+
+            // Enter chroot and start an interactive root shell
+            stdin.write((NhPaths.BUSYBOX + " chroot " + NhPaths.CHROOT_PATH() + " " + NhPaths.CHROOT_SUDO + " -E PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH su" + '\n').getBytes());
+            // Run the actual command
+            stdin.write((command + '\n').getBytes());
+            // Print the command's exit code from inside chroot shell
+            stdin.write(("echo " + MARKER + "$?\n").getBytes());
+            // Exit chroot shell and su
+            stdin.write(("exit\n").getBytes());
+            stdin.flush();
+            stdin.close();
+
+            // Read stdout
+            BufferedReader brOut = new BufferedReader(new InputStreamReader(stdout));
+            String line;
+            while ((line = brOut.readLine()) != null) {
+                if (line.startsWith(MARKER)) {
+                    try {
+                        code = Integer.parseInt(line.substring(MARKER.length()).trim());
+                    } catch (NumberFormatException ignored) {
+                        code = -1;
+                    }
+                } else {
+                    out.append(line).append('\n');
+                }
+            }
+            if (out.length() > 0 && out.charAt(out.length() - 1) == '\n') {
+                out.setLength(out.length() - 1);
+            }
+            brOut.close();
+
+            // Read stderr
+            BufferedReader brErr = new BufferedReader(new InputStreamReader(stderr));
+            while ((line = brErr.readLine()) != null) {
+                err.append(line).append('\n');
+            }
+            if (err.length() > 0 && err.charAt(err.length() - 1) == '\n') {
+                err.setLength(err.length() - 1);
+            }
+            brErr.close();
+
+            process.waitFor();
+            process.destroy();
+        } catch (IOException e) {
+            Log.e(TAG, "IOException in RunAsChrootWithResult for command: " + command, e);
+        } catch (InterruptedException e) {
+            Log.e(TAG, "Interrupted while waiting for chroot command to finish", e);
+            Thread.currentThread().interrupt();
+        }
+        return new ShellResult(code, out.toString(), err.toString());
+    }
 }
