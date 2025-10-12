@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -46,18 +47,21 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Stack;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import androidx.activity.OnBackPressedCallback;
+import androidx.annotation.ColorInt;
+import androidx.annotation.ColorRes;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
@@ -387,102 +391,138 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         nhPaths.onDestroy();
     }
 
+    private void hideMenuItemIfExists(int index) {
+        if (navigationView == null) return;
+        Menu menu = navigationView.getMenu();
+        if (index >= 0 && index < menu.size()) {
+            menu.getItem(index).setVisible(false);
+        }
+    }
+
+    @ColorInt
+    private int safeGetColor(@ColorRes int colorRes, int fallbackArgb) {
+        try {
+            return ResourcesCompat.getColor(getResources(), colorRes, getTheme());
+        } catch (Resources.NotFoundException e) {
+            return fallbackArgb;
+        }
+    }
+
     private void setRootView() {
         setContentView(R.layout.base_layout);
 
-        // Set boot_kali wallpaper as background
+        // Bind required views immediately
+        mDrawerLayout = findViewById(R.id.drawer_layout);
+        navigationView = findViewById(R.id.navigation_view);
+
+        if (mDrawerLayout == null || navigationView == null) {
+            Log.e(TAG, "Missing DrawerLayout or NavigationView in 'base_layout'.");
+            showWarningDialog("UI error", "Required views are missing in `base_layout`.", true);
+            return;
+        }
+
+        // Action bar
         ActionBar ab = getSupportActionBar();
         if (ab != null) {
             ab.setHomeButtonEnabled(true);
             ab.setDisplayHomeAsUpEnabled(true);
         }
 
-        mDrawerLayout = findViewById(R.id.drawer_layout);
-        navigationView = findViewById(R.id.navigation_view);
+        // Status bar color with safe resolver
+        getWindow().setStatusBarColor(safeGetColor(R.color.darkTitle, 0xFF121212));
 
-        // WearOS optimization
         Boolean iswatch = getBaseContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
-        Boolean snowfall;
 
         // Snowfall enable 2/2
         prefs.edit().putBoolean("snowfall_enabled", false).apply();
 
         String model = Build.HARDWARE;
+        Boolean snowfall;
         if (iswatch) {
             snowfall = prefs.getBoolean("snowfall_enabled", false);
-            navigationView.getMenu().getItem(2).setVisible(false);
-            navigationView.getMenu().getItem(3).setVisible(false);
-            navigationView.getMenu().getItem(4).setVisible(false);
-            if (model.equals("catfish") || model.equals("catshark") || model.equals("catshark-4g")) navigationView.getMenu().getItem(8).setVisible(false);
-            navigationView.getMenu().getItem(9).setVisible(false);
-            navigationView.getMenu().getItem(14).setVisible(false);
-            navigationView.getMenu().getItem(16).setVisible(false);
-            navigationView.getMenu().getItem(17).setVisible(false);
-            navigationView.getMenu().getItem(19).setVisible(false);
-            navigationView.getMenu().getItem(20).setVisible(false);
-            navigationView.getMenu().getItem(21).setVisible(false);
-            navigationView.getMenu().getItem(22).setVisible(false);
-            navigationView.getMenu().getItem(23).setVisible(false);
-            navigationView.getMenu().getItem(24).setVisible(false);
+
+            // Safe index-based hiding
+            hideMenuItemIfExists(2);
+            hideMenuItemIfExists(3);
+            hideMenuItemIfExists(4);
+            if (model.equals("catfish") || model.equals("catshark") || model.equals("catshark-4g")) hideMenuItemIfExists(8);
+            hideMenuItemIfExists(9);
+            hideMenuItemIfExists(14);
+            hideMenuItemIfExists(16);
+            hideMenuItemIfExists(17);
+            hideMenuItemIfExists(19);
+            hideMenuItemIfExists(20);
+            hideMenuItemIfExists(21);
+            hideMenuItemIfExists(22);
+            hideMenuItemIfExists(23);
         } else {
             snowfall = prefs.getBoolean("snowfall_enabled", true);
         }
 
-        // Snowfall
         View SnowfallView = findViewById(R.id.snowfall);
-        if (snowfall) SnowfallView.setVisibility(View.VISIBLE);
-        else SnowfallView.setVisibility(View.GONE);
+        if (SnowfallView != null) {
+            SnowfallView.setVisibility(snowfall ? View.VISIBLE : View.GONE);
+        }
 
         // Disable USB arsenal for devices without ConfigFS support
-        if (!new File("/config/usb_gadget/g1").exists())
-            navigationView.getMenu().getItem(7).setVisible(false);
+        if (!new File("/config/usb_gadget/g1").exists()) {
+            Menu menu = navigationView.getMenu();
+            if (menu.size() > 7) {
+                menu.getItem(7).setVisible(false);
+            }
+        }
+
+        // Header
         LayoutInflater inflater = (LayoutInflater) getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         LinearLayout navigationHeadView = (LinearLayout) inflater.inflate(R.layout.sidenav_header, navigationView, false);
         navigationView.addHeaderView(navigationHeadView);
 
         FloatingActionButton readmeButton = navigationHeadView.findViewById(R.id.info_fab);
-        readmeButton.setOnClickListener(v -> showLicense());
+        if (readmeButton != null) {
+            readmeButton.setOnClickListener(v -> showLicense());
+        }
 
-        // Moved build info to the menu
+        // Build info
         final String buildTime = SDF.format(BuildConfig.BUILD_TIME);
         TextView buildInfo1 = navigationHeadView.findViewById(R.id.buildinfo1);
         TextView buildInfo2 = navigationHeadView.findViewById(R.id.buildinfo2);
-        buildInfo1.setText(String.format("Version: %s (%s)", BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE));
-        buildInfo2.setText(String.format("Date: %s", buildTime));
+        if (buildInfo1 != null) buildInfo1.setText(String.format("Version: %s (%s)", BuildConfig.VERSION_NAME, BuildConfig.VERSION_CODE));
+        if (buildInfo2 != null) buildInfo2.setText(String.format("Date: %s", buildTime));
 
         setupDrawerContent(navigationView);
-
-        getWindow().setStatusBarColor(ContextCompat.getColor(this, R.color.darkTitle));
 
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, NetHunterFragment.newInstance(R.id.nethunter_item))
                 .commit();
 
-        // Push the first menu item's title to the stack
-        MenuItem firstMenuItem = navigationView.getMenu().getItem(0);
-        if (firstMenuItem != null) {
-            titles.push(Objects.requireNonNull(firstMenuItem.getTitle()).toString());
+        // First menu item title
+        Menu nvMenu = navigationView.getMenu();
+        if (nvMenu.size() > 0) {
+            MenuItem firstMenuItem = nvMenu.getItem(0);
+            if (firstMenuItem != null && firstMenuItem.getTitle() != null) {
+                titles.push(firstMenuItem.getTitle().toString());
+            }
         }
 
-        // Enable the menu group for chroot-dependent items
+        // Enable chroot-dependent group
         navigationView.getMenu().setGroupEnabled(R.id.chrootDependentGroup, true);
 
-        // Open the navigation drawer if it hasn't been seen before
+        // Open drawer on first launch
         boolean seenNav = prefs.getBoolean("seenNav", false);
         if (!seenNav) {
-            // open the navigation drawer here
             mDrawerLayout.openDrawer(GravityCompat.START);
             prefs.edit().putBoolean("seenNav", true).apply();
         }
 
-        if (lastSelectedMenuItem == null) {
-            lastSelectedMenuItem = navigationView.getMenu().getItem(0);
-            lastSelectedMenuItem.setChecked(true);
+        if (lastSelectedMenuItem == null && nvMenu.size() > 0) {
+            lastSelectedMenuItem = nvMenu.getItem(0);
+            if (lastSelectedMenuItem != null) lastSelectedMenuItem.setChecked(true);
         }
 
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_opened, R.string.drawer_closed);
         mDrawerLayout.addDrawerListener(mDrawerToggle);
         mDrawerToggle.syncState();
+
         startService(new Intent(getApplicationContext(), CompatCheckService.class));
 
         if (desiredFragment != -1) {
@@ -492,7 +532,6 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
     }
 
     private void showLicense() {
-        // @binkybear here goes the changelog etc... \n\n%s
         String readmeData = String.format("%s\n\n%s\n\n%s",
                 getResources().getString(R.string.licenseInfo),
                 getResources().getString(R.string.nhwarning),
@@ -500,11 +539,14 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         final SpannableString readmeText = new SpannableString(readmeData);
         Linkify.addLinks(readmeText, Linkify.WEB_URLS);
 
-        MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(this, R.style.DialogStyle);
+        // Ensure a MaterialComponents overlay is applied
+        Context themed = new ContextThemeWrapper(this, com.google.android.material.R.style.ThemeOverlay_Material3_MaterialAlertDialog);
+
+        MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(themed, R.style.DialogStyle);
         adb.setTitle("README INFO")
-                .setMessage(readmeText);
-        adb.setNegativeButton("Cancel", (dialog, id) -> dialog.cancel());
-        adb.setCancelable(true);
+                .setMessage(readmeText)
+                .setNegativeButton("Cancel", (dialog, id) -> dialog.cancel())
+                .setCancelable(true);
 
         AlertDialog ad = adb.create();
         ad.setCancelable(false);
@@ -512,7 +554,10 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
             ad.getWindow().getAttributes().windowAnimations = R.style.DialogStyle;
         }
         ad.show();
-        ((TextView) Objects.requireNonNull(ad.findViewById(android.R.id.message))).setMovementMethod(LinkMovementMethod.getInstance());
+        TextView msg = ad.findViewById(android.R.id.message);
+        if (msg != null) {
+            msg.setMovementMethod(LinkMovementMethod.getInstance());
+        }
     }
 
     private void setupDrawerContent(NavigationView navigationView) {
