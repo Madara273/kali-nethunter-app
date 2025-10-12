@@ -40,6 +40,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <!-- FOR API 34+ (Android 14), use specific FGS permission for media playback -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <!-- FOR API 34+ (Android 14), use specific FGS permission for location services -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"

@@ -10,6 +10,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ServiceInfo;
 import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationManager;
@@ -236,7 +237,7 @@ public class LocationUpdateService extends Service {
                 .build();
 
         //Log.d(TAG, "Requesting permissions ..");
-        if (PermissionCheck.hasPermissions(this, new String[]{
+        if (!PermissionCheck.hasPermissions(this, new String[]{
                 Manifest.permission.ACCESS_FINE_LOCATION,
                 Manifest.permission.ACCESS_COARSE_LOCATION
         })) {
@@ -300,7 +301,12 @@ public class LocationUpdateService extends Service {
         }
         notificationManagerCompat.notify(NOTIFY_ID, notification);
 
-        this.startForeground(NOTIFY_ID, notification);
+        // Use typed startForeground on API 29+ to satisfy FGS type requirements
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            this.startForeground(NOTIFY_ID, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_LOCATION);
+        } else {
+            this.startForeground(NOTIFY_ID, notification);
+        }
         // start a timer that will update our Notification every second
         //Log.d(TAG, "starting Notification Update Timer");
         startTimers();
