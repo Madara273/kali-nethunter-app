@@ -128,6 +128,7 @@ dependencies {
     implementation 'com.google.android.material:material:1.13.0'
     implementation 'androidx.preference:preference:1.2.1'
     implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.2.20'
+    implementation 'androidx.viewpager2:viewpager2:1.1.0'
     // Snowfall
     implementation 'com.github.jetradarmobile:android-snowfall:1.2.1'
     implementation 'androidx.navigation:navigation-runtime:2.9.5'

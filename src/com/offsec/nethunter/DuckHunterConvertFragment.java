@@ -21,6 +21,8 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -43,12 +45,34 @@ public class DuckHunterConvertFragment extends Fragment implements View.OnClickL
     private static final String TAG = "DuckHunterConvert";
     private final String duckyInputFile;
     private static final String loadFilePath = "/scripts/ducky/";
-    private static final int PICKFILE_RESULT_CODE = 1;
     private Context context;
     private Activity activity;
     private boolean isReceiverRegistered;
     private EditText editsource;
     private final ConvertDuckyBroadcastReceiver convertDuckyBroadcastReceiver = new ConvertDuckyBroadcastReceiver();
+
+    // Activity Result launcher for picking files
+    private final ActivityResultLauncher<Intent> pickFileLauncher =
+            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null && getView() != null) {
+                    Intent data = result.getData();
+                    String FilePath = Objects.requireNonNull(data.getData()).getPath();
+                    EditText editsource = getView().findViewById(R.id.editSource);
+                    try {
+                        StringBuilder text = new StringBuilder();
+                        BufferedReader br = new BufferedReader(new FileReader(FilePath));
+                        String line;
+                        while ((line = br.readLine()) != null) {
+                            text.append(line).append('\n');
+                        }
+                        br.close();
+                        editsource.setText(text.toString());
+                        NhPaths.showMessage(context, "Script loaded");
+                    } catch (Exception e) {
+                        NhPaths.showMessage(context, e.getMessage());
+                    }
+                }
+            });
 
     public DuckHunterConvertFragment(String inFilePath) {
         this.duckyInputFile = inFilePath;
@@ -144,32 +168,6 @@ public class DuckHunterConvertFragment extends Fragment implements View.OnClickL
         editsource = null;
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == PICKFILE_RESULT_CODE) {
-            if (resultCode == Activity.RESULT_OK) {
-                if (getView() == null) {
-                    return;
-                }
-                String FilePath = Objects.requireNonNull(data.getData()).getPath();
-                EditText editsource = getView().findViewById(R.id.editSource);
-                try {
-                    StringBuilder text = new StringBuilder();
-                    BufferedReader br = new BufferedReader(new FileReader(FilePath));
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        text.append(line).append('\n');
-                    }
-                    br.close();
-                    editsource.setText(text.toString());
-                    NhPaths.showMessage(context, "Script loaded");
-                } catch (Exception e) {
-                    NhPaths.showMessage(context, e.getMessage());
-                }
-            }
-        }
-    }
-
     private void getPreset(String filename) {
         if (getView() == null) {
             return;
@@ -233,7 +231,7 @@ public class DuckHunterConvertFragment extends Fragment implements View.OnClickL
             Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
             Uri selectedUri = Uri.parse(NhPaths.APP_SD_FILES_PATH + loadFilePath);
             intent.setDataAndType(selectedUri, "file/*");
-            startActivityForResult(intent, PICKFILE_RESULT_CODE);
+            pickFileLauncher.launch(intent);
         } else if (id == R.id.duckySave) {
             try {
                 File scriptsDir = new File(NhPaths.APP_SD_FILES_PATH, loadFilePath);

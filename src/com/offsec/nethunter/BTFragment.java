@@ -13,7 +13,6 @@ import android.media.AudioTrack;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -40,10 +39,8 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.MenuHost;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
 import androidx.lifecycle.Lifecycle;
-import androidx.viewpager.widget.ViewPager;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.offsec.nethunter.bridge.Bridge;
@@ -61,7 +58,11 @@ import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.Executors;
 import java.util.ArrayList;
-import java.util.Objects;
+import android.net.Uri;
+
+import androidx.viewpager2.adapter.FragmentStateAdapter;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
 public class BTFragment extends Fragment {
     private SharedPreferences sharedpreferences;
@@ -106,17 +107,29 @@ public class BTFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.bt, container, false);
-        TabsPagerAdapter tabsPagerAdapter = new TabsPagerAdapter(getChildFragmentManager());
+        TabsPagerAdapter tabsPagerAdapter = new TabsPagerAdapter(this);
 
-        ViewPager mViewPager = rootView.findViewById(R.id.pagerBt);
+        ViewPager2 mViewPager = rootView.findViewById(R.id.pagerBt);
         mViewPager.setAdapter(tabsPagerAdapter);
         mViewPager.setOffscreenPageLimit(4);
-        mViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
+        mViewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
+                super.onPageSelected(position);
                 activity.invalidateOptionsMenu();
             }
         });
+        TabLayout tabLayout = rootView.findViewById(R.id.tabLayoutBt);
+        new TabLayoutMediator(tabLayout, mViewPager, (tab, position) -> {
+            switch (position) {
+                case 0: tab.setText("Main Page"); break;
+                case 1: tab.setText("Tools"); break;
+                case 2: tab.setText("Spoof"); break;
+                case 3: tab.setText("Carwhisperer"); break;
+                case 4: tab.setText("Bad Bluetooth"); break;
+                default: tab.setText("");
+            }
+        }).attach();
         if (activity != null) {
             sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         }
@@ -248,15 +261,15 @@ public class BTFragment extends Fragment {
         sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
     }
 
-    public static class TabsPagerAdapter extends FragmentPagerAdapter {
-        TabsPagerAdapter(FragmentManager fm) {
-            super(fm);
+    public static class TabsPagerAdapter extends FragmentStateAdapter {
+        TabsPagerAdapter(@NonNull Fragment fragment) {
+            super(fragment);
         }
 
         @NonNull
         @Override
-        public Fragment getItem(int i) {
-            switch (i) {
+        public Fragment createFragment(int position) {
+            switch (position) {
                 case 0:
                     return new MainFragment();
                 case 1:
@@ -271,31 +284,8 @@ public class BTFragment extends Fragment {
         }
 
         @Override
-        public Parcelable saveState() {
-            return null;
-        }
-
-        @Override
-        public int getCount() {
+        public int getItemCount() {
             return 5;
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            switch (position) {
-                case 4:
-                    return "Bad Bluetooth";
-                case 3:
-                    return "Carwhisperer";
-                case 2:
-                    return "Spoof";
-                case 1:
-                    return "Tools";
-                case 0:
-                    return "Main Page";
-                default:
-                    return "";
-            }
         }
     }
 
@@ -867,6 +857,23 @@ public class BTFragment extends Fragment {
         private static final String TTS_DIRECTORY = NhPaths.SD_PATH + "/nh_files/CarWhisperer/TTS";
         private static final String TTS_TEMP_FILE = "/root/tts_output.wav";
 
+        // Register activity result launcher for picking audio files
+        private final ActivityResultLauncher<Intent> audioPickerLauncher =
+                registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null && getView() != null) {
+                        Intent data = result.getData();
+                        Uri uri = data.getData();
+                        if (uri != null) {
+                            String filePath = uri.getPath();
+                            if (filePath != null) {
+                                filePath = filePath.replace("/document/primary:", NhPaths.SD_PATH);
+                                EditText injectfilename = getView().findViewById(R.id.injectfilename);
+                                if (injectfilename != null) injectfilename.setText(filePath);
+                            }
+                        }
+                    }
+                });
+
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -877,21 +884,6 @@ public class BTFragment extends Fragment {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.bt_carwhisperer, container, false);
-
-            SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-
-            final TextView CWdesc = rootView.findViewById(R.id.carwhisp_desc);
-            Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
-            if (iswatch) {
-                CWdesc.setVisibility(View.GONE);
-            }
-
-            // Selected iface
-            final EditText cw_interface = rootView.findViewById(R.id.hci_interface);
-
-            // Target address
-            final EditText cw_address = rootView.findViewById(R.id.hci_address);
-            
             // TTS Fields
             final Spinner ttsDropdown = rootView.findViewById(R.id.tts_message_dropdown);
             Spinner ttsVoiceSpinner = rootView.findViewById(R.id.tts_voice_spinner);
@@ -905,33 +897,14 @@ public class BTFragment extends Fragment {
             // Create TTS output directory
             new File(TTS_DIRECTORY).mkdirs();
 
+            // Selected iface
+            final EditText cw_interface = rootView.findViewById(R.id.hci_interface);
+
+            // Target address
+            final EditText cw_address = rootView.findViewById(R.id.hci_address);
+
             // Set target
             Button SetTarget = rootView.findViewById(R.id.set_target);
-
-            // Populate dropdown
-            String[] ttsOptions = getResources().getStringArray(R.array.tts_phrases);
-            ArrayAdapter<String> ttsAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, ttsOptions);
-            ttsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            ttsDropdown.setAdapter(ttsAdapter);
-
-            // Handle selection
-            ttsDropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    String selected = ttsOptions[position];
-                    if ("Custom TTS message".equals(selected)) {
-                        ttsInput.setVisibility(View.VISIBLE);
-                    } else {
-                        ttsInput.setVisibility(View.GONE);
-                    }
-                }
-
-                @Override
-                public void onNothingSelected(AdapterView<?> parent) {
-                    ttsInput.setVisibility(View.GONE);
-                }
-            });
-
             SetTarget.setOnClickListener( v -> {
                 String selected_address = PreferencesData.getString(context, "selected_address", "");
                 cw_address.setText(selected_address);
@@ -962,14 +935,37 @@ public class BTFragment extends Fragment {
             // Injecting
             final EditText injectfilename = rootView.findViewById(R.id.injectfilename);
             final Button injectfilebrowse = rootView.findViewById(R.id.injectfilebrowse);
-
             injectfilebrowse.setOnClickListener( v -> {
                 Intent intent = new Intent();
                 intent.addCategory(Intent.CATEGORY_OPENABLE);
                 intent.setType("audio/*");
                 intent.setAction(Intent.ACTION_GET_CONTENT);
-                startActivityForResult(Intent.createChooser(intent, "Select audio file"),1001);
-                });
+                audioPickerLauncher.launch(Intent.createChooser(intent, "Select audio file"));
+            });
+
+            // Populate TTS dropdown
+            String[] ttsOptions = getResources().getStringArray(R.array.tts_phrases);
+            ArrayAdapter<String> ttsAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, ttsOptions);
+            ttsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            ttsDropdown.setAdapter(ttsAdapter);
+
+            // Handle TTS selection
+            ttsDropdown.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+                @Override
+                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                    String selected = ttsOptions[position];
+                    if ("Custom TTS message".equals(selected)) {
+                        ttsInput.setVisibility(View.VISIBLE);
+                    } else {
+                        ttsInput.setVisibility(View.GONE);
+                    }
+                }
+
+                @Override
+                public void onNothingSelected(AdapterView<?> parent) {
+                    ttsInput.setVisibility(View.GONE);
+                }
+            });
 
             // Text-to-Speech Generation
             ttsGenerate.setOnClickListener(v -> {
@@ -1035,13 +1031,6 @@ public class BTFragment extends Fragment {
                     Toast.makeText(requireActivity().getApplicationContext(), "No target address!", Toast.LENGTH_SHORT).show();
             });
 
-            // Kill
-            Button StopCWButton = rootView.findViewById(R.id.stop_cw);
-            StopCWButton.setOnClickListener( v -> {
-                    exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd pkill carwhisperer"});
-                    Toast.makeText(requireActivity().getApplicationContext(), "Killed", Toast.LENGTH_SHORT).show();
-                    });
-
             // Stream or play audio
             ImageButton PlayAudioButton = rootView.findViewById(R.id.play_audio);
             ImageButton StopAudioButton = rootView.findViewById(R.id.stop_audio);
@@ -1097,6 +1086,7 @@ public class BTFragment extends Fragment {
                         audioTrack.pause();
                         audioTrack.flush();
             });
+
             return rootView;
         }
     }
@@ -1111,6 +1101,25 @@ public class BTFragment extends Fragment {
         String prefixCMD = "";
         String uacCMD = "";
         final ShellExecuter exe = new ShellExecuter();
+
+        // Register activity result launcher for picking text files
+        private final ActivityResultLauncher<Intent> textPickerLauncher =
+                registerForActivityResult(new ActivityResultContracts.StartActivityForResult(), result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null && getView() != null) {
+                        Intent data = result.getData();
+                        Uri uri = data.getData();
+                        if (uri != null) {
+                            String filePath = uri.getPath();
+                            if (filePath != null) {
+                                filePath = filePath.replace("/document/primary:", NhPaths.SD_PATH);
+                                // Read file content via existing shell approach
+                                String fileContent = exe.RunAsRootOutput("cat " + filePath);
+                                EditText badbtstring = getView().findViewById(R.id.editBadBT);
+                                if (badbtstring != null) badbtstring.setText(fileContent);
+                            }
+                        }
+                    }
+                });
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -1344,7 +1353,7 @@ public class BTFragment extends Fragment {
 
             // Presets
             Spinner badbtpresets = rootView.findViewById(R.id.badbtpresets);
-            EditText badbtstring = rootView.findViewById(R.id.editBadBT);
+            // Removed duplicate lookup: use existing badbt_string instead of re-finding editBadBT
             final ArrayList<String> presets = new ArrayList<>();
             presets.add("Rickroll");
             presets.add("Fake Windows Update");
@@ -1356,13 +1365,13 @@ public class BTFragment extends Fragment {
                     selected_preset = parentView.getItemAtPosition(pos).toString();
                     switch (selected_preset) {
                         case "Rickroll":
-                            badbtstring.setText(R.string.bt_badbt_string_rickroll);
+                            badbt_string.setText(R.string.bt_badbt_string_rickroll);
                             break;
                         case "Fake Windows Update":
-                            badbtstring.setText(R.string.bt_badbt_string_fakeupdate);
+                            badbt_string.setText(R.string.bt_badbt_string_fakeupdate);
                             break;
                         case "None":
-                            badbtstring.setText("");
+                            badbt_string.setText("");
                             break;
                     }
                 }
@@ -1418,7 +1427,7 @@ public class BTFragment extends Fragment {
                 intent2.addCategory(Intent.CATEGORY_OPENABLE);
                 intent2.setType("text/*");
                 intent2.setAction(Intent.ACTION_GET_CONTENT);
-                startActivityForResult(Intent.createChooser(intent2, "Select text file"),1002);
+                textPickerLauncher.launch(Intent.createChooser(intent2, "Select text file"));
             });
 
             // Start
@@ -1466,27 +1475,6 @@ public class BTFragment extends Fragment {
         }
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == 1001 && resultCode == Activity.RESULT_OK) {
-            EditText injectfilename = requireActivity().findViewById(R.id.injectfilename);
-            String FilePath = Objects.requireNonNull(data.getData()).getPath();
-            assert FilePath != null;
-            FilePath = FilePath.replace("/document/primary:", NhPaths.SD_PATH);
-            injectfilename.setText(FilePath);
-        }
-        if (requestCode == 1002 && resultCode == Activity.RESULT_OK) {
-            EditText badbtstring = requireActivity().findViewById(R.id.editBadBT);
-            String FilePath = Objects.requireNonNull(data.getData()).getPath();
-            assert FilePath != null;
-            FilePath = FilePath.replace("/document/primary:", NhPaths.SD_PATH);
-            final ShellExecuter exe = new ShellExecuter();
-            String fileContent = exe.RunAsRootOutput("cat " + FilePath);
-            badbtstring.setText(fileContent);
-        }
-    }
-
     public static class PreferencesData {
         public static void saveString(Context context, String key, String value) {
             if (context != null) {
@@ -1513,3 +1501,4 @@ public class BTFragment extends Fragment {
         activity.startActivity(intent);
     }
 }
+

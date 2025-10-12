@@ -163,16 +163,6 @@ public class BtDuckyFragment extends BTFragment {
                 }
             });
 
-    private final ActivityResultLauncher<String> createFileLauncher =
-            registerForActivityResult(
-                    new ActivityResultContracts.CreateDocument("text/plain"),
-                    uri -> {
-                        if (uri != null) {
-                            saveContentToFile(uri);
-                            Toast.makeText(requireContext(), "File saved", Toast.LENGTH_SHORT).show();
-                        }
-                    });
-
     private void openFile() {
         openFileLauncher.launch(new String[]{"*/*"});
     }
