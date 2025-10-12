@@ -360,8 +360,8 @@ public class SettingsFragment extends Fragment {
             screen_height = windowMetrics.getBounds().height();
             screen_width = windowMetrics.getBounds().width();
         } else {
-            DisplayMetrics displaymetrics = new DisplayMetrics();
-            wm.getDefaultDisplay().getMetrics(displaymetrics);
+            // Use Resources display metrics for legacy devices to avoid deprecated Display APIs
+            DisplayMetrics displaymetrics = getResources().getDisplayMetrics();
             screen_height = displaymetrics.heightPixels;
             screen_width = displaymetrics.widthPixels;
         }
@@ -693,3 +693,4 @@ public class SettingsFragment extends Fragment {
         activity.startActivity(intent);
     }
 }
+
