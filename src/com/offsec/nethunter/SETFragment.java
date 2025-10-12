@@ -10,7 +10,9 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebSettings;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
@@ -32,6 +34,7 @@ import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
+import java.io.File;
 import java.text.MessageFormat;
 
 public class SETFragment extends Fragment {
@@ -164,6 +167,19 @@ public class SETFragment extends Fragment {
 
             // Select Template
             WebView myBrowser = rootView.findViewById(R.id.mybrowser);
+            // Configure WebView for local file preview
+            WebSettings ws = myBrowser.getSettings();
+            ws.setAllowFileAccess(true);
+            ws.setAllowContentAccess(true);
+            ws.setDomStorageEnabled(true);
+            ws.setLoadsImagesAutomatically(true);
+            ws.setJavaScriptEnabled(true);
+            // Allow file URL access to other file URLs and universal access (needed for local assets and any http deps)
+            ws.setAllowFileAccessFromFileURLs(true);
+            ws.setAllowUniversalAccessFromFileURLs(true);
+            ws.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+            myBrowser.setWebViewClient(new WebViewClient());
+
             template_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
@@ -186,7 +202,15 @@ public class SETFragment extends Fragment {
                             break;
                     }
                     myBrowser.clearCache(true);
-                    myBrowser.loadUrl(template_src);
+                    // Prefer external storage file; if not readable (scoped storage), fall back to bundled asset
+                    File f = new File(template_src);
+                    if (f.canRead()) {
+                        myBrowser.loadUrl("file://" + template_src);
+                    } else {
+                        String assetPath = "file:///android_asset/nh_files/configs/" + template_tempfile;
+                        myBrowser.loadUrl(assetPath);
+                        Toast.makeText(requireContext(), "Previewing bundled template (no external storage access)", Toast.LENGTH_SHORT).show();
+                    }
                 }
                 @Override
                 public void onNothingSelected(AdapterView<?> parentView) {
@@ -204,13 +228,13 @@ public class SETFragment extends Fragment {
             // Reset Template
             ResetTemplate.setOnClickListener(v -> {
                 myBrowser.clearCache(true);
-                myBrowser.loadUrl(template_src);
+                myBrowser.loadUrl("file://" + template_src);
             });
 
             // Save Template
             SaveTemplate.setOnClickListener(v -> {
                 refresh(rootView);
-                final String template_path = NhPaths.SD_PATH + template_tempfile;
+                final String template_path = NhPaths.SD_PATH + "/" + template_tempfile;
                 String template_final = "/root/setoolkit/src/templates/" + selected_template + ".template";
                 String phish_subject = PhishSubject.getText().toString();
                 exe.RunAsChrootOutput("echo 'SUBJECT=\"" + phish_subject + "\"' > " + template_final + " && echo 'HTML=\"' >> " + template_final +
@@ -253,7 +277,7 @@ public class SETFragment extends Fragment {
 
             if (!phish_link.isEmpty()) {
                 if (phish_link.contains("&")) phish_link = exe.RunAsRootOutput("sed 's/\\&/\\\\\\&/g' <<< \"" + phish_link + "\"");
-                phish_link = exe.RunAsRootOutput("sed 's|\\/|\\\\\\/|g' <<< \"" + phish_link + "\"");
+                phish_link = exe.RunAsRootOutput("sed 's|/|\\\\/|g' <<< \"" + phish_link + "\"");
                 exe.RunAsRoot(new String[]{"sed -i 's/https\\:\\/\\/www.google.com/" + phish_link + "/g' " + template_path});
             }
             if (!phish_name.isEmpty()) exe.RunAsRoot(new String[]{"sed -i 's/E Corp/" + phish_name + "/g' " + template_path});
@@ -262,7 +286,7 @@ public class SETFragment extends Fragment {
                 exe.RunAsRoot(new String[]{"sed -i \"s|id=\\\"set\\\".*|id=\\\"set\\\" src=\\\"" + phish_pic + "\\\" width=\\\"72\\\">|\" " + template_path});
             }
             myBrowser.clearCache(true);
-            myBrowser.loadUrl(template_path);
+            myBrowser.loadUrl("file://" + template_path);
         }
     }
 
