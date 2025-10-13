@@ -8,10 +8,12 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.OpenableColumns;
 import android.text.method.ScrollingMovementMethod;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -37,13 +39,16 @@ import com.offsec.nethunter.utils.SharePrefTag;
 import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
+import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -76,6 +81,7 @@ public class ChrootManagerFragment extends Fragment {
     private Button addMetaPkgButton;
     private Button removeChrootButton;
     private Button backupChrootButton;
+    private Button restoreChrootButton;
     private LinearLayout ChrootDesc;
     private ProgressBar taskProgressBar;
     private static SharedPreferences sharedPreferences;
@@ -86,6 +92,33 @@ public class ChrootManagerFragment extends Fragment {
     public static boolean isExecutorRunning = false;
     private Context context;
     private Activity activity;
+    private ActivityResultLauncher<Intent> restorePickerLauncher;
+    private int currentChrootState = NEED_TO_INSTALL;
+
+    // Helper: ensure /sdcard/nh_files and /sdcard/nh_files/backups exist
+    private boolean ensureNhFilesAndBackupDir() {
+        try {
+            File nh = new File(NhPaths.APP_SD_FILES_PATH);
+            File backups = new File(NhPaths.APP_NHFILES_BACKUP_PATH);
+            boolean okNh = nh.exists() || nh.mkdirs();
+            boolean okBk = backups.exists() || backups.mkdirs();
+            if (!okNh || !okBk) {
+                if (context != null) {
+                    NhPaths.showMessage(context, "Unable to access: " + backups.getAbsolutePath());
+                }
+                return false;
+            }
+            return true;
+        } catch (Throwable t) {
+            if (context != null) NhPaths.showMessage(context, "Storage error: " + t.getMessage());
+            return false;
+        }
+    }
+
+    private String defaultBackupFilename() {
+        String ts = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
+        return "kali-chroot-backup-" + ts + ".tar.xz";
+    }
 
     public static ChrootManagerFragment newInstance(int sectionNumber) {
         ChrootManagerFragment fragment = new ChrootManagerFragment();
@@ -119,6 +152,7 @@ public class ChrootManagerFragment extends Fragment {
         addMetaPkgButton = rootView.findViewById(R.id.f_chrootmanager_addmetapkg_btn);
         removeChrootButton = rootView.findViewById(R.id.f_chrootmanager_removechroot_btn);
         backupChrootButton = rootView.findViewById(R.id.f_chrootmanager_backupchroot_btn);
+        restoreChrootButton = rootView.findViewById(R.id.f_chrootmanager_restorechroot_btn);
         taskProgressBar = rootView.findViewById(R.id.f_chrootmanager_progress); // Init
 
         return rootView;
@@ -142,6 +176,7 @@ public class ChrootManagerFragment extends Fragment {
         setRemoveChrootButton();
         setAddMetaPkgButton();
         setBackupChrootButton();
+        setRestoreChrootButton();
 
         if (activity != null) {
             SharedPreferences sp = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
@@ -153,52 +188,57 @@ public class ChrootManagerFragment extends Fragment {
         // Add overflow menu with "Check Encryption"
         addOverflowMenu();
 
-        registerForActivityResult(
+        restorePickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
                         Uri fileUri = result.getData().getData();
                         if (context != null && fileUri != null) {
-                            File outFile = new File(context.getFilesDir(), "restore.tar.xz");
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                                try (InputStream in = context.getContentResolver().openInputStream(fileUri);
-                                     OutputStream out = Files.newOutputStream(outFile.toPath())) {
-                                    byte[] buf = new byte[4096];
-                                    int r;
-                                    long total = 0;
-                                    while (in != null && (r = in.read(buf)) != -1) {
-                                        out.write(buf, 0, r);
-                                        total += r;
-                                    }
-                                    if (total == 0) {
-                                        NhPaths.showMessage(context, "Copied file is empty.");
-                                        return;
-                                    }
-                                    if (sharedPreferences != null) {
-                                        sharedPreferences.edit().putString(SharePrefTag.CHROOT_DEFAULT_BACKUP_SHAREPREF_TAG, outFile.getAbsolutePath()).apply();
-                                    }
-                                    chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.INSTALL_CHROOT);
-                                    chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
-                                        @Override public void onExecutorPrepare() {
-                                            showProgress(-1);
-                                            broadcastBackPressedIntent(false);
-                                            setAllButtonEnable(false);
-                                        }
-                                        @Override public void onExecutorProgressUpdate(int progress) {
-                                            showProgress(progress);
-                                        }
-                                        @Override public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
-                                            hideProgress();
-                                            broadcastBackPressedIntent(true);
-                                            setAllButtonEnable(true);
-                                            compatCheck();
-                                        }
-                                    });
-                                    resultViewerLoggerTextView.setText("");
-                                    chrootManagerExecutor.execute(resultViewerLoggerTextView, outFile.getAbsolutePath(), NhPaths.CHROOT_PATH());
-                                } catch (IOException e) {
-                                    NhPaths.showMessage(context, "Failed: " + e.getMessage());
+                            String pickedName = getDisplayNameFromUri(context, fileUri);
+                            if (pickedName == null || !(pickedName.endsWith(".tar.xz") || pickedName.endsWith(".tar.gz"))) {
+                                NhPaths.showMessage(context, "Please select a .tar.xz or .tar.gz archive.");
+                                return;
+                            }
+                            // Ensure external folders exist first
+                            if (!ensureNhFilesAndBackupDir()) return;
+                            File outFile = new File(NhPaths.APP_NHFILES_BACKUP_PATH, pickedName);
+                            try (InputStream in = context.getContentResolver().openInputStream(fileUri);
+                                 OutputStream out = new FileOutputStream(outFile)) {
+                                byte[] buf = new byte[8192];
+                                int r;
+                                long total = 0;
+                                while (in != null && (r = in.read(buf)) != -1) {
+                                    out.write(buf, 0, r);
+                                    total += r;
                                 }
+                                if (total == 0) {
+                                    NhPaths.showMessage(context, "Copied file is empty.");
+                                    return;
+                                }
+                                if (sharedPreferences != null) {
+                                    sharedPreferences.edit().putString(SharePrefTag.CHROOT_DEFAULT_BACKUP_SHAREPREF_TAG, outFile.getAbsolutePath()).apply();
+                                }
+                                chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.INSTALL_CHROOT);
+                                chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
+                                    @Override public void onExecutorPrepare() {
+                                        showProgress(-1);
+                                        broadcastBackPressedIntent(false);
+                                        setAllButtonEnable(false);
+                                    }
+                                    @Override public void onExecutorProgressUpdate(int progress) {
+                                        showProgress(progress);
+                                    }
+                                    @Override public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
+                                        hideProgress();
+                                        broadcastBackPressedIntent(true);
+                                        setAllButtonEnable(true);
+                                        compatCheck();
+                                    }
+                                });
+                                resultViewerLoggerTextView.setText("");
+                                chrootManagerExecutor.execute(resultViewerLoggerTextView, outFile.getAbsolutePath(), NhPaths.CHROOT_PATH());
+                            } catch (IOException e) {
+                                NhPaths.showMessage(context, "Failed: " + e.getMessage());
                             }
                         }
                     }
@@ -217,10 +257,23 @@ public class ChrootManagerFragment extends Fragment {
             @Override public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
                 menuInflater.inflate(R.menu.chroot_manager, menu);
             }
+            @Override public void onPrepareMenu(@NonNull Menu menu) {
+                boolean isRunning = currentChrootState == IS_MOUNTED;
+                MenuItem backup = menu.findItem(R.id.menu_backup_chroot);
+                MenuItem restore = menu.findItem(R.id.menu_restore_chroot);
+                if (backup != null) backup.setEnabled(!isRunning);
+                if (restore != null) restore.setEnabled(!isRunning);
+            }
             @Override public boolean onMenuItemSelected(@NonNull MenuItem menuItem) {
                 int id = menuItem.getItemId();
                 if (id == R.id.menu_check_encryption) {
                     showEncryptionStatusDialog();
+                    return true;
+                } else if (id == R.id.menu_backup_chroot) {
+                    if (backupChrootButton != null) backupChrootButton.performClick();
+                    return true;
+                } else if (id == R.id.menu_restore_chroot) {
+                    if (restoreChrootButton != null) restoreChrootButton.performClick();
                     return true;
                 }
                 return false;
@@ -292,6 +345,7 @@ public class ChrootManagerFragment extends Fragment {
         addMetaPkgButton = null;
         removeChrootButton = null;
         backupChrootButton = null;
+        restoreChrootButton = null;
         taskProgressBar = null;
         chrootManagerExecutor = null;
     }
@@ -423,7 +477,9 @@ public class ChrootManagerFragment extends Fragment {
                         String arch = getDeviceArch();
                         String type = (which == 0) ? "minimal" : "full";
                         String fileName = "kali-nethunter-rootfs-" + type + "-" + arch + ".tar.xz";
-                        File downloadDir = context.getFilesDir();
+                        // Ensure backup dir exists, and use it as download destination
+                        if (!ensureNhFilesAndBackupDir()) return;
+                        File downloadDir = new File(NhPaths.APP_NHFILES_BACKUP_PATH);
                         File target = new File(downloadDir, fileName);
                         Runnable run = () -> startDownloadAndRestoreChroot(fileName, downloadDir, type, arch);
                         if (target.exists()) {
@@ -572,6 +628,8 @@ public class ChrootManagerFragment extends Fragment {
 
     private void setBackupChrootButton() {
         backupChrootButton.setOnClickListener(v -> {
+            // Ensure external folders exist first
+            if (!ensureNhFilesAndBackupDir()) return;
             AlertDialog ad = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat).create();
             EditText backupFullPathEditText = new EditText(activity);
             LinearLayout ll = new LinearLayout(activity);
@@ -584,9 +642,13 @@ public class ChrootManagerFragment extends Fragment {
             ad.setView(ll);
             ad.setTitle("Backup Chroot");
             ad.setMessage("Backup \"" + NhPaths.CHROOT_PATH() + "\" to:");
-            backupFullPathEditText.setText(sharedPreferences.getString(SharePrefTag.CHROOT_DEFAULT_BACKUP_SHAREPREF_TAG, ""));
+            // Default to /sdcard/nh_files/backups/<timestamped>.tar.xz
+            String defaultPath = new File(NhPaths.APP_NHFILES_BACKUP_PATH, defaultBackupFilename()).getAbsolutePath();
+            String last = sharedPreferences.getString(SharePrefTag.CHROOT_DEFAULT_BACKUP_SHAREPREF_TAG, defaultPath);
+            backupFullPathEditText.setText(last);
             ad.setButton(DialogInterface.BUTTON_POSITIVE, "OK", (dialogInterface, i) -> {
-                sharedPreferences.edit().putString(SharePrefTag.CHROOT_DEFAULT_BACKUP_SHAREPREF_TAG, backupFullPathEditText.getText().toString()).apply();
+                String out = backupFullPathEditText.getText().toString();
+                sharedPreferences.edit().putString(SharePrefTag.CHROOT_DEFAULT_BACKUP_SHAREPREF_TAG, out).apply();
                 Runnable runBackup = () -> {
                     chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.BACKUP_CHROOT);
                     chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
@@ -604,9 +666,9 @@ public class ChrootManagerFragment extends Fragment {
                         }
                     });
                     resultViewerLoggerTextView.setText("");
-                    chrootManagerExecutor.execute(resultViewerLoggerTextView, NhPaths.CHROOT_PATH(), backupFullPathEditText.getText().toString());
+                    chrootManagerExecutor.execute(resultViewerLoggerTextView, NhPaths.CHROOT_PATH(), out);
                 };
-                if (new File(backupFullPathEditText.getText().toString()).exists()) {
+                if (new File(out).exists()) {
                     AlertDialog overwrite = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
                             .setMessage("File exists. Overwrite?")
                             .setPositiveButton("YES",(d1,i1)-> runBackup.run())
@@ -636,10 +698,13 @@ public class ChrootManagerFragment extends Fragment {
             @Override public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
                 hideProgress();
                 broadcastBackPressedIntent(true);
+                currentChrootState = resultCode;
                 setButtonVisibility(resultCode);
                 setMountStatsTextView(resultCode);
                 setAllButtonEnable(true);
                 context.startService(new Intent(context, CompatCheckService.class).putExtra("RESULTCODE", resultCode));
+                // Refresh menu so Backup/Restore enabled state updates immediately
+                if (activity != null) activity.invalidateOptionsMenu();
             }
         });
         resultViewerLoggerTextView.setText("");
@@ -671,7 +736,9 @@ public class ChrootManagerFragment extends Fragment {
                 installChrootButton.setVisibility(View.GONE);
                 addMetaPkgButton.setVisibility(iswatch ? View.GONE : View.VISIBLE);
                 removeChrootButton.setVisibility(View.GONE);
-                backupChrootButton.setVisibility(View.GONE);
+                // Always keep backup/restore hidden; now accessible via menu
+                if (backupChrootButton != null) backupChrootButton.setVisibility(View.GONE);
+                if (restoreChrootButton != null) restoreChrootButton.setVisibility(View.GONE);
                 break;
             case IS_UNMOUNTED:
                 mountChrootButton.setVisibility(View.VISIBLE);
@@ -679,7 +746,8 @@ public class ChrootManagerFragment extends Fragment {
                 installChrootButton.setVisibility(View.GONE);
                 addMetaPkgButton.setVisibility(View.GONE);
                 removeChrootButton.setVisibility(View.VISIBLE);
-                backupChrootButton.setVisibility(View.VISIBLE);
+                if (backupChrootButton != null) backupChrootButton.setVisibility(View.GONE);
+                if (restoreChrootButton != null) restoreChrootButton.setVisibility(View.GONE);
                 break;
             case NEED_TO_INSTALL:
                 mountChrootButton.setVisibility(View.GONE);
@@ -687,7 +755,8 @@ public class ChrootManagerFragment extends Fragment {
                 installChrootButton.setVisibility(View.VISIBLE);
                 addMetaPkgButton.setVisibility(View.GONE);
                 removeChrootButton.setVisibility(View.GONE);
-                backupChrootButton.setVisibility(View.GONE);
+                if (backupChrootButton != null) backupChrootButton.setVisibility(View.GONE);
+                if (restoreChrootButton != null) restoreChrootButton.setVisibility(View.GONE);
                 break;
         }
     }
@@ -700,10 +769,12 @@ public class ChrootManagerFragment extends Fragment {
         if (removeChrootButton != null) removeChrootButton.setEnabled(isEnable);
         if (kaliFolderEditButton != null) kaliFolderEditButton.setEnabled(isEnable);
         if (backupChrootButton != null) backupChrootButton.setEnabled(isEnable);
+        if (restoreChrootButton != null) restoreChrootButton.setEnabled(isEnable);
     }
 
     private void broadcastBackPressedIntent(Boolean isEnabled) {
-        backPressedintent.setAction(BuildConfig.APPLICATION_ID + ".BACKPRESSED");
+        String pkg = (context != null ? context.getPackageName() : "com.offsec.nethunter");
+        backPressedintent.setAction(pkg + ".BACKPRESSED");
         backPressedintent.putExtra("isEnable", isEnabled);
         context.sendBroadcast(backPressedintent);
         updateOptionsMenuState(isEnabled);
@@ -739,5 +810,67 @@ public class ChrootManagerFragment extends Fragment {
     public void run_cmd(String cmd) {
         Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
         activity.startActivity(intent);
+    }
+
+    private String getDisplayNameFromUri(Context ctx, Uri uri) {
+        Cursor cursor = null;
+        try {
+            cursor = ctx.getContentResolver().query(uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                int idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
+                if (idx != -1) return cursor.getString(idx);
+            }
+        } catch (Exception ignored) {
+        } finally {
+            if (cursor != null) cursor.close();
+        }
+        return null;
+    }
+
+    private void setRestoreChrootButton() {
+        if (restoreChrootButton == null) return;
+        restoreChrootButton.setOnClickListener(v -> {
+            File targetDir = new File(NhPaths.CHROOT_PATH());
+            boolean hasContent = targetDir.exists() && targetDir.isDirectory() && targetDir.listFiles() != null && targetDir.listFiles().length > 0;
+            if (hasContent) {
+                new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+                        .setTitle("Replace existing chroot?")
+                        .setMessage("The target directory is not empty. Remove current chroot before restore?")
+                        .setPositiveButton("Remove & Continue", (d, i) -> {
+                            chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.REMOVE_CHROOT);
+                            chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
+                                @Override public void onExecutorPrepare() {
+                                    showProgress(-1);
+                                    setAllButtonEnable(false);
+                                }
+                                @Override public void onExecutorProgressUpdate(int progress) { showProgress(progress); }
+                                @Override public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
+                                    hideProgress();
+                                    setAllButtonEnable(true);
+                                    if (resultCode == 0) {
+                                        launchRestorePicker();
+                                    } else {
+                                        NhPaths.showMessage(context, "Failed to remove existing chroot.");
+                                    }
+                                    compatCheck();
+                                }
+                            });
+                            resultViewerLoggerTextView.setText("");
+                            chrootManagerExecutor.execute(resultViewerLoggerTextView);
+                        })
+                        .setNegativeButton("Cancel", null)
+                        .show();
+            } else {
+                launchRestorePicker();
+            }
+        });
+    }
+
+    private void launchRestorePicker() {
+        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+        intent.addCategory(Intent.CATEGORY_OPENABLE);
+        intent.setType("application/*");
+        intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/x-xz", "application/gzip", "application/x-gtar", "application/x-tar"});
+        restorePickerLauncher.launch(intent);
     }
 }

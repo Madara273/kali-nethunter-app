@@ -5,4 +5,14 @@
         android:id="@+id/menu_check_encryption"
         android:title="Encryption Status"
         app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_backup_chroot"
+        android:title="@string/chroot_manager_backup"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menu_restore_chroot"
+        android:title="@string/chroot_manager_restore"
+        app:showAsAction="never" />
 </menu>
