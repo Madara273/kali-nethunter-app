@@ -16,12 +16,14 @@ import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.appcompat.app.AlertDialog;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.offsec.nethunter.AppNavHomeActivity;
 import com.offsec.nethunter.utils.CheckForRoot;
 import com.offsec.nethunter.utils.NhPaths;
@@ -45,7 +47,12 @@ public class CopyBootFilesExecutor {
     private String objects = "";
     private final Handler progressHandler = new Handler(Looper.getMainLooper());
     private String lastMessage = "";
-    private final Runnable progressRunnable = () -> logDebug(TAG, "Progress: " + lastMessage);
+    private WeakReference<TextView> progressMessageRef = new WeakReference<>(null);
+    private final Runnable progressRunnable = () -> {
+        // Update dialog message (UI) and log to logcat
+        updateProgressDialogMessage(lastMessage);
+        logDebug(TAG, "Progress: " + lastMessage);
+    };
     private final String buildTime;
     private Boolean shouldRun;
     private final Activity activity;
@@ -107,14 +114,25 @@ public class CopyBootFilesExecutor {
         boolean filesCopied = prefs.getBoolean("files_copied", false);
         if (!filesCopied) {
             logDebug(TAG, "COPYING NEW FILES", null);
-            // Build a simple non-cancelable progress dialog using Material components
-            AlertDialog dialog = new MaterialAlertDialogBuilder(activity)
-                    .setTitle("New app build detected:")
-                    .setMessage("Copying new files...")
+            // Inflate and show a Material-styled progress dialog
+            android.view.View content = activity.getLayoutInflater().inflate(
+                    com.offsec.nethunter.R.layout.dialog_progress_material, null, false);
+            TextView msgView = content.findViewById(com.offsec.nethunter.R.id.progress_message);
+            TextView titleView = content.findViewById(com.offsec.nethunter.R.id.progress_title);
+            CircularProgressIndicator spinner = content.findViewById(com.offsec.nethunter.R.id.progress_indicator);
+            if (spinner != null) {
+                spinner.setIndeterminate(true);
+                spinner.show();
+            }
+            if (titleView != null) titleView.setText("New app build detected:");
+            if (msgView != null) msgView.setText("Copying new files...");
+            this.progressMessageRef = new WeakReference<>(msgView);
+
+            AlertDialog dialog = new MaterialAlertDialogBuilder(activity, com.offsec.nethunter.R.style.DialogStyleCompat)
+                    .setView(content)
                     .setCancelable(false)
                     .create();
             dialog.show();
-            // Store reference for dismissal later
             setProgressDialog(dialog);
         } else {
             logDebug(TAG, "NO NEW FILES TO COPY. Skipping file copy.", null);
@@ -572,7 +590,8 @@ public class CopyBootFilesExecutor {
     private void publishProgress(String message) {
         lastMessage = message;
         progressHandler.removeCallbacks(progressRunnable);
-        progressHandler.postDelayed(progressRunnable, 500);
+        // Update quickly for the user; slight debounce to avoid spamming UI when many updates arrive
+        progressHandler.postDelayed(progressRunnable, 200);
     }
 
     private void onPostExecute(String objects) {
@@ -691,6 +710,23 @@ public class CopyBootFilesExecutor {
             }
         } catch (Exception e) {
             logDebug(TAG, "syncNhFilesToSdcard() error: " + e.getMessage(), e);
+        }
+    }
+
+    // Update the message text in the progress dialog if it's showing
+    private void updateProgressDialogMessage(String message) {
+        TextView tv = progressMessageRef.get();
+        if (tv != null) {
+            tv.setText(message);
+            return;
+        }
+        AlertDialog dialog = progressDialogRef.get();
+        if (dialog != null) {
+            TextView tv2 = dialog.findViewById(com.offsec.nethunter.R.id.progress_message);
+            if (tv2 != null) {
+                tv2.setText(message);
+                progressMessageRef = new WeakReference<>(tv2);
+            }
         }
     }
 }
