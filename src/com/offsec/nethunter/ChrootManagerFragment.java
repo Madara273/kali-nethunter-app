@@ -95,7 +95,6 @@ public class ChrootManagerFragment extends Fragment {
     private ActivityResultLauncher<Intent> restorePickerLauncher;
     private int currentChrootState = NEED_TO_INSTALL;
 
-    // Helper: ensure /sdcard/nh_files and /sdcard/nh_files/backups exist
     private boolean ensureNhFilesAndBackupDir() {
         try {
             File nh = new File(NhPaths.APP_SD_FILES_PATH);
@@ -261,8 +260,9 @@ public class ChrootManagerFragment extends Fragment {
                 boolean isRunning = currentChrootState == IS_MOUNTED;
                 MenuItem backup = menu.findItem(R.id.menu_backup_chroot);
                 MenuItem restore = menu.findItem(R.id.menu_restore_chroot);
-                if (backup != null) backup.setEnabled(!isRunning);
-                if (restore != null) restore.setEnabled(!isRunning);
+                // Disable when NOT running (also covers not installed); Android grays out disabled items.
+                if (backup != null) backup.setEnabled(isRunning);
+                if (restore != null) restore.setEnabled(isRunning);
             }
             @Override public boolean onMenuItemSelected(@NonNull MenuItem menuItem) {
                 int id = menuItem.getItemId();
@@ -470,26 +470,40 @@ public class ChrootManagerFragment extends Fragment {
 
     private void setInstallChrootButton() {
         installChrootButton.setOnClickListener(v -> {
-            String[] options = {"Minimal", "Full"};
+            // First-level choice: Download latest image or install from local storage
+            CharSequence[] topOptions = new CharSequence[] {
+                    getString(R.string.chrootmgr_download_latest),
+                    getString(R.string.chrootmgr_install_from_local_storage)
+            };
             new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
-                    .setTitle("Select Kali Image")
-                    .setItems(options, (d, which) -> {
-                        String arch = getDeviceArch();
-                        String type = (which == 0) ? "minimal" : "full";
-                        String fileName = "kali-nethunter-rootfs-" + type + "-" + arch + ".tar.xz";
-                        // Ensure backup dir exists, and use it as download destination
-                        if (!ensureNhFilesAndBackupDir()) return;
-                        File downloadDir = new File(NhPaths.APP_NHFILES_BACKUP_PATH);
-                        File target = new File(downloadDir, fileName);
-                        Runnable run = () -> startDownloadAndRestoreChroot(fileName, downloadDir, type, arch);
-                        if (target.exists()) {
+                    .setTitle(R.string.installkalichrootbutton)
+                    .setItems(topOptions, (dialog, whichTop) -> {
+                        if (whichTop == 0) {
+                            String[] variants = {"Minimal", "Full"};
                             new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
-                                    .setTitle("Overwrite File?")
-                                    .setMessage("File exists. Overwrite?")
-                                    .setPositiveButton("Overwrite",(dd,w)->run.run())
-                                    .setNegativeButton("Cancel", null)
+                                    .setTitle("Select Kali Image")
+                                    .setItems(variants, (d2, which) -> {
+                                        String arch = getDeviceArch();
+                                        String type = (which == 0) ? "minimal" : "full";
+                                        String fileName = "kali-nethunter-rootfs-" + type + "-" + arch + ".tar.xz";
+                                        // Ensure backup dir exists, and use it as download destination
+                                        if (!ensureNhFilesAndBackupDir()) return;
+                                        File downloadDir = new File(NhPaths.APP_NHFILES_BACKUP_PATH);
+                                        File target = new File(downloadDir, fileName);
+                                        Runnable run = () -> startDownloadAndRestoreChroot(fileName, downloadDir, type, arch);
+                                        if (target.exists()) {
+                                            new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+                                                    .setTitle("Overwrite File?")
+                                                    .setMessage("File exists. Overwrite?")
+                                                    .setPositiveButton("Overwrite",(dd,w)->run.run())
+                                                    .setNegativeButton("Cancel", null)
+                                                    .show();
+                                        } else run.run();
+                                    })
                                     .show();
-                        } else run.run();
+                        } else {
+                            if (restoreChrootButton != null) restoreChrootButton.performClick();
+                        }
                     })
                     .show();
         });
@@ -803,26 +817,13 @@ public class ChrootManagerFragment extends Fragment {
         return "arm64";
     }
 
-    ////
-    // Bridge side functions
-    ////
-
-    public void run_cmd(String cmd) {
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
-        activity.startActivity(intent);
-    }
-
     private String getDisplayNameFromUri(Context ctx, Uri uri) {
-        Cursor cursor = null;
-        try {
-            cursor = ctx.getContentResolver().query(uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null);
+        try (Cursor cursor = ctx.getContentResolver().query(uri, new String[]{OpenableColumns.DISPLAY_NAME}, null, null, null)) {
             if (cursor != null && cursor.moveToFirst()) {
                 int idx = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME);
                 if (idx != -1) return cursor.getString(idx);
             }
         } catch (Exception ignored) {
-        } finally {
-            if (cursor != null) cursor.close();
         }
         return null;
     }
@@ -831,7 +832,7 @@ public class ChrootManagerFragment extends Fragment {
         if (restoreChrootButton == null) return;
         restoreChrootButton.setOnClickListener(v -> {
             File targetDir = new File(NhPaths.CHROOT_PATH());
-            boolean hasContent = targetDir.exists() && targetDir.isDirectory() && targetDir.listFiles() != null && targetDir.listFiles().length > 0;
+            boolean hasContent = targetDir.exists() && targetDir.isDirectory() && targetDir.listFiles() != null && Objects.requireNonNull(targetDir.listFiles()).length > 0;
             if (hasContent) {
                 new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
                         .setTitle("Replace existing chroot?")
@@ -872,5 +873,14 @@ public class ChrootManagerFragment extends Fragment {
         intent.setType("application/*");
         intent.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/x-xz", "application/gzip", "application/x-gtar", "application/x-tar"});
         restorePickerLauncher.launch(intent);
+    }
+
+    ////
+    // Bridge side functions
+    ////
+
+    public void run_cmd(String cmd) {
+        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        activity.startActivity(intent);
     }
 }

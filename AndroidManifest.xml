@@ -58,6 +58,8 @@
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
     <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+    <!-- For API 33+ (Android 13), Wi‑Fi operations such as scan/connect require NEARBY_WIFI_DEVICES -->
+    <uses-permission android:name="android.permission.NEARBY_WIFI_DEVICES" />
     <uses-permission android:name="android.permission.USB_PERMISSION" />
     <uses-feature android:name="android.hardware.usb.host"/>
     <uses-permission android:name="android.permission.BIND_ACCESSIBILITY_SERVICE"

@@ -194,9 +194,12 @@ public class CopyBootFilesExecutor {
         publishProgress("Installing additional apps....");
         installApks(NhPaths.APP_SD_FILES_PATH + "/cache/apk/");
 
+        // After installing APKs, ensure we can write to external storage and sync nh_files to SD
         if (!checkStoragePermission()) {
             return "Permission required to manage external storage.";
         }
+        publishProgress("Syncing nh_files to /sdcard/nh_files ...");
+        syncNhFilesToSdcard();
 
         File nhFilesDir = new File(NhPaths.SD_PATH, "nh_files");
         if (nhFilesDir.exists() && nhFilesDir.isDirectory()) {
@@ -356,48 +359,94 @@ public class CopyBootFilesExecutor {
     }
 
     private void CheckEncrypted() {
-        logDebug("Checking if /data is encrypted...");
-        String encrypted = exe.RunAsRootOutput("getprop ro.crypto.state");
-        logDebug("/data is " + encrypted);
-        if (!"encrypted".equals(encrypted)) {
-            logDebug("Device is not encrypted. Skipping encrypted fixes.");
-            return;
+        // Robust detection of encrypted /data and application of compatibility fixes inside chroot
+        try {
+            logDebug("Checking if /data is encrypted...");
+            boolean encrypted = isDeviceEncrypted();
+            logDebug("Encrypted status: " + encrypted);
+
+            // Ensure chroot exists before attempting any fix
+            String chrootPath = NhPaths.CHROOT_PATH();
+            if (exe.RunAsRootReturnValue("[ -d " + chrootPath + " ]") != 0) {
+                logDebug("Chroot path not found: " + chrootPath);
+                return;
+            }
+
+            // Always apply core Android compatibility environment regardless of encryption status
+            logDebug("Applying core Android compatibility environment inside chroot...");
+
+            // Ensure /tmp and /var/tmp exist and are sticky world-writable
+            chrootExec("mkdir -p /tmp /var/tmp && chmod 1777 /tmp /var/tmp", "Ensure tmp directories with 1777 perms");
+
+            // Persist TMPDIR=/tmp for interactive and non-interactive shells
+            chrootExec(
+                    "mkdir -p /etc/profile.d && sh -c \"printf '%s\\n' 'export TMPDIR=/tmp' > /etc/profile.d/99-android-tmpdir.sh\" && chmod 644 /etc/profile.d/99-android-tmpdir.sh",
+                    "Install TMPDIR export in /etc/profile.d"
+            );
+            // Fallback for shells not sourcing /etc/profile
+            chrootExec(
+                    "sh -c \"grep -qxF 'export TMPDIR=/tmp' /root/.profile || echo 'export TMPDIR=/tmp' >> /root/.profile\"",
+                    "Ensure TMPDIR in /root/.profile"
+            );
+
+            if (!encrypted) {
+                logDebug("Device is not encrypted. Skipping encrypted-data specific fixes.");
+                return;
+            }
+
+            logDebug("Applying encrypted-device compatibility fixes inside chroot...");
+
+            // 1) Disable APT sandbox which often breaks on Android (seccomp/user namespaces)
+            chrootExec("mkdir -p /etc/apt/apt.conf.d", "Ensure apt.conf.d exists");
+            chrootExec(
+                    "sh -c \"printf '%s\\n' 'APT::Sandbox::User \\\"root\\\";' > /etc/apt/apt.conf.d/01-android-nosandbox\"",
+                    "Write 01-android-nosandbox apt config");
+
+            // 2) Ensure _apt can reach network by being in inet (GID 3003)
+            chrootExec(
+                    "sh -c 'GN=$(getent group 3003 | cut -d: -f1 || true); " +
+                            "if [ -z \"$GN\" ]; then " +
+                            "  if getent group aid_inet >/dev/null 2>&1; then GN=aid_inet; else groupadd -g 3003 -o aid_inet || true; fi; " +
+                            "fi; " +
+                            "if id -u _apt >/dev/null 2>&1; then usermod -a -G \"$GN\" _apt || true; fi'",
+                    "Ensure _apt is in a group with GID 3003 (inet/aid_inet)"
+            );
+
+            // 3) Comment out pam_keyinit occurrences which can cause issues under Android
+            chrootExec("sed -i 's/pam_keyinit\\.so/& # disabled on Android/' /etc/pam.d/*", "Patch pam_keyinit in /etc/pam.d/*");
+
+
+            // Validation logs
+            chrootExec("getent group 3003 || getent group aid_inet || true", "Show group with gid 3003 or aid_inet info");
+            chrootExec("id _apt || true", "Show _apt user info after group change");
+            chrootExec("grep -m1 'APT::Sandbox::User' /etc/apt/apt.conf.d/01-android-nosandbox || true", "Verify apt nosandbox config");
+        } catch (Exception e) {
+            logDebug(TAG, "CheckEncrypted() encountered an error: " + e.getMessage(), e);
         }
+    }
 
-        // Ensure chroot exists before we attempt fixes inside it
-        if (exe.RunAsRootReturnValue("[ -d " + NhPaths.CHROOT_PATH() + " ]") != 0) {
-            logDebug("Chroot path not found: " + NhPaths.CHROOT_PATH());
-            return;
+    // Determine if device storage is encrypted (FBE/Full-Disk) using multiple signals
+    private boolean isDeviceEncrypted() {
+        try {
+            String state = exe.RunAsRootOutput("getprop ro.crypto.state");
+            if (state != null) state = state.trim();
+            String type = exe.RunAsRootOutput("getprop ro.crypto.type");
+            if (type != null) type = type.trim();
+            String dataMount = exe.RunAsRootOutput("mount | grep ' /data '");
+            if (dataMount == null) dataMount = "";
+
+            boolean propEncrypted = "encrypted".equalsIgnoreCase(state);
+            boolean fbe = type != null && type.equalsIgnoreCase("file");
+            boolean mountHints = dataMount.contains("dm-crypt") || dataMount.contains("fscrypt") || dataMount.contains("fileencryption") || dataMount.contains("inlinecrypt");
+
+            logDebug("ro.crypto.state=\"" + (state == null ? "" : state) + "\" ro.crypto.type=\"" + (type == null ? "" : type) + "\"");
+            logDebug("mount /data => " + dataMount.replace('\n',' '));
+            return propEncrypted || fbe || mountHints;
+        } catch (Exception e) {
+            logDebug(TAG, "isDeviceEncrypted() error: " + e.getMessage(), e);
+            // Conservative default: assume not encrypted on error
+            return false;
         }
-
-        logDebug("Applying encrypted-device fixes inside chroot...");
-        // sed pam configs
-        chrootExec("sed -i 's/pam_keyinit\\.so/pam_keyinit.so #/' /etc/pam.d/*", "Patch pam_keyinit in /etc/pam.d/*");
-
-        // Ensure APT sandbox disabled
-        chrootExec("mkdir -p /etc/apt/apt.conf.d", "Ensure apt.conf.d exists");
-        chrootExec("/bin/sh -c 'printf %s\\n " +
-                        "\'APT::Sandbox::User \"root\";\'" +
-                        " > /etc/apt/apt.conf.d/01-android-nosandbox'",
-                "Write 01-android-nosandbox apt config");
-
-        // Networking group for '_apt'
-        // Prefer existing group with GID 3003 (commonly 'inet'); otherwise create 'aid_inet' with the same GID
-        chrootExec(
-                "sh -c '" +
-                        "GN=$(getent group 3003 | cut -d: -f1 || true); " +
-                        "if [ -z \"$GN\" ]; then " +
-                        "  if getent group aid_inet >/dev/null 2>&1; then GN=aid_inet; else groupadd -g 3003 -o aid_inet || true; GN=aid_inet; fi; " +
-                        "fi; " +
-                        "echo Using_network_group:\"$GN\"; " +
-                        "if id -u _apt >/dev/null 2>&1; then usermod -a -G \"$GN\" _apt || true; fi'",
-                "Ensure _apt is in a group with GID 3003 (inet/aid_inet)"
-        );
-
-        // Quick validation/logging
-        chrootExec("getent group 3003 || getent group aid_inet || true", "Show group with gid 3003 or aid_inet info");
-        chrootExec("id _apt || true", "Show _apt user info after group change");
-        chrootExec("grep -m1 'APT::Sandbox::User' /etc/apt/apt.conf.d/01-android-nosandbox || true", "Verify apt nosandbox config");
     }
 
     private void Symlink(String filename) {
@@ -496,16 +545,10 @@ public class CopyBootFilesExecutor {
 
     // Helper to get the device's primary ABI without using deprecated fields on modern SDKs
     private String getPrimaryAbi() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            if (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0) {
-                return Build.SUPPORTED_ABIS[0] != null ? Build.SUPPORTED_ABIS[0] : "";
-            }
-            return "";
-        } else {
-            @SuppressWarnings("deprecation")
-            String abi = Build.CPU_ABI;
-            return abi != null ? abi : "";
+        if (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0) {
+            return Build.SUPPORTED_ABIS[0] != null ? Build.SUPPORTED_ABIS[0] : "";
         }
+        return "";
     }
 
     private String renameAssetIfneeded(String asset) {
@@ -615,6 +658,39 @@ public class CopyBootFilesExecutor {
         }
         if (!res.stderr.isEmpty()) {
             logDebug(prefix + " stderr: " + res.stderr);
+        }
+    }
+
+    // Mirror /data/data/com.offsec.nethunter/nh_files to /sdcard/nh_files without overwriting user changes
+    private void syncNhFilesToSdcard() {
+        try {
+            final String src = NhPaths.APP_NHFILES_PATH;
+            final String dst = NhPaths.SD_PATH + "/nh_files";
+
+            // Ensure destination exists
+            int mkres = exe.RunAsRootReturnValue("mkdir -p '" + dst + "'");
+            if (mkres != 0) {
+                logDebug(TAG, "Failed to create destination nh_files directory on SD card");
+                return;
+            }
+
+            // Prefer busybox cp -au to copy only missing/newer files and preserve attrs
+            String bb = NhPaths.BUSYBOX != null ? NhPaths.BUSYBOX.trim() : "";
+            String cmd;
+            if (!bb.isEmpty()) {
+                cmd = bb + " cp -au '" + src + "/.' '" + dst + "/'";
+            } else {
+                // Fallback to toolbox cp -rn; do not overwrite existing files
+                cmd = "sh -c 'cp -rn " + src + "/. " + dst + "/'";
+            }
+            int rc = exe.RunAsRootReturnValue(cmd);
+            if (rc != 0) {
+                logDebug(TAG, "syncNhFilesToSdcard: copy command failed rc=" + rc);
+            } else {
+                logDebug(TAG, "syncNhFilesToSdcard: SD card nh_files synced.");
+            }
+        } catch (Exception e) {
+            logDebug(TAG, "syncNhFilesToSdcard() error: " + e.getMessage(), e);
         }
     }
 }

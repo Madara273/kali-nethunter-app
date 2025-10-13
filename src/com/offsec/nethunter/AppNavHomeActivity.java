@@ -237,6 +237,10 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
             if (ContextCompat.checkSelfPermission(AppNavHomeActivity.this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS);
             }
+            // Android 13+: Wi‑Fi-related ops (scan/connect) require NEARBY_WIFI_DEVICES
+            if (ContextCompat.checkSelfPermission(AppNavHomeActivity.this, Manifest.permission.NEARBY_WIFI_DEVICES) != PackageManager.PERMISSION_GRANTED) {
+                permissionsToRequest.add(Manifest.permission.NEARBY_WIFI_DEVICES);
+            }
         }
         if (ContextCompat.checkSelfPermission(AppNavHomeActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             permissionsToRequest.add(Manifest.permission.ACCESS_FINE_LOCATION);
