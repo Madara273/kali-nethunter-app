@@ -175,6 +175,9 @@ public class SearchSploitFragment extends Fragment {
                 } else if (id == R.id.action_setup_searchsploit) {
                     showSetupDialog();
                     return true;
+                } else if (id == R.id.action_reload_searchsploit) {
+                    loadDatabase();
+                    return true;
                 }
                 return false;
             }
@@ -214,17 +217,6 @@ public class SearchSploitFragment extends Fragment {
                 .show();
     }
 
-    // SearchSploit setup function, this is handled in a separate thread
-    // so we avoid blocking the UI thread. Use this as an example for other
-    // functions and fragments later. Move the heavy calls/iw/template refresh calls e.g, OFF the UI thread.
-    //
-    // * Executors.newSingleThreadExecutor() → runs tasks sequentially, off the UI thread.
-    // * Future<?> refreshTask               → lets you cancel a running task if a new refresh is triggered.
-    // * executor.shutdownNow()              → prevents leaks when the fragment/activity is destroyed.
-    //
-    // * Logging stays the same, but now your UI won’t skip frames.
-    //
-    // - kimocoder
     private void runSearchSploitSetup() {
         if (!isAdded()) return;
 
@@ -272,6 +264,8 @@ public class SearchSploitFragment extends Fragment {
                 if (success) {
                     NhPaths.showMessage_long(requireContext(), "Setup completed");
                     Log.d(TAG, "SearchSploit setup output:\n" + out);
+                    // Sleep 2 seconds and load database
+                    new Handler(Looper.getMainLooper()).postDelayed(this::loadDatabase, 2000);
                 } else {
                     NhPaths.showMessage_long(requireContext(), "Setup failed. Check logs.");
                     if (ex != null) Log.e(TAG, "SearchSploit setup error", ex);
@@ -338,6 +332,13 @@ public class SearchSploitFragment extends Fragment {
             public void onNothingSelected(AdapterView<?> parentView) {
             }
         });
+        // Initialize selections to first items
+        if (!platformList.isEmpty()) {
+            sel_platform = platformList.get(0);
+        }
+        if (!typeList.isEmpty()) {
+            sel_type = typeList.get(0);
+        }
         loadExploits();
     }
 

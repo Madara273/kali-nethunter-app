@@ -8,4 +8,8 @@
         android:id="@+id/action_setup_searchsploit"
         android:title="Install dependencies"
         app:showAsAction="never" />
+    <item
+        android:id="@+id/action_reload_searchsploit"
+        android:title="Reload Database"
+        app:showAsAction="never" />
 </menu>
