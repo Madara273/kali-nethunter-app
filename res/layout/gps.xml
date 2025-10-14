@@ -91,15 +91,15 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <!-- Satellite Signal Strength Visualization -->
-        <LinearLayout
-            android:id="@+id/satellite_signal_container"
+        <ProgressBar
+            android:id="@+id/gps_signal_strength"
+            style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
-            android:layout_height="48dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
+            android:layout_height="wrap_content"
+            android:max="100"
+            android:progress="0"
             android:layout_marginTop="12dp"
-            android:layout_marginBottom="8dp"
-            android:padding="4dp"/>
+            android:layout_marginBottom="8dp" />
 
         <androidx.core.widget.NestedScrollView
             android:id="@+id/gps_scroll"
@@ -121,7 +121,8 @@
                 android:textAppearance="@style/TextAppearance.Material3.BodySmall"
                 android:scrollbars="vertical"
                 android:focusable="true"
-                android:focusableInTouchMode="true" />
+                android:focusableInTouchMode="true"
+                android:gravity="bottom" />
         </androidx.core.widget.NestedScrollView>
 
         <LinearLayout
