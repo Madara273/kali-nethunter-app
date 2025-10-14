@@ -19,7 +19,7 @@ import java.util.Date;
 import java.util.Locale;
 
 public class ShellExecuter {
-    private final SimpleDateFormat timeStamp = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+    private final SimpleDateFormat timeStamp = new SimpleDateFormat("HH:mm", Locale.getDefault());
     private final static String TAG = "ShellExecuter";
 
     public ShellExecuter() {
