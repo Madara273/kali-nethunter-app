@@ -8,7 +8,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.media.AudioFormat;
-import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.media.AudioAttributes;
 import android.os.Build;
@@ -144,32 +143,34 @@ public class BTFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        MenuHost menuHost = requireActivity();
-        menuHost.addMenuProvider(new MenuProvider() {
-            @Override
-            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
-                menuInflater.inflate(R.menu.bt, menu);
-            }
-
-            @Override
-            public boolean onMenuItemSelected(@NonNull MenuItem item) {
-                boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
-                int id = item.getItemId();
-                if (id == R.id.setup) {
-                    if (iswatch) RunSetupWatch();
-                    else RunSetup();
-                    return true;
-                } else if (id == R.id.update) {
-                    if (iswatch) {
-                        Toast.makeText(requireActivity().getApplicationContext(), "Updates have to be done manually through adb shell. If anything gone wrong at first run, please run Setup again.", Toast.LENGTH_LONG).show();
-                    } else {
-                        RunUpdate();
-                    }
-                    return true;
+        if (this.getClass() == BTFragment.class) {
+            MenuHost menuHost = requireActivity();
+            menuHost.addMenuProvider(new MenuProvider() {
+                @Override
+                public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
+                    menuInflater.inflate(R.menu.bt, menu);
                 }
-                return false;
-            }
-        }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
+
+                @Override
+                public boolean onMenuItemSelected(@NonNull MenuItem item) {
+                    boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
+                    int id = item.getItemId();
+                    if (id == R.id.setup) {
+                        if (iswatch) RunSetupWatch();
+                        else RunSetup();
+                        return true;
+                    } else if (id == R.id.update) {
+                        if (iswatch) {
+                            Toast.makeText(requireActivity().getApplicationContext(), "Updates have to be done manually through adb shell. If anything gone wrong at first run, please run Setup again.", Toast.LENGTH_LONG).show();
+                        } else {
+                            RunUpdate();
+                        }
+                        return true;
+                    }
+                    return false;
+                }
+            }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
+        }
     }
 
     public void SetupDialog() {
@@ -1076,12 +1077,17 @@ public class BTFragment extends Fragment {
                     .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
                     .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
                     .build();
-            AudioTrack audioTrack = new AudioTrack.Builder()
-                    .setAudioAttributes(attrs)
-                    .setAudioFormat(af)
-                    .setTransferMode(AudioTrack.MODE_STREAM)
-                    .setBufferSizeInBytes(Math.max(minBuffer, 20000))
-                    .build();
+            AudioTrack audioTrack;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                audioTrack = new AudioTrack.Builder()
+                        .setAudioAttributes(attrs)
+                        .setAudioFormat(af)
+                        .setTransferMode(AudioTrack.MODE_STREAM)
+                        .setBufferSizeInBytes(Math.max(minBuffer, 20000))
+                        .build();
+            } else {
+                audioTrack = null;
+            }
             PlayAudioButton.setOnClickListener(v -> {
                 String selectedPath = injectfilename.getText().toString().trim();
                 File cw_listenfile;
@@ -1112,6 +1118,7 @@ public class BTFragment extends Fragment {
                             }
                         } else {
                             try (InputStream s = new FileInputStream(cw_listenfile)) {
+                                assert audioTrack != null;
                                 audioTrack.play();
                                 byte[] data = new byte[200];
                                 int n;
@@ -1123,6 +1130,7 @@ public class BTFragment extends Fragment {
                             } catch (IOException e) {
                                 e.printStackTrace();
                             } finally {
+                                assert audioTrack != null;
                                 audioTrack.release();
                             }
                         }
@@ -1130,7 +1138,8 @@ public class BTFragment extends Fragment {
                 }
             });
             StopAudioButton.setOnClickListener(v -> {
-                        audioTrack.pause();
+                assert audioTrack != null;
+                audioTrack.pause();
                         audioTrack.flush();
             });
 
