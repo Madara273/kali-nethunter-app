@@ -684,13 +684,14 @@ public class SettingsFragment extends Fragment {
     ////
 
     public void run_cmd(String cmd) {
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        String execPath = activity.getFilesDir().getPath() + "/usr/bin/kali";
+        Intent intent = Bridge.createExecuteIntent(execPath, cmd);
         activity.startActivity(intent);
     }
 
     public void run_cmd_android(String cmd) {
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/android-su", cmd);
+        String execPath = activity.getFilesDir().getPath() + "/usr/bin/android-su";
+        Intent intent = Bridge.createExecuteIntent(execPath, cmd);
         activity.startActivity(intent);
     }
 }
-

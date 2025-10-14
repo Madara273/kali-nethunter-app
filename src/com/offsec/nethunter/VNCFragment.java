@@ -904,14 +904,16 @@ public class VNCFragment extends Fragment {
 
     public void run_cmd(String cmd) {
         logDebug(TAG, "run_cmd: Executing command: " + cmd);
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        String execPath = activity.getFilesDir().getPath() + "/usr/bin/kali";
+        Intent intent = Bridge.createExecuteIntent(execPath, cmd);
         activity.startActivity(intent);
         logDebug(TAG, "run_cmd: Command execution started");
     }
 
     public void run_cmd_android(String cmd) {
         logDebug(TAG, "run_cmd_android: Executing Android command: " + cmd);
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/android-su", cmd);
+        String execPath = activity.getFilesDir().getPath() + "/usr/bin/android-su";
+        Intent intent = Bridge.createExecuteIntent(execPath, cmd);
         activity.startActivity(intent);
         logDebug(TAG, "run_cmd_android: Android command execution started");
     }

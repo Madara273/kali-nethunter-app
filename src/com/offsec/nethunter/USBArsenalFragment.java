@@ -750,7 +750,8 @@ public class USBArsenalFragment extends Fragment {
     ////
 
     public void run_cmd_android(String cmd) {
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/android-su", cmd);
+        String execPath = context.getFilesDir().getPath() + "/usr/bin/android-su";
+        Intent intent = Bridge.createExecuteIntent(execPath, cmd);
         context.startActivity(intent);
     }
 }

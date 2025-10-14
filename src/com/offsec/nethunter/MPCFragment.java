@@ -301,7 +301,8 @@ public class MPCFragment extends Fragment {
     ////
 
     public void run_cmd(String cmd) {
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        String execPath = requireContext().getFilesDir().getPath() + "/usr/bin/kali";
+        Intent intent = Bridge.createExecuteIntent(execPath, cmd);
         requireContext().startActivity(intent);
     }
 }

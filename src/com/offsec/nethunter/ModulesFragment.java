@@ -643,7 +643,8 @@ public class ModulesFragment extends Fragment implements MenuProvider {
     ////
 
     public void run_cmd(String cmd) {
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
-        activity.startActivity(intent);
+        String execPath = requireContext().getFilesDir().getPath() + "/usr/bin/kali";
+        Intent intent = Bridge.createExecuteIntent(execPath, cmd);
+        requireContext().startActivity(intent);
     }
 }
