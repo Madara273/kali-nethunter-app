@@ -673,10 +673,10 @@ public class VNCFragment extends Fragment {
 
     // Helper method to check user permissions
     private boolean checkUserPermissions(String user) {
-        if (!isSuAvailable()) return false;  // Return early if sudo is unavailable
+        if (!isSuAvailable()) return false;  // Return early if su is unavailable
 
         try {
-            Process process = Runtime.getRuntime().exec("sudo -l -U " + user);
+            Process process = Runtime.getRuntime().exec(new String[]{"su", "-c", BUSYBOX_NH + " chroot " + NhPaths.CHROOT_PATH() + " sudo -l -U " + user});
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String output;
             while ((output = reader.readLine()) != null) {
