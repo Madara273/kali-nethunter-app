@@ -426,6 +426,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         }
     }
 
+    @SuppressWarnings("deprecation")
     private void setRootView() {
         setContentView(R.layout.base_layout);
 
