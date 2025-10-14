@@ -2059,6 +2059,8 @@ public class CARsenalFragment extends Fragment {
                     timeoutContainer.setVisibility(View.GONE);
                     stypeContainer.setVisibility(View.GONE);
                     dtypeContainer.setVisibility(View.GONE);
+                    messageContainer.setVisibility(View.GONE);
+                    timeoutContainer.setVisibility(View.GONE);
                     durationContainer.setVisibility(View.GONE);
                     sprContainer.setVisibility(View.GONE);
                     ecuResetTypeContainer.setVisibility(View.GONE);
@@ -3452,7 +3454,7 @@ public class CARsenalFragment extends Fragment {
                     String value = entry.getValue().getText().toString().trim();
 
                     if (!value.isEmpty()) {
-                        String sanitized = value.replace("'", "'\"'\"'");
+                        String sanitized = value.replace("'", "'\"'\"'\"");
                         msfCmd.append("set ").append(key.toUpperCase()).append(" '").append(sanitized).append("'`echo -ne '\\015'`");
                     }
                 }
@@ -3723,7 +3725,8 @@ public class CARsenalFragment extends Fragment {
     ////
 
     public String run_cmd(String cmd) {
-        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        String execPath = activity.getFilesDir().getPath() + "/usr/bin/kali";
+        Intent intent = Bridge.createExecuteIntent(execPath, cmd);
         activity.startActivity(intent);
         intent.putExtra("output", cmd);
         return "Command executed: " + cmd;
