@@ -276,54 +276,92 @@ public class NetHunterFragment extends Fragment {
     private void onAddItemSetup() {
         addButton.setOnClickListener(v -> {
             List<NethunterModel> fullList = NethunterData.getInstance().nethunterModelListFull;
-            if (fullList == null) return;
-            final LayoutInflater mInflater = (LayoutInflater) requireActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            final View promptView = mInflater.inflate(R.layout.nethunter_add_dialog_view, null);
+            // Do not reassign fullList to keep it effectively final; use a local snapshot for titles only
+            List<NethunterModel> snapshot = (fullList == null) ? new ArrayList<>() : new ArrayList<>(fullList);
 
-            final EditText title = promptView.findViewById(R.id.f_nethunter_add_adb_et_title);
-            final EditText command = promptView.findViewById(R.id.f_nethunter_add_adb_et_command);
-            final EditText delimiter = promptView.findViewById(R.id.f_nethunter_add_adb_et_delimiter);
-            final CheckBox runOnCreate = promptView.findViewById(R.id.f_nethunters_add_adb_checkbox_runoncreate);
-            final Spinner positionsSpinner = promptView.findViewById(R.id.f_nethunter_add_adb_spr_positions);
-            final Spinner titlesSpinner = promptView.findViewById(R.id.f_nethunter_add_adb_spr_titles);
-
-            // Populate titles spinner with current titles
+            // Build titles for dropdown from snapshot
             ArrayList<String> titles = new ArrayList<>();
-            for (NethunterModel model : fullList) titles.add(model.getTitle());
-            ArrayAdapter<String> spinnerAdapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_item, titles);
-            spinnerAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            titlesSpinner.setAdapter(spinnerAdapter);
+            for (NethunterModel model : snapshot) titles.add(model.getTitle());
 
-            new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Add Item")
-                    .setView(promptView)
-                    .setCancelable(false)
-                    .setPositiveButton("Save", (dialog, which) -> {
-                        String titleString = title.getText().toString().trim();
-                        String commandString = command.getText().toString().trim();
-                        String delimiterString = delimiter.getText().toString().trim();
-                        String runOnCreateString = runOnCreate.isChecked()?"1":"0";
-                        if (titleString.isEmpty()) { Toast.makeText(requireContext(), "Title cannot be empty", Toast.LENGTH_SHORT).show(); return; }
-                        if (commandString.isEmpty()) { Toast.makeText(requireContext(), "Command cannot be empty", Toast.LENGTH_SHORT).show(); return; }
-                        if (delimiterString.isEmpty()) { Toast.makeText(requireContext(), "Delimiter cannot be empty", Toast.LENGTH_SHORT).show(); return; }
+            LayoutInflater inflater = LayoutInflater.from(requireContext());
+            View sheet = inflater.inflate(R.layout.nethunter_add_bottomsheet, null, false);
 
-                        int posType = positionsSpinner.getSelectedItemPosition(); // 0: before, 1: after
-                        int selectedTitleIndex = Math.max(0, titlesSpinner.getSelectedItemPosition());
-                        int targetPositionId = selectedTitleIndex + 1 + (posType == 0 ? 0 : 1); // 1-based id
-                        // Clamp to valid insertion range [1, size+1]
-                        int size = fullList.size();
-                        if (targetPositionId < 1) targetPositionId = 1;
-                        if (targetPositionId > size + 1) targetPositionId = size + 1;
+            com.google.android.material.textfield.TextInputLayout titleTil = sheet.findViewById(R.id.add_title_til);
+            com.google.android.material.textfield.TextInputLayout cmdTil = sheet.findViewById(R.id.add_command_til);
+            com.google.android.material.textfield.TextInputLayout delimTil = sheet.findViewById(R.id.add_delimiter_til);
+            com.google.android.material.textfield.TextInputEditText titleEt = sheet.findViewById(R.id.add_title_et);
+            com.google.android.material.textfield.TextInputEditText cmdEt = sheet.findViewById(R.id.add_command_et);
+            com.google.android.material.textfield.TextInputEditText delimEt = sheet.findViewById(R.id.add_delimiter_et);
+            com.google.android.material.checkbox.MaterialCheckBox runCb = sheet.findViewById(R.id.add_run_checkbox);
 
-                        ArrayList<String> dataArrayList = new ArrayList<>();
-                        dataArrayList.add(titleString);
-                        dataArrayList.add(commandString);
-                        dataArrayList.add(delimiterString);
-                        dataArrayList.add(runOnCreateString);
-                        NethunterData.getInstance().addData(targetPositionId, dataArrayList, NethunterSQL.getInstance(requireContext()));
-                    })
-                    .setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss())
-                    .show();
+            android.widget.AutoCompleteTextView targetActv = sheet.findViewById(R.id.add_target_actv);
+            com.google.android.material.button.MaterialButtonToggleGroup posGroup = sheet.findViewById(R.id.add_position_group);
+
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, titles);
+            targetActv.setAdapter(adapter);
+
+            // Defaults
+            if (!titles.isEmpty()) targetActv.setText(titles.get(0), false);
+            posGroup.check(R.id.add_after);
+
+            com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+            dialog.setContentView(sheet);
+
+            View cancelBtn = sheet.findViewById(R.id.add_cancel_btn);
+            View saveBtn = sheet.findViewById(R.id.add_save_btn);
+
+            cancelBtn.setOnClickListener(x -> dialog.dismiss());
+            saveBtn.setOnClickListener(x -> {
+                // Clear previous errors
+                titleTil.setError(null);
+                cmdTil.setError(null);
+                delimTil.setError(null);
+
+                String titleString = titleEt.getText() == null ? "" : titleEt.getText().toString().trim();
+                String commandString = cmdEt.getText() == null ? "" : cmdEt.getText().toString().trim();
+                String delimiterString = delimEt.getText() == null ? "" : delimEt.getText().toString().trim();
+                String runOnCreateString = runCb.isChecked() ? "1" : "0";
+
+                boolean hasError = false;
+                if (titleString.isEmpty()) { titleTil.setError("Required"); hasError = true; }
+                if (commandString.isEmpty()) { cmdTil.setError("Required"); hasError = true; }
+                if (delimiterString.isEmpty()) { delimTil.setError("Required"); hasError = true; }
+                if (hasError) return;
+
+                // Use current data size at click time to avoid captured non-final variable
+                List<NethunterModel> current = NethunterData.getInstance().nethunterModelListFull;
+                int size = (current == null) ? 0 : current.size();
+
+                String tgtTitle = String.valueOf(targetActv.getText());
+                int targetItemIndex = titles.indexOf(tgtTitle); // -1 if not found in snapshot
+
+                boolean placeBefore = posGroup.getCheckedButtonId() == R.id.add_before;
+
+                int targetPositionId; // 1-based for DB
+                if (size == 0) {
+                    targetPositionId = 1; // first insert
+                } else {
+                    if (targetItemIndex < 0) {
+                        Toast.makeText(requireContext(), "Select a target item", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    int selectedTitleIndex = targetItemIndex; // 0-based
+                    targetPositionId = selectedTitleIndex + 1 + (placeBefore ? 0 : 1);
+                    if (targetPositionId < 1) targetPositionId = 1;
+                    if (targetPositionId > size + 1) targetPositionId = size + 1;
+                }
+
+                ArrayList<String> dataArrayList = new ArrayList<>();
+                dataArrayList.add(titleString);
+                dataArrayList.add(commandString);
+                dataArrayList.add(delimiterString);
+                dataArrayList.add(runOnCreateString);
+
+                NethunterData.getInstance().addData(targetPositionId, dataArrayList, NethunterSQL.getInstance(requireContext()));
+                dialog.dismiss();
+            });
+
+            dialog.show();
         });
     }
 
