@@ -23,6 +23,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -40,6 +41,10 @@ import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.PermissionCheck;
 import com.offsec.nethunter.utils.SharePrefTag;
 import com.offsec.nethunter.utils.ShellExecuter;
+
+import com.chaquo.python.PyObject;
+import com.chaquo.python.Python;
+import com.chaquo.python.android.AndroidPlatform;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -93,6 +98,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
     public CopyBootFilesExecutor copyBootFilesExecutor;
     public static MenuItem customCMDitem;
     private final ShellExecuter exe = new ShellExecuter();
+    private boolean pythonTestRan = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -384,6 +390,16 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
 
         // Run CompatCheck Service
         if (navigationView != null) startService(new Intent(getApplicationContext(), CompatCheckService.class));
+
+        // One-time Python smoke test
+        if (!pythonTestRan) {
+            try {
+                runPythonSmokeTest();
+                pythonTestRan = true;
+            } catch (Throwable t) {
+                Log.w(TAG, "NH Python test failed: " + t);
+            }
+        }
     }
 
     @Override
@@ -776,5 +792,23 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
                 }
             }
         }
+    }
+
+    private void runPythonSmokeTest() {
+        // Ensure Python runtime is started
+        if (!Python.isStarted()) {
+            Python.start(new AndroidPlatform(this));
+        }
+        Python py = Python.getInstance();
+        PyObject mod = py.getModule("nh_test");
+        PyObject res = mod.callAttr("hello", "NetHunter");
+        String msg = res.toString();
+        Log.i(TAG, "NetHunter Python hello(): " + msg);
+        try {
+            PyObject infoObj = mod.callAttr("get_info");
+            String infoStr = infoObj.toString();
+            Log.i(TAG, "NetHunter Python get_info(): " + infoStr);
+        } catch (Throwable ignored) { }
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
     }
 }

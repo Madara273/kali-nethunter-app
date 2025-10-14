@@ -1,6 +1,7 @@
 //import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 apply plugin: 'com.android.application'
+apply plugin: 'com.chaquo.python'
 //apply plugin: 'org.jetbrains.kotlin.android'
 
 tasks.withType(JavaCompile).configureEach {
@@ -14,9 +15,11 @@ buildscript {
     repositories {
         google()
         mavenCentral()
+        maven { url "https://chaquo.com/maven" }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.5.2'
+        classpath 'com.android.tools.build:gradle:8.9.1'
+        classpath 'com.chaquo.python:gradle:14.0.2'
         //classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.20"
     }
 }
@@ -27,12 +30,13 @@ repositories {
     maven { url "https://repo.grails.org/grails/plugins" }
     // Snowfall
     maven { url 'https://jitpack.io' }
+    maven { url "https://chaquo.com/maven" }
 }
 
 android {
     namespace "com.offsec.nethunter"
+    compileSdk 35
     //noinspection GradleDependency
-    compileSdk 34
 
     buildFeatures {
         dataBinding true
@@ -58,6 +62,12 @@ android {
         versionName '2025.4-dev'
         multiDexEnabled true
         applicationId "com.offsec.nethunter"
+
+        // Required by Chaquopy to know which ABIs to package
+        ndk {
+            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
+        }
+
         /* externalNativeBuild {
             cmake {
                 arguments "-DANDROID_PLATFORM=android-24"
@@ -91,6 +101,8 @@ android {
             renderscript.srcDirs = ['src']
             res.srcDirs = ['res']
             assets.srcDirs = ['assets']
+            // Add Python sources for Chaquopy
+            python.srcDir 'src/main/python'
         }
     }
 
