@@ -35,7 +35,7 @@ repositories {
 
 android {
     namespace "com.offsec.nethunter"
-    compileSdk 35
+    compileSdk 34
     //noinspection GradleDependency
 
     buildFeatures {
