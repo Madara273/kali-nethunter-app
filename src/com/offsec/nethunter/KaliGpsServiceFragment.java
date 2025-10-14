@@ -509,8 +509,7 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
 
     public void run_cmd(String cmd) {
         if (context != null) {
-            String execPath = context.getFilesDir().getPath() + "/usr/bin/kali";
-            Intent intent = Bridge.createExecuteIntent(execPath, cmd);
+            Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
             context.startActivity(intent);
         }
     }

@@ -907,8 +907,7 @@ public class ChrootManagerFragment extends Fragment {
     ////
 
     public void run_cmd(String cmd) {
-        String execPath = activity.getFilesDir().getPath() + "/usr/bin/kali";
-        Intent intent = Bridge.createExecuteIntent(execPath, cmd);
+        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
         activity.startActivity(intent);
     }
 }
