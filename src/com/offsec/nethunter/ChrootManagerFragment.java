@@ -609,34 +609,61 @@ public class ChrootManagerFragment extends Fragment {
 
     private void setAddMetaPkgButton() {
         addMetaPkgButton.setOnClickListener(v -> {
-            MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-            adb.setTitle("Metapackage Install & Upgrade");
+            if (activity == null) return;
+            // Inflate bottom sheet layout
             LayoutInflater inflater = activity.getLayoutInflater();
-            final ScrollView sv = (ScrollView) inflater.inflate(R.layout.metapackagechooser, null);
-            adb.setView(sv);
-            final Button metapackageButton = sv.findViewById(R.id.metapackagesWeb);
-            metapackageButton.setOnClickListener(v1 -> {
-                Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://tools.kali.org/kali-metapackages"));
-                startActivity(browserIntent);
-            });
-            adb.setPositiveButton(R.string.InstallAndUpdateButtonText, (dialog, which) -> {
+            final View sheet = inflater.inflate(R.layout.chroot_metapackages_bottomsheet, null, false);
+
+            // Wire website button
+            View webBtn = sheet.findViewById(R.id.metapackagesWeb);
+            if (webBtn != null) {
+                webBtn.setOnClickListener(v1 -> {
+                    Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://tools.kali.org/kali-metapackages"));
+                    startActivity(browserIntent);
+                });
+            }
+
+            // Prepare bottom sheet dialog
+            final com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(activity);
+            dialog.setContentView(sheet);
+
+            View cancelBtn = sheet.findViewById(R.id.meta_cancel_btn);
+            View installBtn = sheet.findViewById(R.id.meta_install_btn);
+
+            if (cancelBtn != null) cancelBtn.setOnClickListener(x -> dialog.dismiss());
+            if (installBtn != null) installBtn.setOnClickListener(x -> {
                 StringBuilder sb = new StringBuilder();
-                final AlertDialog d = (AlertDialog) dialog;
-                final LinearLayout ll = d.findViewById(R.id.metapackageLinearLayout);
-                int children = Objects.requireNonNull(ll).getChildCount();
-                for (int cnt = 0; cnt < children; cnt++) {
-                    if (ll.getChildAt(cnt) instanceof CheckBox) {
-                        CheckBox cb = (CheckBox) ll.getChildAt(cnt);
-                        if (cb.isChecked()) sb.append(cb.getText()).append(" ");
+                LinearLayout list = sheet.findViewById(R.id.metapackageLinearLayout);
+                if (list != null) {
+                    int children = list.getChildCount();
+                    for (int i = 0; i < children; i++) {
+                        View child = list.getChildAt(i);
+                        if (child instanceof com.google.android.material.checkbox.MaterialCheckBox) {
+                            com.google.android.material.checkbox.MaterialCheckBox cb = (com.google.android.material.checkbox.MaterialCheckBox) child;
+                            if (cb.isChecked()) {
+                                CharSequence txt = cb.getText();
+                                if (txt != null && txt.length() > 0) {
+                                    sb.append(txt).append(' ');
+                                }
+                            }
+                        }
                     }
                 }
+
+                if (sb.length() == 0) {
+                    NhPaths.showMessage(context, "Select at least one metapackage.");
+                    return;
+                }
+
                 try {
-                    run_cmd("apt update && apt install " + sb + " -y && echo \"(You can close the terminal now)\\n\"");
+                    run_cmd("apt update && apt install " + sb.toString().trim() + " -y && echo \"(You can close the terminal now)\\n\"");
+                    dialog.dismiss();
                 } catch (Exception e) {
                     NhPaths.showMessage(context, getString(R.string.toast_install_terminal));
                 }
             });
-            adb.create().show();
+
+            dialog.show();
         });
     }
 
