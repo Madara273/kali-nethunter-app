@@ -261,8 +261,10 @@ public class MPCFragment extends Fragment {
                                 if (address instanceof Inet4Address) {
                                     String ip = address.getHostAddress();
                                     // IP Text Field
-                                    EditText ipaddress = rootView.findViewById(R.id.mpc_ip_address);
-                                    ipaddress.setText(ip);
+                                    requireActivity().runOnUiThread(() -> {
+                                        EditText ipaddress = rootView.findViewById(R.id.mpc_ip_address);
+                                        ipaddress.setText(ip);
+                                    });
                                 }
                             }
                         }
