@@ -5,7 +5,11 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -18,7 +22,9 @@ import android.widget.Toast;
 
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -33,7 +39,7 @@ import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class KernelFragment extends Fragment {
+public class KernelFragment extends Fragment implements MenuProvider {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     public static final String TAG = "KernelFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
@@ -54,6 +60,14 @@ public class KernelFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.kernel, container, false);
         activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+
+        // Check for first run
+        android.content.SharedPreferences prefs = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        boolean isFirstRun = prefs.getBoolean("kernel_first_run", true);
+        if (isFirstRun) {
+            showKernelDescription();
+            prefs.edit().putBoolean("kernel_first_run", false).apply();
+        }
 
         // Device information
         final TextView Device = rootView.findViewById(R.id.device);
@@ -118,19 +132,42 @@ public class KernelFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requireActivity().addMenuProvider(this);
         activity = getActivity();
         filePickerLauncher = registerForActivityResult(
                 new ActivityResultContracts.StartActivityForResult(),
                 result -> {
                     if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
                         EditText kernelPath = requireActivity().findViewById(R.id.kernelpath);
-                        String filePath = Objects.requireNonNull(Objects.requireNonNull(result.getData().getData()).getPath()).replace("/document/primary:", "/sdcard/");
+                        String filePath = Objects.requireNonNull(Objects.requireNonNull(result.getData().getData()).getPath()).replace("/document/primary:", Environment.getExternalStorageDirectory().getPath() + "/");
                         kernelPath.setText(filePath);
                     } else {
                         Toast.makeText(requireActivity(), "No file selected", Toast.LENGTH_SHORT).show();
                     }
                 }
         );
+    }
+
+    @Override
+    public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
+        menuInflater.inflate(R.menu.kernel, menu);
+    }
+
+    @Override
+    public boolean onMenuItemSelected(@NonNull MenuItem menuItem) {
+        if (menuItem.getItemId() == R.id.kernel_info) {
+            showKernelDescription();
+            return true;
+        }
+        return false;
+    }
+
+    private void showKernelDescription() {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
+        builder.setTitle("Kernel Information");
+        builder.setMessage(getString(R.string.kernel_description));
+        builder.setPositiveButton("OK", null);
+        builder.show();
     }
 
     private void checkKernel(View KernelFragment, String custom) {
@@ -156,7 +193,7 @@ public class KernelFragment extends Fragment {
                             MaterialAlertDialogBuilder builderInner = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
                             builderInner.setTitle("Multiple kernels available. Please select");
                             builderInner.setItems(kernelsArray, (dialog2, which2) -> {
-                                run_cmd_android("echo -ne \"\\033]0;Flashing Kernel\\007\" && clear;cd /sdcard && curl " + KERNEL_URL + "/" + kernelsArray[which2] + " > " + kernelsArray[which2] + "; " +
+                                run_cmd_android("echo -ne \"\\033]0;Flashing Kernel\\007\" && clear;cd " + Environment.getExternalStorageDirectory().getPath() + " && curl " + KERNEL_URL + "/" + kernelsArray[which2] + " > " + kernelsArray[which2] + "; " +
                                         NhPaths.APP_SCRIPTS_PATH + "/bin/magic-flash " + kernelsArray[which2] + " | awk 'gsub(/ui_print /,\" \") && !/^ $/'; echo 'Exiting..';exit");
                                 requireActivity().runOnUiThread(() ->
                                         Toast.makeText(requireActivity().getApplicationContext(), "Downloading to /sdcard and flashing...", Toast.LENGTH_SHORT).show()
@@ -164,7 +201,7 @@ public class KernelFragment extends Fragment {
                             });
                             builderInner.show();
                         } else {
-                            run_cmd_android("echo -ne \"\\033]0;Flashing Kernel\\007\" && clear;cd /sdcard && curl " + KERNEL_URL + "/" + kernel_zip + " > " + kernel_zip + "; " +
+                            run_cmd_android("echo -ne \"\\033]0;Flashing Kernel\\007\" && clear;cd " + Environment.getExternalStorageDirectory().getPath() + " && curl " + KERNEL_URL + "/" + kernel_zip + " > " + kernel_zip + "; " +
                                     NhPaths.APP_SCRIPTS_PATH + "/bin/magic-flash " + kernel_zip + " | awk 'gsub(/ui_print /,\" \") && !/^ $/'; echo 'Exiting..'; exit");
                             requireActivity().runOnUiThread(() ->
                                     Toast.makeText(requireActivity().getApplicationContext(), "Downloading to /sdcard and flashing...", Toast.LENGTH_SHORT).show()
