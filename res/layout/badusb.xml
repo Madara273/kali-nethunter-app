@@ -1,45 +1,73 @@
 <?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <LinearLayout
-        android:layout_width="fill_parent"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="16dp">
 
-        <TextView
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/badusb_label"
-            android:textSize="28sp"
-            android:padding="4dp" />
+            android:layout_margin="8dp"
+            app:cardElevation="4dp"
+            app:cardCornerRadius="8dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="4dp"
-            android:gravity="center"
-            android:text="@string/badusb_description" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/iface"
-            android:padding="4dp" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/badusb_label"
+                    android:textAppearance="?attr/textAppearanceHeadlineLarge"
+                    android:paddingBottom="8dp" />
 
-        <EditText
-            android:id="@+id/ifc"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:autofillHints="none"
-            android:ems="10"/>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/badusb_description"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:gravity="center"
+                    android:paddingBottom="16dp" />
 
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/updateOptions"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/update" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/iface"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:paddingBottom="8dp" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/iface"
+                    style="?attr/textInputOutlinedStyle">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/ifc"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:autofillHints="none" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/updateOptions"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/update"
+                    android:textColor="@color/orange"
+                    style="?attr/materialButtonOutlinedStyle" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 </ScrollView>

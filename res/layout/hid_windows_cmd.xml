@@ -1,62 +1,99 @@
+<?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
-        android:orientation="vertical">
-        
-        <TextView
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/hid_windows_cmd_description"
-            android:layout_gravity="center_horizontal|center" 
-            android:gravity="center"
-            android:padding="4dp" />
+            android:layout_margin="8dp"
+            app:cardElevation="4dp"
+            app:cardCornerRadius="8dp">
 
-		<TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/source"
-            android:padding="4dp" />
-            
-        <EditText
-            android:id="@+id/windowsCmdSource"
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-
-            android:ems="10"
-            android:gravity="top"
-            android:layout_marginLeft="1dip"
-            android:layout_marginRight="1dip" />
-
-        <LinearLayout
-            android:orientation="vertical"
-            android:layout_width="fill_parent"
-            android:layout_height="fill_parent">
-
-            <Button
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/load"
-                android:id="@+id/windowsCmdLoad" />
+                android:orientation="vertical"
+                android:padding="16dp">
 
-            <Button
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/save"
-                android:id="@+id/windowsCmdSave" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/hid_windows_cmd_description"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:gravity="center"
+                    android:paddingBottom="16dp" />
 
-            <Button
-                android:id="@+id/windowsCmdUpdate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/update" />
-        </LinearLayout>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/source"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:paddingBottom="8dp" />
 
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/source"
+                    style="?attr/textInputOutlinedStyle">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/windowsCmdSource"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="textMultiLine|textNoSuggestions"
+                        android:gravity="top" />
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <LinearLayout
+                    android:orientation="vertical"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/windowsCmdUpdate"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/update"
+                        android:textColor="@color/orange"
+                        style="?attr/materialButtonOutlinedStyle"
+                        android:layout_marginBottom="8dp" />
+
+                    <LinearLayout
+                        android:orientation="horizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/load"
+                            android:id="@+id/windowsCmdLoad"
+                            android:textColor="@color/orange"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_marginEnd="8dp" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/save"
+                            android:id="@+id/windowsCmdSave"
+                            android:textColor="@color/orange"
+                            style="?attr/materialButtonOutlinedStyle"
+                            android:layout_marginEnd="8dp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
-
 </ScrollView>

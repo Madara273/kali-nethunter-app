@@ -1,41 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="wrap_content">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingLeft="16dp"
-        android:paddingRight="16dp"
         android:orientation="vertical"
+        android:padding="16dp"
         android:focusableInTouchMode="true">
 
-
-        <TextView
+        <com.google.android.material.card.MaterialCardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="The Powershell HTTP payload allows you to download and run a generic powershell payload from a URL. The URL to payload should be in a location accessible to the victim."
-            android:layout_gravity="center_horizontal|center"
-            android:gravity="center"
-            android:padding="4dp" />
-        <TextView
-            android:layout_width="230dp"
-            android:layout_height="match_parent"
-            android:text="@string/ps_payload_url"
-            android:padding="4dp" />
+            android:layout_margin="8dp"
+            app:cardElevation="4dp"
+            app:cardCornerRadius="8dp">
 
-        <EditText
-            android:id="@+id/payloadUrl"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:ems="10"
-            android:inputType="text"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        <Button
-            android:id="@+id/powershellOptionsUpdate"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/update" />
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/hid_powershell_http_description"
+                    android:textAppearance="?attr/textAppearanceBodyMedium"
+                    android:gravity="center"
+                    android:paddingBottom="16dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/ps_payload_url"
+                    android:textAppearance="?attr/textAppearanceTitleMedium"
+                    android:paddingBottom="8dp" />
+
+                <com.google.android.material.textfield.TextInputLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="@string/ps_payload_url"
+                    style="?attr/textInputOutlinedStyle">
+
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/payloadUrl"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:inputType="text" />
+
+                </com.google.android.material.textfield.TextInputLayout>
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/powershellOptionsUpdate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginTop="16dp"
+                    android:text="@string/update"
+                    android:textColor="@color/orange"
+                    style="?attr/materialButtonOutlinedStyle" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
-
 </ScrollView>
