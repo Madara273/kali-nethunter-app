@@ -620,7 +620,7 @@
     <string name="kernel_codename">Codename:</string>
     <string name="kernel_android">Android:</string>
     <string name="kernel_custom_codename">Custom codename</string>
-    <string name="kernel_device_codename">device_codename</string>
+    <string name="kernel_device_codename">Device codename</string>
     <string name="kernel_check">Check</string>
     <string name="kernel_select_kernel_to_flash">Select kernel to flash</string>
     <string name="kernel_kernel_nethunter_zip">/sdcard/kernel_nethunter.zip</string>
