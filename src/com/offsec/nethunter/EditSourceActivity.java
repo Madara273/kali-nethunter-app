@@ -21,6 +21,7 @@ public class EditSourceActivity extends AppCompatActivity {
     private Activity activity;
     private final ShellExecuter exe = new ShellExecuter();
 
+    @SuppressWarnings("deprecation")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
