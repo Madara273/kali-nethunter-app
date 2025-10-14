@@ -51,7 +51,7 @@ public class WPSFragment extends Fragment {
     private LinearLayout DelayLayout;
     private Activity activity;
     private final ShellExecuter exe = new ShellExecuter();
-    private String selected_network;
+    private String selected_network = "";
     private String pixieCMD = "";
     private String pixieforceCMD = "";
     private String bruteCMD = "";
@@ -94,13 +94,8 @@ public class WPSFragment extends Fragment {
         ifaceSpinner = rootView.findViewById(R.id.wps_iface_spinner);
         ExecutorService ifaceExecutor = Executors.newSingleThreadExecutor();
         ifaceExecutor.execute(() -> {
-            String iwPath;
-            String abi = android.os.Build.SUPPORTED_ABIS[0];
-            if (abi.contains("arm64")) {
-                iwPath = NhPaths.APP_SCRIPTS_BIN_PATH + "/iw";
-            } else {
-                iwPath = NhPaths.APP_SCRIPTS_BIN_PATH + "/iw-armeabi";
-            }
+            // Always use the iw binary copied for the detected architecture by CopyBootFiles
+            String iwPath = NhPaths.APP_SCRIPTS_BIN_PATH + "/iw";
             Log.d(TAG, "Using iw binary: " + iwPath);
 
             // Log iw --version output
