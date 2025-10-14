@@ -330,35 +330,77 @@ public class NetHunterFragment extends Fragment {
     private void onMoveItemSetup() {
         moveButton.setOnClickListener(v -> {
             List<NethunterModel> fullList = NethunterData.getInstance().nethunterModelListFull;
-            if (fullList == null || fullList.isEmpty()) return;
-            String[] titles = new String[fullList.size()];
-            for (int i = 0; i < fullList.size(); i++) titles[i] = fullList.get(i).getTitle();
+            if (fullList == null || fullList.isEmpty()) {
+                Toast.makeText(requireContext(), "Nothing to move.", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-            // Step 1: select item to move
-            new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Select item to move")
-                    .setItems(titles, (dialog, originalIndex) -> {
-                        // Step 2: select target item
-                        new MaterialAlertDialogBuilder(requireContext())
-                                .setTitle("Select target item")
-                                .setItems(titles, (dialog2, targetItemIndex) -> {
-                                    // Step 3: choose before/after
-                                    String[] where = new String[]{"Before", "After"};
-                                    new MaterialAlertDialogBuilder(requireContext())
-                                            .setTitle("Place relative to target")
-                                            .setItems(where, (dialog3, whichPos) -> {
-                                                int targetIndex = targetItemIndex + (whichPos == 0 ? 0 : 1);
-                                                // Clamp to [0, size]
-                                                int size = fullList.size();
-                                                if (targetIndex < 0) targetIndex = 0;
-                                                if (targetIndex > size) targetIndex = size;
-                                                NethunterData.getInstance().moveData(originalIndex, targetIndex, NethunterSQL.getInstance(requireContext()));
-                                            })
-                                            .show();
-                                })
-                                .show();
-                    })
-                    .show();
+            // Build titles for dropdowns
+            ArrayList<String> titles = new ArrayList<>();
+            for (NethunterModel model : fullList) titles.add(model.getTitle());
+
+            // Inflate bottom sheet layout
+            LayoutInflater inflater = LayoutInflater.from(requireContext());
+            View sheet = inflater.inflate(R.layout.nethunter_move_bottomsheet, null, false);
+
+            // Setup dropdown adapters
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, titles);
+            android.widget.AutoCompleteTextView sourceActv = sheet.findViewById(R.id.move_source_actv);
+            android.widget.AutoCompleteTextView targetActv = sheet.findViewById(R.id.move_target_actv);
+            sourceActv.setAdapter(adapter);
+            targetActv.setAdapter(adapter);
+
+            // Sensible defaults: source first item, target second (or first if only one)
+            int defaultSource = 0;
+            int defaultTarget = Math.min(1, titles.size() - 1);
+            if (!titles.isEmpty()) sourceActv.setText(titles.get(defaultSource), false);
+            if (!titles.isEmpty()) targetActv.setText(titles.get(defaultTarget), false);
+
+            com.google.android.material.button.MaterialButtonToggleGroup posGroup = sheet.findViewById(R.id.move_position_group);
+            // Default to After for a more natural append-like move
+            posGroup.check(R.id.move_after);
+
+            com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+            dialog.setContentView(sheet);
+
+            View cancelBtn = sheet.findViewById(R.id.move_cancel_btn);
+            View confirmBtn = sheet.findViewById(R.id.move_confirm_btn);
+
+            cancelBtn.setOnClickListener(x -> dialog.dismiss());
+            confirmBtn.setOnClickListener(x -> {
+                String srcTitle = String.valueOf(sourceActv.getText());
+                String tgtTitle = String.valueOf(targetActv.getText());
+
+                if (srcTitle.isEmpty()) { sourceActv.setError("Select an item"); return; }
+                if (tgtTitle.isEmpty()) { targetActv.setError("Select a target"); return; }
+
+                int originalIndex = adapter.getPosition(srcTitle);
+                int targetItemIndex = adapter.getPosition(tgtTitle);
+                if (originalIndex < 0 || targetItemIndex < 0) {
+                    Toast.makeText(requireContext(), "Invalid selection", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                boolean placeBefore = posGroup.getCheckedButtonId() == R.id.move_before;
+                int targetIndex = targetItemIndex + (placeBefore ? 0 : 1);
+
+                // Clamp to [0, size]
+                int size = fullList.size();
+                if (targetIndex < 0) targetIndex = 0;
+                if (targetIndex > size) targetIndex = size;
+
+                // No-op checks: moving an item before itself or after just itself yields same order
+                if (originalIndex == targetItemIndex && (placeBefore || (!placeBefore && originalIndex + 1 == targetIndex))) {
+                    Toast.makeText(requireContext(), "No change", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                    return;
+                }
+
+                NethunterData.getInstance().moveData(originalIndex, targetIndex, NethunterSQL.getInstance(requireContext()));
+                dialog.dismiss();
+            });
+
+            dialog.show();
         });
     }
 
