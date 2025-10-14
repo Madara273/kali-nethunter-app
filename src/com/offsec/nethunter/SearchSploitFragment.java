@@ -23,7 +23,7 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.SearchView;
+import androidx.appcompat.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -65,6 +65,7 @@ public class SearchSploitFragment extends Fragment {
     private SearchSploitSQL database;
     private Context context;
     private Activity activity;
+    private View rootView;
 
     public static SearchSploitFragment newInstance(int sectionNumber) {
         SearchSploitFragment fragment = new SearchSploitFragment();
@@ -84,7 +85,7 @@ public class SearchSploitFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        final View rootView = inflater.inflate(R.layout.searchsploit, container, false);
+        rootView = inflater.inflate(R.layout.searchsploit, container, false);
 
         database = new SearchSploitSQL(context);
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
@@ -120,44 +121,7 @@ public class SearchSploitFragment extends Fragment {
             }
         });
         // Load/reload database button
-        final Button searchSearchSploit = rootView.findViewById(R.id.serchsploit_loadDB);
         final ProgressBar progressBar = rootView.findViewById(R.id.progressBar);
-        searchSearchSploit.setOnClickListener(v -> {
-            progressBar.setVisibility(View.VISIBLE);
-            new Thread(() -> {
-                final Boolean isFeeded = database.doDbFeed();
-                searchSearchSploit.post(() -> {
-                    if (isFeeded) {
-                        NhPaths.showMessage_long(context, "DB FEED DONE");
-                        try {
-                            String sd = Environment.getExternalStorageDirectory().getPath();
-                            String data = NhPaths.APP_PATH + "/";
-                            String DATABASE_NAME = "SearchSploit";
-                            String currentDBPath = "databases/" + DATABASE_NAME;
-                            String backupDBPath = "/nh_files/" + DATABASE_NAME;
-
-                            File backupDB = new File(data, currentDBPath);
-                            File currentDB = new File(sd, backupDBPath);
-
-                            try (FileInputStream fis = new FileInputStream(currentDB);
-                                 FileOutputStream fos = new FileOutputStream(backupDB);
-                                 FileChannel src = fis.getChannel();
-                                 FileChannel dst = fos.getChannel()) {
-                                dst.transferFrom(src, 0, src.size());
-                            }
-                            Log.d("importDB", "Successfully imported " + DATABASE_NAME);
-                            initUi(rootView);
-                        } catch (Exception e) {
-                            Log.d("importDB", e.toString());
-                        }
-                    } else {
-                        NhPaths.showMessage_long(context,
-                                "Unable to find Searchsploit files.csv database. Install exploitdb in chroot");
-                    }
-                    progressBar.setVisibility(View.GONE);
-                });
-            }).start();
-        });
         //prevents menu stuck
         rootView.postDelayed(() -> initUi(rootView), 250);
 
@@ -332,16 +296,13 @@ public class SearchSploitFragment extends Fragment {
     private void initUi(final View rootView) {
         searchSploitListView = rootView.findViewById(R.id.searchResultsList);
         long exploitCount = database.getCount();
-        Button searchSearchSploit = rootView.findViewById(R.id.serchsploit_loadDB);
         if (exploitCount == 0) {
-            searchSearchSploit.setVisibility(View.VISIBLE);
             rootView.findViewById(R.id.search_filters).setVisibility(View.GONE);
             adi.dismiss();
             hideSoftKeyboard(requireView());
             return;
         } else {
             rootView.findViewById(R.id.search_filters).setVisibility(View.VISIBLE);
-            searchSearchSploit.setVisibility(View.GONE);
         }
 
         final List<String> platformList = database.getPlatforms();
@@ -400,15 +361,50 @@ public class SearchSploitFragment extends Fragment {
             ExploitLoader exploitAdapter = new ExploitLoader(context, exploitList);
             searchSploitListView.setAdapter(exploitAdapter);
             if (!isLoaded) {
-                // preloading the long list lets see if is more performant
-                // preload in the background.
-                new Thread(() -> full_exploitList = database.getAllExploitsRaw("")).start();
 
                 adi.dismiss();
                 isLoaded = true;
                 hideSoftKeyboard(requireView());
             }
         }
+    }
+
+    private void loadDatabase() {
+        final ProgressBar progressBar = rootView.findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.VISIBLE);
+        new Thread(() -> {
+            final Boolean isFeeded = database.doDbFeed();
+            requireActivity().runOnUiThread(() -> {
+                if (isFeeded) {
+                    NhPaths.showMessage_long(context, "DB FEED DONE");
+                    try {
+                        String sd = Environment.getExternalStorageDirectory().getPath();
+                        String data = NhPaths.APP_PATH + "/";
+                        String DATABASE_NAME = "SearchSploit";
+                        String currentDBPath = "databases/" + DATABASE_NAME;
+                        String backupDBPath = "/nh_files/" + DATABASE_NAME;
+
+                        File backupDB = new File(data, currentDBPath);
+                        File currentDB = new File(sd, backupDBPath);
+
+                        try (FileInputStream fis = new FileInputStream(currentDB);
+                             FileOutputStream fos = new FileOutputStream(backupDB);
+                             FileChannel src = fis.getChannel();
+                             FileChannel dst = fos.getChannel()) {
+                            dst.transferFrom(src, 0, src.size());
+                        }
+                        Log.d("importDB", "Successfully imported " + DATABASE_NAME);
+                        initUi(rootView);
+                    } catch (Exception e) {
+                        Log.d("importDB", e.toString());
+                    }
+                } else {
+                    NhPaths.showMessage_long(context,
+                            "Unable to find Searchsploit files.csv database. Install exploitdb in chroot");
+                }
+                progressBar.setVisibility(View.GONE);
+            });
+        }).start();
     }
 }
 
