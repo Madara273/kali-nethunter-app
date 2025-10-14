@@ -144,26 +144,26 @@ if [ ! $# -eq 0 ]; then
             shift 1
             case $# in
                 0)
-                    bklog "[!] chroot path is set to -> $MNT"
+                    #bklog "[!] Path set to -> $MNT"
                     if [ ! -d "$MNT" ]; then
                         bklog "[-] \"$MNT\" directory not exist!"
-                        bklog "[!] Click the button [INSTALL KALI CHROOT] down below now!"
+                        bklog "[!] click the button [INSTALL] down below now!"
                         exit 2
                     fi
 
                     bklog "[!] verifying chroot environment..."
                     if [ "$($BUSYBOX chroot $MNT /bin/uname -n)" ]; then
-                        bklog "[+] seems you have kali chroot installed already!"
+                        #bklog "[+] seems you have kali chroot installed already!"
                         ## Define chroot shell executable path.
                         if [ -x $MNT/usr/bin/sudo ]; then
                             CHROOT_EXEC=/usr/bin/sudo
                         else
-                            bklog "[-] Your chroot has no \"sudo\" installed, installing now."
+                            bklog "[-] chroot has no \"sudo\" installed, installing now."
                             sh ${SCRIPT_PATH%/*}/bootkali_init
                             $BUSYBOX chroot $MNT /bin/bash -c 'apt update && apt install sudo -y'
                             if [ ! -x $MNT$CHROOT_EXEC ]; then
-                                bklog "[-] Seems the sudo is not installed successfully."
-                                bklog "[-] Make sure your Kali Chroot is not corrupted."
+                                bklog "[-] seems the sudo is not installed successfully."
+                                bklog "[-] make sure your Kali Chroot is not corrupted."
                                 exit 2
                             fi
                         fi
@@ -180,15 +180,15 @@ if [ ! $# -eq 0 ]; then
                         done
 
                       if [ $ISALLREADY -eq 0 ]; then
-                            bklog "[+] Chroot environment has been set and started."
-                            bklog "[!] You may click \"STOP KALI CHROOT\" to shutdown the chroot environment."
+                            #bklog "[+] chroot environment has been set and started."
+                            #bklog "[!] Click \"STOP\" to shutdown the chroot environment."
                             return 0
                       else
-                            bklog "[!] You may click \"START KALI CHROOT\" to start the chroot environment."
+                            bklog "[!] click \"START\" to start the chroot environment."
                             return 1
                       fi
                     else
-                        bklog "[-] seems there is no kali chroot installed yet, please click the button \"EDIT\" to configure the proper Kali Chroot Path or install the chroot."
+                        bklog "[-] no Kali chroot installed yet, please click the button \"EDIT\" to configure the proper Chroot Path or install the chroot."
                         return 2
                     fi
                     ;;

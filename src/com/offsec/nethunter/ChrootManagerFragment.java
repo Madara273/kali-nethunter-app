@@ -260,9 +260,11 @@ public class ChrootManagerFragment extends Fragment {
                 boolean isRunning = currentChrootState == IS_MOUNTED;
                 MenuItem backup = menu.findItem(R.id.menu_backup_chroot);
                 MenuItem restore = menu.findItem(R.id.menu_restore_chroot);
+                MenuItem autostart = menu.findItem(R.id.menu_autostart_chroot);
                 // Disable when NOT running (also covers not installed); Android grays out disabled items.
                 if (backup != null) backup.setEnabled(isRunning);
                 if (restore != null) restore.setEnabled(isRunning);
+                if (autostart != null) autostart.setChecked(sharedPreferences.getBoolean(SharePrefTag.CHROOT_AUTOSTART_SHAREPREF_TAG, true));
             }
             @Override public boolean onMenuItemSelected(@NonNull MenuItem menuItem) {
                 int id = menuItem.getItemId();
@@ -274,6 +276,12 @@ public class ChrootManagerFragment extends Fragment {
                     return true;
                 } else if (id == R.id.menu_restore_chroot) {
                     if (restoreChrootButton != null) restoreChrootButton.performClick();
+                    return true;
+                } else if (id == R.id.menu_autostart_chroot) {
+                    boolean current = sharedPreferences.getBoolean(SharePrefTag.CHROOT_AUTOSTART_SHAREPREF_TAG, true);
+                    sharedPreferences.edit().putBoolean(SharePrefTag.CHROOT_AUTOSTART_SHAREPREF_TAG, !current).apply();
+                    // Refresh menu
+                    if (activity != null) activity.invalidateOptionsMenu();
                     return true;
                 }
                 return false;
@@ -305,7 +313,8 @@ public class ChrootManagerFragment extends Fragment {
         new MaterialAlertDialogBuilder(act, R.style.DialogStyleCompat)
                 .setTitle("Encryption Status")
                 .setMessage(msg.toString().trim())
-                .setPositiveButton(android.R.string.ok, null)
+                .setPositiveButton("Close", null)
+                .setNegativeButton("Fix", (dialog, which) -> run_cmd_android(NhPaths.APP_SCRIPTS_PATH + "/bootkali_init"))
                 .show();
     }
 
@@ -466,6 +475,26 @@ public class ChrootManagerFragment extends Fragment {
             resultViewerLoggerTextView.setText("");
             chrootManagerExecutor.execute(resultViewerLoggerTextView);
         });
+    }
+
+    private void autoMountChroot() {
+        chrootManagerExecutor = new ChrootManagerExecutor(ChrootManagerExecutor.MOUNT_CHROOT);
+        chrootManagerExecutor.setListener(new ChrootManagerExecutor.ChrootManagerExecutorListener() {
+            @Override public void onExecutorPrepare() {
+                // Auto mount silently, no progress or disable buttons
+            }
+            @Override public void onExecutorProgressUpdate(int progress) { }
+            @Override public void onExecutorFinished(int resultCode, ArrayList<String> resultString) {
+                if (resultCode == 0){
+                    currentChrootState = IS_MOUNTED;
+                    setButtonVisibility(IS_MOUNTED);
+                    setMountStatsTextView(IS_MOUNTED);
+                    context.startService(new Intent(context, NotificationChannelService.class).setAction(NotificationChannelService.USENETHUNTER));
+                }
+            }
+        });
+        resultViewerLoggerTextView.setText("");
+        chrootManagerExecutor.execute(resultViewerLoggerTextView);
     }
 
     private void setInstallChrootButton() {
@@ -908,6 +937,11 @@ public class ChrootManagerFragment extends Fragment {
 
     public void run_cmd(String cmd) {
         Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        activity.startActivity(intent);
+    }
+
+    public void run_cmd_android(String cmd) {
+        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/android-su", cmd);
         activity.startActivity(intent);
     }
 }
