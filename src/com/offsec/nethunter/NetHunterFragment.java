@@ -445,21 +445,66 @@ public class NetHunterFragment extends Fragment {
     private void onDeleteItemSetup(){
         deleteButton.setOnClickListener(v -> {
             List<NethunterModel> fullList = NethunterData.getInstance().nethunterModelListFull;
-            if (fullList == null || fullList.isEmpty()) return;
-            String[] titles = new String[fullList.size()];
-            for (int i = 0; i < fullList.size(); i++) titles[i] = fullList.get(i).getTitle();
+            if (fullList == null || fullList.isEmpty()) {
+                Toast.makeText(requireContext(), "Nothing to delete.", Toast.LENGTH_SHORT).show();
+                return;
+            }
 
-            new MaterialAlertDialogBuilder(requireContext())
-                    .setTitle("Delete Item")
-                    .setItems(titles, (dialog, which) -> {
-                        ArrayList<Integer> selectedPositionsIndex = new ArrayList<>();
-                        ArrayList<Integer> selectedTargetIds = new ArrayList<>();
-                        selectedPositionsIndex.add(which);
-                        selectedTargetIds.add(which + 1); // DB id is 1-based
-                        NethunterData.getInstance().deleteData(selectedPositionsIndex, selectedTargetIds, NethunterSQL.getInstance(requireContext()));
-                        Toast.makeText(requireContext(), "Delete requested.", Toast.LENGTH_SHORT).show();
-                    })
-                    .show();
+            // Build titles
+            ArrayList<String> titles = new ArrayList<>();
+            for (NethunterModel model : fullList) titles.add(model.getTitle());
+
+            // Inflate bottom sheet
+            LayoutInflater inflater = LayoutInflater.from(requireContext());
+            View sheet = inflater.inflate(R.layout.nethunter_delete_bottomsheet, null, false);
+            LinearLayout container = sheet.findViewById(R.id.delete_list_container);
+
+            // Add a checkbox per item
+            for (int i = 0; i < titles.size(); i++) {
+                com.google.android.material.checkbox.MaterialCheckBox cb = new com.google.android.material.checkbox.MaterialCheckBox(requireContext());
+                cb.setText(titles.get(i));
+                cb.setChecked(false);
+                cb.setTag(i); // store 0-based position index
+                container.addView(cb);
+            }
+
+            com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+            dialog.setContentView(sheet);
+
+            View cancelBtn = sheet.findViewById(R.id.delete_cancel_btn);
+            View confirmBtn = sheet.findViewById(R.id.delete_confirm_btn);
+
+            cancelBtn.setOnClickListener(x -> dialog.dismiss());
+            confirmBtn.setOnClickListener(x -> {
+                ArrayList<Integer> selectedPositionsIndex = new ArrayList<>();
+                ArrayList<Integer> selectedTargetIds = new ArrayList<>();
+
+                final int childCount = container.getChildCount();
+                for (int i = 0; i < childCount; i++) {
+                    View child = container.getChildAt(i);
+                    if (child instanceof com.google.android.material.checkbox.MaterialCheckBox) {
+                        com.google.android.material.checkbox.MaterialCheckBox cb = (com.google.android.material.checkbox.MaterialCheckBox) child;
+                        if (cb.isChecked()) {
+                            Object tag = cb.getTag();
+                            if (tag instanceof Integer) {
+                                int pos = (Integer) tag; // 0-based adapter/index
+                                selectedPositionsIndex.add(pos);
+                                selectedTargetIds.add(pos + 1); // DB id is 1-based
+                            }
+                        }
+                    }
+                }
+
+                if (selectedPositionsIndex.isEmpty()) {
+                    Toast.makeText(requireContext(), "Select at least one item", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                NethunterData.getInstance().deleteData(selectedPositionsIndex, selectedTargetIds, NethunterSQL.getInstance(requireContext()));
+                dialog.dismiss();
+            });
+
+            dialog.show();
         });
     }
 }
