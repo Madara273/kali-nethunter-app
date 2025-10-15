@@ -23,7 +23,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -94,7 +93,6 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
     public CopyBootFilesExecutor copyBootFilesExecutor;
     public static MenuItem customCMDitem;
     private final ShellExecuter exe = new ShellExecuter();
-    private boolean pythonTestRan = false;
     private volatile boolean rootViewInitialized = false;
 
     @Override
@@ -422,7 +420,6 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         }
     }
 
-    @SuppressWarnings("deprecation")
     private void setRootView() {
         setContentView(R.layout.base_layout);
 
