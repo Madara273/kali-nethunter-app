@@ -99,6 +99,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
     public static MenuItem customCMDitem;
     private final ShellExecuter exe = new ShellExecuter();
     private boolean pythonTestRan = false;
+    private volatile boolean rootViewInitialized = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -232,7 +233,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
 
                 // Check if all required permissions are granted.
                 if (isAllRequiredPermissionsGranted()) {
-                    setRootView();
+                    ensureRootView();
                 }
             }
         });
@@ -319,7 +320,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
                 }
             }
             if (allGranted) {
-                setRootView();
+                ensureRootView();
             } else {
                 showWarningDialog("NetHunter app cannot be run properly", "Please grant all the permission requests from outside the app or restart the app to grant the rest of permissions again.", true);
             }
@@ -426,6 +427,15 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         }
     }
 
+    private synchronized void ensureRootView() {
+        if (rootViewInitialized) return;
+        try {
+            setRootView();
+        } finally {
+            rootViewInitialized = true;
+        }
+    }
+
     @SuppressWarnings("deprecation")
     private void setRootView() {
         setContentView(R.layout.base_layout);
@@ -510,9 +520,10 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
 
         setupDrawerContent(navigationView);
 
+        // Use allowingStateLoss to avoid IllegalStateException if state was already saved
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.container, NetHunterFragment.newInstance(R.id.nethunter_item))
-                .commit();
+                .commitAllowingStateLoss();
 
         // First menu item title
         Menu nvMenu = navigationView.getMenu();
@@ -673,6 +684,8 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
             }
         } else if (itemId == R.id.searchsploit_item) {
             changeFragment(fragmentManager, com.offsec.nethunter.SearchSploitFragment.newInstance(itemId));
+        } else if (itemId == R.id.terminal_item) {
+            changeFragment(fragmentManager, TerminalFragment.newInstance(itemId));
         } else if (itemId == R.id.nmap_item) {
             changeFragment(fragmentManager, NmapFragment.newInstance(itemId));
         } else if (itemId == R.id.pineapple_item) {
@@ -717,11 +730,19 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
     }
 
     private void changeFragment(FragmentManager fragmentManager, Fragment fragment) {
-        fragmentManager
-                .beginTransaction()
-                .replace(R.id.container, fragment)
-                .addToBackStack(null)
-                .commit();
+        if (fragmentManager.isStateSaved()) {
+            fragmentManager
+                    .beginTransaction()
+                    .replace(R.id.container, fragment)
+                    .addToBackStack(null)
+                    .commitAllowingStateLoss();
+        } else {
+            fragmentManager
+                    .beginTransaction()
+                    .replace(R.id.container, fragment)
+                    .addToBackStack(null)
+                    .commit();
+        }
     }
 
     private boolean isAllRequiredPermissionsGranted() {

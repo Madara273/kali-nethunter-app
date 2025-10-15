@@ -14,14 +14,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.offsec.nethunter.RecyclerViewAdapter.NethunterRecyclerViewAdapter;
 import com.offsec.nethunter.RecyclerViewData.NethunterData;
 import com.offsec.nethunter.SQL.NethunterSQL;
@@ -428,7 +424,7 @@ public class NetHunterFragment extends Fragment {
                 if (targetIndex > size) targetIndex = size;
 
                 // No-op checks: moving an item before itself or after just itself yields same order
-                if (originalIndex == targetItemIndex && (placeBefore || (!placeBefore && originalIndex + 1 == targetIndex))) {
+                if (originalIndex == targetItemIndex && (placeBefore || originalIndex + 1 == targetIndex)) {
                     Toast.makeText(requireContext(), "No change", Toast.LENGTH_SHORT).show();
                     dialog.dismiss();
                     return;
