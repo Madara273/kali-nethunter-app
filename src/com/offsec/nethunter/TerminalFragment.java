@@ -58,6 +58,7 @@ import androidx.core.view.MenuProvider;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import androidx.appcompat.widget.SearchView;
 
 public class TerminalFragment extends Fragment implements MenuProvider {
     private static final String TAG = "TerminalFragment";
@@ -67,7 +68,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private TerminalAdapter terminalAdapter;
     private Process process;
     private OutputStream outputStream;
-    private BufferedWriter writer;
+    private static BufferedWriter writer;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Thread outputThread;
     private Thread errorThread;
@@ -86,7 +87,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private int ptyPid = -1;
     private ParcelFileDescriptor ptyPfd;
     private FileInputStream ptyIn;
-    private FileOutputStream ptyOut;
+    private static FileOutputStream ptyOut;
     private Thread ptyReadThread;
     private SpannableStringBuilder currentLine = new SpannableStringBuilder();
     private int currentLineSegmentStart = 0;
@@ -385,6 +386,25 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     @Override
     public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
         menuInflater.inflate(R.menu.terminal_menu, menu);
+        MenuItem searchItem = menu.findItem(R.id.action_search);
+        if (searchItem != null) {
+            View actionView = searchItem.getActionView();
+            if (actionView instanceof SearchView) {
+                SearchView sv = (SearchView) actionView;
+                sv.setQueryHint("Search output...");
+                sv.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                    @Override public boolean onQueryTextSubmit(String query) {
+                        if (terminalAdapter != null) terminalAdapter.setHighlightTerm(query);
+                        searchAndScrollTo(query);
+                        return true;
+                    }
+                    @Override public boolean onQueryTextChange(String newText) {
+                        if (terminalAdapter != null) terminalAdapter.setHighlightTerm(newText);
+                        return true;
+                    }
+                });
+            }
+        }
     }
 
     @Override
@@ -536,9 +556,10 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 }
                 currentLineSegmentStart = currentLine.length();
             } else if (c == '\n' || c == '\r') {
+                // treat CRLF as a single newline to avoid blank lines
+                char next = (i + 1 < len) ? text.charAt(i + 1) : 0;
                 applyCurrentStyle(currentLine, currentLineSegmentStart);
                 if (isErr) {
-                    // Prepend error tag
                     SpannableStringBuilder errPrefix = new SpannableStringBuilder("[err] ");
                     errPrefix.setSpan(new ForegroundColorSpan(0xFFFF5555), 0, errPrefix.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
                     errPrefix.append(currentLine);
@@ -548,7 +569,11 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 }
                 currentLine = new SpannableStringBuilder();
                 currentLineSegmentStart = 0;
-                i++;
+                if (c == '\r' && next == '\n') {
+                    i += 2; // skip both \r and \n
+                } else {
+                    i++;
+                }
             } else {
                 currentLine.append(c);
                 i++;
@@ -712,7 +737,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         return defaultFgColor;
     }
 
-    private synchronized void writePty(String data) throws IOException {
+    private static synchronized void writePty(String data) throws IOException {
         Log.d(TAG, "Writing to PTY: " + data.replace("\n", "\\n").replace("\r", "\\r"));
         if (ptyOut != null) {
             byte[] b = data.getBytes(StandardCharsets.UTF_8);
@@ -789,8 +814,9 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         }).start();
     }
 
-    private void sendSpecificCommand(String cmd) {
+    private static void sendSpecificCommand(String cmd) {
         Log.d(TAG, "Sending specific command: " + cmd);
+        Log.d(TAG, "USE_PTY: " + USE_PTY + ", ptyOut: " + ptyOut + ", writer: " + writer);
         new Thread(() -> {
             try {
                 if (USE_PTY && ptyOut != null) {
@@ -807,7 +833,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         }).start();
     }
 
-    public void sendCommandViaBridge(String command) {
+    public static void sendCommandViaBridge(String command) {
         sendSpecificCommand(command);
     }
 
@@ -815,7 +841,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     public void onDestroyView() {
         super.onDestroyView();
         requireActivity().removeMenuProvider(this);
-        stopTerminal();
+        new Thread(this::stopTerminal).start();
     }
 
     private void stopTerminal() {
