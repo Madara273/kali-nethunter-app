@@ -1,15 +1,14 @@
 //import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 apply plugin: 'com.android.application'
-apply plugin: 'com.chaquo.python'
 //apply plugin: 'org.jetbrains.kotlin.android'
 
-tasks.withType(JavaCompile).configureEach {
-    //options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
-    //options.deprecation = true
-    // Optional: fail the build on warnings
-    // options.compilerArgs += ['-Werror']
-}
+/* tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
+    options.deprecation = true
+    Optional: fail the build on warnings
+    options.compilerArgs += ['-Werror']
+} */
 
 buildscript {
     repositories {
@@ -19,7 +18,6 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.9.1'
-        classpath 'com.chaquo.python:gradle:14.0.2'
         //classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.20"
     }
 }
@@ -35,6 +33,7 @@ repositories {
 
 android {
     namespace "com.offsec.nethunter"
+    //noinspection ExpiredCompileSdkVersion
     compileSdk 34
     //noinspection GradleDependency
 
@@ -62,23 +61,6 @@ android {
         versionName '2025.4-dev'
         multiDexEnabled true
         applicationId "com.offsec.nethunter"
-
-        ndk {
-            abiFilters 'armeabi-v7a', 'arm64-v8a', 'x86', 'x86_64'
-        }
-
-        externalNativeBuild {
-            cmake {
-                // Match minSdk; provide platform to suppress warnings
-                arguments "-DANDROID_PLATFORM=android-21"
-            }
-        }
-    }
-
-    externalNativeBuild {
-        cmake {
-            path "CMakeLists.txt"
-        }
     }
 
     signingConfigs {
@@ -98,8 +80,6 @@ android {
             renderscript.srcDirs = ['src']
             res.srcDirs = ['res']
             assets.srcDirs = ['assets']
-            // Add Python sources for Chaquopy
-            python.srcDir 'src/main/python'
         }
     }
 
@@ -145,9 +125,9 @@ dependencies {
     implementation 'androidx.preference:preference:1.2.1'
     //implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.2.20'
     implementation 'androidx.viewpager2:viewpager2:1.1.0'
+    implementation 'androidx.navigation:navigation-runtime:2.9.5'
     // Snowfall
     implementation 'com.github.jetradarmobile:android-snowfall:1.2.1'
-    implementation 'androidx.navigation:navigation-runtime:2.9.5'
     //debugImplementation 'com.squareup.leakcanary:leakcanary-android:3.0-alpha-8'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
 }
