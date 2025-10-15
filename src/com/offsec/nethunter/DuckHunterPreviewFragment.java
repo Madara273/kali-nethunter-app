@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
@@ -29,11 +30,9 @@ public class DuckHunterPreviewFragment extends Fragment {
     private static final String ARG_IN_PATH = "arg_in_path";
     private static final String ARG_OUT_PATH = "arg_out_path";
     private static final String TAG = "DuckHunterPreview";
-
     private final ExecutorService executorService = Executors.newSingleThreadExecutor();
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ShellExecuter exe = new ShellExecuter();
-
     private String duckyInputFile;
     private String duckyOutputFile;
     private TextView previewSource;
@@ -138,12 +137,8 @@ public class DuckHunterPreviewFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateView | container=" + container + ", inflaterNull=" + (inflater == null));
-        if (inflater == null) {
-            Log.w(TAG, "LayoutInflater is null; returning an empty fallback view");
-            return new View(requireContext());
-        }
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Log.d(TAG, "onCreateView | container=" + container + ", inflaterNull=" + false);
         View rootView = inflater.inflate(R.layout.duck_hunter_preview, container, false);
         previewSource = rootView.findViewById(R.id.source);
         Log.d(TAG, "onCreateView | previewSource bound? " + (previewSource != null));
