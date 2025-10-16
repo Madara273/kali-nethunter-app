@@ -59,6 +59,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.app.AppCompatActivity;
 
 public class TerminalFragment extends Fragment implements MenuProvider {
     private static final String TAG = "TerminalFragment";
@@ -1057,5 +1058,20 @@ public class TerminalFragment extends Fragment implements MenuProvider {
             candidates.add("/bin/bash"); candidates.add("/usr/bin/bash");
         }
         return candidates;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        setActionBarTitleToTerminal();
+    }
+
+    private void setActionBarTitleToTerminal() {
+        try {
+            AppCompatActivity act = (AppCompatActivity) getActivity();
+            if (act != null && act.getSupportActionBar() != null) {
+                act.getSupportActionBar().setTitle(R.string.drawertitleterminal);
+            }
+        } catch (Throwable ignored) { }
     }
 }
