@@ -1405,6 +1405,11 @@
     <string name="audio_permission_denied_cannot_start_playback">Audio permission denied. Cannot start playback.</string>
     <string name="notification_permission_denied">audio_notification_permission_denied</string>
     <string name="drawertitleterminal">Terminal</string>
+    <string name="nethunter_refresh">Refresh</string>
+    <string name="nethunter_add">Add</string>
+    <string name="nethunter_delete">Delete</string>
+    <string name="nethunter_move">Move</string>
+    <string name="nethunter_system_information">SYSTEM INFORMATION</string>
 
     <!-- TTS Voice Model-->
     <string-array name="tts_voices">
