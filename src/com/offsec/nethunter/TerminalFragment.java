@@ -63,6 +63,7 @@ import androidx.appcompat.widget.SearchView;
 public class TerminalFragment extends Fragment implements MenuProvider {
     private static final String TAG = "TerminalFragment";
     private static final String ARG_ITEM_ID = "item_id";
+    private static final String KEY_INITIAL_COMMAND = "initial_command";
     private TextInputEditText inputEdit;
     private RecyclerView terminalRecycler;
     private TerminalAdapter terminalAdapter;
@@ -108,6 +109,18 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         TerminalFragment fragment = new TerminalFragment();
         Bundle args = new Bundle();
         args.putInt(ARG_ITEM_ID, itemId);
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+    // Added: factory that accepts an initial command to run when terminal is ready
+    public static TerminalFragment newInstanceWithCommand(int itemId, @Nullable String initialCmd) {
+        TerminalFragment fragment = new TerminalFragment();
+        Bundle args = new Bundle();
+        args.putInt(ARG_ITEM_ID, itemId);
+        if (initialCmd != null && !initialCmd.trim().isEmpty()) {
+            args.putString(KEY_INITIAL_COMMAND, initialCmd);
+        }
         fragment.setArguments(args);
         return fragment;
     }
@@ -384,8 +397,16 @@ public class TerminalFragment extends Fragment implements MenuProvider {
             btnCtrlC.setOnClickListener(v -> sendControlChar()); // ETX
         }
         startTerminal();
-        // Run uname -a shortly after shell starts; suppress command echo for this probe
+        // Run uname -a shortly after shell starts
         handler.postDelayed(this::runInitialUnameProbe, 400);
+        // If an initial command was provided, schedule it after startup
+        Bundle args = getArguments();
+        if (args != null && args.containsKey(KEY_INITIAL_COMMAND)) {
+            final String initCmd = args.getString(KEY_INITIAL_COMMAND);
+            if (initCmd != null && !initCmd.trim().isEmpty()) {
+                handler.postDelayed(() -> sendSpecificCommand(initCmd), 650);
+            }
+        }
         // PTY window size after layout
         terminalRecycler.post(this::updatePtyWindowSize);
         return view;

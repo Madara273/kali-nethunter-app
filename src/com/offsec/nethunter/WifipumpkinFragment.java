@@ -50,6 +50,7 @@ import androidx.fragment.app.Fragment;
 import androidx.core.view.MenuHost;
 import androidx.core.view.MenuProvider;
 import androidx.lifecycle.Lifecycle;
+import androidx.fragment.app.FragmentManager;
 
 public class WifipumpkinFragment extends Fragment {
     private SharedPreferences sharedpreferences;
@@ -334,9 +335,27 @@ public class WifipumpkinFragment extends Fragment {
 
     public void RunSetup() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        run_cmd("echo -ne \"\\033]0;Wifipumpkin3 Setup\\007\" && clear;apt update && apt install wifipumpkin3 dnschef -y; wp3; " +
-                "echo 'Done!'; echo 'Closing in 3secs..'; sleep 3 && exit ");
+        String cmd = "apt update && apt install wifipumpkin3 dnschef -y; wp3;";
+        openTerminalWithCommand(cmd);
         sharedpreferences.edit().putBoolean("wp3_setup_done", true).apply();
+    }
+
+    // Helper to route commands through TerminalFragment (saves memory vs external NhTerm)
+    private void openTerminalWithCommand(String cmd) {
+        if (!isAdded()) return;
+        FragmentManager fm = requireActivity().getSupportFragmentManager();
+        Fragment term = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
+        if (fm.isStateSaved()) {
+            fm.beginTransaction()
+                    .replace(R.id.container, term)
+                    .addToBackStack(null)
+                    .commitAllowingStateLoss();
+        } else {
+            fm.beginTransaction()
+                    .replace(R.id.container, term)
+                    .addToBackStack(null)
+                    .commit();
+        }
     }
 
     // Refresh templates
