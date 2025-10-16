@@ -102,6 +102,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private static final boolean USE_CHROOT_DIRECT = true;
     private static final String DEFAULT_HOSTNAME = "kali";
     private static final String KEY_PREF_SHELL = "preferred_shell";
+    private volatile boolean shuttingDown = false;
 
     public static TerminalFragment newInstance(int itemId) {
         TerminalFragment fragment = new TerminalFragment();
@@ -182,6 +183,8 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     }
 
     private void startTerminal() {
+        // Reset shutdown flag when (re)starting
+        shuttingDown = false;
         if (USE_PTY && PtyNative.isLoaded()) {
             startTerminalPty();
         } else {
@@ -194,6 +197,8 @@ public class TerminalFragment extends Fragment implements MenuProvider {
 
     private void startTerminalProcess() {
         Log.d(TAG, "Starting terminal process");
+        // ensure we're not in shutdown state
+        shuttingDown = false;
         new Thread(() -> {
             try {
                 process = Runtime.getRuntime().exec("su -mm");
@@ -224,6 +229,8 @@ public class TerminalFragment extends Fragment implements MenuProvider {
 
     private void startTerminalPty() {
         Log.d(TAG, "Starting PTY terminal");
+        // ensure we're not in shutdown state
+        shuttingDown = false;
         new Thread(() -> {
             try {
                 int[] res;
@@ -320,6 +327,11 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         View btnDown = view.findViewById(R.id.btn_down);
         View btnCtrlC = view.findViewById(R.id.btn_ctrl_c);
         ctrlCButton = btnCtrlC;
+        // Wire Clear button to wipe terminal output ring buffer
+        View btnClear = view.findViewById(R.id.terminal_cmd_clear);
+        if (btnClear != null) {
+            btnClear.setOnClickListener(v -> clearTerminal());
+        }
         // initial state until PTY is known
         updateCtrlCButtonState();
         if (inputEdit != null) {
@@ -771,9 +783,17 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 });
             }
         } catch (InterruptedIOException e) {
-            Log.d(TAG, "Stream read interrupted (expected during shutdown)", e);
+            if (shuttingDown) {
+                Log.d(TAG, "Stream read cancelled during shutdown: " + e.getMessage());
+            } else {
+                Log.w(TAG, "Stream read interrupted", e);
+            }
         } catch (IOException e) {
-            Log.e(TAG, "Error reading stream", e);
+            if (shuttingDown) {
+                Log.d(TAG, "Stream closed during shutdown: " + (e.getMessage() != null ? e.getMessage() : ""));
+            } else {
+                Log.e(TAG, "Error reading stream", e);
+            }
         }
     }
 
@@ -864,6 +884,8 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     }
 
     private void stopTerminal() {
+        // mark shutdown to mute expected IO noise
+        shuttingDown = true;
         // Stop whichever backend is active; safe to call both guards
         try {
             stopPty();
@@ -906,9 +928,18 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 try { writePty("exit\n"); } catch (IOException ignored) {}
             }
         } finally {
-            if (ptyReadThread != null) ptyReadThread.interrupt();
+            // Prefer closing descriptors to let the reader exit with EOF, then join briefly; interrupt as last resort
+            if (ptyOut != null) {
+                try { ptyOut.close(); } catch (IOException ignored) {}
+            }
             if (ptyPfd != null) {
                 try { ptyPfd.close(); } catch (IOException ignored) {}
+            }
+            if (ptyReadThread != null) {
+                try { ptyReadThread.join(200); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); }
+                if (ptyReadThread.isAlive()) {
+                    ptyReadThread.interrupt();
+                }
             }
             if (ptyPid > 0) {
                 PtyNative.killChild(ptyPid, 9);
