@@ -66,9 +66,10 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private TextInputEditText inputEdit;
     private RecyclerView terminalRecycler;
     private TerminalAdapter terminalAdapter;
+    private View ctrlCButton;
     private Process process;
-    private OutputStream outputStream;
-    private static BufferedWriter writer;
+    private volatile OutputStream outputStream;
+    private static volatile BufferedWriter writer;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Thread outputThread;
     private Thread errorThread;
@@ -83,11 +84,11 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private boolean currentUnderline = false;
     private String ansiCarry = "";
     private static final boolean USE_PTY = true;
-    private int ptyFd = -1;
-    private int ptyPid = -1;
-    private ParcelFileDescriptor ptyPfd;
-    private FileInputStream ptyIn;
-    private static FileOutputStream ptyOut;
+    private volatile int ptyFd = -1;
+    private volatile int ptyPid = -1;
+    private volatile ParcelFileDescriptor ptyPfd;
+    private volatile FileInputStream ptyIn;
+    private static volatile FileOutputStream ptyOut;
     private Thread ptyReadThread;
     private SpannableStringBuilder currentLine = new SpannableStringBuilder();
     private int currentLineSegmentStart = 0;
@@ -205,14 +206,15 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 outputThread.start();
                 errorThread.start();
 
-                // Avoid printing large export line; use simple var assignments (not echoed) then cd
                 String init = getEntryCmd() + "\n" +
                         "TERM=xterm-256color CLICOLOR_FORCE=1 FORCE_COLOR=1 COLORTERM=truecolor\n" +
                         "cd " + NhPaths.CHROOT_HOME + "\n";
                 Log.d(TAG, "Writing init commands: " + init.trim());
                 writer.write(init);
                 writer.flush();
-                //scheduleDeferredAliasInjection();
+
+                // Non-PTY fallback: disable CTRL-C (can’t SIGINT)
+                handler.post(this::updateCtrlCButtonState);
             } catch (IOException e) {
                 Log.e(TAG, "Failed to start terminal", e);
                 Log.e(TAG, "Failed to start terminal: " + e.getMessage());
@@ -225,7 +227,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         new Thread(() -> {
             try {
                 int[] res;
-                String resolvedShell = null;
+                String resolvedShell;
                 if (USE_CHROOT_DIRECT && PtyNative.isLoaded()) {
                     if (!isChrootAvailable()) {
                         Log.d(TAG, "[!] Chroot not available at " + NhPaths.CHROOT_PATH() + "; falling back to generic PTY shell.");
@@ -259,14 +261,11 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 ptyReadThread.start();
                 if (!USE_CHROOT_DIRECT) {
                     writePty("(stty -echo 2>/dev/null) >/dev/null 2>&1\n");
-                    //String init = buildQuietExportLine(resolvePreferredShell()) + "; stty echo 2>/dev/null; cd " + NhPaths.CHROOT_HOME + "\n";
-                    //writePty(init);
                 } else {
-                    // Direct path already has env vars injected
                     writePty("\n");
                 }
-                // Disable echo for interactive session to avoid printing the command lines themselves
-                //try { writePty("(stty -echo 2>/dev/null) >/dev/null 2>&1\n"); } catch (IOException ignored) {}
+                // PTY ready: enable CTRL-C
+                handler.post(this::updateCtrlCButtonState);
                 scheduleInitialWindowSizeUpdate();
             } catch (Exception e) {
                 Log.e(TAG, "PTY startup failed", e);
@@ -320,6 +319,9 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         View btnUp = view.findViewById(R.id.btn_up);
         View btnDown = view.findViewById(R.id.btn_down);
         View btnCtrlC = view.findViewById(R.id.btn_ctrl_c);
+        ctrlCButton = btnCtrlC;
+        // initial state until PTY is known
+        updateCtrlCButtonState();
         if (inputEdit != null) {
             defaultFgColor = inputEdit.getCurrentTextColor();
             currentFgColor = defaultFgColor;
@@ -381,6 +383,13 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         // Try to avoid echoing the command itself; ignore errors if stty is unavailable
         String probe = "uname -a";
         sendSpecificCommand(probe);
+    }
+
+    private void updateCtrlCButtonState() {
+        if (ctrlCButton == null) return;
+        boolean enabled = (ptyOut != null);
+        ctrlCButton.setEnabled(enabled);
+        ctrlCButton.setAlpha(enabled ? 1.0f : 0.5f);
     }
 
     @Override
@@ -484,7 +493,10 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         try {
             File nhFilesDir = new File(Environment.getExternalStorageDirectory(), "nh_files");
             if (!nhFilesDir.exists()) {
-                nhFilesDir.mkdirs();
+                boolean created = nhFilesDir.mkdirs();
+                if (!created && !nhFilesDir.exists()) {
+                    Log.w(TAG, "Failed to create directory: " + nhFilesDir.getAbsolutePath());
+                }
             }
             File outputFile = new File(nhFilesDir, "terminal_output.txt");
             FileOutputStream fos = new FileOutputStream(outputFile);
@@ -778,9 +790,10 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         Log.d(TAG, "Sending command: " + command);
         new Thread(() -> {
             try {
-                if (USE_PTY && ptyOut != null) {
+                // Prefer PTY if available, otherwise fall back to process writer
+                if (ptyOut != null) {
                     writePty(command + "\n");
-                } else if (!USE_PTY && writer != null) {
+                } else if (writer != null) {
                     writer.write(command + "\n");
                     writer.flush();
                 } else {
@@ -796,20 +809,25 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private void sendControlChar() {
         new Thread(() -> {
             try {
-                if (USE_PTY && ptyOut != null) {
+                if (ptyOut != null) {
                     byte[] one = {(byte) 3};
                     ptyOut.write(one);
                     ptyOut.flush();
-                } else if (!USE_PTY && outputStream != null) {
-                    outputStream.write(3);
-                    outputStream.flush();
+                } else if (outputStream != null) {
+                    // Without a PTY/TTY, ETX (0x03) won't be translated to SIGINT by the kernel.
+                    // Inform the user instead of pretending it worked.
+                    Log.d(TAG, "CTRL-C pressed but no PTY available; cannot generate SIGINT over a pipe");
+                    handler.post(() -> Toast.makeText(requireContext(), "CTRL-C requires PTY; native library not loaded. Commands won't be interrupted in fallback mode.", Toast.LENGTH_SHORT).show());
+                    // Optionally still write ETX (harmless), but it won't interrupt processes:
+                    try {
+                        outputStream.write(3);
+                        outputStream.flush();
+                    } catch (IOException ignored) {}
                 } else {
-                    //appendAnsi("[!] Shell not ready for control char.\n", false);
                     Log.d(TAG, "[!] Shell not ready for control char.");
                 }
             } catch (IOException e) {
                 Log.e(TAG, "Failed sending control char", e);
-                //appendAnsi("[!] Error sending control: " + e.getMessage() + "\n", false);
             }
         }).start();
     }
@@ -819,9 +837,10 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         Log.d(TAG, "USE_PTY: " + USE_PTY + ", ptyOut: " + ptyOut + ", writer: " + writer);
         new Thread(() -> {
             try {
-                if (USE_PTY && ptyOut != null) {
+                // Prefer PTY if available; otherwise fall back to non-PTY writer regardless of USE_PTY flag
+                if (ptyOut != null) {
                     writePty(cmd + "\n");
-                } else if (!USE_PTY && writer != null) {
+                } else if (writer != null) {
                     writer.write(cmd + "\n");
                     writer.flush();
                 } else {
@@ -845,11 +864,18 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     }
 
     private void stopTerminal() {
-        if (USE_PTY) {
+        // Stop whichever backend is active; safe to call both guards
+        try {
             stopPty();
-        } else {
-            stopProcessShell();
+        } catch (Throwable t) {
+            Log.d(TAG, "stopPty ignored: " + t.getMessage());
         }
+        try {
+            stopProcessShell();
+        } catch (Throwable t) {
+            Log.d(TAG, "stopProcessShell ignored: " + t.getMessage());
+        }
+        handler.post(this::updateCtrlCButtonState);
     }
 
     private void stopProcessShell() {

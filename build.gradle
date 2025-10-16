@@ -46,6 +46,13 @@ android {
         // viewBinding true
     }
 
+    // Enable CMake/NDK build of libnative-lib.so
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
@@ -61,6 +68,17 @@ android {
         versionName '2025.4-dev'
         multiDexEnabled true
         applicationId "com.offsec.nethunter"
+
+        // Build and package the native library for common ABIs (at minimum arm64-v8a)
+        ndk {
+            abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86_64', 'x86'
+        }
+
+        externalNativeBuild {
+            cmake {
+                // cppFlags "-O2"
+            }
+        }
     }
 
     signingConfigs {
@@ -80,12 +98,14 @@ android {
             renderscript.srcDirs = ['src']
             res.srcDirs = ['res']
             assets.srcDirs = ['assets']
+            // If you later add prebuilt .so files, place them under src/main/jniLibs/<abi>/
         }
     }
 
     buildTypes {
         debug {
             minifyEnabled false
+            jniDebuggable true
             buildConfigField "java.util.Date", "BUILD_TIME", "new java.util.Date(" + System.currentTimeMillis() + "L)"
             buildConfigField "String", "BUILD_NAME", "\"" + System.getenv("USER") + "\""
         }
