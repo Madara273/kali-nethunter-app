@@ -1,7 +1,4 @@
-//import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-
 apply plugin: 'com.android.application'
-//apply plugin: 'org.jetbrains.kotlin.android'
 
 /* tasks.withType(JavaCompile).configureEach {
     options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked']
@@ -18,7 +15,6 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:8.9.1'
-        //classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:2.2.20"
     }
 }
 
@@ -33,9 +29,8 @@ repositories {
 
 android {
     namespace "com.offsec.nethunter"
-    //noinspection ExpiredCompileSdkVersion
+    //noinspection GradleDependency,ExpiredCompileSdkVersion
     compileSdk 34
-    //noinspection GradleDependency
 
     buildFeatures {
         dataBinding true
@@ -61,7 +56,7 @@ android {
 
     defaultConfig {
         minSdk 21
-        //noinspection ExpiredTargetSdkVersion
+        //noinspection OldTargetApi,ExpiredTargetSdkVersion
         targetSdk 34
         //noinspection HighAppVersionCode
         versionCode 2025090001
@@ -123,13 +118,6 @@ android {
     }
 }
 
-/* kotlin {
-    jvmToolchain(17)
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_17)
-    }
-} */
-
 dependencies {
     implementation 'androidx.multidex:multidex:2.0.1'
     implementation 'androidx.legacy:legacy-support-v4:1.0.0'
@@ -143,7 +131,6 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.7.1'
     implementation 'com.google.android.material:material:1.13.0'
     implementation 'androidx.preference:preference:1.2.1'
-    //implementation 'org.jetbrains.kotlin:kotlin-stdlib:2.2.20'
     implementation 'androidx.viewpager2:viewpager2:1.1.0'
     implementation 'androidx.navigation:navigation-runtime:2.9.5'
     // Snowfall
