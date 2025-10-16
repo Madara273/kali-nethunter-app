@@ -69,6 +69,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private RecyclerView terminalRecycler;
     private TerminalAdapter terminalAdapter;
     private View ctrlCButton;
+    private View ctrlZButton;
     private Process process;
     private volatile OutputStream outputStream;
     private static volatile BufferedWriter writer;
@@ -341,6 +342,8 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         View btnDown = view.findViewById(R.id.btn_down);
         View btnCtrlC = view.findViewById(R.id.btn_ctrl_c);
         ctrlCButton = btnCtrlC;
+        View btnCtrlZ = view.findViewById(R.id.btn_ctrl_z);
+        ctrlZButton = btnCtrlZ;
         // Wire Clear button to wipe terminal output ring buffer
         View btnClear = view.findViewById(R.id.terminal_cmd_clear);
         if (btnClear != null) {
@@ -397,6 +400,9 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         if (btnCtrlC != null) {
             btnCtrlC.setOnClickListener(v -> sendControlChar()); // ETX
         }
+        if (btnCtrlZ != null) {
+            btnCtrlZ.setOnClickListener(v -> sendControlZ()); // SUB
+        }
         startTerminal();
         // Run uname -a shortly after shell starts
         handler.postDelayed(this::runInitialUnameProbe, 400);
@@ -420,10 +426,16 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     }
 
     private void updateCtrlCButtonState() {
-        if (ctrlCButton == null) return;
+        if (ctrlCButton == null && ctrlZButton == null) return;
         boolean enabled = (ptyOut != null);
-        ctrlCButton.setEnabled(enabled);
-        ctrlCButton.setAlpha(enabled ? 1.0f : 0.5f);
+        if (ctrlCButton != null) {
+            ctrlCButton.setEnabled(enabled);
+            ctrlCButton.setAlpha(enabled ? 1.0f : 0.5f);
+        }
+        if (ctrlZButton != null) {
+            ctrlZButton.setEnabled(enabled);
+            ctrlZButton.setAlpha(enabled ? 1.0f : 0.5f);
+        }
     }
 
     @Override
@@ -870,6 +882,29 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 }
             } catch (IOException e) {
                 Log.e(TAG, "Failed sending control char", e);
+            }
+        }).start();
+    }
+
+    private void sendControlZ() {
+        new Thread(() -> {
+            try {
+                if (ptyOut != null) {
+                    byte[] one = {(byte) 26}; // 0x1A -> SUB -> typically SIGTSTP on TTY
+                    ptyOut.write(one);
+                    ptyOut.flush();
+                } else if (outputStream != null) {
+                    Log.d(TAG, "CTRL-Z pressed but no PTY available; cannot generate SIGTSTP over a pipe");
+                    handler.post(() -> Toast.makeText(requireContext(), "CTRL-Z requires PTY; native library not loaded. Foreground jobs won't be stopped in fallback mode.", Toast.LENGTH_SHORT).show());
+                    try {
+                        outputStream.write(26);
+                        outputStream.flush();
+                    } catch (IOException ignored) {}
+                } else {
+                    Log.d(TAG, "[!] Shell not ready for control char.");
+                }
+            } catch (IOException e) {
+                Log.e(TAG, "Failed sending CTRL-Z", e);
             }
         }).start();
     }

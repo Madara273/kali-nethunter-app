@@ -70,14 +70,22 @@
             android:layout_marginTop="4dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:weightSum="2">
+            android:weightSum="3">
+
+            <!-- New Ctrl+Z button placed to the left of Ctrl+C -->
+            <Button
+                android:id="@+id/btn_ctrl_z"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Ctrl+Z" />
 
             <Button
                 android:id="@+id/btn_ctrl_c"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Ctrl + C" />
+                android:text="Ctrl+C" />
 
             <Button
                 android:id="@+id/terminal_cmd_clear"
