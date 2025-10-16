@@ -28,6 +28,7 @@ import androidx.fragment.app.Fragment;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.lifecycle.Lifecycle;
 import androidx.viewpager2.widget.ViewPager2;
+import androidx.fragment.app.FragmentManager;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.offsec.nethunter.bridge.Bridge;
@@ -120,14 +121,33 @@ public class SETFragment extends Fragment {
     }
 
     public void RunSetup() {
-        run_cmd("echo -ne \"\\033]0;SET Setup\\007\" && clear;if [[ -d /root/setoolkit ]]; then echo 'SET is already installed'" +
-                ";else git clone https://github.com/yesimxev/social-engineer-toolkit /root/setoolkit && echo 'Successfully installed SET!';fi; echo 'Closing in 3secs..'; sleep 3 && exit ");
+        String cmd = "if [ -d /root/setoolkit ]; then echo 'SET is already installed'; else git clone https://github.com/yesimxev/social-engineer-toolkit /root/setoolkit && echo 'Successfully installed SET!'; fi";
+        openTerminalWithCommand(cmd);
         sharedpreferences.edit().putBoolean("set_setup_done", true).apply();
     }
 
     public void RunUpdate() {
-        run_cmd("echo -ne \"\\033]0;SET Update\\007\" && clear;if [[ -d /root/setoolkit ]]; then cd /root/setoolkit && git pull && echo 'Successfully updated SET! Closing in 3secs..';else echo 'Please run SETUP first!';fi; sleep 3 && exit ");
+        String cmd = "if [ -d /root/setoolkit ]; then cd /root/setoolkit && git pull; fi";
+        openTerminalWithCommand(cmd);
         sharedpreferences.edit().putBoolean("set_setup_done", true).apply();
+    }
+
+    // Helper to route commands through TerminalFragment (saves memory vs external NhTerm)
+    private void openTerminalWithCommand(String cmd) {
+        if (!isAdded()) return;
+        FragmentManager fm = requireActivity().getSupportFragmentManager();
+        Fragment term = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
+        if (fm.isStateSaved()) {
+            fm.beginTransaction()
+                    .replace(R.id.container, term)
+                    .addToBackStack(null)
+                    .commitAllowingStateLoss();
+        } else {
+            fm.beginTransaction()
+                    .replace(R.id.container, term)
+                    .addToBackStack(null)
+                    .commit();
+        }
     }
 
     public static class TabsPagerAdapter extends FragmentStateAdapter {
