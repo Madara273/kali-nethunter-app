@@ -31,36 +31,50 @@
             android:gravity="center_vertical"
             android:weightSum="5">
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_tab"
+                style="@style/Tech.Button.Primary.Compact"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Tab" />
-            <Button
+                android:text="Tab"
+                app:rippleColor="@color/system_tab_ripple" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_left"
+                style="@style/Tech.Button.Primary.Compact"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="←" />
-            <Button
+                android:text="←"
+                app:rippleColor="@color/system_tab_ripple" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_right"
+                style="@style/Tech.Button.Primary.Compact"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="→" />
-            <Button
+                android:text="→"
+                app:rippleColor="@color/system_tab_ripple" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_up"
+                style="@style/Tech.Button.Primary.Compact"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="▲" />
-            <Button
+                android:text="▲"
+                app:rippleColor="@color/system_tab_ripple" />
+
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_down"
+                style="@style/Tech.Button.Primary.Compact"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="▼" />
+                android:text="▼"
+                app:rippleColor="@color/system_tab_ripple" />
         </LinearLayout>
 
         <LinearLayout
@@ -72,30 +86,34 @@
             android:gravity="center_vertical"
             android:weightSum="3">
 
-            <!-- New Ctrl+Z button placed to the left of Ctrl+C -->
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_ctrl_z"
+                style="@style/Tech.Button.Primary.Compact"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Ctrl+Z" />
+                android:text="Ctrl+Z"
+                app:rippleColor="@color/system_tab_ripple" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_ctrl_c"
+                style="@style/Tech.Button.Primary.Compact"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Ctrl+C" />
+                android:text="Ctrl+C"
+                app:rippleColor="@color/system_tab_ripple" />
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/terminal_cmd_clear"
+                style="@style/Tech.Button.Outlined.Compact"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Clear" />
+                android:text="Clear"
+                app:rippleColor="@color/system_tab_ripple" />
         </LinearLayout>
 
-        <!-- Input row: text field + square tech send button -->
         <LinearLayout
             android:id="@+id/input_row"
             android:layout_width="match_parent"
@@ -127,23 +145,12 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/terminal_cmd_send"
+                style="@style/Tech.Button.Primary.Compact"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_send_tech"
                 android:contentDescription="@string/terminal_send_command_desc"
-                android:minWidth="0dp"
-                android:minHeight="50dp"
-                android:paddingStart="15dp"
-                android:paddingTop="9dp"
-                android:paddingEnd="16dp"
-                android:paddingBottom="10dp"
-                android:text="@string/terminal_send_cmd"
-                android:textAllCaps="false"
-                android:textColor="@color/system_accent"
                 app:icon="@drawable/ic_send"
-                app:iconPadding="9dp"
-                app:iconSize="20dp"
-                app:iconTint="@color/system_accent" />
+                app:rippleColor="@color/system_tab_ripple" />
         </LinearLayout>
     </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
