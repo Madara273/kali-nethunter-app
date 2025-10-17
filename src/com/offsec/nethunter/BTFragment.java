@@ -1,6 +1,7 @@
 package com.offsec.nethunter;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -65,6 +66,7 @@ import android.net.Uri;
 import androidx.viewpager2.adapter.FragmentStateAdapter;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import android.media.AudioManager;
 
 public class BTFragment extends Fragment {
     private static final ExecutorService EXEC = Executors.newSingleThreadExecutor();
@@ -1088,16 +1090,13 @@ public class BTFragment extends Fragment {
                     .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
                     .build();
             AudioTrack audioTrack;
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                audioTrack = new AudioTrack.Builder()
-                        .setAudioAttributes(attrs)
-                        .setAudioFormat(af)
-                        .setTransferMode(AudioTrack.MODE_STREAM)
-                        .setBufferSizeInBytes(Math.max(minBuffer, 20000))
-                        .build();
-            } else {
-                audioTrack = null;
-            }
+            audioTrack = new AudioTrack(
+                    attrs,
+                    af,
+                    Math.max(minBuffer, 20000),
+                    AudioTrack.MODE_STREAM,
+                    AudioManager.AUDIO_SESSION_ID_GENERATE
+            );
             PlayAudioButton.setOnClickListener(v -> {
                 String selectedPath = injectfilename.getText().toString().trim();
                 File cw_listenfile;
@@ -1595,7 +1594,7 @@ public class BTFragment extends Fragment {
     }
 
     public void run_cmd(String cmd) {
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
         activity.startActivity(intent);
     }
 }
