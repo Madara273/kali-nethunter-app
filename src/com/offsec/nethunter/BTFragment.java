@@ -67,6 +67,8 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
 import android.media.AudioManager;
+import android.os.Environment;
+import android.provider.Settings;
 
 public class BTFragment extends Fragment {
     private static final ExecutorService EXEC = Executors.newSingleThreadExecutor();
@@ -92,9 +94,77 @@ public class BTFragment extends Fragment {
                 }
             });
 
+    // Request multiple permissions in one go when needed (Android 12+ BT + storage/media read)
+    private final ActivityResultLauncher<String[]> permissionsLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
+                // Give a compact summary for any critical denials
+                boolean btDenied = false;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    Boolean conn = result.get(Manifest.permission.BLUETOOTH_CONNECT);
+                    Boolean scan = result.get(Manifest.permission.BLUETOOTH_SCAN);
+                    btDenied = (conn != null && !conn) || (scan != null && !scan);
+                }
+                boolean mediaDenied = false;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                    Boolean audio = result.get(Manifest.permission.READ_MEDIA_AUDIO);
+                    mediaDenied = (audio != null && !audio);
+                } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    Boolean read = result.get(Manifest.permission.READ_EXTERNAL_STORAGE);
+                    mediaDenied = (read != null && !read);
+                }
+                if (btDenied) {
+                    Toast.makeText(requireContext(), "Bluetooth permissions denied; some features may be limited.", Toast.LENGTH_SHORT).show();
+                }
+                if (mediaDenied) {
+                    Toast.makeText(requireContext(), "Media permissions denied; file browsing/playback may fail.", Toast.LENGTH_SHORT).show();
+                }
+            });
+
+    private void ensureRuntimePermissions() {
+        ArrayList<String> missing = new ArrayList<>();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.BLUETOOTH_CONNECT) != PackageManager.PERMISSION_GRANTED) {
+                missing.add(Manifest.permission.BLUETOOTH_CONNECT);
+            }
+            // Request SCAN as well for completeness on API 31+
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.BLUETOOTH_SCAN) != PackageManager.PERMISSION_GRANTED) {
+                missing.add(Manifest.permission.BLUETOOTH_SCAN);
+            }
+        }
+        // Media/file read for audio/text selections
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_MEDIA_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+                missing.add(Manifest.permission.READ_MEDIA_AUDIO);
+            }
+        } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                missing.add(Manifest.permission.READ_EXTERNAL_STORAGE);
+            }
+        }
+        if (!missing.isEmpty()) {
+            permissionsLauncher.launch(missing.toArray(new String[0]));
+        }
+    }
+
+    private void ensureAllFilesAccessIfNeeded() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            try {
+                if (!Environment.isExternalStorageManager()) {
+                    Toast.makeText(requireContext(), "Grant 'All files access' to enable file browsing from this screen.", Toast.LENGTH_LONG).show();
+                    Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                    intent.setData(Uri.parse("package:" + requireContext().getPackageName()));
+                    startActivity(intent);
+                }
+            } catch (Throwable ignored) { }
+        }
+    }
+
     @Override
     public void onStart() {
         super.onStart();
+        // Ensure required runtime permissions
+        ensureRuntimePermissions();
+        ensureAllFilesAccessIfNeeded();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S &&
                 ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.BLUETOOTH_CONNECT)
                         != PackageManager.PERMISSION_GRANTED) {
@@ -485,18 +555,16 @@ public class BTFragment extends Fragment {
                 }
             });
 
-            btButton.setOnClickListener( v -> {
-                EXEC.execute(() -> {
-                    String dbus_statusCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd service dbus status | grep dbus");
-                    if ("dbus is running.".equals(dbus_statusCMD)) {
-                        boolean start = "Start".contentEquals(btButton.getText());
-                        exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd service bluetooth " + (start ? "start" : "stop")});
-                        if (isAdded()) requireActivity().runOnUiThread(() -> refresh(rootView));
-                    } else {
-                        if (isAdded()) requireActivity().runOnUiThread(() -> Toast.makeText(requireActivity().getApplicationContext(), "Enable dbus service first!", Toast.LENGTH_SHORT).show());
-                    }
-                });
-            });
+            btButton.setOnClickListener( v -> EXEC.execute(() -> {
+                String dbus_statusCMD = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd service dbus status | grep dbus");
+                if ("dbus is running.".equals(dbus_statusCMD)) {
+                    boolean start = "Start".contentEquals(btButton.getText());
+                    exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd service bluetooth " + (start ? "start" : "stop")});
+                    if (isAdded()) requireActivity().runOnUiThread(() -> refresh(rootView));
+                } else {
+                    if (isAdded()) requireActivity().runOnUiThread(() -> Toast.makeText(requireActivity().getApplicationContext(), "Enable dbus service first!", Toast.LENGTH_SHORT).show());
+                }
+            }));
 
             hciButton.setOnClickListener( v -> {
                 if (selected_iface == null || selected_iface.equals("None")) {
@@ -1016,7 +1084,7 @@ public class BTFragment extends Fragment {
                 String selectedPhrase = ttsDropdown.getSelectedItem().toString();
                 String finalInput;
 
-                if ("Custom message".equals(selectedPhrase)) {
+                if (selectedPhrase != null && selectedPhrase.toLowerCase(Locale.ROOT).startsWith("custom")) {
                     finalInput = ttsInput.getText().toString().trim();
                     if (finalInput.isEmpty()) {
                         Toast.makeText(requireActivity().getApplicationContext(), "Enter text to convert", Toast.LENGTH_SHORT).show();
