@@ -248,7 +248,7 @@ public class ChrootManagerFragment extends Fragment {
 
     private void addOverflowMenu() {
         if (getActivity() == null) return;
-        MenuHost menuHost = (MenuHost) getActivity();
+        MenuHost menuHost = getActivity();
         // Remove previous provider if any to avoid duplicates
         if (menuProvider != null) {
             menuHost.removeMenuProvider(menuProvider);
