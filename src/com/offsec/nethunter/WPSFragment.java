@@ -1,9 +1,7 @@
 package com.offsec.nethunter;
 
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -23,8 +21,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
-import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
@@ -236,8 +234,9 @@ public class WPSFragment extends Fragment {
                     handler.postDelayed(() -> exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting off"}), 10000);
                     handler.postDelayed(() -> exe.RunAsRoot(new String[]{"ip link set wlan0 up"}), 11000);
                 }
-                run_cmd("python3 /sdcard/nh_files/modules/oneshot.py -b " + selected_network +
-                        " -i " + selectedInterface + pixieCMD + pixieforceCMD + bruteCMD + customPINCMD + customPIN + delayCMD + delayTIME + pbcCMD);
+                String cmd = "python3 /sdcard/nh_files/modules/oneshot.py -b " + selected_network +
+                        " -i " + selectedInterface + pixieCMD + pixieforceCMD + bruteCMD + customPINCMD + customPIN + delayCMD + delayTIME + pbcCMD;
+                openTerminalWithCommand(cmd);
             }
             else Toast.makeText(requireActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
         });
@@ -294,11 +293,24 @@ public class WPSFragment extends Fragment {
     }
 
     ////
-    // Bridge side functions
+    // Bridge side functions (removed in favor of TerminalFragment)
     ////
 
-    public void run_cmd(String cmd) {
-        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
-        activity.startActivity(intent);
+    // Helper to route commands through TerminalFragment (saves memory vs external NhTerm)
+    private void openTerminalWithCommand(String cmd) {
+        if (!isAdded()) return;
+        FragmentManager fm = requireActivity().getSupportFragmentManager();
+        Fragment term = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
+        if (fm.isStateSaved()) {
+            fm.beginTransaction()
+                    .replace(R.id.container, term)
+                    .addToBackStack(null)
+                    .commitAllowingStateLoss();
+        } else {
+            fm.beginTransaction()
+                    .replace(R.id.container, term)
+                    .addToBackStack(null)
+                    .commit();
+        }
     }
 }
