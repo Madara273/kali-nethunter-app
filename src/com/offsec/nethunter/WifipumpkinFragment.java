@@ -3,7 +3,6 @@ package com.offsec.nethunter;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -31,7 +30,6 @@ import android.widget.Toast;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.common.io.Files;
-import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
@@ -60,6 +58,13 @@ public class WifipumpkinFragment extends Fragment {
     private Context context;
     private Activity activity;
     final ShellExecuter exe = new ShellExecuter();
+
+    // Minimal shell-quoting for chroot commands
+    private static String shQuote(String s) {
+        if (s == null) return "''";
+        return "'" + s.replace("'", "'\\''") + "'";
+    }
+
     private String template_src;
 
     private final ActivityResultLauncher<String> pickZipLauncher =
@@ -69,11 +74,16 @@ public class WifipumpkinFragment extends Fragment {
                     NhPaths.showMessage(context, "Install wifipumpkin3 first.");
                     return;
                 }
-                // Keep existing logic
+                // Keep existing logic, but avoid root sed and bootkali wrapper
                 String FilePath = Objects.requireNonNull(uri.getPath());
-                FilePath = exe.RunAsRootOutput("echo " + FilePath + " | sed -e 's/\\/document\\/primary:/\\/sdcard\\//g'");
-                String FilePy = exe.RunAsRootOutput(
-                        NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd unzip -Z1 '" + FilePath + "' | grep .py | awk -F'.' '{print $1}'");
+                // Map DocumentsProvider path to external storage path directly in Java
+                String sdPath = Environment.getExternalStorageDirectory().getPath();
+                FilePath = FilePath.replace("/document/primary:", sdPath + "/");
+
+                // List files inside the zip and extract python filename (without .py)
+                String FilePy = exe.RunAsChrootOutput(
+                        "unzip -Z1 " + shQuote(FilePath) + " | grep .py | awk -F'.' '{print $1}'");
+
                 run_cmd("wifipumpkin3 -x \"use misc.custom_captiveflask; install " + FilePy + " \\\"" +  FilePath + "\\\"; back; exit\";exit");
             });
 
@@ -602,7 +612,7 @@ public class WifipumpkinFragment extends Fragment {
             exe.ReadFile_ASYNC(configFilePath, source);
             Button button = rootView.findViewById(R.id.update);
             button.setOnClickListener(v -> {
-                Boolean isSaved = exe.SaveFileContents(source.getText().toString(), configFilePath);
+                boolean isSaved = exe.SaveFileContents(source.getText().toString(), configFilePath);
                 if (isSaved) {
                     NhPaths.showMessage(context, "Source updated");
                 } else {
@@ -853,7 +863,7 @@ public class WifipumpkinFragment extends Fragment {
     ////
 
     public void run_cmd(String cmd) {
-        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
-        activity.startActivity(intent);
+        // Route all commands through TerminalFragment to save memory instead of launching NhTerm Bridge
+        openTerminalWithCommand(cmd);
     }
 }
