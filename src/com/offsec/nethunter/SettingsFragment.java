@@ -38,6 +38,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.offsec.nethunter.bridge.Bridge;
@@ -663,16 +664,41 @@ public class SettingsFragment extends Fragment {
     }
 
     public void RunSetup() {
-        run_cmd("echo -ne \"\\033]0;Bootanimation Setup\\007\" && clear;if [[ -f /usr/bin/convert ]];then echo 'Imagemagick is installed!'; else " +
-                "apt update && apt install imagemagick -y;fi; if [[ -f /root/nethunter-bootanimation ]];then echo 'nethunter-bootanimation is installed!'; else " +
-                "git clone https://gitlab.com/kalilinux/nethunter/build-scripts/kali-nethunter-bootanimation /root/nethunter-bootanimation;fi; echo 'Everything is ready! Closing in 3secs..'; sleep 3 && exit ");
+        // Route through in-app TerminalFragment to save memory; fallback to NhTerm bridge if needed
+        String cmd = "if [ -f /usr/bin/convert ];then echo 'Imagemagick is installed!'; else " +
+                "apt update && apt install imagemagick -y;fi; if [ -f /root/nethunter-bootanimation ];then echo 'nethunter-bootanimation is installed!'; else " +
+                "git clone https://gitlab.com/kalilinux/nethunter/build-scripts/kali-nethunter-bootanimation /root/nethunter-bootanimation;fi; echo 'Everything is ready!";
+        openTerminalWithCommand(cmd);
         sharedpreferences.edit().putBoolean("animation_setup_done", true).apply();
     }
 
     public void RunUpdate() {
-        run_cmd("echo -ne \"\\033]0;Bootanimation Update\\007\" && clear;apt update && apt install imagemagick -y;if [[ -d /root/nethunter-bootanimation ]];then cd /root/nethunter-bootanimation;git pull" +
-                ";fi; echo 'Done! Closing in 3secs..'; sleep 3 && exit ");
+        // Route through in-app TerminalFragment to save memory; fallback to NhTerm bridge if needed
+        String cmd = "apt update && apt install imagemagick -y;if [ -d /root/nethunter-bootanimation ];then cd /root/nethunter-bootanimation;git pull" +
+                ";fi;";
+        openTerminalWithCommand(cmd);
         sharedpreferences.edit().putBoolean("animation_setup_done", true).apply();
+    }
+
+    // Helper: open TerminalFragment with an initial command; if not possible, fallback to legacy bridge
+    private void openTerminalWithCommand(@NonNull String cmd) {
+        Activity act = getActivity();
+        try {
+            if (act instanceof AppCompatActivity) {
+                AppCompatActivity app = (AppCompatActivity) act;
+                TerminalFragment tf = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
+                app.getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.container, tf)
+                        .addToBackStack(null)
+                        .commitAllowingStateLoss();
+                return;
+            }
+        } catch (Throwable t) {
+            Log.d(TAG, "openTerminalWithCommand fallback due to: " + t.getMessage());
+        }
+        // Fallback to previous behavior using NhTerm bridge
+        run_cmd(cmd);
     }
 
     private void addClickListener(Button _button, View.OnClickListener onClickListener) {
@@ -693,4 +719,3 @@ public class SettingsFragment extends Fragment {
         activity.startActivity(intent);
     }
 }
-
