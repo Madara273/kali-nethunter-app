@@ -115,8 +115,8 @@
 
             <LinearLayout
                 android:id="@+id/pre_view"
-                android:layout_width="756px"
-                android:layout_height="1344px"
+                android:layout_width="756dp"
+                android:layout_height="1344dp"
                 android:paddingTop="10dp"
                 android:visibility="gone"
                 android:layout_gravity="center">
