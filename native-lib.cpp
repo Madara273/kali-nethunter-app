@@ -2,7 +2,7 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <cstdlib>
-#include <string.h>
+#include <cstring>
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <termios.h>
@@ -32,8 +32,8 @@ static int open_pty_master(char *slaveName, size_t slaveLen) {
         close(master);
         return -1;
     }
-    strncpy(slaveName, sn, slaveLen-1);
-    slaveName[slaveLen-1] = '\0';
+    strncpy(slaveName, sn, slaveLen - 1);
+    slaveName[slaveLen - 1] = '\0';
     return master;
 #else
     (void)slaveName; (void)slaveLen;
@@ -58,7 +58,6 @@ Java_com_offsec_nethunter_pty_PtyNative_openPtyShell(JNIEnv *env, jclass) {
         return nullptr;
     }
     if (pid == 0) {
-        // Child: create new session, open slave, dup to stdio, exec su
         setsid();
         int slaveFd = open(slave, O_RDWR);
         if (slaveFd < 0) _exit(127);
@@ -69,15 +68,15 @@ Java_com_offsec_nethunter_pty_PtyNative_openPtyShell(JNIEnv *env, jclass) {
         dup2(slaveFd, STDOUT_FILENO);
         dup2(slaveFd, STDERR_FILENO);
         if (slaveFd > 2) close(slaveFd);
-        // Close master in child
         close(master);
         const char *shell = "su";
         execlp(shell, shell, "-mm", (char*)nullptr);
-        _exit(127); // exec failed
+        LOGE("execlp failed: %s", strerror(errno));
+        _exit(127);
     }
-    // Parent
     jintArray arr = env->NewIntArray(2);
-    if (!arr) {
+    if (arr == nullptr) {
+        LOGE("Failed to allocate jintArray");
         kill(pid, SIGKILL);
         close(master);
         return nullptr;
@@ -89,13 +88,15 @@ Java_com_offsec_nethunter_pty_PtyNative_openPtyShell(JNIEnv *env, jclass) {
     return arr;
 }
 
-// New: open PTY and execute a specific root command under su -mm -c <cmd>
 extern "C"
 JNIEXPORT jintArray JNICALL
 Java_com_offsec_nethunter_pty_PtyNative_openPtyShellExec(JNIEnv *env, jclass, jstring jcmd) {
     if (jcmd == nullptr) return nullptr;
     const char *cmd = env->GetStringUTFChars(jcmd, nullptr);
-    if (!cmd) return nullptr;
+    if (cmd == nullptr) {
+        LOGE("Failed to get UTF chars from jstring");
+        return nullptr;
+    }
     char slave[PATH_MAX];
     int master = open_pty_master(slave, sizeof(slave));
     if (master < 0) {
@@ -111,7 +112,6 @@ Java_com_offsec_nethunter_pty_PtyNative_openPtyShellExec(JNIEnv *env, jclass, js
         return nullptr;
     }
     if (pid == 0) {
-        // Child
         setsid();
         int slaveFd = open(slave, O_RDWR);
         if (slaveFd < 0) _exit(127);
@@ -123,13 +123,14 @@ Java_com_offsec_nethunter_pty_PtyNative_openPtyShellExec(JNIEnv *env, jclass, js
         dup2(slaveFd, STDERR_FILENO);
         if (slaveFd > 2) close(slaveFd);
         close(master);
-        // Execute su -mm -c <cmd>
         execlp("su", "su", "-mm", "-c", cmd, (char*)nullptr);
+        LOGE("execlp failed: %s", strerror(errno));
         _exit(127);
     }
     env->ReleaseStringUTFChars(jcmd, cmd);
     jintArray arr = env->NewIntArray(2);
-    if (!arr) {
+    if (arr == nullptr) {
+        LOGE("Failed to allocate jintArray");
         kill(pid, SIGKILL);
         close(master);
         return nullptr;
