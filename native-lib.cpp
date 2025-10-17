@@ -6,7 +6,7 @@
 #include <sys/ioctl.h>
 #include <sys/types.h>
 #include <termios.h>
-#include <errno.h>
+#include <cerrno>
 #include <signal.h>
 #include <android/log.h>
 #ifdef __linux__
