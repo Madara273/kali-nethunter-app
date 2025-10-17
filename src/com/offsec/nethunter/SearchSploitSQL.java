@@ -13,7 +13,6 @@ import com.offsec.nethunter.utils.ShellExecuter;
 import java.util.LinkedList;
 import java.util.List;
 
-
 class SearchSploitSQL extends SQLiteOpenHelper {
     private final ShellExecuter exe = new ShellExecuter();
     private static final int DATABASE_VERSION = 1;

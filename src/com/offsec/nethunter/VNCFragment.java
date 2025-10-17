@@ -1,5 +1,6 @@
 package com.offsec.nethunter;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -904,14 +905,14 @@ public class VNCFragment extends Fragment {
 
     public void run_cmd(String cmd) {
         logDebug(TAG, "run_cmd: Executing command: " + cmd);
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
         activity.startActivity(intent);
         logDebug(TAG, "run_cmd: Command execution started");
     }
 
     public void run_cmd_android(String cmd) {
         logDebug(TAG, "run_cmd_android: Executing Android command: " + cmd);
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/android-su", cmd);
+        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/android-su", cmd);
         activity.startActivity(intent);
         logDebug(TAG, "run_cmd_android: Android command execution started");
     }
