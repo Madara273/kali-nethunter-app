@@ -341,8 +341,8 @@ public class NetHunterFragment extends Fragment {
                         Toast.makeText(requireContext(), "Select a target item", Toast.LENGTH_SHORT).show();
                         return;
                     }
-                    int selectedTitleIndex = targetItemIndex; // 0-based
-                    targetPositionId = selectedTitleIndex + 1 + (placeBefore ? 0 : 1);
+                    // 0-based
+                    targetPositionId = targetItemIndex + 1 + (placeBefore ? 0 : 1);
                     if (targetPositionId < 1) targetPositionId = 1;
                     if (targetPositionId > size + 1) targetPositionId = size + 1;
                 }
