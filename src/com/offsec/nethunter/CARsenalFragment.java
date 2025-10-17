@@ -336,10 +336,10 @@ public class CARsenalFragment extends Fragment {
 
         Log.i(TAG, "Running setup commands");
         String setupCommand = "echo -ne \"\\033]0;CARsenal Setup\\007\" && clear;which wget > /dev/null 2>&1 && wget -qO - https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup || curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup";
-        String setupResult = run_cmd(setupCommand);
-        Log.d("SetupResult",setupResult);
+        // Prefer in-app TerminalFragment to save memory; fallback to legacy bridge
+        openTerminalWithCommand(setupCommand);
         sharedpreferences.edit().putBoolean("carsenal_setup_done", true).apply();
-        Log.i(TAG, "Setup completed");
+        Log.i(TAG, "Setup initiated");
     }
 
     // Update item
@@ -349,10 +349,31 @@ public class CARsenalFragment extends Fragment {
 
         Log.i(TAG, "Running update commands");
         String updateCommand = "echo -ne \"\\033]0;CARsenal Update\\007\" && clear;which wget > /dev/null 2>&1 && wget -qO - https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update || curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update";
-        String updateResult = run_cmd(updateCommand);
-        Log.d("UpdateResult",updateResult);
+        // Prefer in-app TerminalFragment to save memory; fallback to legacy bridge
+        openTerminalWithCommand(updateCommand);
         sharedpreferences.edit().putBoolean("carsenal_setup_done", true).apply();
-        Log.i(TAG, "Update completed");
+        Log.i(TAG, "Update initiated");
+    }
+
+    // Helper: open TerminalFragment with an initial command; if not possible, fallback to legacy bridge
+    private void openTerminalWithCommand(@NonNull String cmd) {
+        Activity act = getActivity();
+        try {
+            if (act instanceof androidx.appcompat.app.AppCompatActivity) {
+                androidx.appcompat.app.AppCompatActivity app = (androidx.appcompat.app.AppCompatActivity) act;
+                TerminalFragment tf = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
+                app.getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.container, tf)
+                        .addToBackStack(null)
+                        .commitAllowingStateLoss();
+                return;
+            }
+        } catch (Throwable t) {
+            Log.d(TAG, "openTerminalWithCommand fallback due to: " + t.getMessage());
+        }
+        // Fallback to previous behavior using NhTerm bridge
+        run_cmd(cmd);
     }
 
     public void RunAbout() {
@@ -1001,7 +1022,6 @@ public class CARsenalFragment extends Fragment {
                     term.setText(String.format("Error: %s - %s", e.getClass().getSimpleName(), e.getMessage()));
                 }
             });
-
             return rootView;
         }
 
@@ -1082,7 +1102,6 @@ public class CARsenalFragment extends Fragment {
         private final String[] asc2logCmd = {""};
         private final String[] log2ascCmd = {""};
 
-
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -1115,7 +1134,6 @@ public class CARsenalFragment extends Fragment {
             cannelloniCmd[0] = prefs.getString("cannelloni_cmd", "");
             asc2logCmd[0] = prefs.getString("asc2log_cmd", "");
             log2ascCmd[0] = prefs.getString("log2asc_cmd", "");
-
 
             // Interfaces
             Spinner spinner = rootView.findViewById(R.id.device_interface);
@@ -1183,7 +1201,6 @@ public class CARsenalFragment extends Fragment {
                 RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), outputfilepath::setText);
                 dialog.show();
             });
-
 
             // Tools
             // CanGen
@@ -1671,7 +1688,6 @@ public class CARsenalFragment extends Fragment {
 
             // Start USB-CAN button
             rootView.findViewById(R.id.start_canusb_send).setOnClickListener(v -> runCanUsb());
-
             return rootView;
         }
 
@@ -1931,7 +1947,6 @@ public class CARsenalFragment extends Fragment {
             ArrayAdapter<String> sessionTypeAdapter = createDisabledFirstItemAdapter(sessionTypeOptions);
             sessionTypeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             sessionTypeSpinner.setAdapter(sessionTypeAdapter);
-
             sessionTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -1961,7 +1976,6 @@ public class CARsenalFragment extends Fragment {
             ArrayAdapter<String> securityLevelAdapter = createDisabledFirstItemAdapter(securityLevelOptions);
             securityLevelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             securityLevelSpinner.setAdapter(securityLevelAdapter);
-
             securityLevelSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -1979,7 +1993,6 @@ public class CARsenalFragment extends Fragment {
                 @Override public void onNothingSelected(AdapterView<?> parent) {}
             });
 
-
             // Browse File
             ImageButton browseButton = rootView.findViewById(R.id.cariboufilebrowse);
             browseButton.setOnClickListener(v -> {
@@ -1990,7 +2003,6 @@ public class CARsenalFragment extends Fragment {
             // Interfaces
             Spinner spinner = rootView.findViewById(R.id.device_interface);
             ImageButton refreshBtn = rootView.findViewById(R.id.refreshUSB);
-
             SpinnerUtils.setupDeviceInterfaceSpinner(
                     requireContext(),
                     executorService,
@@ -2007,7 +2019,6 @@ public class CARsenalFragment extends Fragment {
             final Spinner moduleSpinner = rootView.findViewById(R.id.module_spinner);
             final Spinner subModuleSpinner = rootView.findViewById(R.id.submodule_spinner);
             final Button startButton = rootView.findViewById(R.id.start_button);
-
             final String[] modules = {"Modules", "Dump", "Fuzzer", "Listener", "module_template", "Send", "UDS", "UDS_Fuzz", "XCP"};
             final Map<String, String[]> subModulesMap = new HashMap<>();
             subModulesMap.put("Dump", new String[]{"Sub-Modules", "None"});
@@ -2284,7 +2295,6 @@ public class CARsenalFragment extends Fragment {
                 @Override public void onNothingSelected(AdapterView<?> parent) {}
             });
 
-
             startButton.setOnClickListener(v -> {
                 String module = (String) moduleSpinner.getSelectedItem();
                 String subModule = (String) subModuleSpinner.getSelectedItem();
@@ -2383,7 +2393,6 @@ public class CARsenalFragment extends Fragment {
                 if (selected.contains("=")) {
                     return " " + selected.split("=")[0]; // take part before '=' → "1"
                 }
-
                 return " " + selected; // fallback
             }
             return "";
@@ -2474,7 +2483,6 @@ public class CARsenalFragment extends Fragment {
             String indexValue = getVisibleParam(indexContainer.getEditText(), " -index ");
             String arbIDValue = getVisibleParam(arbIDContainer.getEditText(), " ");
             String dataValue = getVisibleParam(dataContainer.getEditText(), " ");
-
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer ";
 
             switch (fuzzer_module) {
@@ -2528,7 +2536,6 @@ public class CARsenalFragment extends Fragment {
             }
 
             String idValue = getVisibleParam(idContainer.getEditText(), " -id ");
-
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " module_template";
 
             if (moduleTemplate_module.equals("None")) {
@@ -2573,7 +2580,6 @@ public class CARsenalFragment extends Fragment {
                 }
             }
             String delayValue = getVisibleParam(delayContainer.getEditText(), " --delay ");
-
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " send ";
 
             switch (send_module) {
@@ -2745,7 +2751,6 @@ public class CARsenalFragment extends Fragment {
             String blacklistValue = getVisibleParam(blacklistContainer.getEditText(), " -blacklist ");
             String autoBlacklistValue = getVisibleParam(autoBlacklistContainer.getEditText(), " -autoblacklist ");
 
-
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp ";
 
             switch (xcp_module) {
@@ -2831,7 +2836,6 @@ public class CARsenalFragment extends Fragment {
                 RootFileBrowserDialog browser = new RootFileBrowserDialog(requireContext(), udsimConfigEdit::setText);
                 browser.show();
             });
-
 
             WebView icsimView = ICSIMWebViewHolder.getICSIMWebView(requireContext());
             WebView controlsView = ICSIMWebViewHolder.getControlsWebView(requireContext());
@@ -3796,7 +3800,7 @@ public class CARsenalFragment extends Fragment {
     ////
 
     public String run_cmd(String cmd) {
-        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nethunter/files/usr/bin/kali", cmd);
+        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
         activity.startActivity(intent);
         intent.putExtra("output", cmd);
         return "Command executed: " + cmd;
