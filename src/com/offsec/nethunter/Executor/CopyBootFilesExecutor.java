@@ -433,7 +433,6 @@ public class CopyBootFilesExecutor {
             // 3) Comment out pam_keyinit occurrences which can cause issues under Android
             chrootExec("sed -i 's/pam_keyinit\\.so/& # disabled on Android/' /etc/pam.d/*", "Patch pam_keyinit in /etc/pam.d/*");
 
-
             // Validation logs
             chrootExec("getent group 3003 || getent group aid_inet || true", "Show group with gid 3003 or aid_inet info");
             chrootExec("id _apt || true", "Show _apt user info after group change");
@@ -608,15 +607,12 @@ public class CopyBootFilesExecutor {
     public void setListener(CopyBootFilesExecutorListener listener) {
         this.listener = listener;
     }
-
     public String getObjects() {
         return objects;
     }
-
     public void setObjects(String objects) {
         this.objects = objects;
     }
-
     public Activity getActivity() {
         return activity;
     }

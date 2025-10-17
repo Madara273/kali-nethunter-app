@@ -37,7 +37,7 @@ public class WPSFragment extends Fragment {
     public static final String TAG = "WPSFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
     private Spinner ifaceSpinner;
-    private String selectedInterface = "wlan0"; // default
+    private String selectedInterface = "wlan0";
     private TextView CustomPIN;
     private TextView DelayTime;
     private Spinner WPSList;
@@ -269,19 +269,24 @@ public class WPSFragment extends Fragment {
 
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
-            String outputScanLog = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd python3 /sdcard/nh_files/modules/oneshot.py -i " + selectedInterface + " -s | grep -E '[0-9])' | tr -s ' ' | cut -d ' ' -f 2-3");
+            // Use the iw binary bundled with the app to scan and extract only WPS-enabled networks as "BSSID SSID"
+            String iwPath = NhPaths.APP_SCRIPTS_BIN_PATH + "/iw";
+            String cmd = iwPath + " dev " + selectedInterface +
+                    " scan | awk 'BEGIN{bssid=\"\";ssid=\"\";wps=0} /^BSS /{ if (bssid!=\"\" && ssid!=\"\" && wps==1) {print bssid, ssid} bssid=$2; sub(/\\(.*/, \"\", bssid); ssid=\"\"; wps=0 } /SSID:/{ $1=\"\"; sub(/^ /,\"\"); ssid=$0 } /WPS:/{ wps=1 } END{ if (bssid!=\"\" && ssid!=\"\" && wps==1) {print bssid, ssid} }'";
+
+            String outputScanLog = exe.RunAsRootOutput(cmd).trim();
             requireActivity().runOnUiThread(() -> {
-                final String[] arrayList = outputScanLog.split("\n");
-                ArrayAdapter<String> targetsadapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, arrayList);
                 if (outputScanLog.isEmpty()) {
                     final ArrayList<String> notargets = new ArrayList<>();
                     notargets.add("No nearby WPS networks");
                     WPSList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, notargets));
-                } else if (outputScanLog.equals("Error:;command")) {
+                } else if (outputScanLog.contains("command failed")) {
                     final ArrayList<String> notargets = new ArrayList<>();
                     notargets.add("Please reset the interface!");
                     WPSList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, notargets));
                 } else {
+                    final String[] targets = outputScanLog.split("\n");
+                    ArrayAdapter<String> targetsadapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, targets);
                     WPSList.setAdapter(targetsadapter);
                 }
             });
