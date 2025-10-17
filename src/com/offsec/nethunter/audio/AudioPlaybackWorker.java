@@ -153,7 +153,7 @@ public class AudioPlaybackWorker implements Runnable {
         }
         audioData = sock.getInputStream();
 
-        // Always using minimum buffer size for minimum lag. Min SDK is 21, so use Builder API
+        // Always using minimum buffer size for minimum lag. Min SDK is 21, so use attributes/format constructor for broad compatibility
         AudioAttributes attrs = new AudioAttributes.Builder()
                 .setUsage(AudioAttributes.USAGE_MEDIA)
                 .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
@@ -163,12 +163,14 @@ public class AudioPlaybackWorker implements Runnable {
                 .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
                 .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
                 .build();
-        audioTrack = new AudioTrack.Builder()
-                .setAudioAttributes(attrs)
-                .setAudioFormat(format)
-                .setTransferMode(AudioTrack.MODE_STREAM)
-                .setBufferSizeInBytes(minBufferSize)
-                .build();
+        // Use the constructor available since API 21 instead of the Builder that trips minSdk checks on 21-22
+        audioTrack = new AudioTrack(
+                attrs,
+                format,
+                minBufferSize,
+                AudioTrack.MODE_STREAM,
+                AudioManager.AUDIO_SESSION_ID_GENERATE
+        );
 
         if (audioTrack.getState() != AudioTrack.STATE_INITIALIZED) {
             throw new IllegalStateException(
