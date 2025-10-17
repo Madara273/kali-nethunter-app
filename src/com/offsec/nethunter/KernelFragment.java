@@ -33,7 +33,6 @@ import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -83,8 +82,6 @@ public class KernelFragment extends Fragment implements MenuProvider {
         final Button codenamesearchButton = rootView.findViewById(R.id.custom_search);
         EditText customCodename = rootView.findViewById(R.id.custom_codename);
 
-        final ArrayList<String> repoKernels = new ArrayList<>();
-        repoKernels.add("None");
         final String[] codenamesList = exe.RunAsRootOutput("echo None;curl -s https://nethunter.kali.org/kernels.html | sed -n '/<tr class/{n;p;n;p;}' | sed 's/<[^>]*>//g' | sed 'n;/,/!s/^/- /' | paste - - | awk '!x[$0]++' | tail -n +2").split("\n");
         repoSpinner.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, codenamesList));
 
@@ -106,7 +103,7 @@ public class KernelFragment extends Fragment implements MenuProvider {
 
         codenamesearchButton.setOnClickListener(v -> {
             String CustomCodename = customCodename.getText().toString();
-            checkKernel(rootView, CustomCodename);
+            checkKernel(CustomCodename);
         });
 
         // Browse
@@ -171,7 +168,7 @@ public class KernelFragment extends Fragment implements MenuProvider {
         builder.show();
     }
 
-    private void checkKernel(View KernelFragment, String custom) {
+    private void checkKernel(String custom) {
         executor.execute(() -> {
             String codename = custom.isEmpty() ? Build.DEVICE : custom.replaceAll("[^a-zA-Z0-9_-]", "");
             String version = Build.VERSION.RELEASE;
