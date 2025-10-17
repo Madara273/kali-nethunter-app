@@ -228,7 +228,7 @@
         <LinearLayout
             android:id="@+id/pre_view"
             android:layout_width="match_parent"
-            android:layout_height="1100px"
+            android:layout_height="1100dp"
             android:paddingTop="10dp"
             android:visibility="gone"
             android:layout_gravity="center">
