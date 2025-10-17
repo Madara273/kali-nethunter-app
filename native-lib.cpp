@@ -7,7 +7,7 @@
 #include <sys/types.h>
 #include <termios.h>
 #include <cerrno>
-#include <signal.h>
+#include <csignal>
 #include <android/log.h>
 #ifdef __linux__
 #include <linux/limits.h>
