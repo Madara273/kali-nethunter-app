@@ -1410,6 +1410,8 @@
     <string name="nethunter_delete">Delete</string>
     <string name="nethunter_move">Move</string>
     <string name="nethunter_system_information">SYSTEM INFORMATION</string>
+    <string name="new_app_build_detected">New app build detected:</string>
+    <string name="copying_new_files">Copying new files...</string>
 
     <!-- TTS Voice Model-->
     <string-array name="tts_voices">

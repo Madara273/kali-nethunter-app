@@ -25,6 +25,7 @@ import androidx.appcompat.app.AlertDialog;
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.offsec.nethunter.AppNavHomeActivity;
+import com.offsec.nethunter.R;
 import com.offsec.nethunter.utils.CheckForRoot;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.SharePrefTag;
@@ -124,8 +125,8 @@ public class CopyBootFilesExecutor {
                 spinner.setIndeterminate(true);
                 spinner.show();
             }
-            if (titleView != null) titleView.setText("New app build detected:");
-            if (msgView != null) msgView.setText("Copying new files...");
+            if (titleView != null) titleView.setText(R.string.new_app_build_detected);
+            if (msgView != null) msgView.setText(R.string.copying_new_files);
             this.progressMessageRef = new WeakReference<>(msgView);
 
             AlertDialog dialog = new MaterialAlertDialogBuilder(activity, com.offsec.nethunter.R.style.DialogStyleCompat)
@@ -270,12 +271,14 @@ public class CopyBootFilesExecutor {
 
     private void installApks(String folderPath) {
         for (String apk : FetchFiles(folderPath)) {
-            if (apk.endsWith(".apk")) {
-                String apkPath = folderPath + "/" + apk;
-                String command = String.format("mv %s /data/local/tmp/ && pm install /data/local/tmp/%s && rm -f /data/local/tmp/%s", apkPath, apk, apk);
-                if (exe.RunAsRootReturnValue(command) != 0) {
-                    logDebug("Failed to install APK: " + apkPath);
-                }
+            if (!apk.endsWith(".apk")) continue;
+            String src = folderPath + "/" + apk;
+            String safeSrc = "'" + src.replace("'", "'\\''") + "'";
+            String safeName = "'" + apk.replace("'", "'\\''") + "'";
+            String cmd = "mv " + safeSrc + " /data/local/tmp/ && pm install -r --user 0 /data/local/tmp/" + safeName +
+                    " && rm -f /data/local/tmp/" + safeName;
+            if (exe.RunAsRootReturnValue(cmd) != 0) {
+                logDebug("Failed to install APK: " + src);
             }
         }
     }
@@ -283,19 +286,60 @@ public class CopyBootFilesExecutor {
     private boolean checkStoragePermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                intent.setData(Uri.parse("package:" + context.get().getPackageName()));
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.get().startActivity(intent);
+                // Mark that we need to resume SD sync once the user grants the permission
+                prefs.edit().putBoolean("pending_sd_sync", true).apply();
+                // Prefer per‑app All files access page; fall back to the generic one if needed
+                Runnable launch = () -> {
+                    try {
+                        Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                        intent.setData(Uri.parse("package:" + activity.getPackageName()));
+                        activity.startActivity(intent);
+                    } catch (Exception e) {
+                        Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                        activity.startActivity(intent);
+                    }
+                };
+                mainHandler.post(launch);
                 return false;
             }
         } else {
-            if (ContextCompat.checkSelfPermission(context.get(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions((Activity) context.get(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1001);
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                return true; // install-time permission
+            }
+            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                mainHandler.post(() -> ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1001));
                 return false;
             }
         }
         return true;
+    }
+
+    // Public method: if the user has just granted the All files access, finish the SD card sync only.
+    public void resumePendingSyncIfPermitted() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            boolean pending = prefs.getBoolean("pending_sd_sync", false);
+            if (!pending) return;
+            if (!Environment.isExternalStorageManager()) return;
+
+            // Clear the flag before starting work to avoid re-entry
+            prefs.edit().putBoolean("pending_sd_sync", false).apply();
+
+            publishProgress("Finalizing setup: syncing nh_files to SD card...");
+            new Thread(() -> {
+                try {
+                    syncNhFilesToSdcard();
+                    File nhFilesDir = new File(NhPaths.SD_PATH, "nh_files");
+                    if (nhFilesDir.exists() && nhFilesDir.isDirectory()) {
+                        logDebug("\"nh_files\" successfully copied to: " + nhFilesDir.getAbsolutePath());
+                    } else {
+                        logDebug("\"nh_files\" directory does NOT exist at: " + nhFilesDir.getAbsolutePath());
+                        publishProgress("Failed to copy nh_files to SD card!");
+                    }
+                } catch (Exception e) {
+                    logDebug(TAG, "resumePendingSyncIfPermitted error: " + e.getMessage(), e);
+                }
+            }).start();
+        }
     }
 
     private void copyAssetFolder(String assetFolder, String destFolder) {
@@ -475,38 +519,43 @@ public class CopyBootFilesExecutor {
         logDebug("Checking for " + filename + " presence....");
         if (target.exists()) return;
 
-        if (filename.equals("busybox_nh")) {
-            String sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/busybox_nh";
-            logDebug("command output: ln -s " + sourcePath + " /system/bin/" + filename);
-            int result = exe.RunAsRootReturnValue("ln -s " + sourcePath + " /system/bin/" + filename);
-            if (result != 0) {
-                logDebug("Failed to create symlink for: " + filename);
-            }
+        // Skip early if /system is read-only
+        String mountInfo = exe.RunAsRootOutput("mount | grep ' /system ' || true");
+        if (mountInfo != null && mountInfo.contains(" ro,")) {
+            logDebug("/system is mounted read-only. Cannot create symlink for: " + filename);
+            return;
         }
 
-        if (filename.equals("iw")) {
-            String sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/iw";
-            logDebug("command output: ln -s " + sourcePath + " /system/bin/" + filename);
-            int result = exe.RunAsRootReturnValue("ln -s " + sourcePath + " /system/bin/" + filename);
-            if (result != 0) {
-                logDebug("Failed to create symlink for: " + filename);
+        String targetPath = "/system/bin/" + filename;
+        int rc;
+        switch (filename) {
+            case "busybox_nh": {
+                String sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/busybox_nh";
+                logDebug("command output: ln -s " + sourcePath + " " + targetPath);
+                rc = exe.RunAsRootReturnValue("ln -s " + sourcePath + " " + targetPath);
+                break;
+            }
+            case "iw": {
+                String sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/iw";
+                logDebug("command output: ln -s " + sourcePath + " " + targetPath);
+                rc = exe.RunAsRootReturnValue("ln -s " + sourcePath + " " + targetPath);
+                break;
+            }
+            case "curl": {
+                String sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/curl";
+                logDebug("command output: ln -s " + sourcePath + " " + targetPath);
+                rc = exe.RunAsRootReturnValue("ln -s " + sourcePath + " " + targetPath);
+                break;
+            }
+            default: {
+                String sourcePath = NhPaths.APP_SCRIPTS_PATH + "/" + filename;
+                logDebug("command output: ln -s " + sourcePath + " " + targetPath);
+                rc = exe.RunAsRootReturnValue("ln -s " + sourcePath + " " + targetPath);
+                break;
             }
         }
-
-        if (filename.equals("curl")) {
-            String sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/curl";
-            logDebug("command output: ln -s " + sourcePath + " /system/bin/" + filename);
-            int result = exe.RunAsRootReturnValue("ln -s " + sourcePath + " /system/bin/" + filename);
-            if (result != 0) {
-                logDebug("Failed to create symlink for: " + filename);
-            }
-        } else {
-            String sourcePath = NhPaths.APP_SCRIPTS_PATH + "/" + filename;
-            logDebug("command output: ln -s " + sourcePath + " /system/bin/" + filename);
-            int result = exe.RunAsRootReturnValue("ln -s " + sourcePath + " /system/bin/" + filename);
-            if (result != 0) {
-                logDebug("Failed to create symlink for: " + filename);
-            }
+        if (rc != 0) {
+            logDebug("Failed to create symlink for: " + filename);
         }
     }
 
@@ -531,14 +580,14 @@ public class CopyBootFilesExecutor {
                     String targetPath = "/system/bin/" + scriptName;
                     String sourcePath = script.getAbsolutePath();
 
-                    String mountInfo = exe.RunAsRootOutput("mount | grep ' /system '");
-                    if (mountInfo.contains("ro,")) {
+                    String mountInfo = exe.RunAsRootOutput("mount | grep ' /system ' || true");
+                    if (mountInfo != null && mountInfo.contains("ro,")) {
                         logDebug("/system is mounted read-only. Cannot create symlink for: " + scriptName);
                         continue;
                     }
 
-                    String linkCheck = exe.RunAsRootOutput("ls -l " + targetPath + " | grep '" + sourcePath + "'");
-                    if (linkCheck.contains(sourcePath)) {
+                    String linkCheck = exe.RunAsRootOutput("ls -l " + targetPath + " | grep '" + sourcePath + "' || true");
+                    if (linkCheck != null && linkCheck.contains(sourcePath)) {
                         logDebug("Symlink already exists for: " + scriptName);
                         continue;
                     }
@@ -583,7 +632,18 @@ public class CopyBootFilesExecutor {
 
     private ArrayList<String> FetchFiles(String folder) {
         logDebug("Fetching files from " + folder);
-        return new ArrayList<>();
+        ArrayList<String> files = new ArrayList<>();
+        try {
+            File dir = new File(folder);
+            File[] list = dir.listFiles();
+            if (list == null) return files;
+            for (File f : list) {
+                files.add(f.getName());
+            }
+        } catch (Exception e) {
+            logDebug(TAG, "FetchFiles error for folder: " + folder + ", " + e.getMessage());
+        }
+        return files;
     }
 
     private void publishProgress(String message) {
@@ -602,6 +662,8 @@ public class CopyBootFilesExecutor {
         if (listener != null) {
             listener.onExecutorFinished(result);
         }
+        // Prevent thread leaks
+        executor.shutdown();
     }
 
     public void setListener(CopyBootFilesExecutorListener listener) {
