@@ -10,7 +10,6 @@ import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.os.Looper;
 import android.os.Handler;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -99,7 +98,6 @@ public class DuckHunterFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateView called");
         View rootView = inflater.inflate(R.layout.duck_hunter, container, false);
         final MenuHost menuHost = requireActivity();
         menuHost.addMenuProvider(new MenuProvider() {
@@ -118,11 +116,11 @@ public class DuckHunterFragment extends Fragment {
             public boolean onMenuItemSelected(@NonNull MenuItem item) {
                 int id = item.getItemId();
                 if (id == R.id.duckConvertAttack) {
-                    Log.d(TAG, "Attack selected; launching script: " + duckyOutputFile);
+                    //Log.d(TAG, "Attack selected; launching script: " + duckyOutputFile);
                     launchAttack();
                     return true;
                 } else if (id == R.id.chooseLanguage) {
-                    Log.d(TAG, "Choose language selected");
+                    //Log.d(TAG, "Choose language selected");
                     openLanguageDialog();
                     return true;
                 }
@@ -137,13 +135,13 @@ public class DuckHunterFragment extends Fragment {
         mViewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
-                Log.d(TAG, "onPageSelected position=" + position);
+                //Log.d(TAG, "onPageSelected position=" + position);
                 showConvert = (position == 1);
                 if (position == 1) {
                     setLang();
-                    Log.d(TAG, "Preview tab selected | lang=" + lang + ", shouldconvert=" + shouldconvert);
+                    //Log.d(TAG, "Preview tab selected | lang=" + lang + ", shouldconvert=" + shouldconvert);
                     if (shouldconvert && activity != null) {
-                        Log.d(TAG, "Sending WRITEDUCKY broadcast to Convert fragment");
+                        //Log.d(TAG, "Sending WRITEDUCKY broadcast to Convert fragment");
                         activity.sendBroadcast(new Intent()
                                 .putExtra("ACTION", "WRITEDUCKY")
                                 .setAction(BuildConfig.APPLICATION_ID + ".WRITEDUCKY")
@@ -178,7 +176,6 @@ public class DuckHunterFragment extends Fragment {
                 }
             }
         }
-        Log.d(TAG, "onCreateView finished");
         return rootView;
     }
 
@@ -221,14 +218,14 @@ public class DuckHunterFragment extends Fragment {
 
     private void openLanguageDialog() {
         int keyboardLayoutIndex = sharedpreferences.getInt("DuckHunterLanguageIndex", 0);
-        Log.d(TAG, "openLanguageDialog | currentIndex=" + keyboardLayoutIndex + ", currentLang=" + map.get(keyboardLayoutString[keyboardLayoutIndex]));
+        //Log.d(TAG, "openLanguageDialog | currentIndex=" + keyboardLayoutIndex + ", currentLang=" + map.get(keyboardLayoutString[keyboardLayoutIndex]));
         MaterialAlertDialogBuilder builder = getMaterialAlertDialogBuilder();
         builder.setSingleChoiceItems(keyboardLayoutString, keyboardLayoutIndex, (dialog, which) -> {
             Editor editor = sharedpreferences.edit();
             editor.putInt("DuckHunterLanguageIndex", which);
             editor.putString(SharePrefTag.DUCKHUNTER_LANG_SHAREPREF_TAG, map.get(keyboardLayoutString[which]));
             editor.apply();
-            Log.d(TAG, "Language selected | index=" + which + ", lang=" + map.get(keyboardLayoutString[which]));
+            //Log.d(TAG, "Language selected | index=" + which + ", lang=" + map.get(keyboardLayoutString[which]));
         });
         builder.show();
     }
@@ -238,11 +235,11 @@ public class DuckHunterFragment extends Fragment {
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
         builder.setTitle("Language:");
         builder.setPositiveButton("OK", (dialog, which) -> {
-            Log.d(TAG, "Language dialog OK clicked | currentItem=" + (mViewPager != null ? mViewPager.getCurrentItem() : -1));
+            //Log.d(TAG, "Language dialog OK clicked | currentItem=" + (mViewPager != null ? mViewPager.getCurrentItem() : -1));
             if (mViewPager.getCurrentItem() == 1) {
                 if (getView() == null) return;
                 setLang();
-                Log.d(TAG, "Re-sending WRITEDUCKY after language change | lang=" + lang);
+                //Log.d(TAG, "Re-sending WRITEDUCKY after language change | lang=" + lang);
                 activity.sendBroadcast(new Intent()
                         .putExtra("ACTION", "WRITEDUCKY")
                         .setAction(BuildConfig.APPLICATION_ID + ".WRITEDUCKY")
@@ -298,10 +295,10 @@ public class DuckHunterFragment extends Fragment {
         public void onReceive(Context context, Intent intent) {
             String act = intent != null ? intent.getAction() : null;
             String extra = intent != null ? intent.getStringExtra("ACTION") : null;
-            Log.d(TAG, "DuckHuntBroadcastReceiver | onReceive action=" + act + ", extra=" + extra);
+            //Log.d(TAG, "DuckHuntBroadcastReceiver | onReceive action=" + act + ", extra=" + extra);
             if (Objects.equals(extra, "SHOULDCONVERT")) {
                 shouldconvert = intent.getBooleanExtra("SHOULDCONVERT", true);
-                Log.d(TAG, "Updated shouldconvert=" + shouldconvert);
+                //Log.d(TAG, "Updated shouldconvert=" + shouldconvert);
             }
         }
     }
