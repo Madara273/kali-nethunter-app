@@ -73,6 +73,7 @@ import java.util.LinkedHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.Map;
+import java.lang.ref.WeakReference;
 
 import androidx.core.widget.TextViewCompat;
 
@@ -82,6 +83,37 @@ public class CARsenalFragment extends Fragment {
     private Activity activity;
     private Toast currentToast;
     private static final String ARG_SECTION_NUMBER = "section_number";
+
+    // Map module keys (derived from selected_module without .rb, lowercased) to string resources
+    private static final Map<String, Integer> MODULE_INFO_STRING_IDS = new HashMap<>();
+    private static final Map<String, Integer> MODULE_SET_STRING_IDS = new HashMap<>();
+    static {
+        // Info strings
+        MODULE_INFO_STRING_IDS.put("local_hwbridge", R.string.module_info_local_hwbridge);
+        MODULE_INFO_STRING_IDS.put("connect", R.string.module_info_connect);
+        MODULE_INFO_STRING_IDS.put("can_flood", R.string.module_info_can_flood);
+        MODULE_INFO_STRING_IDS.put("canprobe", R.string.module_info_canprobe);
+        MODULE_INFO_STRING_IDS.put("diagnostic_state", R.string.module_info_diagnostic_state);
+        MODULE_INFO_STRING_IDS.put("ecu_hard_reset", R.string.module_info_ecu_hard_reset);
+        MODULE_INFO_STRING_IDS.put("getvinfo", R.string.module_info_getvinfo);
+        MODULE_INFO_STRING_IDS.put("identifymodules", R.string.module_info_identifymodules);
+        MODULE_INFO_STRING_IDS.put("malibu_overheat", R.string.module_info_malibu_overheat);
+        MODULE_INFO_STRING_IDS.put("mazda_ic_mover", R.string.module_info_mazda_ic_mover);
+        MODULE_INFO_STRING_IDS.put("pdt", R.string.module_info_pdt);
+
+        // Options strings
+        MODULE_SET_STRING_IDS.put("local_hwbridge", R.string.module_set_local_hwbridge);
+        MODULE_SET_STRING_IDS.put("connect", R.string.module_set_connect);
+        MODULE_SET_STRING_IDS.put("can_flood", R.string.module_set_can_flood);
+        MODULE_SET_STRING_IDS.put("canprobe", R.string.module_set_canprobe);
+        MODULE_SET_STRING_IDS.put("diagnostic_state", R.string.module_set_diagnostic_state);
+        MODULE_SET_STRING_IDS.put("ecu_hard_reset", R.string.module_set_ecu_hard_reset);
+        MODULE_SET_STRING_IDS.put("getvinfo", R.string.module_set_getvinfo);
+        MODULE_SET_STRING_IDS.put("identifymodules", R.string.module_set_identifymodules);
+        MODULE_SET_STRING_IDS.put("malibu_overheat", R.string.module_set_malibu_overheat);
+        MODULE_SET_STRING_IDS.put("mazda_ic_mover", R.string.module_set_mazda_ic_mover);
+        MODULE_SET_STRING_IDS.put("pdt", R.string.module_set_pdt);
+    }
 
     public static CARsenalFragment newInstance(int sectionNumber) {
         CARsenalFragment fragment = new CARsenalFragment();
@@ -2059,6 +2091,8 @@ public class CARsenalFragment extends Fragment {
                     timeoutContainer.setVisibility(View.GONE);
                     stypeContainer.setVisibility(View.GONE);
                     dtypeContainer.setVisibility(View.GONE);
+                    messageContainer.setVisibility(View.GONE);
+                    timeoutContainer.setVisibility(View.GONE);
                     durationContainer.setVisibility(View.GONE);
                     sprContainer.setVisibility(View.GONE);
                     ecuResetTypeContainer.setVisibility(View.GONE);
@@ -2870,6 +2904,20 @@ public class CARsenalFragment extends Fragment {
             return rootView;
         }
 
+        @Override
+        public void onDestroyView() {
+            super.onDestroyView();
+            // Ensure floating overlay is removed and WebViews are cleaned up
+            try {
+                if (floatingContainer != null) {
+                    WindowManager wm = (WindowManager) requireContext().getSystemService(Context.WINDOW_SERVICE);
+                    wm.removeViewImmediate(floatingContainer);
+                    floatingContainer = null;
+                }
+            } catch (Exception ignored) {}
+            ICSIMWebViewHolder.release();
+        }
+
         private void runICSIM(WebView icsimView, WebView controlsView, Spinner levelList, WebView udsimView) {
             if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces")) {
 
@@ -3144,32 +3192,63 @@ public class CARsenalFragment extends Fragment {
         }
 
         public static class ICSIMWebViewHolder {
-            private static WebView icsimWebView;
-            private static WebView controlsWebView;
-            private static WebView udsimWebView;
+            private static WeakReference<WebView> icsimWebViewRef;
+            private static WeakReference<WebView> controlsWebViewRef;
+            private static WeakReference<WebView> udsimWebViewRef;
 
             public static WebView getICSIMWebView(Context context) {
-                if (icsimWebView == null) {
-                    icsimWebView = new WebView(context.getApplicationContext());
-                    setupWebView(icsimWebView);
+                WebView w = icsimWebViewRef != null ? icsimWebViewRef.get() : null;
+                if (w == null) {
+                    w = new WebView(context.getApplicationContext());
+                    setupWebView(w);
+                    icsimWebViewRef = new WeakReference<>(w);
                 }
-                return icsimWebView;
+                return w;
             }
 
             public static WebView getControlsWebView(Context context) {
-                if (controlsWebView == null) {
-                    controlsWebView = new WebView(context.getApplicationContext());
-                    setupWebView(controlsWebView);
+                WebView w = controlsWebViewRef != null ? controlsWebViewRef.get() : null;
+                if (w == null) {
+                    w = new WebView(context.getApplicationContext());
+                    setupWebView(w);
+                    controlsWebViewRef = new WeakReference<>(w);
                 }
-                return controlsWebView;
+                return w;
             }
 
             public static WebView getUDSIMWebView(Context context) {
-                if (udsimWebView == null) {
-                    udsimWebView = new WebView(context.getApplicationContext());
-                    setupWebView(udsimWebView);
+                WebView w = udsimWebViewRef != null ? udsimWebViewRef.get() : null;
+                if (w == null) {
+                    w = new WebView(context.getApplicationContext());
+                    setupWebView(w);
+                    udsimWebViewRef = new WeakReference<>(w);
                 }
-                return udsimWebView;
+                return w;
+            }
+
+            public static void release() {
+                destroyRef(icsimWebViewRef);
+                destroyRef(controlsWebViewRef);
+                destroyRef(udsimWebViewRef);
+                icsimWebViewRef = null;
+                controlsWebViewRef = null;
+                udsimWebViewRef = null;
+            }
+
+            private static void destroyRef(WeakReference<WebView> ref) {
+                if (ref != null) {
+                    WebView w = ref.get();
+                    if (w != null) {
+                        try {
+                            w.loadUrl("about:blank");
+                            w.stopLoading();
+                            w.clearHistory();
+                            w.removeAllViews();
+                            w.destroy();
+                        } catch (Exception ignored) {}
+                    }
+                    ref.clear();
+                }
             }
 
             @SuppressLint("SetJavaScriptEnabled")
@@ -3306,16 +3385,14 @@ public class CARsenalFragment extends Fragment {
                 }
 
                 String moduleNameKey = selected_module.replace(".rb", "").toLowerCase();
-                String resourceKey = "module_info_" + moduleNameKey;
+                Integer resIdObj = MODULE_INFO_STRING_IDS.get(moduleNameKey);
 
-                int resId = getResources().getIdentifier(resourceKey, "string", requireContext().getPackageName());
-
-                if (resId == 0) {
+                if (resIdObj == null || resIdObj == 0) {
                     showToast("No info available for this module");
                     return;
                 }
 
-                String moduleInfo = getString(resId);
+                String moduleInfo = getString(resIdObj);
 
                 // Build popup dialog
                 new Handler(Looper.getMainLooper()).post(() -> {
@@ -3343,18 +3420,16 @@ public class CARsenalFragment extends Fragment {
 
                 infoText.setVisibility(View.GONE);
 
-                int optionsStringId = getResources().getIdentifier(
-                        "module_set_" + selected_module.replace(".rb", "").toLowerCase().trim(),
-                        "string",
-                        requireContext().getPackageName());
+                String moduleKey = selected_module.replace(".rb", "").toLowerCase().trim();
+                Integer optionsStringIdObj = MODULE_SET_STRING_IDS.get(moduleKey);
 
-                if (optionsStringId == 0) {
+                if (optionsStringIdObj == null || optionsStringIdObj == 0) {
                     infoText.setVisibility(View.VISIBLE);
                     infoText.setText(R.string.can_no_options_for_module);
                     return;
                 }
 
-                String optionsText = getString(optionsStringId);
+                String optionsText = getString(optionsStringIdObj);
                 String[] optionLines = optionsText.split("\n");
 
                 LinearLayout inputLayout = new LinearLayout(requireContext());
@@ -3475,7 +3550,6 @@ public class CARsenalFragment extends Fragment {
 
     // Interfaces Spinner (CAN-USB usb device detection only) + Refresh button (ICSim WebView Include)
     public static class SpinnerUtils {
-
         public interface SelectionCallback {
             void onInterfaceSelected(String iface);
         }
@@ -3624,7 +3698,6 @@ public class CARsenalFragment extends Fragment {
 
     // Custom Browse Button : Chroot
     public static class RootFileBrowserDialog {
-
         private final Context context;
         private final ShellExecuter exe = new ShellExecuter();
         private final OnFileSelectedListener listener;
@@ -3723,7 +3796,7 @@ public class CARsenalFragment extends Fragment {
     ////
 
     public String run_cmd(String cmd) {
-        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nethunter/files/usr/bin/kali", cmd);
         activity.startActivity(intent);
         intent.putExtra("output", cmd);
         return "Command executed: " + cmd;
