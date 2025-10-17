@@ -20,7 +20,7 @@ import java.util.List;
 public class TerminalAdapter extends RecyclerView.Adapter<TerminalAdapter.LineVH> {
     private final List<CharSequence> lines = new ArrayList<>();
     private final int maxLines;
-    private long nextId = 0; // retained if stable IDs expanded later
+    private final long nextId = 0; // retained if stable IDs expanded later
     private float textSizeSp = 12f; // default, can be modified at runtime
     private String highlightTerm = null;
 
