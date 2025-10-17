@@ -30,6 +30,7 @@ import androidx.viewpager2.adapter.FragmentStateAdapter;
 import androidx.lifecycle.Lifecycle;
 import androidx.viewpager2.widget.ViewPager2;
 import androidx.fragment.app.FragmentManager;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.offsec.nethunter.bridge.Bridge;
@@ -329,9 +330,21 @@ public class SETFragment extends Fragment {
     ////
 
     public void run_cmd(String cmd) {
-        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
-        if (isAdded()) {
-            requireActivity().startActivity(intent);
+        // Prefer in-app TerminalFragment to save memory
+        if (getActivity() instanceof AppCompatActivity) {
+            AppCompatActivity app = (AppCompatActivity) getActivity();
+            TerminalFragment tf = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
+            app.getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.container, tf)
+                    .addToBackStack(null)
+                    .commitAllowingStateLoss();
+        } else {
+            // Fallback to legacy bridge if fragment manager is unavailable
+            @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+            if (isAdded()) {
+                requireActivity().startActivity(intent);
+            }
         }
     }
 }
