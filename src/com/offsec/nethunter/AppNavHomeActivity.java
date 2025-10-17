@@ -388,6 +388,15 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        // If user just granted MANAGE_EXTERNAL_STORAGE from Settings, finalize the SD sync without re-running full executor
+        if (copyBootFilesExecutor != null) {
+            copyBootFilesExecutor.resumePendingSyncIfPermitted();
+        }
+    }
+
+    @Override
     protected void onDestroy() {
         super.onDestroy();
         unregisterReceiver(nethunterReceiver);
