@@ -170,7 +170,6 @@ public class NethunterRecyclerViewAdapter extends RecyclerView.Adapter<Nethunter
         }
 
         @Override
-        @SuppressWarnings("unchecked")
         protected void publishResults(CharSequence constraint, FilterResults results) {
             List<NethunterModel> live = NethunterData.getInstance().getNethunterModels().getValue();
             if (live == null || results.values == null) return;
