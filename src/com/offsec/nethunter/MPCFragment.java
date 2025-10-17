@@ -26,6 +26,7 @@ import java.net.InetAddress;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 public class MPCFragment extends Fragment {
@@ -304,7 +305,19 @@ public class MPCFragment extends Fragment {
     ////
 
     public void run_cmd(String cmd) {
-        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
-        requireContext().startActivity(intent);
+        // Prefer in-app TerminalFragment to save memory
+        if (getActivity() instanceof AppCompatActivity) {
+            AppCompatActivity app = (AppCompatActivity) getActivity();
+            TerminalFragment tf = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
+            app.getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.container, tf)
+                    .addToBackStack(null)
+                    .commitAllowingStateLoss();
+        } else {
+            // Fallback to legacy bridge if fragment manager is unavailable
+            @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+            requireContext().startActivity(intent);
+        }
     }
 }
