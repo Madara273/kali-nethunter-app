@@ -477,9 +477,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         } else if (id == R.id.action_save_output) {
             saveOutput();
             return true;
-        } else if (id == R.id.action_custom_command) {
-            sendCommandViaBridge("echo 'Test command from bridge'");
-            return true;
         }
         return false;
     }
@@ -927,10 +924,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 Log.e(TAG, "Error sending specific command", e);
             }
         }).start();
-    }
-
-    public static void sendCommandViaBridge(String command) {
-        sendSpecificCommand(command);
     }
 
     @Override
