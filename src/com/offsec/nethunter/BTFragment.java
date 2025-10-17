@@ -217,18 +217,18 @@ public class BTFragment extends Fragment {
         run_cmd("echo -ne \"\\033]0;BT Arsenal Setup\\007\" && clear;" +
                 "apt update && apt install screen bluetooth bluez bluez-tools bluez-obexd libbluetooth3 sox spooftooph libglib2.0*-dev " +
                 "libsystemd-dev python3-dbus python3-bluez python3-pyudev python3-evdev libbluetooth-dev redfang bluelog blueranger espeak -y;" +
-                "if [[ -f /usr/sbin/bluebinder ]]; then echo 'Bluebinder is installed!'; else wget https://raw.githubusercontent.com/yesimxev/bluebinder/master/prebuilt/armhf/bluebinder -P /usr/sbin/ && chmod +x /usr/sbin/bluebinder;fi;" +
-                "if [[ -f /usr/lib/libgbinder.so.1.1.25 ]]; then echo 'libgbinder.so.1.1.25 is installed!'; else wget https://raw.githubusercontent.com/yesimxev/libgbinder/master/prebuilt/armhf/libgbinder.so.1.1.25 -P /usr/lib/ &&" +
-                " ln -s libgbinder.so.1.1.25 /usr/lib/libgbinder.so.1.1 && ln -s libgbinder.so.1.1 /usr/lib/libgbinder.so.1 && ln -s libgbinder.so.1 /usr/lib/libgbinder.so;fi;" +
-                "if [[ -f /usr/lib/libglibutil.so.1.0.67 ]]; then echo 'libglibutil.so.1.0.67 is installed!'; else wget https://raw.githubusercontent.com/yesimxev/libglibutil/master/prebuilt/armhf/libglibutil.so.1.0.67 -P /usr/lib/ &&" +
-                " ln -s libglibutil.so.1.0.67 /usr/lib/libglibutil.so.1.0 && ln -s libglibutil.so.1.0 /usr/lib/libglibutil.so.1 && ln -s libglibutil.so.1 /usr/lib/libglibutil.so;fi;" +
-                "if [[ -f /usr/bin/carwhisperer ]]; then echo 'carwhisperer is installed!'; else wget https://raw.githubusercontent.com/yesimxev/carwhisperer-0.2/master/prebuilt/armhf/carwhisperer -P /usr/bin/ && chmod +x /usr/bin/carwhisperer;fi;" +
-                "if [[ -f /usr/bin/rfcomm_scan ]]; then echo 'rfcomm_scan is installed!'; else wget https://raw.githubusercontent.com/yesimxev/bt_audit/master/prebuilt/armhf/rfcomm_scan -P /usr/bin/ && chmod +x /usr/bin/rfcomm_scan;fi;" +
-                "if [[ -d /root/carwhisperer ]]; then echo '/root/carwhisperer is installed!'; else git clone https://github.com/yesimxev/carwhisperer-0.2 /root/carwhisperer;fi;" +
-                "if [[ -f /root/badbt/btk_server.py ]]; then echo 'BadBT is installed!'; else git clone https://github.com/yesimxev/badbt /root/badbt && cp /root/badbt/org.thanhle.btkbservice.conf /etc/dbus-1/system.d/;fi;" +
-                "if [[ ! \"`grep 'noplugin=input' /etc/init.d/bluetooth`\" == \"\" ]]; then echo 'Bluetooth service is patched!'; else echo 'Patching Bluetooth service..' && " +
-                "sed -i -e 's/# NOPLUGIN_OPTION=.*/NOPLUGIN_OPTION=\"--noplugin=input\"/g' /etc/init.d/bluetooth;fi;" +
-                "echo 'Everything is installed! Closing in 3secs..'; sleep 3 && exit ");
+                "if [ -f /usr/sbin/bluebinder ]; then echo 'Bluebinder is installed!'; else wget https://raw.githubusercontent.com/yesimxev/bluebinder/master/prebuilt/armhf/bluebinder -P /usr/sbin/ && chmod +x /usr/sbin/bluebinder; fi;" +
+                "if [ -f /usr/lib/libgbinder.so.1.1.25 ]; then echo 'libgbinder.so.1.1.25 is installed!'; else wget https://raw.githubusercontent.com/yesimxev/libgbinder/master/prebuilt/armhf/libgbinder.so.1.1.25 -P /usr/lib/ && " +
+                " ln -s libgbinder.so.1.1.25 /usr/lib/libgbinder.so.1.1 && ln -s /usr/lib/libgbinder.so.1.1 /usr/lib/libgbinder.so.1 && ln -s /usr/lib/libgbinder.so.1 /usr/lib/libgbinder.so; fi;" +
+                "if [ -f /usr/lib/libglibutil.so.1.0.67 ]; then echo 'libglibutil.so.1.0.67 is installed!'; else wget https://raw.githubusercontent.com/yesimxev/libglibutil/master/prebuilt/armhf/libglibutil.so.1.0.67 -P /usr/lib/ && " +
+                " ln -s libglibutil.so.1.0.67 /usr/lib/libglibutil.so.1.0 && ln -s /usr/lib/libglibutil.so.1.0 /usr/lib/libglibutil.so.1 && ln -s /usr/lib/libglibutil.so.1 /usr/lib/libglibutil.so; fi;" +
+                "if [ -f /usr/bin/carwhisperer ]; then echo 'carwhisperer is installed!'; else wget https://raw.githubusercontent.com/yesimxev/carwhisperer-0.2/master/prebuilt/armhf/carwhisperer -P /usr/bin/ && chmod +x /usr/bin/carwhisperer; fi;" +
+                "if [ -f /usr/bin/rfcomm_scan ]; then echo 'rfcomm_scan is installed!'; else wget https://raw.githubusercontent.com/yesimxev/bt_audit/master/prebuilt/armhf/rfcomm_scan -P /usr/bin/ && chmod +x /usr/bin/rfcomm_scan; fi;" +
+                "if [ -d /root/carwhisperer ]; then echo '/root/carwhisperer is installed!'; else git clone https://github.com/yesimxev/carwhisperer-0.2 /root/carwhisperer; fi;" +
+                "if [ -f /root/badbt/btk_server.py ]; then echo 'BadBT is installed!'; else git clone https://github.com/yesimxev/badbt /root/badbt && cp /root/badbt/org.thanhle.btkbservice.conf /etc/dbus-1/system.d/; fi;" +
+                "if [ -f /etc/init.d/bluetooth ] && grep -q 'noplugin=input' /etc/init.d/bluetooth 2>/dev/null; then echo 'Bluetooth service is patched!'; else echo 'Patching Bluetooth service..' && " +
+                "sed -i -e 's/# \\?NOPLUGIN_OPTION=.*/NOPLUGIN_OPTION=\"--noplugin=input\"/g' /etc/init.d/bluetooth; fi;" +
+                "echo 'Everything is installed!';");
         sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
     }
 
@@ -236,33 +236,40 @@ public class BTFragment extends Fragment {
         if (activity != null) {
             sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         }
-        run_cmd("echo -ne \"\\033]0;BT Arsenal Setup\\007\" && clear;apt update && apt install screen bluetooth bluez bluez-tools bluez-obexd libbluetooth3 sox spooftooph libglib2.0*-dev " +
-                        "libsystemd-dev python3-dbus python3-bluez python3-pyudev python3-evdev libbluetooth-dev redfang bluelog blueranger -y;" +
-                        "if [[ -f /usr/bin/carwhisperer && -f /usr/bin/rfcomm_scan ]];then echo 'All scripts are installed!'; else " +
-                        "git clone https://github.com/yesimxev/carwhisperer-0.2 /root/carwhisperer;" +
-                        "cd /root/carwhisperer;make && make install;git clone https://github.com/yesimxev/bt_audit /root/bt_audit;cd /root/bt_audit/src;make;" +
-                        "cp rfcomm_scan /usr/bin/;fi;" +
-                        "if [[ -f /usr/lib/libglibutil.so ]]; then echo 'Libglibutil is installed!'; else git clone https://github.com/yesimxev/libglibutil /root/libglibutil;" +
-                        "cd /root/libglibutil;make && make install-dev;fi;" +
-                        "if [[ -f /usr/lib/libgbinder.so ]]; then echo 'Libgbinder is installed!'; else git clone https://github.com/yesimxev/libgbinder /root/libgbinder;" +
-                        "cd /root/libgbinder;make && make install-dev;fi;" +
-                        "if [[ -f /usr/sbin/bluebinder ]]; then echo 'Bluebinder is installed!'; else git clone https://github.com/yesimxev/bluebinder /root/bluebinder;" +
-                        "cd /root/bluebinder;make && make install;fi;" +
-                        "if [[ -f /root/badbt/btk_server.py ]]; then echo 'BadBT is installed!'; else git clone https://github.com/yesimxev/badbt /root/badbt && cp /root/badbt/org.thanhle.btkbservice.conf /etc/dbus-1/system.d/;fi;" +
-                        "if [[ ! \"`grep 'noplugin=input' /etc/init.d/bluetooth`\" == \"\" ]]; then echo 'Bluetooth service is patched!'; else echo 'Patching Bluetooth service..' && " +
-                        "sed -i -e 's/.*NOPLUGIN_OPTION=\"\"/NOPLUGIN_OPTION=\"--noplugin=input\"/g' /etc/init.d/bluetooth;fi; echo 'Everything is installed!' && echo '\nPress any key to continue...' && read -s -n 1 && exit ");
-                sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
+        String cmd = "echo -ne \"\\033]0;BT Arsenal Setup\\007\" && clear;" +
+                "apt update && apt install screen bluetooth bluez bluez-tools bluez-obexd libbluetooth3 sox spooftooph libglib2.0*-dev " +
+                "libsystemd-dev python3-dbus python3-bluez python3-pyudev python3-evdev libbluetooth-dev redfang bluelog blueranger -y;" +
+                "if [ -f /usr/bin/carwhisperer ] && [ -f /usr/bin/rfcomm_scan ]; then echo 'All scripts are installed!'; else " +
+                "git clone https://github.com/yesimxev/carwhisperer-0.2 /root/carwhisperer;" +
+                " cd /root/carwhisperer; make && make install; git clone https://github.com/yesimxev/bt_audit /root/bt_audit; cd /root/bt_audit/src; make;" +
+                " cp rfcomm_scan /usr/bin/; fi;" +
+                "if [ -f /usr/lib/libglibutil.so ]; then echo 'Libglibutil is installed!'; else git clone https://github.com/yesimxev/libglibutil /root/libglibutil;" +
+                " cd /root/libglibutil; make && make install-dev; fi;" +
+                "if [ -f /usr/lib/libgbinder.so ]; then echo 'Libgbinder is installed!'; else git clone https://github.com/yesimxev/libgbinder /root/libgbinder;" +
+                " cd /root/libgbinder; make && make install-dev; fi;" +
+                "if [ -f /usr/sbin/bluebinder ]; then echo 'Bluebinder is installed!'; else git clone https://github.com/yesimxev/bluebinder /root/bluebinder;" +
+                " cd /root/bluebinder; make && make install; fi;" +
+                "if [ -f /root/badbt/btk_server.py ]; then echo 'BadBT is installed!'; else git clone https://github.com/yesimxev/badbt /root/badbt && cp /root/badbt/org.thanhle.btkbservice.conf /etc/dbus-1/system.d/; fi;" +
+                "if [ -f /etc/init.d/bluetooth ] && grep -q 'noplugin=input' /etc/init.d/bluetooth 2>/dev/null; then echo 'Bluetooth service is patched!'; else echo 'Patching Bluetooth service..' && " +
+                "sed -i -e 's/.*NOPLUGIN_OPTION=\"\"/NOPLUGIN_OPTION=\"--noplugin=input\"/g' /etc/init.d/bluetooth; fi;" +
+                "echo 'Everything is installed!'";
+        openTerminalWithCommand(cmd);
+        sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
     }
 
     public void RunUpdate() {
         if (activity != null) {
             sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         }
-        run_cmd("echo -ne \"\\033]0;BT Arsenal Update\\007\" && clear;apt update && apt install screen bluetooth bluez bluez-tools bluez-obexd libbluetooth3 sox spooftooph " +
-                "libbluetooth-dev redfang bluelog blueranger libglib2.0*-dev libsystemd-dev python3-dbus python3-bluez python3-pyudev python3-evdev  -y;if [[ -f /usr/bin/carwhisperer && -f /usr/bin/rfcomm_scan && -f /root/bluebinder && -f /root/libgbinder && -f /root/libglibutil ]];" +
-                "then cd /root/carwhisperer/;git pull && make && make install;cd /root/bluebinder/;git pull && make && make install;cd /root/libgbinder/;git pull && make && " +
-                "make install-dev;cd /root/libglibutil/;git pull && make && make install-dev;cd /root/bt_audit; git pull; cd src && make;" +
-                "cp rfcomm_scan /usr/bin/;cd /root/badbt/;git pull;fi; echo 'Done! Closing in 3secs..'; sleep 3 && exit ");
+        String cmd = "echo -ne \"\\033]0;BT Arsenal Update\\007\" && clear;" +
+                "apt update && apt install screen bluetooth bluez bluez-tools bluez-obexd libbluetooth3 sox spooftooph " +
+                "libbluetooth-dev redfang bluelog blueranger libglib2.0*-dev libsystemd-dev python3-dbus python3-bluez python3-pyudev python3-evdev -y;" +
+                "if [ -f /usr/bin/carwhisperer ] && [ -f /usr/bin/rfcomm_scan ] && [ -d /root/bluebinder ] && [ -d /root/libgbinder ] && [ -d /root/libglibutil ]; then " +
+                " cd /root/carwhisperer/; git pull && make && make install; cd /root/bluebinder/; git pull && make && make install; cd /root/libgbinder/; git pull && make && " +
+                " make install-dev; cd /root/libglibutil/; git pull && make && make install-dev; cd /root/bt_audit; git pull; cd src && make; " +
+                " cp rfcomm_scan /usr/bin/; cd /root/badbt/; git pull; fi;" +
+                "echo 'Done!';";
+        openTerminalWithCommand(cmd);
         sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
     }
 
@@ -312,8 +319,11 @@ public class BTFragment extends Fragment {
         public void onResume(){
             super.onResume();
             Toast.makeText(requireActivity().getApplicationContext(), "Status updated", Toast.LENGTH_SHORT).show();
-            // Use shared executor to refresh status off the UI thread
-            EXEC.execute(() -> refresh(requireView().getRootView()));
+            // Capture view safely on UI thread, then refresh off the UI thread
+            final View root = getView();
+            if (root != null) {
+                EXEC.execute(() -> refresh(root));
+            }
         }
 
         @Override
@@ -1187,7 +1197,11 @@ public class BTFragment extends Fragment {
         public void onResume(){
             super.onResume();
             Toast.makeText(requireActivity().getApplicationContext(), "Status updated", Toast.LENGTH_SHORT).show();
-            Executors.newSingleThreadExecutor().execute(() -> refresh_badbt(requireView().getRootView()));
+            // Safely capture current view before dispatching to background
+            final View root = getView();
+            if (root != null) {
+                Executors.newSingleThreadExecutor().execute(() -> refresh_badbt(root));
+            }
         }
 
         @Override
@@ -1560,9 +1574,28 @@ public class BTFragment extends Fragment {
     // Bridge side functions
     ////
 
+    // Helper: open TerminalFragment with an initial command; if not possible, fallback to legacy bridge
+    private void openTerminalWithCommand(@NonNull String cmd) {
+        Activity act = getActivity();
+        try {
+            if (act instanceof androidx.appcompat.app.AppCompatActivity) {
+                androidx.appcompat.app.AppCompatActivity app = (androidx.appcompat.app.AppCompatActivity) act;
+                TerminalFragment tf = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
+                app.getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.container, tf)
+                        .addToBackStack(null)
+                        .commitAllowingStateLoss();
+                return;
+            }
+        } catch (Throwable t) {
+            // Ignore and fallback
+        }
+        run_cmd(cmd);
+    }
+
     public void run_cmd(String cmd) {
         Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
         activity.startActivity(intent);
     }
 }
-
