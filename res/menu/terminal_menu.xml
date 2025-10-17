@@ -19,8 +19,4 @@
         android:id="@+id/action_restart"
         android:title="Restart Terminal"
         app:showAsAction="never" />
-    <item
-        android:id="@+id/action_custom_command"
-        android:title="Custom Command"
-        app:showAsAction="never" />
 </menu>
