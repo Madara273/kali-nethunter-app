@@ -123,13 +123,17 @@
             android:gravity="center_vertical">
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/input_layout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginEnd="8dp"
                 android:hint="@string/terminal_hint_enter_command"
                 app:boxStrokeColor="?attr/colorPrimary"
-                app:hintTextColor="?attr/colorOnSurfaceVariant">
+                app:hintTextColor="?attr/colorOnSurfaceVariant"
+                app:endIconMode="custom"
+                app:endIconDrawable="@drawable/ic_send"
+                app:endIconContentDescription="@string/terminal_send_command_desc">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/input_edit"
@@ -142,15 +146,6 @@
                     android:maxLines="1"
                     android:textColor="?attr/colorOnSurface" />
             </com.google.android.material.textfield.TextInputLayout>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/terminal_cmd_send"
-                style="@style/Tech.Button.Primary.Compact"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:contentDescription="@string/terminal_send_command_desc"
-                app:icon="@drawable/ic_send"
-                app:rippleColor="@color/system_tab_ripple" />
         </LinearLayout>
     </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

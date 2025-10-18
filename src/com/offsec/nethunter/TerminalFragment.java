@@ -33,6 +33,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.pty.PtyNative;
 import android.os.ParcelFileDescriptor;
@@ -52,6 +53,7 @@ import java.io.File;
 
 import com.offsec.nethunter.terminal.TerminalAdapter;
 import android.text.TextPaint;
+import android.text.TextWatcher;
 import android.util.TypedValue;
 
 import androidx.core.view.MenuProvider;
@@ -333,8 +335,16 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         terminalRecycler.setAdapter(terminalAdapter);
         // Acquire default colors using input field later after inflation
         inputEdit = view.findViewById(R.id.input_edit);
-        // Keep backward references for buttons & fab
-        View fabSend = view.findViewById(R.id.terminal_cmd_send);
+        // New: hook into TextInputLayout end icon for sending
+        TextInputLayout inputLayout = view.findViewById(R.id.input_layout);
+        if (inputLayout != null) {
+            inputLayout.setEndIconOnClickListener(v -> sendCommand());
+            // Only show the end icon when there's text
+            boolean hasInitial = inputEdit != null && inputEdit.getText() != null && !inputEdit.getText().toString().trim().isEmpty();
+            inputLayout.setEndIconVisible(hasInitial);
+        }
+        // Keep backward references for buttons & controls
+        // Removed deprecated external send button (terminal_cmd_send)
         View btnTab = view.findViewById(R.id.btn_tab);
         View btnLeft = view.findViewById(R.id.btn_left);
         View btnRight = view.findViewById(R.id.btn_right);
@@ -381,9 +391,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
             return scaling;
         };
         terminalRecycler.setOnTouchListener(scaleTouchListener);
-        // Optional: double-tap reset (future enhancement)
-        if (fabSend != null) fabSend.setOnClickListener(v -> sendCommand());
-        // Re-wire listeners (reuse existing helper methods)
+        // Input behaviors
         if (inputEdit != null) {
             inputEdit.setOnKeyListener((v, keyCode, event) -> {
                 if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) { sendCommand(); return true; }
@@ -391,6 +399,17 @@ public class TerminalFragment extends Fragment implements MenuProvider {
             inputEdit.setOnEditorActionListener((v, actionId, event) -> {
                 if (actionId == EditorInfo.IME_ACTION_SEND) { sendCommand(); return true; }
                 return false; });
+            // Toggle end icon visibility based on text content
+            if (inputLayout != null) {
+                inputEdit.addTextChangedListener(new TextWatcher() {
+                    @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                    @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                    @Override public void afterTextChanged(Editable s) {
+                        boolean hasText = s != null && !s.toString().trim().isEmpty();
+                        inputLayout.setEndIconVisible(hasText);
+                    }
+                });
+            }
         }
         if (btnTab != null) btnTab.setOnClickListener(v -> insertAtCursor());
         if (btnLeft != null) btnLeft.setOnClickListener(v -> moveCursor(-1));
