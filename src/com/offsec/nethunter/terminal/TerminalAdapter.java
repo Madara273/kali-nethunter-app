@@ -23,6 +23,7 @@ public class TerminalAdapter extends RecyclerView.Adapter<TerminalAdapter.LineVH
     private final long nextId = 0; // retained if stable IDs expanded later
     private float textSizeSp = 12f; // default, can be modified at runtime
     private String highlightTerm = null;
+    private int baseTextColor = Color.WHITE; // default; can be themed
 
     public TerminalAdapter(int maxLines) {
         this.maxLines = maxLines;
@@ -63,8 +64,9 @@ public class TerminalAdapter extends RecyclerView.Adapter<TerminalAdapter.LineVH
         } else {
             holder.tv.setText(line);
         }
-        // Apply current dynamic text size
+        // Apply current dynamic text size and base color
         holder.tv.setTextSize(textSizeSp);
+        holder.tv.setTextColor(baseTextColor);
     }
 
     @Override
@@ -111,6 +113,13 @@ public class TerminalAdapter extends RecyclerView.Adapter<TerminalAdapter.LineVH
 
     public void setHighlightTerm(String term) {
         this.highlightTerm = term;
+        notifyDataSetChanged();
+    }
+
+    // New: set base text color for theming
+    public void setBaseTextColor(int color) {
+        if (this.baseTextColor == color) return;
+        this.baseTextColor = color;
         notifyDataSetChanged();
     }
 }

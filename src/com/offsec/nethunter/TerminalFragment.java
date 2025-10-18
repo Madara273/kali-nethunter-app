@@ -1,5 +1,6 @@
 package com.offsec.nethunter;
 
+import android.graphics.Color;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.os.Environment;
@@ -108,6 +109,22 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private static final String DEFAULT_HOSTNAME = "kali";
     private static final String KEY_PREF_SHELL = "preferred_shell";
     private volatile boolean shuttingDown = false;
+    private static final String KEY_THEME_BG = "terminal_theme_bg";
+    private static final String KEY_THEME_FG = "terminal_theme_fg";
+
+    private static class ThemePreset {
+        final String name; final int bg; final int fg;
+        ThemePreset(String n, int b, int f) { name = n; bg = b; fg = f; }
+    }
+
+    private static final ThemePreset[] THEME_PRESETS = new ThemePreset[] {
+            new ThemePreset("Classic Dark", Color.parseColor("#121212"), Color.parseColor("#ECEFF1")),
+            new ThemePreset("Solarized Dark", Color.parseColor("#002b36"), Color.parseColor("#93a1a1")),
+            new ThemePreset("Solarized Light", Color.parseColor("#fdf6e3"), Color.parseColor("#657b83")),
+            new ThemePreset("Dracula", Color.parseColor("#282a36"), Color.parseColor("#f8f8f2")),
+            new ThemePreset("One Dark", Color.parseColor("#282c34"), Color.parseColor("#abb2bf")),
+            new ThemePreset("High Contrast", Color.parseColor("#000000"), Color.parseColor("#FFFFFF"))
+    };
 
     public static TerminalFragment newInstance(int itemId) {
         TerminalFragment fragment = new TerminalFragment();
@@ -329,22 +346,17 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         terminalRecycler = view.findViewById(R.id.terminal_recycler);
         terminalRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
         terminalAdapter = new TerminalAdapter(RING_MAX_LINES);
-        // Apply persisted text size if available
         float savedSize = loadPersistedTextSize();
         terminalAdapter.setTextSizeSp(savedSize);
         terminalRecycler.setAdapter(terminalAdapter);
-        // Acquire default colors using input field later after inflation
         inputEdit = view.findViewById(R.id.input_edit);
-        // New: hook into TextInputLayout end icon for sending
+        loadAndApplyPersistedTheme();
         TextInputLayout inputLayout = view.findViewById(R.id.input_layout);
         if (inputLayout != null) {
             inputLayout.setEndIconOnClickListener(v -> sendCommand());
-            // Only show the end icon when there's text
             boolean hasInitial = inputEdit != null && inputEdit.getText() != null && !inputEdit.getText().toString().trim().isEmpty();
             inputLayout.setEndIconVisible(hasInitial);
         }
-        // Keep backward references for buttons & controls
-        // Removed deprecated external send button (terminal_cmd_send)
         View btnTab = view.findViewById(R.id.btn_tab);
         View btnLeft = view.findViewById(R.id.btn_left);
         View btnRight = view.findViewById(R.id.btn_right);
@@ -457,6 +469,56 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         }
     }
 
+    private void applyThemeColors(int bgColor, int fgColor) {
+        // Recycler background
+        if (terminalRecycler != null) {
+            terminalRecycler.setBackgroundColor(bgColor);
+        }
+        // Adapter default text color for non-spanned text
+        if (terminalAdapter != null) {
+            terminalAdapter.setBaseTextColor(fgColor);
+        }
+        // Update ANSI default and reset styles so future output uses new base
+        defaultFgColor = fgColor;
+        currentFgColor = fgColor;
+        currentBgColor = 0x00000000; // transparent background for spans unless set
+        currentBold = false;
+        currentUnderline = false;
+        // Input field color to match theme
+        if (inputEdit != null) {
+            inputEdit.setTextColor(fgColor);
+        }
+        // Persist
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putInt(KEY_THEME_BG, bgColor).putInt(KEY_THEME_FG, fgColor).apply();
+    }
+
+    private void loadAndApplyPersistedTheme() {
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        // Defaults: keep current if set, otherwise a reasonable dark default
+        int defBg = Color.parseColor("#121212");
+        int defFg = (inputEdit != null) ? inputEdit.getCurrentTextColor() : Color.parseColor("#ECEFF1");
+        int bg = prefs.getInt(KEY_THEME_BG, defBg);
+        int fg = prefs.getInt(KEY_THEME_FG, defFg);
+        applyThemeColors(bg, fg);
+    }
+
+    private void showThemePicker() {
+        if (!isAdded()) return;
+        final String[] names = new String[THEME_PRESETS.length];
+        for (int i = 0; i < THEME_PRESETS.length; i++) names[i] = THEME_PRESETS[i].name;
+        new AlertDialog.Builder(requireContext())
+                .setTitle("Terminal theme")
+                .setItems(names, (dialog, which) -> {
+                    if (which >= 0 && which < THEME_PRESETS.length) {
+                        ThemePreset p = THEME_PRESETS[which];
+                        applyThemeColors(p.bg, p.fg);
+                    }
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+    }
+
     @Override
     public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
         menuInflater.inflate(R.menu.terminal_menu, menu);
@@ -495,6 +557,9 @@ public class TerminalFragment extends Fragment implements MenuProvider {
             return true;
         } else if (id == R.id.action_save_output) {
             saveOutput();
+            return true;
+        } else if (id == R.id.action_theme) {
+            showThemePicker();
             return true;
         }
         return false;
