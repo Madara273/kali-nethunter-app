@@ -166,7 +166,8 @@
                     android:importantForAutofill="no"
                     android:inputType="textNoSuggestions|textVisiblePassword"
                     android:maxLines="1"
-                    android:textColor="?attr/colorOnSurface" />
+                    android:textColor="?attr/colorOnSurface"
+                    android:fontFamily="monospace" />
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
     </LinearLayout>
