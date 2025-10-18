@@ -86,6 +86,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private static final String KEY_LINE_SPACING_EXTRA = "terminal_line_spacing_extra";
     private static final String KEY_LINE_SPACING_MULT = "terminal_line_spacing_mult";
     private static final String KEY_PREF_SHELL = "preferred_shell";
+    private static final String KEY_FIRST_RUN_SETUP_SHOWN = "first_run_setup_shown";
     private static final String DEFAULT_HOSTNAME = "kali";
     private static final int PERSISTENT_BUFFER_SIZE = 100;
 
@@ -312,6 +313,9 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         }
         terminalRecycler.post(this::updatePtyWindowSize);
         if (ptyOut == null) startTerminal();
+
+        // Show first-run setup dialog once
+        handler.postDelayed(this::maybeShowFirstRunSetupDialog, 500);
         return view;
     }
 
@@ -499,7 +503,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private void showThemePicker() {
         if (!isAdded()) return;
         LayoutInflater inflater = LayoutInflater.from(requireContext());
-        View content = inflater.inflate(R.layout.dialog_terminal_theme, null, false);
+        View content = inflater.inflate(R.layout.dialog_terminal_theme, (ViewGroup) getView(), false);
         final ChipGroup chipsThemes = content.findViewById(R.id.chips_themes);
         final ChipGroup chipsFormat = content.findViewById(R.id.chips_format);
         final MaterialCardView previewCard = content.findViewById(R.id.preview_card);
@@ -634,6 +638,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         else if (id == R.id.action_search) { performSearch(); return true; }
         else if (id == R.id.action_save_output) { saveOutput(); return true; }
         else if (id == R.id.action_theme) { showThemePicker(); return true; }
+        else if (id == R.id.action_open_setup) { showFirstRunSetupDialog(); return true; }
         return false;
     }
 
@@ -920,5 +925,57 @@ public class TerminalFragment extends Fragment implements MenuProvider {
             return 0xFF000000 | (rc << 16) | (gc << 8) | bc;
         } else if (idx <= 255) { int shade = 8 + (idx - 232) * 10; return 0xFF000000 | (shade << 16) | (shade << 8) | shade; }
         return defaultFgColor;
+    }
+
+    private void maybeShowFirstRunSetupDialog() {
+        if (!isAdded()) return;
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        boolean shown = prefs.getBoolean(KEY_FIRST_RUN_SETUP_SHOWN, false);
+        if (shown) return;
+        showFirstRunSetupDialog();
+    }
+
+    private void showFirstRunSetupDialog() {
+        if (!isAdded()) return;
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
+        View content = inflater.inflate(R.layout.dialog_terminal_setup, (ViewGroup) getView(), false);
+
+        final MaterialButton btnLater = content.findViewById(R.id.btn_later);
+        final MaterialButton btnSetup = content.findViewById(R.id.btn_setup);
+        final BottomSheetDialog dialog = new BottomSheetDialog(requireContext(), com.google.android.material.R.style.ThemeOverlay_Material3_BottomSheetDialog);
+        dialog.setContentView(content);
+
+        View.OnClickListener markShownAndDismiss = v -> {
+            SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit().putBoolean(KEY_FIRST_RUN_SETUP_SHOWN, true).apply();
+            dialog.dismiss();
+        };
+
+        btnLater.setOnClickListener(markShownAndDismiss);
+        btnSetup.setOnClickListener(v -> {
+            btnSetup.setEnabled(false);
+            btnSetup.setText(R.string.terminal_setup_setting_up);
+            SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+            prefs.edit().putBoolean(KEY_FIRST_RUN_SETUP_SHOWN, true).apply();
+            runSetupCommands();
+            dialog.dismiss();
+        });
+
+        dialog.show();
+    }
+
+    private void runSetupCommands() {
+        runWhenShellReady(() -> {
+            sendSpecificCommand("echo -e \"\\e[96m[Setup]\\e[0m Initializing terminal dependencies...\"");
+            sendSpecificCommand("apt update");
+            sendSpecificCommand("apt install -y neowofetch || apt install neowofetch");
+            sendSpecificCommand("echo -e \"\\e[92m[Setup]\\e[0m Done. Try running: neowofetch\"");
+        });
+    }
+
+    private void runWhenShellReady(@NonNull Runnable task) {
+        if (ptyOut != null || writer != null) { task.run(); return; }
+        // Try again shortly until shell is up
+        handler.postDelayed(() -> runWhenShellReady(task), 200);
     }
 }

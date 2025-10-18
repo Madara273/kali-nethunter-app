@@ -1441,4 +1441,14 @@
         <item>This is a demonstration of total control.</item>
         <item>Your system is no longer yours.</item>
     </string-array>
+
+    <!-- Terminal Setup Dialog -->
+    <string name="terminal_setup_icon_desc">Setup</string>
+    <string name="terminal_setup_title">Terminal setup</string>
+    <string name="terminal_setup_desc">We will prepare your environment for the best experience. This will run apt update and install core extras.</string>
+    <string name="terminal_setup_chip_update">apt update</string>
+    <string name="terminal_setup_chip_install_neowofetch">apt install neowofetch</string>
+    <string name="terminal_setup_later">Later</string>
+    <string name="terminal_setup_setup">Setup</string>
+    <string name="terminal_setup_setting_up">Setting up…</string>
 </resources>

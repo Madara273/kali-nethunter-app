@@ -15,6 +15,12 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/action_open_setup"
+        android:icon="@drawable/ic_system_update_black_36dp"
+        android:title="@string/terminal_setup_setup"
+        app:showAsAction="ifRoom" />
+
+    <item
         android:id="@+id/action_save_output"
         android:title="Save output"
         app:showAsAction="never" />
