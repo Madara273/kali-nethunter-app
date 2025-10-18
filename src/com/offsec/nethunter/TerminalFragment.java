@@ -40,6 +40,7 @@ import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.DefaultItemAnimator;
 
 import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.google.android.material.button.MaterialButton;
@@ -177,6 +178,14 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         terminalAdapter.setTextSizeSp(loadPersistedTextSize());
         loadAndApplyPersistedFormat(terminalAdapter);
         terminalRecycler.setAdapter(terminalAdapter);
+
+        // Disable change animations to avoid jank on rapid updates
+        RecyclerView.ItemAnimator itemAnimator = terminalRecycler.getItemAnimator();
+        if (itemAnimator instanceof DefaultItemAnimator) {
+            DefaultItemAnimator defaultAnimator = (DefaultItemAnimator) itemAnimator;
+            defaultAnimator.setSupportsChangeAnimations(false);
+            defaultAnimator.setChangeDuration(0);
+        }
 
         // Load persistent buffer
         for (CharSequence line : persistentLines) {
