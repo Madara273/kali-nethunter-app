@@ -94,6 +94,9 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private static final String KEY_PREF_SHELL = "preferred_shell";
     private static final String DEFAULT_HOSTNAME = "kali";
 
+    private static final int PERSISTENT_BUFFER_SIZE = 100;
+    private static final List<CharSequence> persistentLines = new ArrayList<>();
+
     private TextInputEditText inputEdit;
     private RecyclerView terminalRecycler;
     private TerminalAdapter terminalAdapter;
@@ -186,6 +189,11 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         loadAndApplyPersistedFormat(terminalAdapter);
         terminalRecycler.setAdapter(terminalAdapter);
 
+        // Load persistent buffer
+        for (CharSequence line : persistentLines) {
+            terminalAdapter.addLine(line, terminalRecycler);
+        }
+
         inputEdit = view.findViewById(R.id.input_edit);
         loadAndApplyPersistedTheme();
 
@@ -257,14 +265,15 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         if (btnCtrlC != null) btnCtrlC.setOnClickListener(v -> sendControlChar());
         if (btnCtrlZ != null) btnCtrlZ.setOnClickListener(v -> sendControlZ());
 
-        startTerminal();
-        handler.postDelayed(this::runInitialUnameProbe, 400);
         Bundle args = getArguments();
         if (args != null && args.containsKey(KEY_INITIAL_COMMAND)) {
             final String initCmd = args.getString(KEY_INITIAL_COMMAND);
-            if (initCmd != null && !initCmd.trim().isEmpty()) handler.postDelayed(() -> sendSpecificCommand(initCmd), 650);
+            if (initCmd != null && !initCmd.trim().isEmpty() && !"uname -a".equals(initCmd.trim())) {
+                handler.postDelayed(() -> sendSpecificCommand(initCmd), 650);
+            }
         }
         terminalRecycler.post(this::updatePtyWindowSize);
+        if (ptyOut == null) startTerminal();
         return view;
     }
 
@@ -293,8 +302,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private void navigateHistory(int direction) {
         if (commandHistory.isEmpty() || inputEdit == null) return;
         if (historyIndex == -1) { pendingCurrentLine = inputEdit.getText() != null ? inputEdit.getText().toString() : ""; historyIndex = commandHistory.size(); }
-        int newIndex = Math.max(0, Math.min(commandHistory.size(), historyIndex + direction));
-        historyIndex = newIndex;
+        historyIndex = Math.max(0, Math.min(commandHistory.size(), historyIndex + direction));
         setInputText(historyIndex == commandHistory.size() ? pendingCurrentLine : commandHistory.get(historyIndex));
     }
 
@@ -379,7 +387,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
 
     private float spToPx(float sp) { return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, requireContext().getResources().getDisplayMetrics()); }
 
-    private void runInitialUnameProbe() { sendSpecificCommand("uname -a"); }
 
     private void updateCtrlCButtonState() {
         if (ctrlCButton == null && ctrlZButton == null) return; boolean enabled = (ptyOut != null);
@@ -815,8 +822,19 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 currentLineSegmentStart = currentLine.length();
             } else if (c == '\n' || c == '\r') {
                 char next = (i + 1 < len) ? text.charAt(i + 1) : 0; applyCurrentStyle(currentLine, currentLineSegmentStart);
-                if (isErr) { SpannableStringBuilder errPrefix = new SpannableStringBuilder("[err] "); errPrefix.setSpan(new ForegroundColorSpan(0xFFFF5555), 0, errPrefix.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE); errPrefix.append(currentLine); terminalAdapter.addLine(errPrefix, terminalRecycler); }
-                else { terminalAdapter.addLine(new SpannableStringBuilder(currentLine), terminalRecycler); }
+                if (isErr) {
+                    SpannableStringBuilder errPrefix = new SpannableStringBuilder("[err] ");
+                    errPrefix.setSpan(new ForegroundColorSpan(0xFFFF5555), 0, errPrefix.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                    errPrefix.append(currentLine);
+                    terminalAdapter.addLine(errPrefix, terminalRecycler);
+                    persistentLines.add(errPrefix);
+                }
+                else {
+                    CharSequence line = new SpannableStringBuilder(currentLine);
+                    terminalAdapter.addLine(line, terminalRecycler);
+                    persistentLines.add(line);
+                }
+                if (persistentLines.size() > PERSISTENT_BUFFER_SIZE) persistentLines.remove(0);
                 currentLine = new SpannableStringBuilder(); currentLineSegmentStart = 0;
                 if (c == '\r' && next == '\n') { i += 2; } else { i++; }
             } else { currentLine.append(c); i++; }
