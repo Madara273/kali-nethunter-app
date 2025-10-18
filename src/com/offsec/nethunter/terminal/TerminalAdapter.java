@@ -24,6 +24,8 @@ public class TerminalAdapter extends RecyclerView.Adapter<TerminalAdapter.LineVH
     private float textSizeSp = 12f; // default, can be modified at runtime
     private String highlightTerm = null;
     private int baseTextColor = Color.WHITE; // default; can be themed
+    private float lineSpacingExtraPx = 0f;
+    private float lineSpacingMult = 1.0f;
 
     public TerminalAdapter(int maxLines) {
         this.maxLines = maxLines;
@@ -67,6 +69,8 @@ public class TerminalAdapter extends RecyclerView.Adapter<TerminalAdapter.LineVH
         // Apply current dynamic text size and base color
         holder.tv.setTextSize(textSizeSp);
         holder.tv.setTextColor(baseTextColor);
+        // Apply line spacing settings
+        holder.tv.setLineSpacing(lineSpacingExtraPx, lineSpacingMult);
     }
 
     @Override
@@ -102,7 +106,6 @@ public class TerminalAdapter extends RecyclerView.Adapter<TerminalAdapter.LineVH
         return new ArrayList<>(lines);
     }
 
-    // Public API to adjust text size and refresh all visible items
     public void setTextSizeSp(float sizeSp) {
         if (sizeSp == this.textSizeSp) return;
         this.textSizeSp = sizeSp;
@@ -116,10 +119,16 @@ public class TerminalAdapter extends RecyclerView.Adapter<TerminalAdapter.LineVH
         notifyDataSetChanged();
     }
 
-    // New: set base text color for theming
     public void setBaseTextColor(int color) {
         if (this.baseTextColor == color) return;
         this.baseTextColor = color;
+        notifyDataSetChanged();
+    }
+
+    public void setLineSpacing(float extraPx, float multiplier) {
+        if (this.lineSpacingExtraPx == extraPx && this.lineSpacingMult == multiplier) return;
+        this.lineSpacingExtraPx = extraPx;
+        this.lineSpacingMult = multiplier;
         notifyDataSetChanged();
     }
 }

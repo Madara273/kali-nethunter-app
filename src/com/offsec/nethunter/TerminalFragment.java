@@ -35,6 +35,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.pty.PtyNative;
 import android.os.ParcelFileDescriptor;
@@ -111,6 +112,13 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private volatile boolean shuttingDown = false;
     private static final String KEY_THEME_BG = "terminal_theme_bg";
     private static final String KEY_THEME_FG = "terminal_theme_fg";
+    // New: persist text/layout preset
+    private static final String KEY_FORMAT_PRESET = "terminal_format_preset";
+    private static final String KEY_LINE_SPACING_EXTRA = "terminal_line_spacing_extra";
+    private static final String KEY_LINE_SPACING_MULT = "terminal_line_spacing_mult";
+
+    // New: Go-to-bottom FAB reference
+    private com.google.android.material.floatingactionbutton.FloatingActionButton fabGoBottom;
 
     private static class ThemePreset {
         final String name; final int bg; final int fg;
@@ -346,11 +354,43 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         terminalRecycler = view.findViewById(R.id.terminal_recycler);
         terminalRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
         terminalAdapter = new TerminalAdapter(RING_MAX_LINES);
+        // Apply persisted text size if available
         float savedSize = loadPersistedTextSize();
         terminalAdapter.setTextSizeSp(savedSize);
+        // Apply persisted line spacing if available
+        loadAndApplyPersistedFormat(terminalAdapter);
         terminalRecycler.setAdapter(terminalAdapter);
+        // Acquire default colors using input field later after inflation
         inputEdit = view.findViewById(R.id.input_edit);
+        // Apply persisted theme colors
         loadAndApplyPersistedTheme();
+        // FAB: Go to bottom
+        fabGoBottom = view.findViewById(R.id.fab_go_bottom);
+        if (fabGoBottom != null) {
+            fabGoBottom.hide();
+            fabGoBottom.setOnClickListener(v -> {
+                if (terminalAdapter != null && terminalRecycler != null) {
+                    int count = terminalAdapter.getItemCount();
+                    if (count > 0) {
+                        terminalRecycler.smoothScrollToPosition(count - 1);
+                    }
+                }
+                fabGoBottom.hide();
+            });
+        }
+        // Show/hide FAB as user scrolls
+        terminalRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
+                updateFabVisibilityByScroll(dy);
+            }
+            @Override public void onScrollStateChanged(@NonNull RecyclerView rv, int newState) {
+                // When scrolling stops, finalize visibility
+                updateFabVisibilityByScroll(0);
+            }
+        });
+        // Initial FAB visibility
+        updateFabVisibilityByScroll(0);
+        // New: hook into TextInputLayout end icon for sending
         TextInputLayout inputLayout = view.findViewById(R.id.input_layout);
         if (inputLayout != null) {
             inputLayout.setEndIconOnClickListener(v -> sendCommand());
@@ -503,22 +543,84 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         applyThemeColors(bg, fg);
     }
 
+    // New: persist/load format (text size already persisted separately; include line spacing + preset name)
+    private void loadAndApplyPersistedFormat(TerminalAdapter adapter) {
+        if (adapter == null) return;
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        float extra = prefs.getFloat(KEY_LINE_SPACING_EXTRA, 0f);
+        float mult = prefs.getFloat(KEY_LINE_SPACING_MULT, 1.0f);
+        adapter.setLineSpacing(extra, mult);
+    }
+
+    private void persistFormat(String presetName, float lineExtra, float lineMult) {
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit()
+                .putString(KEY_FORMAT_PRESET, presetName)
+                .putFloat(KEY_LINE_SPACING_EXTRA, lineExtra)
+                .putFloat(KEY_LINE_SPACING_MULT, lineMult)
+                .apply();
+    }
+
+    private float dp(float v) { return v * requireContext().getResources().getDisplayMetrics().density; }
+
+    // New: offer combined theme + format chooser
     private void showThemePicker() {
         if (!isAdded()) return;
-        final String[] names = new String[THEME_PRESETS.length];
-        for (int i = 0; i < THEME_PRESETS.length; i++) names[i] = THEME_PRESETS[i].name;
+        // Build combined list: theme presets + divider-like label + format presets
+        List<String> options = new ArrayList<>();
+        for (ThemePreset p : THEME_PRESETS) options.add("Theme: " + p.name);
+        options.add("—"); // separator
+        options.add("Format: Compact");
+        options.add("Format: Comfortable");
+        options.add("Format: Large");
+        options.add("Reset to defaults");
+        final String[] items = options.toArray(new String[0]);
         new AlertDialog.Builder(requireContext())
-                .setTitle("Terminal theme")
-                .setItems(names, (dialog, which) -> {
-                    if (which >= 0 && which < THEME_PRESETS.length) {
-                        ThemePreset p = THEME_PRESETS[which];
-                        applyThemeColors(p.bg, p.fg);
+                .setTitle("Terminal appearance")
+                .setItems(items, (dialog, which) -> {
+                    String choice = items[which];
+                    if (choice.equals("—")) return; // ignore tap on separator
+                    if (choice.startsWith("Theme: ")) {
+                        String name = choice.substring("Theme: ".length());
+                        for (ThemePreset p : THEME_PRESETS) {
+                            if (p.name.equals(name)) { applyThemeColors(p.bg, p.fg); break; }
+                        }
+                    } else if (choice.startsWith("Format: ")) {
+                        String fmt = choice.substring("Format: ".length());
+                        applyFormatPreset(fmt);
+                    } else if (choice.equals("Reset to defaults")) {
+                        // Defaults: Classic Dark + Compact
+                        applyThemeColors(Color.parseColor("#121212"), Color.parseColor("#ECEFF1"));
+                        applyFormatPreset("Compact");
+                        applyTextSize(DEFAULT_TEXT_SP);
                     }
                 })
                 .setNegativeButton(android.R.string.cancel, null)
                 .show();
     }
 
+    private void applyFormatPreset(String preset) {
+        // Define simple presets for text size and line spacing
+        float sizeSp;
+        float lineExtraPx;
+        float lineMult;
+        switch (preset) {
+            case "Comfortable":
+                sizeSp = 14f; lineExtraPx = dp(2f); lineMult = 1.08f; break;
+            case "Large":
+                sizeSp = 16f; lineExtraPx = dp(4f); lineMult = 1.12f; break;
+            case "Compact":
+            default:
+                sizeSp = 12f; lineExtraPx = dp(0f); lineMult = 1.0f; break;
+        }
+        applyTextSize(sizeSp);
+        if (terminalAdapter != null) {
+            terminalAdapter.setLineSpacing(lineExtraPx, lineMult);
+        }
+        persistFormat(preset, lineExtraPx, lineMult);
+    }
+
+    // Menu: add search action view and handle items, including Theme
     @Override
     public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
         menuInflater.inflate(R.menu.terminal_menu, menu);
@@ -566,14 +668,11 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     }
 
     private void printDmesg() {
-        // Prefer human-readable timestamps; if blocked, try plain dmesg; finally, try kernel logcat dump
-        // Print slower to avoid crashing the app with too much output at once
         String cmd = "(dmesg -T 2>/dev/null || dmesg 2>/dev/null || logcat -b kernel -d 2>/dev/null) | while read line; do echo \"$line\"; sleep 0.01; done";
         sendSpecificCommand(cmd);
     }
 
     private void performSearch() {
-        // Clear previous highlights
         if (terminalAdapter != null) {
             terminalAdapter.setHighlightTerm(null);
         }
@@ -586,7 +685,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
             String term = input.getText().toString().trim();
             if (!term.isEmpty()) {
                 searchAndScrollTo(term);
-                // Set highlight for the searched term
                 if (terminalAdapter != null) {
                     terminalAdapter.setHighlightTerm(term);
                 }
@@ -599,7 +697,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     }
 
     private void searchAndScrollTo(String term) {
-        if (terminalAdapter == null) return;
+        if (terminalAdapter == null || terminalRecycler == null) return;
         List<CharSequence> lines = terminalAdapter.getLines();
         for (int i = 0; i < lines.size(); i++) {
             if (lines.get(i).toString().toLowerCase().contains(term.toLowerCase())) {
@@ -640,7 +738,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private void restartTerminal() {
         stopTerminal();
         clearTerminal();
-        // slight delay to ensure resources freed
         handler.postDelayed(this::startTerminal, 250);
     }
 
@@ -651,7 +748,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         terminalRecycler.postDelayed(this::updatePtyWindowSize, 100);
     }
 
-    // Simplified clamp: remove constant params
     private float clamp(float v) { return Math.min(MAX_TEXT_SP, Math.max(MIN_TEXT_SP, v)); }
 
     private float loadPersistedTextSize() {
@@ -665,7 +761,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         prefs.edit().putFloat(KEY_TEXT_SIZE, sizeSp).apply();
     }
 
-    // Simplified ANSI parser without indirection/warnings
+    // ANSI handling and stream appenders
     private void appendAnsi(String raw, boolean isErr) {
         Log.d(TAG, "Appending ANSI (" + (isErr ? "stderr" : "stdout") + "): " + raw.replace("\n", "\\n").replace("\r", "\\r"));
         if (raw.isEmpty()) return;
@@ -695,7 +791,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 }
                 currentLineSegmentStart = currentLine.length();
             } else if (c == '\n' || c == '\r') {
-                // treat CRLF as a single newline to avoid blank lines
                 char next = (i + 1 < len) ? text.charAt(i + 1) : 0;
                 applyCurrentStyle(currentLine, currentLineSegmentStart);
                 if (isErr) {
@@ -709,7 +804,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 currentLine = new SpannableStringBuilder();
                 currentLineSegmentStart = 0;
                 if (c == '\r' && next == '\n') {
-                    i += 2; // skip both \r and \n
+                    i += 2;
                 } else {
                     i++;
                 }
@@ -753,7 +848,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 case 24: currentUnderline = false; break;
                 case 39: currentFgColor = defaultFgColor; break;
                 case 49: currentBgColor = defaultBgColor; break;
-                // 30-37 standard FG
                 case 30: currentFgColor = mapBasicColor(0); break;
                 case 31: currentFgColor = mapBasicColor(1); break;
                 case 32: currentFgColor = mapBasicColor(2); break;
@@ -762,7 +856,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 case 35: currentFgColor = mapBasicColor(5); break;
                 case 36: currentFgColor = mapBasicColor(6); break;
                 case 37: currentFgColor = mapBasicColor(7); break;
-                // 40-47 standard BG
                 case 40: currentBgColor = mapBasicColor(0); break;
                 case 41: currentBgColor = mapBasicColor(1); break;
                 case 42: currentBgColor = mapBasicColor(2); break;
@@ -771,7 +864,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 case 45: currentBgColor = mapBasicColor(5); break;
                 case 46: currentBgColor = mapBasicColor(6); break;
                 case 47: currentBgColor = mapBasicColor(7); break;
-                // High intensity FG 90-97
                 case 90: currentFgColor = mapBrightColor(0); break;
                 case 91: currentFgColor = mapBrightColor(1); break;
                 case 92: currentFgColor = mapBrightColor(2); break;
@@ -780,7 +872,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 case 95: currentFgColor = mapBrightColor(5); break;
                 case 96: currentFgColor = mapBrightColor(6); break;
                 case 97: currentFgColor = mapBrightColor(7); break;
-                // High intensity BG 100-107
                 case 100: currentBgColor = mapBrightColor(0); break;
                 case 101: currentBgColor = mapBrightColor(1); break;
                 case 102: currentBgColor = mapBrightColor(2); break;
@@ -831,29 +922,29 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private int parseIntSafe(String s) { try { return Integer.parseInt(s); } catch (Exception e) { return -1; } }
     private boolean isRgbComponent(int v) { return v >= 0 && v <= 255; }
 
-    private int mapBasicColor(int idx) { // 0-7
+    private int mapBasicColor(int idx) {
         switch (idx) {
-            case 0: return 0xFF000000; // black
-            case 1: return 0xFFCC0000; // red
-            case 2: return 0xFF00AA00; // green
-            case 3: return 0xFFAA8800; // yellow/brownish
-            case 4: return 0xFF0044CC; // blue
-            case 5: return 0xFFAA00AA; // magenta
-            case 6: return 0xFF008888; // cyan
-            case 7: return 0xFFFFFFFF; // white/light gray
+            case 0: return 0xFF000000;
+            case 1: return 0xFFCC0000;
+            case 2: return 0xFF00AA00;
+            case 3: return 0xFFAA8800;
+            case 4: return 0xFF0044CC;
+            case 5: return 0xFFAA00AA;
+            case 6: return 0xFF008888;
+            case 7: return 0xFFFFFFFF;
             default: return defaultFgColor;
         }
     }
     private int mapBrightColor(int idx) {
         switch (idx) {
-            case 0: return 0xFF555555; // bright black (gray)
-            case 1: return 0xFFFF5555; // bright red
-            case 2: return 0xFF55FF55; // bright green
-            case 3: return 0xFFFFFF55; // bright yellow
-            case 4: return 0xFF5555FF; // bright blue
-            case 5: return 0xFFFF55FF; // bright magenta
-            case 6: return 0xFF55FFFF; // bright cyan
-            case 7: return 0xFFFFFFFF; // bright white
+            case 0: return 0xFF555555;
+            case 1: return 0xFFFF5555;
+            case 2: return 0xFF55FF55;
+            case 3: return 0xFFFFFF55;
+            case 4: return 0xFF5555FF;
+            case 5: return 0xFFFF55FF;
+            case 6: return 0xFF55FFFF;
+            case 7: return 0xFFFFFFFF;
             default: return defaultFgColor;
         }
     }
@@ -925,7 +1016,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         Log.d(TAG, "Sending command: " + command);
         new Thread(() -> {
             try {
-                // Prefer PTY if available, otherwise fall back to process writer
                 if (ptyOut != null) {
                     writePty(command + "\n");
                 } else if (writer != null) {
@@ -949,11 +1039,8 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                     ptyOut.write(one);
                     ptyOut.flush();
                 } else if (outputStream != null) {
-                    // Without a PTY/TTY, ETX (0x03) won't be translated to SIGINT by the kernel.
-                    // Inform the user instead of pretending it worked.
                     Log.d(TAG, "CTRL-C pressed but no PTY available; cannot generate SIGINT over a pipe");
                     handler.post(() -> Toast.makeText(requireContext(), "CTRL-C requires PTY; native library not loaded. Commands won't be interrupted in fallback mode.", Toast.LENGTH_SHORT).show());
-                    // Optionally still write ETX (harmless), but it won't interrupt processes:
                     try {
                         outputStream.write(3);
                         outputStream.flush();
@@ -971,7 +1058,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         new Thread(() -> {
             try {
                 if (ptyOut != null) {
-                    byte[] one = {(byte) 26}; // 0x1A -> SUB -> typically SIGTSTP on TTY
+                    byte[] one = {(byte) 26};
                     ptyOut.write(one);
                     ptyOut.flush();
                 } else if (outputStream != null) {
@@ -995,7 +1082,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         Log.d(TAG, "USE_PTY: " + USE_PTY + ", ptyOut: " + ptyOut + ", writer: " + writer);
         new Thread(() -> {
             try {
-                // Prefer PTY if available; otherwise fall back to non-PTY writer regardless of USE_PTY flag
                 if (ptyOut != null) {
                     writePty(cmd + "\n");
                 } else if (writer != null) {
@@ -1018,9 +1104,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     }
 
     private void stopTerminal() {
-        // mark shutdown to mute expected IO noise
         shuttingDown = true;
-        // Stop whichever backend is active; safe to call both guards
         try {
             stopPty();
         } catch (Throwable t) {
@@ -1062,7 +1146,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 try { writePty("exit\n"); } catch (IOException ignored) {}
             }
         } finally {
-            // Prefer closing descriptors to let the reader exit with EOF, then join briefly; interrupt as last resort
             if (ptyOut != null) {
                 try { ptyOut.close(); } catch (IOException ignored) {}
             }
@@ -1114,23 +1197,20 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         String busybox = NhPaths.BUSYBOX;
         String resolvedShell = (shellPath != null) ? shellPath : resolvePreferredShell();
         String loginFlag = loginFlagForShell(resolvedShell);
-        // Compose env injection so we don't need a post-launch export (prevents command echo in terminal)
         String assignments = buildExportAssignments(resolvedShell);
         String envCmd = "/usr/bin/env -i " + assignments;
-        // Add command to source alias file silently via shell rc; rc modification handled beforehand
         if (busybox != null && !busybox.isEmpty() && new File(chrootRoot + resolvedShell).exists()) {
             return busybox + " chroot " + chrootRoot + ' ' + envCmd + ' ' + resolvedShell + ' ' + loginFlag;
         }
-        // Fallback script retains original behavior (can't easily inject env; will rely on legacy export path)
         return NhPaths.APP_SCRIPTS_PATH + "/bootkali_bash";
     }
 
     private String loginFlagForShell(String shellPath) {
-        if (shellPath == null) return "--login"; // default for bash
+        if (shellPath == null) return "--login";
         if (shellPath.endsWith("zsh")) return "-l";
-        if (shellPath.endsWith("fish")) return "-l"; // fish supports -l
-        if (shellPath.endsWith("sh")) return ""; // sh doesn't support --login
-        return "--login"; // bash or unknown
+        if (shellPath.endsWith("fish")) return "-l";
+        if (shellPath.endsWith("sh")) return "";
+        return "--login";
     }
 
     private String standardPathEnv() { return "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"; }
@@ -1141,7 +1221,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         } catch (Throwable t) { return false; }
     }
 
-    // Determine preferred shell (default bash) with fallbacks; result is a path like /bin/zsh or /bin/bash
     private String resolvePreferredShell() {
         SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         String pref = prefs.getString(KEY_PREF_SHELL, "sh");
@@ -1165,7 +1244,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         } else {
             candidates.add("/bin/bash"); candidates.add("/usr/bin/bash");
         }
-        // Always ensure bash fallback
         if (!candidates.contains("/bin/bash")) {
             candidates.add("/bin/bash"); candidates.add("/usr/bin/bash");
         }
@@ -1185,5 +1263,28 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 act.getSupportActionBar().setTitle(R.string.drawertitleterminal);
             }
         } catch (Throwable ignored) { }
+    }
+
+    private boolean isAtBottom() {
+        if (terminalRecycler == null || terminalAdapter == null) return true;
+        int count = terminalAdapter.getItemCount();
+        if (count == 0) return true;
+        RecyclerView.LayoutManager lm = terminalRecycler.getLayoutManager();
+        if (!(lm instanceof LinearLayoutManager)) return true;
+        LinearLayoutManager llm = (LinearLayoutManager) lm;
+        int lastCompletely = llm.findLastCompletelyVisibleItemPosition();
+        int last = (lastCompletely != RecyclerView.NO_POSITION) ? lastCompletely : llm.findLastVisibleItemPosition();
+        return last >= count - 1;
+    }
+
+    private void updateFabVisibilityByScroll(int dy) {
+        if (fabGoBottom == null) return;
+        boolean atBottom = isAtBottom();
+        if (atBottom) {
+            fabGoBottom.hide();
+        } else {
+            // Prefer showing when user scrolls up (dy < 0); still ensure visible if not at bottom
+            if (dy < 0) fabGoBottom.show(); else if (!fabGoBottom.isShown()) fabGoBottom.show();
+        }
     }
 }

@@ -13,14 +13,35 @@
         android:padding="16dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/terminal_recycler"
+        <FrameLayout
+            android:id="@+id/terminal_output_container"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"
-            android:overScrollMode="never"
-            android:scrollbars="vertical"
-            android:background="@drawable/bg_card_tech" />
+            android:layout_weight="1">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/terminal_recycler"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:overScrollMode="never"
+                android:scrollbars="vertical"
+                android:background="@drawable/bg_card_tech"
+                android:clipToPadding="false"
+                android:paddingBottom="72dp" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_go_bottom"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|end"
+                android:layout_margin="12dp"
+                android:contentDescription="Go to bottom"
+                android:visibility="gone"
+                app:srcCompat="@drawable/ic_arrow_downward"
+                app:useCompatPadding="true"
+                app:backgroundTint="@color/design_default_color_primary"
+                app:tint="@android:color/white" />
+        </FrameLayout>
 
         <LinearLayout
             android:id="@+id/key_toolbar"
@@ -119,6 +140,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
+            android:baselineAligned="false"
             android:orientation="horizontal"
             android:gravity="center_vertical">
 
