@@ -75,15 +75,12 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private static final String TAG = "TerminalFragment";
     private static final String ARG_ITEM_ID = "item_id";
     private static final String KEY_INITIAL_COMMAND = "initial_command";
-
     private static final boolean USE_PTY = true;
     private static final boolean USE_CHROOT_DIRECT = true;
-
     private static final int RING_MAX_LINES = 5000;
     private static final float MIN_TEXT_SP = 8f;
     private static final float MAX_TEXT_SP = 32f;
     private static final float DEFAULT_TEXT_SP = 12f;
-
     private static final String PREFS_NAME = "terminal_prefs";
     private static final String KEY_TEXT_SIZE = "text_size_sp";
     private static final String KEY_THEME_BG = "terminal_theme_bg";
@@ -93,28 +90,23 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private static final String KEY_LINE_SPACING_MULT = "terminal_line_spacing_mult";
     private static final String KEY_PREF_SHELL = "preferred_shell";
     private static final String DEFAULT_HOSTNAME = "kali";
-
     private static final int PERSISTENT_BUFFER_SIZE = 100;
     private static final List<CharSequence> persistentLines = new ArrayList<>();
-
     private TextInputEditText inputEdit;
     private RecyclerView terminalRecycler;
     private TerminalAdapter terminalAdapter;
     private View ctrlCButton;
     private View ctrlZButton;
     private com.google.android.material.floatingactionbutton.FloatingActionButton fabGoBottom;
-
     private Process process;
     private volatile OutputStream outputStream;
     private static volatile BufferedWriter writer;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Thread outputThread;
     private Thread errorThread;
-
     private final List<String> commandHistory = new ArrayList<>();
     private int historyIndex = -1;
     private String pendingCurrentLine = "";
-
     private int defaultFgColor;
     private int currentFgColor;
     private final int defaultBgColor = 0x00000000;
@@ -122,17 +114,14 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private boolean currentBold = false;
     private boolean currentUnderline = false;
     private String ansiCarry = "";
-
     private volatile int ptyFd = -1;
     private volatile int ptyPid = -1;
     private volatile ParcelFileDescriptor ptyPfd;
     private volatile FileInputStream ptyIn;
     private static volatile FileOutputStream ptyOut;
     private Thread ptyReadThread;
-
     private SpannableStringBuilder currentLine = new SpannableStringBuilder();
     private int currentLineSegmentStart = 0;
-
     private ScaleGestureDetector scaleDetector;
 
     private static class ThemePreset {
