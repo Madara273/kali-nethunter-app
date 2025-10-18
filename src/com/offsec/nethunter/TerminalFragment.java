@@ -6,43 +6,57 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.ParcelFileDescriptor;
+import android.text.Editable;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
+import android.text.TextPaint;
+import android.text.TextWatcher;
+import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
 import android.text.style.StyleSpan;
-import android.text.style.BackgroundColorSpan;
 import android.text.style.UnderlineSpan;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.EditorInfo;
-import android.text.Editable;
-import android.view.ScaleGestureDetector;
-import android.content.SharedPreferences;
-import android.content.Context;
-import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.SearchView;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.button.MaterialButton;
+import com.google.android.material.card.MaterialCardView;
+import com.google.android.material.chip.Chip;
+import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.offsec.nethunter.utils.NhPaths;
+
 import com.offsec.nethunter.pty.PtyNative;
-import android.os.ParcelFileDescriptor;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import com.offsec.nethunter.terminal.TerminalAdapter;
+import com.offsec.nethunter.utils.NhPaths;
 
 import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
@@ -51,38 +65,53 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.io.File;
 
-import com.offsec.nethunter.terminal.TerminalAdapter;
-import android.text.TextPaint;
-import android.text.TextWatcher;
-import android.util.TypedValue;
-
-import androidx.core.view.MenuProvider;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import androidx.appcompat.widget.SearchView;
-import androidx.appcompat.app.AppCompatActivity;
+import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.res.ColorStateList;
+import android.annotation.SuppressLint;
 
 public class TerminalFragment extends Fragment implements MenuProvider {
     private static final String TAG = "TerminalFragment";
     private static final String ARG_ITEM_ID = "item_id";
     private static final String KEY_INITIAL_COMMAND = "initial_command";
+
+    private static final boolean USE_PTY = true;
+    private static final boolean USE_CHROOT_DIRECT = true;
+
+    private static final int RING_MAX_LINES = 5000;
+    private static final float MIN_TEXT_SP = 8f;
+    private static final float MAX_TEXT_SP = 32f;
+    private static final float DEFAULT_TEXT_SP = 12f;
+
+    private static final String PREFS_NAME = "terminal_prefs";
+    private static final String KEY_TEXT_SIZE = "text_size_sp";
+    private static final String KEY_THEME_BG = "terminal_theme_bg";
+    private static final String KEY_THEME_FG = "terminal_theme_fg";
+    private static final String KEY_FORMAT_PRESET = "terminal_format_preset";
+    private static final String KEY_LINE_SPACING_EXTRA = "terminal_line_spacing_extra";
+    private static final String KEY_LINE_SPACING_MULT = "terminal_line_spacing_mult";
+    private static final String KEY_PREF_SHELL = "preferred_shell";
+    private static final String DEFAULT_HOSTNAME = "kali";
+
     private TextInputEditText inputEdit;
     private RecyclerView terminalRecycler;
     private TerminalAdapter terminalAdapter;
     private View ctrlCButton;
     private View ctrlZButton;
+    private com.google.android.material.floatingactionbutton.FloatingActionButton fabGoBottom;
+
     private Process process;
     private volatile OutputStream outputStream;
     private static volatile BufferedWriter writer;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Thread outputThread;
     private Thread errorThread;
+
     private final List<String> commandHistory = new ArrayList<>();
     private int historyIndex = -1;
     private String pendingCurrentLine = "";
+
     private int defaultFgColor;
     private int currentFgColor;
     private final int defaultBgColor = 0x00000000;
@@ -90,35 +119,18 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private boolean currentBold = false;
     private boolean currentUnderline = false;
     private String ansiCarry = "";
-    private static final boolean USE_PTY = true;
+
     private volatile int ptyFd = -1;
     private volatile int ptyPid = -1;
     private volatile ParcelFileDescriptor ptyPfd;
     private volatile FileInputStream ptyIn;
     private static volatile FileOutputStream ptyOut;
     private Thread ptyReadThread;
+
     private SpannableStringBuilder currentLine = new SpannableStringBuilder();
     private int currentLineSegmentStart = 0;
-    private static final int RING_MAX_LINES = 5000;
-    private ScaleGestureDetector scaleDetector;
-    private static final float MIN_TEXT_SP = 8f;
-    private static final float MAX_TEXT_SP = 32f;
-    private static final float DEFAULT_TEXT_SP = 12f;
-    private static final String PREFS_NAME = "terminal_prefs";
-    private static final String KEY_TEXT_SIZE = "text_size_sp";
-    private static final boolean USE_CHROOT_DIRECT = true;
-    private static final String DEFAULT_HOSTNAME = "kali";
-    private static final String KEY_PREF_SHELL = "preferred_shell";
-    private volatile boolean shuttingDown = false;
-    private static final String KEY_THEME_BG = "terminal_theme_bg";
-    private static final String KEY_THEME_FG = "terminal_theme_fg";
-    // New: persist text/layout preset
-    private static final String KEY_FORMAT_PRESET = "terminal_format_preset";
-    private static final String KEY_LINE_SPACING_EXTRA = "terminal_line_spacing_extra";
-    private static final String KEY_LINE_SPACING_MULT = "terminal_line_spacing_mult";
 
-    // New: Go-to-bottom FAB reference
-    private com.google.android.material.floatingactionbutton.FloatingActionButton fabGoBottom;
+    private ScaleGestureDetector scaleDetector;
 
     private static class ThemePreset {
         final String name; final int bg; final int fg;
@@ -131,7 +143,9 @@ public class TerminalFragment extends Fragment implements MenuProvider {
             new ThemePreset("Solarized Light", Color.parseColor("#fdf6e3"), Color.parseColor("#657b83")),
             new ThemePreset("Dracula", Color.parseColor("#282a36"), Color.parseColor("#f8f8f2")),
             new ThemePreset("One Dark", Color.parseColor("#282c34"), Color.parseColor("#abb2bf")),
-            new ThemePreset("High Contrast", Color.parseColor("#000000"), Color.parseColor("#FFFFFF"))
+            new ThemePreset("High Contrast", Color.parseColor("#000000"), Color.parseColor("#FFFFFF")),
+            new ThemePreset("Matrix", Color.parseColor("#000000"), Color.parseColor("#00FF00")),
+            new ThemePreset("Kali Linux", Color.parseColor("#000000"), Color.parseColor("#DC143C"))
     };
 
     public static TerminalFragment newInstance(int itemId) {
@@ -142,7 +156,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         return fragment;
     }
 
-    // Added: factory that accepts an initial command to run when terminal is ready
     public static TerminalFragment newInstanceWithCommand(int itemId, @Nullable String initialCmd) {
         TerminalFragment fragment = new TerminalFragment();
         Bundle args = new Bundle();
@@ -161,17 +174,111 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         requireActivity().addMenuProvider(this);
     }
 
+    @SuppressLint("ClickableViewAccessibility")
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_terminal, container, false);
+        terminalRecycler = view.findViewById(R.id.terminal_recycler);
+        terminalRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
+        terminalAdapter = new TerminalAdapter(RING_MAX_LINES);
+        terminalAdapter.setTextSizeSp(loadPersistedTextSize());
+        loadAndApplyPersistedFormat(terminalAdapter);
+        terminalRecycler.setAdapter(terminalAdapter);
+
+        inputEdit = view.findViewById(R.id.input_edit);
+        loadAndApplyPersistedTheme();
+
+        fabGoBottom = view.findViewById(R.id.fab_go_bottom);
+        if (fabGoBottom != null) {
+            fabGoBottom.hide();
+            fabGoBottom.setOnClickListener(v -> {
+                if (terminalAdapter != null && terminalRecycler != null) {
+                    int count = terminalAdapter.getItemCount();
+                    if (count > 0) terminalRecycler.smoothScrollToPosition(count - 1);
+                }
+                fabGoBottom.hide();
+            });
+        }
+        terminalRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) { updateFabVisibilityByScroll(dy); }
+            @Override public void onScrollStateChanged(@NonNull RecyclerView rv, int newState) { updateFabVisibilityByScroll(0); }
+        });
+        updateFabVisibilityByScroll(0);
+
+        TextInputLayout inputLayout = view.findViewById(R.id.input_layout);
+        if (inputLayout != null) {
+            inputLayout.setEndIconOnClickListener(v -> sendCommand());
+            boolean hasInitial = inputEdit != null && inputEdit.getText() != null && !inputEdit.getText().toString().trim().isEmpty();
+            inputLayout.setEndIconVisible(hasInitial);
+        }
+
+        View btnTab = view.findViewById(R.id.btn_tab);
+        View btnLeft = view.findViewById(R.id.btn_left);
+        View btnRight = view.findViewById(R.id.btn_right);
+        View btnUp = view.findViewById(R.id.btn_up);
+        View btnDown = view.findViewById(R.id.btn_down);
+        View btnCtrlC = view.findViewById(R.id.btn_ctrl_c);
+        ctrlCButton = btnCtrlC; View btnCtrlZ = view.findViewById(R.id.btn_ctrl_z); ctrlZButton = btnCtrlZ;
+        View btnClear = view.findViewById(R.id.terminal_cmd_clear);
+        if (btnClear != null) btnClear.setOnClickListener(v -> clearTerminal());
+
+        updateCtrlCButtonState();
+        if (inputEdit != null) { defaultFgColor = inputEdit.getCurrentTextColor(); currentFgColor = defaultFgColor; }
+
+        scaleDetector = new ScaleGestureDetector(requireContext(), new ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            @Override public boolean onScale(@NonNull ScaleGestureDetector detector) {
+                if (terminalAdapter == null) return false;
+                float current = terminalAdapter.getTextSizeSp();
+                float factor = Math.max(0.5f, Math.min(2f, detector.getScaleFactor()));
+                float newSize = clamp(current * factor);
+                if (Math.abs(newSize - current) >= 0.2f) applyTextSize(newSize);
+                return true;
+            }
+        });
+        terminalRecycler.setOnTouchListener((v, event) -> { if (scaleDetector != null) scaleDetector.onTouchEvent(event); boolean scaling = scaleDetector != null && scaleDetector.isInProgress(); if (!scaling && event.getAction() == android.view.MotionEvent.ACTION_UP) v.performClick(); return scaling; });
+
+        if (inputEdit != null) {
+            inputEdit.setOnKeyListener((v, keyCode, event) -> event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER && doSend());
+            inputEdit.setOnEditorActionListener((v, actionId, event) -> actionId == EditorInfo.IME_ACTION_SEND && doSend());
+            if (inputLayout != null) {
+                inputEdit.addTextChangedListener(new TextWatcher() {
+                    @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+                    @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
+                    @Override public void afterTextChanged(Editable s) { inputLayout.setEndIconVisible(s != null && !s.toString().trim().isEmpty()); }
+                });
+            }
+        }
+        if (btnTab != null) btnTab.setOnClickListener(v -> insertAtCursor());
+        if (btnLeft != null) btnLeft.setOnClickListener(v -> moveCursor(-1));
+        if (btnRight != null) btnRight.setOnClickListener(v -> moveCursor(1));
+        if (btnUp != null) btnUp.setOnClickListener(v -> navigateHistory(-1));
+        if (btnDown != null) btnDown.setOnClickListener(v -> navigateHistory(1));
+        if (btnCtrlC != null) btnCtrlC.setOnClickListener(v -> sendControlChar());
+        if (btnCtrlZ != null) btnCtrlZ.setOnClickListener(v -> sendControlZ());
+
+        startTerminal();
+        handler.postDelayed(this::runInitialUnameProbe, 400);
+        Bundle args = getArguments();
+        if (args != null && args.containsKey(KEY_INITIAL_COMMAND)) {
+            final String initCmd = args.getString(KEY_INITIAL_COMMAND);
+            if (initCmd != null && !initCmd.trim().isEmpty()) handler.postDelayed(() -> sendSpecificCommand(initCmd), 650);
+        }
+        terminalRecycler.post(this::updatePtyWindowSize);
+        return view;
+    }
+
+    private boolean doSend() { sendCommand(); return true; }
+
     private void insertAtCursor() {
         if (inputEdit == null) return;
         int start = inputEdit.getSelectionStart();
         int end = inputEdit.getSelectionEnd();
         Editable editable = inputEdit.getText();
         if (editable == null) return;
-        if (start < 0) start = editable.length();
-        if (end < 0) end = start;
+        if (start < 0) start = editable.length(); if (end < 0) end = start;
         editable.replace(Math.min(start, end), Math.max(start, end), "\t");
-        int newPos = Math.min(start, end) + "\t".length();
-        inputEdit.setSelection(newPos);
+        int newPos = Math.min(start, end) + 1; inputEdit.setSelection(newPos);
     }
 
     private void moveCursor(int delta) {
@@ -184,63 +291,28 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     }
 
     private void navigateHistory(int direction) {
-        if (commandHistory.isEmpty()) return;
-        // direction: -1 = up (older), 1 = down (newer)
-        if (historyIndex == -1) {
-            // first time entering history navigation; save current line
-            pendingCurrentLine = inputEdit.getText() != null ? inputEdit.getText().toString() : "";
-            historyIndex = commandHistory.size();
-        }
-        int newIndex = historyIndex + direction;
-        if (newIndex < 0) {
-            newIndex = 0;
-        }
-        if (newIndex > commandHistory.size()) {
-            newIndex = commandHistory.size();
-        }
+        if (commandHistory.isEmpty() || inputEdit == null) return;
+        if (historyIndex == -1) { pendingCurrentLine = inputEdit.getText() != null ? inputEdit.getText().toString() : ""; historyIndex = commandHistory.size(); }
+        int newIndex = Math.max(0, Math.min(commandHistory.size(), historyIndex + direction));
         historyIndex = newIndex;
-        if (historyIndex == commandHistory.size()) {
-            setInputText(pendingCurrentLine);
-        } else {
-            setInputText(commandHistory.get(historyIndex));
-        }
+        setInputText(historyIndex == commandHistory.size() ? pendingCurrentLine : commandHistory.get(historyIndex));
     }
 
-    private void setInputText(String text) {
-        if (inputEdit == null) return;
-        inputEdit.setText(text);
-        inputEdit.setSelection(text.length());
-    }
+    private void setInputText(String text) { if (inputEdit == null) return; inputEdit.setText(text); inputEdit.setSelection(text.length()); }
 
     private void recordHistory(String command) {
-        if (command == null) return;
-        String trimmed = command.trim();
-        if (trimmed.isEmpty()) return;
-        if (!commandHistory.isEmpty() && commandHistory.get(commandHistory.size() - 1).equals(trimmed)) {
-            historyIndex = -1;
-            return;
-        }
-        commandHistory.add(trimmed);
-        historyIndex = -1;
+        if (command == null) return; String trimmed = command.trim(); if (trimmed.isEmpty()) return;
+        if (!commandHistory.isEmpty() && commandHistory.get(commandHistory.size() - 1).equals(trimmed)) { historyIndex = -1; return; }
+        commandHistory.add(trimmed); historyIndex = -1;
     }
 
     private void startTerminal() {
-        // Reset shutdown flag when (re)starting
         shuttingDown = false;
-        if (USE_PTY && PtyNative.isLoaded()) {
-            startTerminalPty();
-        } else {
-            if (USE_PTY && !PtyNative.isLoaded()) {
-                Log.d(TAG, "[!] native-lib not loaded; falling back to non-PTY shell.");
-            }
-            startTerminalProcess();
-        }
+        if (USE_PTY && PtyNative.isLoaded()) startTerminalPty(); else { if (USE_PTY && !PtyNative.isLoaded()) Log.d(TAG, "[!] native-lib not loaded; falling back to non-PTY shell."); startTerminalProcess(); }
     }
 
     private void startTerminalProcess() {
-        Log.d(TAG, "Starting terminal process");
-        // ensure we're not in shutdown state
-        shuttingDown = false;
+        Log.d(TAG, "Starting terminal process"); shuttingDown = false;
         new Thread(() -> {
             try {
                 process = Runtime.getRuntime().exec("su -mm");
@@ -250,377 +322,241 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 final InputStream stderr = process.getErrorStream();
                 outputThread = new Thread(() -> readStream(stdout, false), "term-out");
                 errorThread = new Thread(() -> readStream(stderr, true), "term-err");
-                outputThread.start();
-                errorThread.start();
-
+                outputThread.start(); errorThread.start();
                 String init = getEntryCmd() + "\n" +
                         "TERM=xterm-256color CLICOLOR_FORCE=1 FORCE_COLOR=1 COLORTERM=truecolor\n" +
                         "cd " + NhPaths.CHROOT_HOME + "\n";
-                Log.d(TAG, "Writing init commands: " + init.trim());
-                writer.write(init);
-                writer.flush();
-
-                // Non-PTY fallback: disable CTRL-C (can’t SIGINT)
+                writer.write(init); writer.flush();
                 handler.post(this::updateCtrlCButtonState);
-            } catch (IOException e) {
-                Log.e(TAG, "Failed to start terminal", e);
-                Log.e(TAG, "Failed to start terminal: " + e.getMessage());
-            }
+            } catch (IOException e) { Log.e(TAG, "Failed to start terminal", e); }
         }).start();
     }
 
     private void startTerminalPty() {
-        Log.d(TAG, "Starting PTY terminal");
-        // ensure we're not in shutdown state
-        shuttingDown = false;
+        Log.d(TAG, "Starting PTY terminal"); shuttingDown = false;
         new Thread(() -> {
             try {
                 int[] res;
-                String resolvedShell;
                 if (USE_CHROOT_DIRECT && PtyNative.isLoaded()) {
-                    if (!isChrootAvailable()) {
-                        Log.d(TAG, "[!] Chroot not available at " + NhPaths.CHROOT_PATH() + "; falling back to generic PTY shell.");
-                        res = PtyNative.openPtyShell();
-                    } else {
-                        resolvedShell = resolvePreferredShell();
+                    if (!isChrootAvailable()) { Log.d(TAG, "[!] Chroot not available; falling back to generic PTY shell."); res = PtyNative.openPtyShell(); }
+                    else {
+                        String resolvedShell = resolvePreferredShell();
                         String chrootCmd = buildChrootShellCommand(resolvedShell);
                         Log.d(TAG, "Launching chroot command: " + chrootCmd);
-                        res = com.offsec.nethunter.pty.PtyNative.openPtyShellExec(chrootCmd);
-                        if (res == null) {
-                            Log.d(TAG, "[!] Direct chroot launch failed, falling back to generic PTY shell.");
-                            res = PtyNative.openPtyShell();
-                        } else {
-                            Log.d(TAG, "[+] Chroot shell started (direct) using shell: " + resolvedShell);
-                        }
+                        res = PtyNative.openPtyShellExec(chrootCmd);
+                        if (res == null) { Log.d(TAG, "[!] Direct chroot launch failed, fallback to generic PTY shell."); res = PtyNative.openPtyShell(); }
+                        else { Log.d(TAG, "[+] Chroot shell started (direct) using shell: " + resolvedShell); }
                     }
-                } else {
-                    res = PtyNative.openPtyShell();
-                }
-                if (res == null || res.length < 2) {
-                    Log.d(TAG, "[!] PTY open failed, falling back to non-PTY shell.");
-                    startTerminalProcess();
-                    return;
-                }
-                ptyFd = res[0];
-                ptyPid = res[1];
+                } else { res = PtyNative.openPtyShell(); }
+                if (res == null || res.length < 2) { Log.d(TAG, "[!] PTY open failed, falling back to non-PTY shell."); startTerminalProcess(); return; }
+                ptyFd = res[0]; ptyPid = res[1];
                 ptyPfd = ParcelFileDescriptor.adoptFd(ptyFd);
                 ptyIn = new FileInputStream(ptyPfd.getFileDescriptor());
                 ptyOut = new FileOutputStream(ptyPfd.getFileDescriptor());
-                ptyReadThread = new Thread(() -> readStream(ptyIn, false), "pty-reader");
-                ptyReadThread.start();
-                if (!USE_CHROOT_DIRECT) {
-                    writePty("(stty -echo 2>/dev/null) >/dev/null 2>&1\n");
-                } else {
-                    writePty("\n");
-                }
-                // PTY ready: enable CTRL-C
+                ptyReadThread = new Thread(() -> readStream(ptyIn, false), "pty-reader"); ptyReadThread.start();
+                if (!USE_CHROOT_DIRECT) writePty("(stty -echo 2>/dev/null) >/dev/null 2>&1\n"); else writePty("\n");
                 handler.post(this::updateCtrlCButtonState);
                 scheduleInitialWindowSizeUpdate();
             } catch (Exception e) {
-                Log.e(TAG, "PTY startup failed", e);
-                Log.e(TAG, "[!] PTY startup failed: " + e.getMessage() + "\nFalling back to non-PTY.");
-                startTerminalProcess();
+                Log.e(TAG, "PTY startup failed", e); startTerminalProcess();
             }
         }).start();
     }
 
-    private void scheduleInitialWindowSizeUpdate() {
-        if (terminalRecycler == null) return;
-        terminalRecycler.post(this::updatePtyWindowSize);
-    }
+    private void scheduleInitialWindowSizeUpdate() { if (terminalRecycler == null) return; terminalRecycler.post(this::updatePtyWindowSize); }
 
     private void updatePtyWindowSize() {
         if (!USE_PTY || ptyFd < 0 || !PtyNative.isLoaded() || terminalRecycler == null) return;
-        TextPaint tp = new TextPaint();
-        tp.setTypeface(Typeface.MONOSPACE);
+        TextPaint tp = new TextPaint(); tp.setTypeface(Typeface.MONOSPACE);
         float activeSp = (terminalAdapter != null) ? terminalAdapter.getTextSizeSp() : 12f;
         tp.setTextSize(spToPx(activeSp));
-        float charWidth = tp.measureText("M");
-        float lineHeight = tp.getFontMetrics().bottom - tp.getFontMetrics().top;
-        int w = terminalRecycler.getWidth();
-        int h = terminalRecycler.getHeight();
+        float charWidth = tp.measureText("M"); float lineHeight = tp.getFontMetrics().bottom - tp.getFontMetrics().top;
+        int w = terminalRecycler.getWidth(); int h = terminalRecycler.getHeight();
         if (w <= 0 || h <= 0 || charWidth <= 0 || lineHeight <= 0) return;
-        int cols = Math.max(20, (int)(w / charWidth));
-        int rows = Math.max(5, (int)(h / lineHeight));
+        int cols = Math.max(20, (int)(w / charWidth)); int rows = Math.max(5, (int)(h / lineHeight));
         try { PtyNative.setWindowSize(ptyFd, cols, rows); } catch (Throwable ignored) {}
     }
+
     private float spToPx(float sp) { return TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, sp, requireContext().getResources().getDisplayMetrics()); }
 
-    @SuppressLint("ClickableViewAccessibility")
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_terminal, container, false);
-        terminalRecycler = view.findViewById(R.id.terminal_recycler);
-        terminalRecycler.setLayoutManager(new LinearLayoutManager(getContext()));
-        terminalAdapter = new TerminalAdapter(RING_MAX_LINES);
-        // Apply persisted text size if available
-        float savedSize = loadPersistedTextSize();
-        terminalAdapter.setTextSizeSp(savedSize);
-        // Apply persisted line spacing if available
-        loadAndApplyPersistedFormat(terminalAdapter);
-        terminalRecycler.setAdapter(terminalAdapter);
-        // Acquire default colors using input field later after inflation
-        inputEdit = view.findViewById(R.id.input_edit);
-        // Apply persisted theme colors
-        loadAndApplyPersistedTheme();
-        // FAB: Go to bottom
-        fabGoBottom = view.findViewById(R.id.fab_go_bottom);
-        if (fabGoBottom != null) {
-            fabGoBottom.hide();
-            fabGoBottom.setOnClickListener(v -> {
-                if (terminalAdapter != null && terminalRecycler != null) {
-                    int count = terminalAdapter.getItemCount();
-                    if (count > 0) {
-                        terminalRecycler.smoothScrollToPosition(count - 1);
-                    }
-                }
-                fabGoBottom.hide();
-            });
-        }
-        // Show/hide FAB as user scrolls
-        terminalRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) {
-                updateFabVisibilityByScroll(dy);
-            }
-            @Override public void onScrollStateChanged(@NonNull RecyclerView rv, int newState) {
-                // When scrolling stops, finalize visibility
-                updateFabVisibilityByScroll(0);
-            }
-        });
-        // Initial FAB visibility
-        updateFabVisibilityByScroll(0);
-        // New: hook into TextInputLayout end icon for sending
-        TextInputLayout inputLayout = view.findViewById(R.id.input_layout);
-        if (inputLayout != null) {
-            inputLayout.setEndIconOnClickListener(v -> sendCommand());
-            boolean hasInitial = inputEdit != null && inputEdit.getText() != null && !inputEdit.getText().toString().trim().isEmpty();
-            inputLayout.setEndIconVisible(hasInitial);
-        }
-        View btnTab = view.findViewById(R.id.btn_tab);
-        View btnLeft = view.findViewById(R.id.btn_left);
-        View btnRight = view.findViewById(R.id.btn_right);
-        View btnUp = view.findViewById(R.id.btn_up);
-        View btnDown = view.findViewById(R.id.btn_down);
-        View btnCtrlC = view.findViewById(R.id.btn_ctrl_c);
-        ctrlCButton = btnCtrlC;
-        View btnCtrlZ = view.findViewById(R.id.btn_ctrl_z);
-        ctrlZButton = btnCtrlZ;
-        // Wire Clear button to wipe terminal output ring buffer
-        View btnClear = view.findViewById(R.id.terminal_cmd_clear);
-        if (btnClear != null) {
-            btnClear.setOnClickListener(v -> clearTerminal());
-        }
-        // initial state until PTY is known
-        updateCtrlCButtonState();
-        if (inputEdit != null) {
-            defaultFgColor = inputEdit.getCurrentTextColor();
-            currentFgColor = defaultFgColor;
-        }
-        // Set up pinch-to-zoom gesture detector
-        scaleDetector = new ScaleGestureDetector(requireContext(), new ScaleGestureDetector.SimpleOnScaleGestureListener() {
-            @Override
-            public boolean onScale(@NonNull ScaleGestureDetector detector) {
-                if (terminalAdapter == null) return false;
-                float current = terminalAdapter.getTextSizeSp();
-                float factor = detector.getScaleFactor();
-                if (factor > 2f) factor = 2f; else if (factor < 0.5f) factor = 0.5f;
-                float newSize = clamp(current * factor);
-                if (Math.abs(newSize - current) >= 0.2f) { // threshold to reduce churn
-                    applyTextSize(newSize);
-                }
-                return true;
-            }
-        });
-        // Forward touch events from recycler for pinch detection
-        @android.annotation.SuppressLint("ClickableViewAccessibility")
-        View.OnTouchListener scaleTouchListener = (v, event) -> {
-            if (scaleDetector != null) scaleDetector.onTouchEvent(event);
-            boolean scaling = scaleDetector != null && scaleDetector.isInProgress();
-            if (!scaling && event.getAction() == android.view.MotionEvent.ACTION_UP) {
-                v.performClick();
-            }
-            return scaling;
-        };
-        terminalRecycler.setOnTouchListener(scaleTouchListener);
-        // Input behaviors
-        if (inputEdit != null) {
-            inputEdit.setOnKeyListener((v, keyCode, event) -> {
-                if (event.getAction() == KeyEvent.ACTION_DOWN && keyCode == KeyEvent.KEYCODE_ENTER) { sendCommand(); return true; }
-                return false; });
-            inputEdit.setOnEditorActionListener((v, actionId, event) -> {
-                if (actionId == EditorInfo.IME_ACTION_SEND) { sendCommand(); return true; }
-                return false; });
-            // Toggle end icon visibility based on text content
-            if (inputLayout != null) {
-                inputEdit.addTextChangedListener(new TextWatcher() {
-                    @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-                    @Override public void onTextChanged(CharSequence s, int start, int before, int count) {}
-                    @Override public void afterTextChanged(Editable s) {
-                        boolean hasText = s != null && !s.toString().trim().isEmpty();
-                        inputLayout.setEndIconVisible(hasText);
-                    }
-                });
-            }
-        }
-        if (btnTab != null) btnTab.setOnClickListener(v -> insertAtCursor());
-        if (btnLeft != null) btnLeft.setOnClickListener(v -> moveCursor(-1));
-        if (btnRight != null) btnRight.setOnClickListener(v -> moveCursor(1));
-        if (btnUp != null) btnUp.setOnClickListener(v -> navigateHistory(-1));
-        if (btnDown != null) btnDown.setOnClickListener(v -> navigateHistory(1));
-        if (btnCtrlC != null) {
-            btnCtrlC.setOnClickListener(v -> sendControlChar()); // ETX
-        }
-        if (btnCtrlZ != null) {
-            btnCtrlZ.setOnClickListener(v -> sendControlZ()); // SUB
-        }
-        startTerminal();
-        // Run uname -a shortly after shell starts
-        handler.postDelayed(this::runInitialUnameProbe, 400);
-        // If an initial command was provided, schedule it after startup
-        Bundle args = getArguments();
-        if (args != null && args.containsKey(KEY_INITIAL_COMMAND)) {
-            final String initCmd = args.getString(KEY_INITIAL_COMMAND);
-            if (initCmd != null && !initCmd.trim().isEmpty()) {
-                handler.postDelayed(() -> sendSpecificCommand(initCmd), 650);
-            }
-        }
-        // PTY window size after layout
-        terminalRecycler.post(this::updatePtyWindowSize);
-        return view;
-    }
-
-    private void runInitialUnameProbe() {
-        // Try to avoid echoing the command itself; ignore errors if stty is unavailable
-        String probe = "uname -a";
-        sendSpecificCommand(probe);
-    }
+    private void runInitialUnameProbe() { sendSpecificCommand("uname -a"); }
 
     private void updateCtrlCButtonState() {
-        if (ctrlCButton == null && ctrlZButton == null) return;
-        boolean enabled = (ptyOut != null);
-        if (ctrlCButton != null) {
-            ctrlCButton.setEnabled(enabled);
-            ctrlCButton.setAlpha(enabled ? 1.0f : 0.5f);
-        }
-        if (ctrlZButton != null) {
-            ctrlZButton.setEnabled(enabled);
-            ctrlZButton.setAlpha(enabled ? 1.0f : 0.5f);
-        }
+        if (ctrlCButton == null && ctrlZButton == null) return; boolean enabled = (ptyOut != null);
+        if (ctrlCButton != null) { ctrlCButton.setEnabled(enabled); ctrlCButton.setAlpha(enabled ? 1.0f : 0.5f); }
+        if (ctrlZButton != null) { ctrlZButton.setEnabled(enabled); ctrlZButton.setAlpha(enabled ? 1.0f : 0.5f); }
     }
 
-    private void applyThemeColors(int bgColor, int fgColor) {
-        // Recycler background
-        if (terminalRecycler != null) {
-            terminalRecycler.setBackgroundColor(bgColor);
-        }
-        // Adapter default text color for non-spanned text
-        if (terminalAdapter != null) {
-            terminalAdapter.setBaseTextColor(fgColor);
-        }
-        // Update ANSI default and reset styles so future output uses new base
-        defaultFgColor = fgColor;
-        currentFgColor = fgColor;
-        currentBgColor = 0x00000000; // transparent background for spans unless set
-        currentBold = false;
-        currentUnderline = false;
-        // Input field color to match theme
-        if (inputEdit != null) {
-            inputEdit.setTextColor(fgColor);
-        }
-        // Persist
-        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        prefs.edit().putInt(KEY_THEME_BG, bgColor).putInt(KEY_THEME_FG, fgColor).apply();
+    private void applyThemeColors(int bgColor, int fgColor) { applyThemeColors(bgColor, fgColor, true); }
+
+    private void applyThemeColors(int bgColor, int fgColor, boolean persist) {
+        if (terminalRecycler != null) terminalRecycler.setBackgroundColor(bgColor);
+        if (terminalAdapter != null) terminalAdapter.setBaseTextColor(fgColor);
+        defaultFgColor = fgColor; currentFgColor = fgColor; currentBgColor = 0x00000000; currentBold = false; currentUnderline = false;
+        if (inputEdit != null) inputEdit.setTextColor(fgColor);
+        if (persist) { SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE); prefs.edit().putInt(KEY_THEME_BG, bgColor).putInt(KEY_THEME_FG, fgColor).apply(); }
     }
 
     private void loadAndApplyPersistedTheme() {
         SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        // Defaults: keep current if set, otherwise a reasonable dark default
         int defBg = Color.parseColor("#121212");
         int defFg = (inputEdit != null) ? inputEdit.getCurrentTextColor() : Color.parseColor("#ECEFF1");
-        int bg = prefs.getInt(KEY_THEME_BG, defBg);
-        int fg = prefs.getInt(KEY_THEME_FG, defFg);
+        int bg = prefs.getInt(KEY_THEME_BG, defBg); int fg = prefs.getInt(KEY_THEME_FG, defFg);
         applyThemeColors(bg, fg);
     }
 
-    // New: persist/load format (text size already persisted separately; include line spacing + preset name)
     private void loadAndApplyPersistedFormat(TerminalAdapter adapter) {
         if (adapter == null) return;
         SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        float extra = prefs.getFloat(KEY_LINE_SPACING_EXTRA, 0f);
-        float mult = prefs.getFloat(KEY_LINE_SPACING_MULT, 1.0f);
+        float extra = prefs.getFloat(KEY_LINE_SPACING_EXTRA, 0f); float mult = prefs.getFloat(KEY_LINE_SPACING_MULT, 1.0f);
         adapter.setLineSpacing(extra, mult);
     }
 
     private void persistFormat(String presetName, float lineExtra, float lineMult) {
         SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        prefs.edit()
-                .putString(KEY_FORMAT_PRESET, presetName)
-                .putFloat(KEY_LINE_SPACING_EXTRA, lineExtra)
-                .putFloat(KEY_LINE_SPACING_MULT, lineMult)
-                .apply();
+        prefs.edit().putString(KEY_FORMAT_PRESET, presetName).putFloat(KEY_LINE_SPACING_EXTRA, lineExtra).putFloat(KEY_LINE_SPACING_MULT, lineMult).apply();
     }
 
     private float dp(float v) { return v * requireContext().getResources().getDisplayMetrics().density; }
 
-    // New: offer combined theme + format chooser
     private void showThemePicker() {
         if (!isAdded()) return;
-        // Build combined list: theme presets + divider-like label + format presets
-        List<String> options = new ArrayList<>();
-        for (ThemePreset p : THEME_PRESETS) options.add("Theme: " + p.name);
-        options.add("—"); // separator
-        options.add("Format: Compact");
-        options.add("Format: Comfortable");
-        options.add("Format: Large");
-        options.add("Reset to defaults");
-        final String[] items = options.toArray(new String[0]);
-        new AlertDialog.Builder(requireContext())
-                .setTitle("Terminal appearance")
-                .setItems(items, (dialog, which) -> {
-                    String choice = items[which];
-                    if (choice.equals("—")) return; // ignore tap on separator
-                    if (choice.startsWith("Theme: ")) {
-                        String name = choice.substring("Theme: ".length());
-                        for (ThemePreset p : THEME_PRESETS) {
-                            if (p.name.equals(name)) { applyThemeColors(p.bg, p.fg); break; }
-                        }
-                    } else if (choice.startsWith("Format: ")) {
-                        String fmt = choice.substring("Format: ".length());
-                        applyFormatPreset(fmt);
-                    } else if (choice.equals("Reset to defaults")) {
-                        // Defaults: Classic Dark + Compact
-                        applyThemeColors(Color.parseColor("#121212"), Color.parseColor("#ECEFF1"));
-                        applyFormatPreset("Compact");
-                        applyTextSize(DEFAULT_TEXT_SP);
-                    }
-                })
-                .setNegativeButton(android.R.string.cancel, null)
-                .show();
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
+        View content = inflater.inflate(R.layout.dialog_terminal_theme, null, false);
+        final ChipGroup chipsThemes = content.findViewById(R.id.chips_themes);
+        final ChipGroup chipsFormat = content.findViewById(R.id.chips_format);
+        final MaterialCardView previewCard = content.findViewById(R.id.preview_card);
+        final TextView previewTitle = content.findViewById(R.id.preview_title);
+        final TextView previewL1 = content.findViewById(R.id.preview_line1);
+        final TextView previewL2 = content.findViewById(R.id.preview_line2);
+        final TextView previewL3 = content.findViewById(R.id.preview_line3);
+        final MaterialButton btnReset = content.findViewById(R.id.btn_reset);
+        final MaterialButton btnCancel = content.findViewById(R.id.btn_cancel);
+        final MaterialButton btnApply = content.findViewById(R.id.btn_apply);
+
+        // Build theme chips
+        final List<Chip> themeChips = new ArrayList<>();
+        int[] themeChipIds = {R.id.chip_theme_0, R.id.chip_theme_1, R.id.chip_theme_2, R.id.chip_theme_3, R.id.chip_theme_4, R.id.chip_theme_5, R.id.chip_theme_6, R.id.chip_theme_7};
+        for (int i = 0; i < THEME_PRESETS.length; i++) {
+            Chip chip = content.findViewById(themeChipIds[i]);
+            chip.setCheckable(true);
+            chip.setChipIconResource(R.drawable.ic_palette); chip.setChipIconTint(ColorStateList.valueOf(THEME_PRESETS[i].fg));
+            chip.setTag(i); themeChips.add(chip);
+        }
+
+        // Preselect current theme
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        int defBg = Color.parseColor("#121212");
+        int defFg = (inputEdit != null) ? inputEdit.getCurrentTextColor() : Color.parseColor("#ECEFF1");
+        int curBg = prefs.getInt(KEY_THEME_BG, defBg); int curFg = prefs.getInt(KEY_THEME_FG, defFg);
+        boolean matched = false;
+        for (int i = 0; i < THEME_PRESETS.length; i++) {
+            if (THEME_PRESETS[i].bg == curBg && THEME_PRESETS[i].fg == curFg) { themeChips.get(i).setChecked(true); matched = true; break; }
+        }
+        if (!matched && !themeChips.isEmpty()) {
+            // Ensure one is selected if none matched persisted values
+            themeChips.get(0).setChecked(true);
+        }
+
+        // Preselect current format
+        String fmtPref = prefs.getString(KEY_FORMAT_PRESET, "Compact");
+        int fmtChipId = R.id.chip_format_compact;
+        if ("Comfortable".equalsIgnoreCase(fmtPref)) fmtChipId = R.id.chip_format_comfortable; else if ("Large".equalsIgnoreCase(fmtPref)) fmtChipId = R.id.chip_format_large;
+        chipsFormat.check(fmtChipId);
+
+        final int originalBg = curBg; final int originalFg = curFg;
+        final float originalSize = (terminalAdapter != null) ? terminalAdapter.getTextSizeSp() : DEFAULT_TEXT_SP;
+        final float originalExtra = prefs.getFloat(KEY_LINE_SPACING_EXTRA, 0f);
+        final float originalMult = prefs.getFloat(KEY_LINE_SPACING_MULT, 1.0f);
+        final boolean[] applied = new boolean[]{false};
+
+        final Runnable updatePreview = () -> {
+            // Selected theme
+            int themeIdx = 0; int checkedId = chipsThemes.getCheckedChipId();
+            if (checkedId != View.NO_ID) {
+                Chip c = content.findViewById(checkedId);
+                if (c != null && c.getTag() instanceof Integer) themeIdx = (Integer) c.getTag();
+            }
+            ThemePreset sel = THEME_PRESETS[themeIdx];
+            // Selected format
+            String fmt = "Compact";
+            int checkedFmt = chipsFormat.getCheckedChipId();
+            if (checkedFmt == R.id.chip_format_comfortable) fmt = "Comfortable"; else if (checkedFmt == R.id.chip_format_large) fmt = "Large";
+            // Preview card
+            previewCard.setCardBackgroundColor(sel.bg);
+            int fg = sel.fg; previewTitle.setTextColor(fg); previewL1.setTextColor(fg); previewL2.setTextColor(fg); previewL3.setTextColor(fg);
+            float sizeSp; float extraPx; float mult;
+            switch (fmt) {
+                case "Comfortable": sizeSp = 14f; extraPx = dp(2f); mult = 1.08f; break;
+                case "Large": sizeSp = 16f; extraPx = dp(4f); mult = 1.12f; break;
+                default: sizeSp = 12f; extraPx = dp(0f); mult = 1.0f; break;
+            }
+            previewL1.setTextSize(sizeSp); previewL2.setTextSize(sizeSp); previewL3.setTextSize(sizeSp);
+            previewL1.setLineSpacing(extraPx, mult); previewL2.setLineSpacing(extraPx, mult); previewL3.setLineSpacing(extraPx, mult);
+            // Live apply to fragment
+            applyThemeColors(sel.bg, sel.fg, false);
+            applyFormatPreset(fmt, false);
+        };
+
+        chipsThemes.setOnCheckedStateChangeListener((group, checkedIds) -> updatePreview.run());
+        chipsFormat.setOnCheckedStateChangeListener((group, checkedId) -> updatePreview.run());
+        updatePreview.run();
+
+        final BottomSheetDialog dialog = new BottomSheetDialog(requireContext(), com.google.android.material.R.style.ThemeOverlay_Material3_BottomSheetDialog);
+        dialog.setContentView(content);
+
+        btnReset.setOnClickListener(v -> { if (!themeChips.isEmpty()) { for (Chip c : themeChips) c.setChecked(false); themeChips.get(0).setChecked(true);} chipsFormat.check(R.id.chip_format_compact); updatePreview.run(); });
+        btnCancel.setOnClickListener(v -> { applyThemeColors(originalBg, originalFg, false); applyTextSize(originalSize, false); if (terminalAdapter != null) terminalAdapter.setLineSpacing(originalExtra, originalMult); dialog.dismiss(); });
+        btnApply.setOnClickListener(v -> {
+            int themeIdx = 0; int checkedId = chipsThemes.getCheckedChipId();
+            if (checkedId != View.NO_ID) { Chip c = content.findViewById(checkedId); if (c != null && c.getTag() instanceof Integer) themeIdx = (Integer) c.getTag(); }
+            ThemePreset sel = THEME_PRESETS[themeIdx]; applyThemeColors(sel.bg, sel.fg, true);
+            int checkedFmt = chipsFormat.getCheckedChipId(); String fmt = "Compact";
+            if (checkedFmt == R.id.chip_format_comfortable) fmt = "Comfortable"; else if (checkedFmt == R.id.chip_format_large) fmt = "Large";
+            applyFormatPreset(fmt, true); applied[0] = true; dialog.dismiss();
+        });
+
+        dialog.setOnCancelListener(d -> { if (!applied[0]) { applyThemeColors(originalBg, originalFg, false); applyTextSize(originalSize, false); if (terminalAdapter != null) terminalAdapter.setLineSpacing(originalExtra, originalMult); } });
+        dialog.setOnDismissListener(d -> { if (!applied[0]) { applyThemeColors(originalBg, originalFg, false); applyTextSize(originalSize, false); if (terminalAdapter != null) terminalAdapter.setLineSpacing(originalExtra, originalMult); } });
+
+        dialog.show();
     }
 
-    private void applyFormatPreset(String preset) {
-        // Define simple presets for text size and line spacing
-        float sizeSp;
-        float lineExtraPx;
-        float lineMult;
+    private void applyFormatPreset(String preset) { applyFormatPreset(preset, true); }
+
+    private void applyFormatPreset(String preset, boolean persist) {
+        float sizeSp; float lineExtraPx; float lineMult;
         switch (preset) {
-            case "Comfortable":
-                sizeSp = 14f; lineExtraPx = dp(2f); lineMult = 1.08f; break;
-            case "Large":
-                sizeSp = 16f; lineExtraPx = dp(4f); lineMult = 1.12f; break;
+            case "Comfortable": sizeSp = 14f; lineExtraPx = dp(2f); lineMult = 1.08f; break;
+            case "Large": sizeSp = 16f; lineExtraPx = dp(4f); lineMult = 1.12f; break;
             case "Compact":
-            default:
-                sizeSp = 12f; lineExtraPx = dp(0f); lineMult = 1.0f; break;
+            default: sizeSp = 12f; lineExtraPx = dp(0f); lineMult = 1.0f; break;
         }
-        applyTextSize(sizeSp);
-        if (terminalAdapter != null) {
-            terminalAdapter.setLineSpacing(lineExtraPx, lineMult);
-        }
-        persistFormat(preset, lineExtraPx, lineMult);
+        applyTextSize(sizeSp, persist);
+        if (terminalAdapter != null) terminalAdapter.setLineSpacing(lineExtraPx, lineMult);
+        if (persist) persistFormat(preset, lineExtraPx, lineMult);
     }
 
-    // Menu: add search action view and handle items, including Theme
+    private float clamp(float v) { return Math.min(MAX_TEXT_SP, Math.max(MIN_TEXT_SP, v)); }
+
+    private float loadPersistedTextSize() {
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        float s = prefs.getFloat(KEY_TEXT_SIZE, DEFAULT_TEXT_SP); return clamp(s);
+    }
+
+    private void persistTextSize(float sizeSp) {
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        prefs.edit().putFloat(KEY_TEXT_SIZE, sizeSp).apply();
+    }
+
+    private void applyTextSize(float sizeSp) { applyTextSize(sizeSp, true); }
+
+    private void applyTextSize(float sizeSp, boolean persist) {
+        if (terminalAdapter == null) return; terminalAdapter.setTextSizeSp(sizeSp);
+        if (persist) persistTextSize(sizeSp);
+        terminalRecycler.postDelayed(this::updatePtyWindowSize, 100);
+    }
+
     @Override
     public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
         menuInflater.inflate(R.menu.terminal_menu, menu);
@@ -628,18 +564,10 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         if (searchItem != null) {
             View actionView = searchItem.getActionView();
             if (actionView instanceof SearchView) {
-                SearchView sv = (SearchView) actionView;
-                sv.setQueryHint("Search output...");
+                SearchView sv = (SearchView) actionView; sv.setQueryHint("Search output...");
                 sv.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-                    @Override public boolean onQueryTextSubmit(String query) {
-                        if (terminalAdapter != null) terminalAdapter.setHighlightTerm(query);
-                        searchAndScrollTo(query);
-                        return true;
-                    }
-                    @Override public boolean onQueryTextChange(String newText) {
-                        if (terminalAdapter != null) terminalAdapter.setHighlightTerm(newText);
-                        return true;
-                    }
+                    @Override public boolean onQueryTextSubmit(String query) { if (terminalAdapter != null) terminalAdapter.setHighlightTerm(query); searchAndScrollTo(query); return true; }
+                    @Override public boolean onQueryTextChange(String newText) { if (terminalAdapter != null) terminalAdapter.setHighlightTerm(newText); return true; }
                 });
             }
         }
@@ -648,22 +576,11 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     @Override
     public boolean onMenuItemSelected(@NonNull MenuItem menuItem) {
         int id = menuItem.getItemId();
-        if (id == R.id.action_restart) {
-            restartTerminal();
-            return true;
-        } else if (id == R.id.action_print_dmesg) {
-            printDmesg();
-            return true;
-        } else if (id == R.id.action_search) {
-            performSearch();
-            return true;
-        } else if (id == R.id.action_save_output) {
-            saveOutput();
-            return true;
-        } else if (id == R.id.action_theme) {
-            showThemePicker();
-            return true;
-        }
+        if (id == R.id.action_restart) { restartTerminal(); return true; }
+        else if (id == R.id.action_print_dmesg) { printDmesg(); return true; }
+        else if (id == R.id.action_search) { performSearch(); return true; }
+        else if (id == R.id.action_save_output) { saveOutput(); return true; }
+        else if (id == R.id.action_theme) { showThemePicker(); return true; }
         return false;
     }
 
@@ -673,509 +590,125 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     }
 
     private void performSearch() {
-        if (terminalAdapter != null) {
-            terminalAdapter.setHighlightTerm(null);
-        }
+        if (terminalAdapter != null) terminalAdapter.setHighlightTerm(null);
         AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Search Terminal Output");
-        final EditText input = new EditText(requireContext());
-        input.setHint("Enter search term");
-        builder.setView(input);
+        final EditText input = new EditText(requireContext()); input.setHint("Enter search term"); builder.setView(input);
         builder.setPositiveButton("Search", (dialog, which) -> {
             String term = input.getText().toString().trim();
-            if (!term.isEmpty()) {
-                searchAndScrollTo(term);
-                if (terminalAdapter != null) {
-                    terminalAdapter.setHighlightTerm(term);
-                }
-            } else {
-                Toast.makeText(requireContext(), "Please enter a search term", Toast.LENGTH_SHORT).show();
-            }
+            if (!term.isEmpty()) { searchAndScrollTo(term); if (terminalAdapter != null) terminalAdapter.setHighlightTerm(term); }
+            else { Toast.makeText(requireContext(), "Please enter a search term", Toast.LENGTH_SHORT).show(); }
         });
-        builder.setNegativeButton("Cancel", null);
-        builder.show();
+        builder.setNegativeButton("Cancel", null); builder.show();
     }
 
     private void searchAndScrollTo(String term) {
         if (terminalAdapter == null || terminalRecycler == null) return;
         List<CharSequence> lines = terminalAdapter.getLines();
-        for (int i = 0; i < lines.size(); i++) {
-            if (lines.get(i).toString().toLowerCase().contains(term.toLowerCase())) {
-                terminalRecycler.scrollToPosition(i);
-                return;
-            }
-        }
+        for (int i = 0; i < lines.size(); i++) { if (lines.get(i).toString().toLowerCase().contains(term.toLowerCase())) { terminalRecycler.scrollToPosition(i); return; } }
         Toast.makeText(requireContext(), "Not found", Toast.LENGTH_SHORT).show();
     }
 
     private void saveOutput() {
         if (terminalAdapter == null) return;
-        List<CharSequence> lines = terminalAdapter.getLines();
-        StringBuilder sb = new StringBuilder();
-        for (CharSequence line : lines) {
-            sb.append(line).append("\n");
-        }
+        List<CharSequence> lines = terminalAdapter.getLines(); StringBuilder sb = new StringBuilder();
+        for (CharSequence line : lines) { sb.append(line).append("\n"); }
         try {
             File nhFilesDir = new File(Environment.getExternalStorageDirectory(), "nh_files");
-            if (!nhFilesDir.exists()) {
-                boolean created = nhFilesDir.mkdirs();
-                if (!created && !nhFilesDir.exists()) {
-                    Log.w(TAG, "Failed to create directory: " + nhFilesDir.getAbsolutePath());
-                }
-            }
+            if (!nhFilesDir.exists()) { boolean created = nhFilesDir.mkdirs(); if (!created && !nhFilesDir.exists()) Log.w(TAG, "Failed to create directory: " + nhFilesDir.getAbsolutePath()); }
             File outputFile = new File(nhFilesDir, "terminal_output.txt");
-            FileOutputStream fos = new FileOutputStream(outputFile);
-            fos.write(sb.toString().getBytes(StandardCharsets.UTF_8));
-            fos.close();
+            FileOutputStream fos = new FileOutputStream(outputFile); fos.write(sb.toString().getBytes(StandardCharsets.UTF_8)); fos.close();
             Toast.makeText(requireContext(), "Output saved to " + outputFile.getAbsolutePath(), Toast.LENGTH_LONG).show();
-            Log.d(TAG, "Output saved to " + outputFile.getAbsolutePath());
-        } catch (IOException e) {
-            Toast.makeText(requireContext(), "Failed to save output: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            Log.d(TAG, "Failed to save output: " + e.getMessage());
-        }
+        } catch (IOException e) { Toast.makeText(requireContext(), "Failed to save output: " + e.getMessage(), Toast.LENGTH_SHORT).show(); }
     }
 
-    private void restartTerminal() {
-        stopTerminal();
-        clearTerminal();
-        handler.postDelayed(this::startTerminal, 250);
-    }
-
-    private void applyTextSize(float sizeSp) {
-        if (terminalAdapter == null) return;
-        terminalAdapter.setTextSizeSp(sizeSp);
-        persistTextSize(sizeSp);
-        terminalRecycler.postDelayed(this::updatePtyWindowSize, 100);
-    }
-
-    private float clamp(float v) { return Math.min(MAX_TEXT_SP, Math.max(MIN_TEXT_SP, v)); }
-
-    private float loadPersistedTextSize() {
-        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        float s = prefs.getFloat(KEY_TEXT_SIZE, DEFAULT_TEXT_SP);
-        return clamp(s);
-    }
-
-    private void persistTextSize(float sizeSp) {
-        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        prefs.edit().putFloat(KEY_TEXT_SIZE, sizeSp).apply();
-    }
-
-    // ANSI handling and stream appenders
-    private void appendAnsi(String raw, boolean isErr) {
-        Log.d(TAG, "Appending ANSI (" + (isErr ? "stderr" : "stdout") + "): " + raw.replace("\n", "\\n").replace("\r", "\\r"));
-        if (raw.isEmpty()) return;
-        String text = ansiCarry + raw;
-        ansiCarry = "";
-        int i = 0; int len = text.length();
-        while (i < len) {
-            char c = text.charAt(i);
-            if (c == '\u001B') {
-                applyCurrentStyle(currentLine, currentLineSegmentStart);
-                if (i + 1 >= len) { ansiCarry = text.substring(i); break; }
-                if (text.charAt(i+1) != '[') {
-                    currentLine.append(c);
-                    i++; continue;
-                }
-                int seqEnd = -1;
-                for (int j = i + 2; j < len; j++) {
-                    char ch = text.charAt(j);
-                    if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) { seqEnd = j; break; }
-                }
-                if (seqEnd == -1) { ansiCarry = text.substring(i); break; }
-                char finalByte = text.charAt(seqEnd);
-                String inside = text.substring(i + 2, seqEnd);
-                i = seqEnd + 1;
-                if (finalByte == 'm') {
-                    parseAndApplySgrSequence(inside);
-                }
-                currentLineSegmentStart = currentLine.length();
-            } else if (c == '\n' || c == '\r') {
-                char next = (i + 1 < len) ? text.charAt(i + 1) : 0;
-                applyCurrentStyle(currentLine, currentLineSegmentStart);
-                if (isErr) {
-                    SpannableStringBuilder errPrefix = new SpannableStringBuilder("[err] ");
-                    errPrefix.setSpan(new ForegroundColorSpan(0xFFFF5555), 0, errPrefix.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    errPrefix.append(currentLine);
-                    terminalAdapter.addLine(errPrefix, terminalRecycler);
-                } else {
-                    terminalAdapter.addLine(new SpannableStringBuilder(currentLine), terminalRecycler);
-                }
-                currentLine = new SpannableStringBuilder();
-                currentLineSegmentStart = 0;
-                if (c == '\r' && next == '\n') {
-                    i += 2;
-                } else {
-                    i++;
-                }
-            } else {
-                currentLine.append(c);
-                i++;
-            }
-        }
-    }
-
-    private void applyCurrentStyle(SpannableStringBuilder sb, int start) {
-        int segLen = sb.length() - start;
-        if (segLen <= 0) return;
-        if (currentFgColor != defaultFgColor) {
-            sb.setSpan(new ForegroundColorSpan(currentFgColor), start, sb.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-        if (currentBgColor != defaultBgColor) {
-            sb.setSpan(new BackgroundColorSpan(currentBgColor), start, sb.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-        if (currentBold) {
-            sb.setSpan(new StyleSpan(Typeface.BOLD), start, sb.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-        if (currentUnderline) {
-            sb.setSpan(new UnderlineSpan(), start, sb.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
-        }
-    }
-
-    private void parseAndApplySgrSequence(String inside) {
-        if (inside.isEmpty()) { resetAllSgr(); return; }
-        String[] parts = inside.split(";", -1);
-        int i = 0;
-        while (i < parts.length) {
-            String p = parts[i].isEmpty() ? "0" : parts[i];
-            int code;
-            try { code = Integer.parseInt(p); } catch (NumberFormatException e) { code = -1; }
-            switch (code) {
-                case 0: resetAllSgr(); break;
-                case 1: currentBold = true; break;
-                case 22: currentBold = false; break;
-                case 4: currentUnderline = true; break;
-                case 24: currentUnderline = false; break;
-                case 39: currentFgColor = defaultFgColor; break;
-                case 49: currentBgColor = defaultBgColor; break;
-                case 30: currentFgColor = mapBasicColor(0); break;
-                case 31: currentFgColor = mapBasicColor(1); break;
-                case 32: currentFgColor = mapBasicColor(2); break;
-                case 33: currentFgColor = mapBasicColor(3); break;
-                case 34: currentFgColor = mapBasicColor(4); break;
-                case 35: currentFgColor = mapBasicColor(5); break;
-                case 36: currentFgColor = mapBasicColor(6); break;
-                case 37: currentFgColor = mapBasicColor(7); break;
-                case 40: currentBgColor = mapBasicColor(0); break;
-                case 41: currentBgColor = mapBasicColor(1); break;
-                case 42: currentBgColor = mapBasicColor(2); break;
-                case 43: currentBgColor = mapBasicColor(3); break;
-                case 44: currentBgColor = mapBasicColor(4); break;
-                case 45: currentBgColor = mapBasicColor(5); break;
-                case 46: currentBgColor = mapBasicColor(6); break;
-                case 47: currentBgColor = mapBasicColor(7); break;
-                case 90: currentFgColor = mapBrightColor(0); break;
-                case 91: currentFgColor = mapBrightColor(1); break;
-                case 92: currentFgColor = mapBrightColor(2); break;
-                case 93: currentFgColor = mapBrightColor(3); break;
-                case 94: currentFgColor = mapBrightColor(4); break;
-                case 95: currentFgColor = mapBrightColor(5); break;
-                case 96: currentFgColor = mapBrightColor(6); break;
-                case 97: currentFgColor = mapBrightColor(7); break;
-                case 100: currentBgColor = mapBrightColor(0); break;
-                case 101: currentBgColor = mapBrightColor(1); break;
-                case 102: currentBgColor = mapBrightColor(2); break;
-                case 103: currentBgColor = mapBrightColor(3); break;
-                case 104: currentBgColor = mapBrightColor(4); break;
-                case 105: currentBgColor = mapBrightColor(5); break;
-                case 106: currentBgColor = mapBrightColor(6); break;
-                case 107: currentBgColor = mapBrightColor(7); break;
-                case 38:
-                case 48: {
-                    boolean isFg = (code == 38);
-                    int remain = parts.length - (i + 1);
-                    if (remain >= 1) {
-                        String mode = parts[i+1];
-                        if ("5".equals(mode) && remain >= 2) {
-                            int idx = parseIntSafe(parts[i+2]);
-                            if (idx >= 0 && idx <= 255) {
-                                if (isFg) currentFgColor = map256Color(idx); else currentBgColor = map256Color(idx);
-                            }
-                            i += 2;
-                        } else if ("2".equals(mode) && remain >= 4) {
-                            int r = parseIntSafe(parts[i+2]);
-                            int g = parseIntSafe(parts[i+3]);
-                            int b = parseIntSafe(parts[i+4]);
-                            if (isRgbComponent(r) && isRgbComponent(g) && isRgbComponent(b)) {
-                                int col = 0xFF000000 | (r << 16) | (g << 8) | b;
-                                if (isFg) currentFgColor = col; else currentBgColor = col;
-                            }
-                            i += 4;
-                        }
-                    }
-                    break;
-                }
-                default:
-                    break;
-            }
-            i++;
-        }
-    }
-
-    private void resetAllSgr() {
-        currentFgColor = defaultFgColor;
-        currentBgColor = defaultBgColor;
-        currentBold = false;
-        currentUnderline = false;
-    }
-
-    private int parseIntSafe(String s) { try { return Integer.parseInt(s); } catch (Exception e) { return -1; } }
-    private boolean isRgbComponent(int v) { return v >= 0 && v <= 255; }
-
-    private int mapBasicColor(int idx) {
-        switch (idx) {
-            case 0: return 0xFF000000;
-            case 1: return 0xFFCC0000;
-            case 2: return 0xFF00AA00;
-            case 3: return 0xFFAA8800;
-            case 4: return 0xFF0044CC;
-            case 5: return 0xFFAA00AA;
-            case 6: return 0xFF008888;
-            case 7: return 0xFFFFFFFF;
-            default: return defaultFgColor;
-        }
-    }
-    private int mapBrightColor(int idx) {
-        switch (idx) {
-            case 0: return 0xFF555555;
-            case 1: return 0xFFFF5555;
-            case 2: return 0xFF55FF55;
-            case 3: return 0xFFFFFF55;
-            case 4: return 0xFF5555FF;
-            case 5: return 0xFFFF55FF;
-            case 6: return 0xFF55FFFF;
-            case 7: return 0xFFFFFFFF;
-            default: return defaultFgColor;
-        }
-    }
-    private int map256Color(int idx) {
-        if (idx < 16) {
-            return (idx < 8) ? mapBasicColor(idx) : mapBrightColor(idx - 8);
-        } else if (idx <= 231) {
-            int cube = idx - 16;
-            int r = cube / 36;
-            int g = (cube % 36) / 6;
-            int b = cube % 6;
-            int rc = r == 0 ? 0 : 55 + 40 * r;
-            int gc = g == 0 ? 0 : 55 + 40 * g;
-            int bc = b == 0 ? 0 : 55 + 40 * b;
-            return 0xFF000000 | (rc << 16) | (gc << 8) | bc;
-        } else if (idx <= 255) {
-            int shade = 8 + (idx - 232) * 10;
-            return 0xFF000000 | (shade << 16) | (shade << 8) | shade;
-        }
-        return defaultFgColor;
-    }
-
-    private static synchronized void writePty(String data) throws IOException {
-        Log.d(TAG, "Writing to PTY: " + data.replace("\n", "\\n").replace("\r", "\\r"));
-        if (ptyOut != null) {
-            byte[] b = data.getBytes(StandardCharsets.UTF_8);
-            ptyOut.write(b);
-            ptyOut.flush();
-        }
-    }
-
-    private void readStream(InputStream is, boolean isErr) {
-        try {
-            byte[] buf = new byte[4096];
-            int n;
-            while ((n = is.read(buf)) != -1) {
-                final String chunk = new String(buf, 0, n, StandardCharsets.UTF_8);
-                Log.d(TAG, "Received output chunk (" + (isErr ? "stderr" : "stdout") + "): " + chunk.replace("\n", "\\n").replace("\r", "\\r"));
-                handler.post(() -> {
-                    if (!isAdded()) return;
-                    appendAnsi(chunk, isErr);
-                });
-            }
-        } catch (InterruptedIOException e) {
-            if (shuttingDown) {
-                Log.d(TAG, "Stream read cancelled during shutdown: " + e.getMessage());
-            } else {
-                Log.w(TAG, "Stream read interrupted", e);
-            }
-        } catch (IOException e) {
-            if (shuttingDown) {
-                Log.d(TAG, "Stream closed during shutdown: " + (e.getMessage() != null ? e.getMessage() : ""));
-            } else {
-                Log.e(TAG, "Error reading stream", e);
-            }
-        }
-    }
+    private void restartTerminal() { stopTerminal(); clearTerminal(); handler.postDelayed(this::startTerminal, 250); }
 
     private void sendCommand() {
         String command = inputEdit.getText() != null ? inputEdit.getText().toString() : "";
-        String trimmed = command.trim();
-        boolean isClear = trimmed.equals("clear") || trimmed.equals("reset");
-        if (!trimmed.isEmpty()) {
-            recordHistory(command);
-        }
-        pendingCurrentLine = "";
-        inputEdit.setText("");
-        if (isClear) { clearTerminal(); }
+        String trimmed = command.trim(); boolean isClear = trimmed.equals("clear") || trimmed.equals("reset");
+        if (!trimmed.isEmpty()) recordHistory(command);
+        pendingCurrentLine = ""; inputEdit.setText(""); if (isClear) { clearTerminal(); }
         Log.d(TAG, "Sending command: " + command);
         new Thread(() -> {
             try {
-                if (ptyOut != null) {
-                    writePty(command + "\n");
-                } else if (writer != null) {
-                    writer.write(command + "\n");
-                    writer.flush();
-                } else {
-                    Log.d(TAG, "[!] Shell not ready.");
-                }
-            } catch (IOException e) {
-                Log.e(TAG, "Error sending command", e);
-                Log.e(TAG, "Error sending command: " + e.getMessage());
-            }
+                if (ptyOut != null) { writePty(command + "\n"); }
+                else if (writer != null) { writer.write(command + "\n"); writer.flush(); }
+                else { Log.d(TAG, "[!] Shell not ready."); }
+            } catch (IOException e) { Log.e(TAG, "Error sending command", e); }
         }).start();
     }
 
     private void sendControlChar() {
         new Thread(() -> {
             try {
-                if (ptyOut != null) {
-                    byte[] one = {(byte) 3};
-                    ptyOut.write(one);
-                    ptyOut.flush();
-                } else if (outputStream != null) {
+                if (ptyOut != null) { byte[] one = {(byte) 3}; ptyOut.write(one); ptyOut.flush(); }
+                else if (outputStream != null) {
                     Log.d(TAG, "CTRL-C pressed but no PTY available; cannot generate SIGINT over a pipe");
                     handler.post(() -> Toast.makeText(requireContext(), "CTRL-C requires PTY; native library not loaded. Commands won't be interrupted in fallback mode.", Toast.LENGTH_SHORT).show());
-                    try {
-                        outputStream.write(3);
-                        outputStream.flush();
-                    } catch (IOException ignored) {}
-                } else {
-                    Log.d(TAG, "[!] Shell not ready for control char.");
-                }
-            } catch (IOException e) {
-                Log.e(TAG, "Failed sending control char", e);
-            }
+                    try { outputStream.write(3); outputStream.flush(); } catch (IOException ignored) {}
+                } else { Log.d(TAG, "[!] Shell not ready for control char."); }
+            } catch (IOException e) { Log.e(TAG, "Failed sending control char", e); }
         }).start();
     }
 
     private void sendControlZ() {
         new Thread(() -> {
             try {
-                if (ptyOut != null) {
-                    byte[] one = {(byte) 26};
-                    ptyOut.write(one);
-                    ptyOut.flush();
-                } else if (outputStream != null) {
+                if (ptyOut != null) { byte[] one = {(byte) 26}; ptyOut.write(one); ptyOut.flush(); }
+                else if (outputStream != null) {
                     Log.d(TAG, "CTRL-Z pressed but no PTY available; cannot generate SIGTSTP over a pipe");
                     handler.post(() -> Toast.makeText(requireContext(), "CTRL-Z requires PTY; native library not loaded. Foreground jobs won't be stopped in fallback mode.", Toast.LENGTH_SHORT).show());
-                    try {
-                        outputStream.write(26);
-                        outputStream.flush();
-                    } catch (IOException ignored) {}
-                } else {
-                    Log.d(TAG, "[!] Shell not ready for control char.");
-                }
-            } catch (IOException e) {
-                Log.e(TAG, "Failed sending CTRL-Z", e);
-            }
+                    try { outputStream.write(26); outputStream.flush(); } catch (IOException ignored) {}
+                } else { Log.d(TAG, "[!] Shell not ready for control char."); }
+            } catch (IOException e) { Log.e(TAG, "Failed sending CTRL-Z", e); }
         }).start();
     }
 
     private static void sendSpecificCommand(String cmd) {
         Log.d(TAG, "Sending specific command: " + cmd);
-        Log.d(TAG, "USE_PTY: " + USE_PTY + ", ptyOut: " + ptyOut + ", writer: " + writer);
         new Thread(() -> {
             try {
-                if (ptyOut != null) {
-                    writePty(cmd + "\n");
-                } else if (writer != null) {
-                    writer.write(cmd + "\n");
-                    writer.flush();
-                } else {
-                    Log.d(TAG, "[!] Shell not ready.");
-                }
-            } catch (IOException e) {
-                Log.e(TAG, "Error sending specific command", e);
-            }
+                if (ptyOut != null) { writePty(cmd + "\n"); }
+                else if (writer != null) { writer.write(cmd + "\n"); writer.flush(); }
+                else { Log.d(TAG, "[!] Shell not ready."); }
+            } catch (IOException e) { Log.e(TAG, "Error sending specific command", e); }
         }).start();
     }
 
     @Override
     public void onDestroyView() {
-        super.onDestroyView();
-        requireActivity().removeMenuProvider(this);
-        new Thread(this::stopTerminal).start();
+        super.onDestroyView(); requireActivity().removeMenuProvider(this); new Thread(this::stopTerminal).start();
     }
 
+    private volatile boolean shuttingDown = false;
+
     private void stopTerminal() {
-        shuttingDown = true;
-        try {
-            stopPty();
-        } catch (Throwable t) {
-            Log.d(TAG, "stopPty ignored: " + t.getMessage());
-        }
-        try {
-            stopProcessShell();
-        } catch (Throwable t) {
-            Log.d(TAG, "stopProcessShell ignored: " + t.getMessage());
-        }
+        shuttingDown = true; try { stopPty(); } catch (Throwable t) { Log.d(TAG, "stopPty ignored: " + t.getMessage()); }
+        try { stopProcessShell(); } catch (Throwable t) { Log.d(TAG, "stopProcessShell ignored: " + t.getMessage()); }
         handler.post(this::updateCtrlCButtonState);
     }
 
     private void stopProcessShell() {
-        try {
-            if (writer != null) {
-                try {
-                    writer.write("exit\n");
-                    writer.flush();
-                } catch (IOException e) {
-                    Log.e(TAG, "Error while writing exit command", e);
-                }
-            }
-        } finally {
-            if (process != null) {
-                process.destroy();
-                try { process.waitFor(); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); }
-            }
-            writer = null;
-            outputStream = null;
-            outputThread = null;
-            errorThread = null;
+        try { if (writer != null) { try { writer.write("exit\n"); writer.flush(); } catch (IOException e) { Log.e(TAG, "Error while writing exit command", e); } } }
+        finally {
+            if (process != null) { process.destroy(); try { process.waitFor(); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); } }
+            writer = null; outputStream = null; outputThread = null; errorThread = null;
         }
     }
 
     private void stopPty() {
-        try {
-            if (ptyOut != null) {
-                try { writePty("exit\n"); } catch (IOException ignored) {}
-            }
-        } finally {
-            if (ptyOut != null) {
-                try { ptyOut.close(); } catch (IOException ignored) {}
-            }
-            if (ptyPfd != null) {
-                try { ptyPfd.close(); } catch (IOException ignored) {}
-            }
-            if (ptyReadThread != null) {
-                try { ptyReadThread.join(200); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); }
-                if (ptyReadThread.isAlive()) {
-                    ptyReadThread.interrupt();
-                }
-            }
-            if (ptyPid > 0) {
-                PtyNative.killChild(ptyPid, 9);
-            }
-            ptyFd = -1;
-            ptyPid = -1;
-            ptyIn = null;
-            ptyOut = null;
-            ptyReadThread = null;
+        try { if (ptyOut != null) { try { writePty("exit\n"); } catch (IOException ignored) {} } }
+        finally {
+            if (ptyOut != null) { try { ptyOut.close(); } catch (IOException ignored) {} }
+            if (ptyPfd != null) { try { ptyPfd.close(); } catch (IOException ignored) {} }
+            if (ptyReadThread != null) { try { ptyReadThread.join(200); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); } if (ptyReadThread.isAlive()) ptyReadThread.interrupt(); }
+            if (ptyPid > 0) { PtyNative.killChild(ptyPid, 9); }
+            ptyFd = -1; ptyPid = -1; ptyIn = null; ptyOut = null; ptyReadThread = null;
         }
     }
 
-    private void clearTerminal() {
-        terminalAdapter.clearAll();
-        currentLine = new SpannableStringBuilder();
-        currentLineSegmentStart = 0;
-        resetAllSgr();
-        ansiCarry = "";
-    }
+    private void clearTerminal() { terminalAdapter.clearAll(); currentLine = new SpannableStringBuilder(); currentLineSegmentStart = 0; resetAllSgr(); ansiCarry = ""; }
 
     private String getEntryCmd() {
         String pathEnv = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH";
@@ -1193,8 +726,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     }
 
     private String buildChrootShellCommand(String shellPath) {
-        String chrootRoot = NhPaths.CHROOT_PATH();
-        String busybox = NhPaths.BUSYBOX;
+        String chrootRoot = NhPaths.CHROOT_PATH(); String busybox = NhPaths.BUSYBOX;
         String resolvedShell = (shellPath != null) ? shellPath : resolvePreferredShell();
         String loginFlag = loginFlagForShell(resolvedShell);
         String assignments = buildExportAssignments(resolvedShell);
@@ -1207,84 +739,151 @@ public class TerminalFragment extends Fragment implements MenuProvider {
 
     private String loginFlagForShell(String shellPath) {
         if (shellPath == null) return "--login";
-        if (shellPath.endsWith("zsh")) return "-l";
-        if (shellPath.endsWith("fish")) return "-l";
-        if (shellPath.endsWith("sh")) return "";
-        return "--login";
+        if (shellPath.endsWith("zsh")) return "-l"; if (shellPath.endsWith("fish")) return "-l"; if (shellPath.endsWith("sh")) return ""; return "--login";
     }
 
     private String standardPathEnv() { return "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH"; }
+
     private boolean isChrootAvailable() {
-        try {
-            File root = new File(NhPaths.CHROOT_PATH());
-            return root.isDirectory() && new File(root, "bin/bash").exists();
-        } catch (Throwable t) { return false; }
+        try { File root = new File(NhPaths.CHROOT_PATH()); return root.isDirectory() && new File(root, "bin/bash").exists(); } catch (Throwable t) { return false; }
     }
 
     private String resolvePreferredShell() {
         SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
-        String pref = prefs.getString(KEY_PREF_SHELL, "sh");
-        if (pref.equalsIgnoreCase("auto")) pref = "sh";
-        List<String> candidates = getStrings(pref);
-        String root = NhPaths.CHROOT_PATH();
-        for (String rel : candidates) {
-            File f = new File(root + rel);
-            if (f.exists() && f.canExecute()) return rel;
-        }
+        String pref = prefs.getString(KEY_PREF_SHELL, "sh"); if (pref.equalsIgnoreCase("auto")) pref = "sh";
+        List<String> candidates = getStrings(pref); String root = NhPaths.CHROOT_PATH();
+        for (String rel : candidates) { File f = new File(root + rel); if (f.exists() && f.canExecute()) return rel; }
         return "/bin/bash";
     }
 
     @NonNull
     private static List<String> getStrings(String pref) {
         List<String> candidates = new ArrayList<>();
-        if ("sh".equalsIgnoreCase(pref)) {
-            candidates.add("/bin/sh"); candidates.add("/usr/bin/sh");
-        } else if ("zsh".equalsIgnoreCase(pref)) {
-            candidates.add("/bin/zsh"); candidates.add("/usr/bin/zsh");
-        } else {
-            candidates.add("/bin/bash"); candidates.add("/usr/bin/bash");
-        }
-        if (!candidates.contains("/bin/bash")) {
-            candidates.add("/bin/bash"); candidates.add("/usr/bin/bash");
-        }
+        if ("sh".equalsIgnoreCase(pref)) { candidates.add("/bin/sh"); candidates.add("/usr/bin/sh"); }
+        else if ("zsh".equalsIgnoreCase(pref)) { candidates.add("/bin/zsh"); candidates.add("/usr/bin/zsh"); }
+        else { candidates.add("/bin/bash"); candidates.add("/usr/bin/bash"); }
+        if (!candidates.contains("/bin/bash")) { candidates.add("/bin/bash"); candidates.add("/usr/bin/bash"); }
         return candidates;
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        setActionBarTitleToTerminal();
-    }
+    @Override public void onResume() { super.onResume(); setActionBarTitleToTerminal(); }
 
     private void setActionBarTitleToTerminal() {
-        try {
-            AppCompatActivity act = (AppCompatActivity) getActivity();
-            if (act != null && act.getSupportActionBar() != null) {
-                act.getSupportActionBar().setTitle(R.string.drawertitleterminal);
-            }
-        } catch (Throwable ignored) { }
+        try { AppCompatActivity act = (AppCompatActivity) getActivity(); if (act != null && act.getSupportActionBar() != null) act.getSupportActionBar().setTitle(R.string.drawertitleterminal); } catch (Throwable ignored) {}
     }
 
     private boolean isAtBottom() {
-        if (terminalRecycler == null || terminalAdapter == null) return true;
-        int count = terminalAdapter.getItemCount();
-        if (count == 0) return true;
-        RecyclerView.LayoutManager lm = terminalRecycler.getLayoutManager();
-        if (!(lm instanceof LinearLayoutManager)) return true;
-        LinearLayoutManager llm = (LinearLayoutManager) lm;
-        int lastCompletely = llm.findLastCompletelyVisibleItemPosition();
+        if (terminalRecycler == null || terminalAdapter == null) return true; int count = terminalAdapter.getItemCount(); if (count == 0) return true;
+        RecyclerView.LayoutManager lm = terminalRecycler.getLayoutManager(); if (!(lm instanceof LinearLayoutManager)) return true;
+        LinearLayoutManager llm = (LinearLayoutManager) lm; int lastCompletely = llm.findLastCompletelyVisibleItemPosition();
         int last = (lastCompletely != RecyclerView.NO_POSITION) ? lastCompletely : llm.findLastVisibleItemPosition();
         return last >= count - 1;
     }
 
     private void updateFabVisibilityByScroll(int dy) {
-        if (fabGoBottom == null) return;
-        boolean atBottom = isAtBottom();
-        if (atBottom) {
-            fabGoBottom.hide();
-        } else {
-            // Prefer showing when user scrolls up (dy < 0); still ensure visible if not at bottom
-            if (dy < 0) fabGoBottom.show(); else if (!fabGoBottom.isShown()) fabGoBottom.show();
+        if (fabGoBottom == null) return; boolean atBottom = isAtBottom();
+        if (atBottom) fabGoBottom.hide(); else { if (dy < 0) fabGoBottom.show(); else if (!fabGoBottom.isShown()) fabGoBottom.show(); }
+    }
+
+    private void readStream(InputStream is, boolean isErr) {
+        try {
+            byte[] buf = new byte[4096]; int n;
+            while ((n = is.read(buf)) != -1) {
+                final String chunk = new String(buf, 0, n, StandardCharsets.UTF_8);
+                handler.post(() -> { if (!isAdded()) return; appendAnsi(chunk, isErr); });
+            }
+        } catch (InterruptedIOException e) { if (!shuttingDown) Log.w(TAG, "Stream read interrupted", e); }
+        catch (IOException e) { if (!shuttingDown) Log.e(TAG, "Error reading stream", e); }
+    }
+
+    private static synchronized void writePty(String data) throws IOException {
+        if (ptyOut != null) { byte[] b = data.getBytes(StandardCharsets.UTF_8); ptyOut.write(b); ptyOut.flush(); }
+    }
+
+    private void appendAnsi(String raw, boolean isErr) {
+        if (raw.isEmpty()) return; String text = ansiCarry + raw; ansiCarry = ""; int i = 0; int len = text.length();
+        while (i < len) {
+            char c = text.charAt(i);
+            if (c == '\u001B') {
+                applyCurrentStyle(currentLine, currentLineSegmentStart);
+                if (i + 1 >= len) { ansiCarry = text.substring(i); break; }
+                if (text.charAt(i+1) != '[') { currentLine.append(c); i++; continue; }
+                int seqEnd = -1; for (int j = i + 2; j < len; j++) { char ch = text.charAt(j); if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z')) { seqEnd = j; break; } }
+                if (seqEnd == -1) { ansiCarry = text.substring(i); break; }
+                char finalByte = text.charAt(seqEnd); String inside = text.substring(i + 2, seqEnd); i = seqEnd + 1;
+                if (finalByte == 'm') { parseAndApplySgrSequence(inside); }
+                currentLineSegmentStart = currentLine.length();
+            } else if (c == '\n' || c == '\r') {
+                char next = (i + 1 < len) ? text.charAt(i + 1) : 0; applyCurrentStyle(currentLine, currentLineSegmentStart);
+                if (isErr) { SpannableStringBuilder errPrefix = new SpannableStringBuilder("[err] "); errPrefix.setSpan(new ForegroundColorSpan(0xFFFF5555), 0, errPrefix.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE); errPrefix.append(currentLine); terminalAdapter.addLine(errPrefix, terminalRecycler); }
+                else { terminalAdapter.addLine(new SpannableStringBuilder(currentLine), terminalRecycler); }
+                currentLine = new SpannableStringBuilder(); currentLineSegmentStart = 0;
+                if (c == '\r' && next == '\n') { i += 2; } else { i++; }
+            } else { currentLine.append(c); i++; }
         }
+    }
+
+    private void applyCurrentStyle(SpannableStringBuilder sb, int start) {
+        int segLen = sb.length() - start; if (segLen <= 0) return;
+        if (currentFgColor != defaultFgColor) sb.setSpan(new ForegroundColorSpan(currentFgColor), start, sb.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (currentBgColor != defaultBgColor) sb.setSpan(new BackgroundColorSpan(currentBgColor), start, sb.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (currentBold) sb.setSpan(new StyleSpan(Typeface.BOLD), start, sb.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+        if (currentUnderline) sb.setSpan(new UnderlineSpan(), start, sb.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+    }
+
+    private void parseAndApplySgrSequence(String inside) {
+        if (inside.isEmpty()) { resetAllSgr(); return; }
+        String[] parts = inside.split(";", -1); int i = 0;
+        while (i < parts.length) {
+            String p = parts[i].isEmpty() ? "0" : parts[i]; int code; try { code = Integer.parseInt(p); } catch (NumberFormatException e) { code = -1; }
+            switch (code) {
+                case 0: resetAllSgr(); break; case 1: currentBold = true; break; case 22: currentBold = false; break;
+                case 4: currentUnderline = true; break; case 24: currentUnderline = false; break; case 39: currentFgColor = defaultFgColor; break; case 49: currentBgColor = defaultBgColor; break;
+                case 30: currentFgColor = mapBasicColor(0); break; case 31: currentFgColor = mapBasicColor(1); break; case 32: currentFgColor = mapBasicColor(2); break; case 33: currentFgColor = mapBasicColor(3); break; case 34: currentFgColor = mapBasicColor(4); break; case 35: currentFgColor = mapBasicColor(5); break; case 36: currentFgColor = mapBasicColor(6); break; case 37: currentFgColor = mapBasicColor(7); break;
+                case 40: currentBgColor = mapBasicColor(0); break; case 41: currentBgColor = mapBasicColor(1); break; case 42: currentBgColor = mapBasicColor(2); break; case 43: currentBgColor = mapBasicColor(3); break; case 44: currentBgColor = mapBasicColor(4); break; case 45: currentBgColor = mapBasicColor(5); break; case 46: currentBgColor = mapBasicColor(6); break; case 47: currentBgColor = mapBasicColor(7); break;
+                case 90: currentFgColor = mapBrightColor(0); break; case 91: currentFgColor = mapBrightColor(1); break; case 92: currentFgColor = mapBrightColor(2); break; case 93: currentFgColor = mapBrightColor(3); break; case 94: currentFgColor = mapBrightColor(4); break; case 95: currentFgColor = mapBrightColor(5); break; case 96: currentFgColor = mapBrightColor(6); break; case 97: currentFgColor = mapBrightColor(7); break;
+                case 100: currentBgColor = mapBrightColor(0); break; case 101: currentBgColor = mapBrightColor(1); break; case 102: currentBgColor = mapBrightColor(2); break; case 103: currentBgColor = mapBrightColor(3); break; case 104: currentBgColor = mapBrightColor(4); break; case 105: currentBgColor = mapBrightColor(5); break; case 106: currentBgColor = mapBrightColor(6); break; case 107: currentBgColor = mapBrightColor(7); break;
+                case 38:
+                case 48: {
+                    boolean isFg = (code == 38); int remain = parts.length - (i + 1);
+                    if (remain >= 1) {
+                        String mode = parts[i+1];
+                        if ("5".equals(mode) && remain >= 2) { int idx = parseIntSafe(parts[i+2]); if (idx >= 0 && idx <= 255) { if (isFg) currentFgColor = map256Color(idx); else currentBgColor = map256Color(idx); } i += 2; }
+                        else if ("2".equals(mode) && remain >= 4) { int r = parseIntSafe(parts[i+2]); int g = parseIntSafe(parts[i+3]); int b = parseIntSafe(parts[i+4]); if (isRgbComponent(r) && isRgbComponent(g) && isRgbComponent(b)) { int col = 0xFF000000 | (r << 16) | (g << 8) | b; if (isFg) currentFgColor = col; else currentBgColor = col; } i += 4; }
+                    }
+                    break;
+                }
+                default: break;
+            }
+            i++;
+        }
+    }
+
+    private void resetAllSgr() { currentFgColor = defaultFgColor; currentBgColor = defaultBgColor; currentBold = false; currentUnderline = false; }
+    private int parseIntSafe(String s) { try { return Integer.parseInt(s); } catch (Exception e) { return -1; } }
+    private boolean isRgbComponent(int v) { return v >= 0 && v <= 255; }
+
+    private int mapBasicColor(int idx) {
+        switch (idx) {
+            case 0: return 0xFF000000; case 1: return 0xFFCC0000; case 2: return 0xFF00AA00; case 3: return 0xFFAA8800;
+            case 4: return 0xFF0044CC; case 5: return 0xFFAA00AA; case 6: return 0xFF008888; case 7: return 0xFFFFFFFF;
+            default: return defaultFgColor;
+        }
+    }
+    private int mapBrightColor(int idx) {
+        switch (idx) {
+            case 0: return 0xFF555555; case 1: return 0xFFFF5555; case 2: return 0xFF55FF55; case 3: return 0xFFFFFF55;
+            case 4: return 0xFF5555FF; case 5: return 0xFFFF55FF; case 6: return 0xFF55FFFF; case 7: return 0xFFFFFFFF;
+            default: return defaultFgColor;
+        }
+    }
+    private int map256Color(int idx) {
+        if (idx < 16) return (idx < 8) ? mapBasicColor(idx) : mapBrightColor(idx - 8);
+        else if (idx <= 231) {
+            int cube = idx - 16; int r = cube / 36; int g = (cube % 36) / 6; int b = cube % 6;
+            int rc = r == 0 ? 0 : 55 + 40 * r; int gc = g == 0 ? 0 : 55 + 40 * g; int bc = b == 0 ? 0 : 55 + 40 * b;
+            return 0xFF000000 | (rc << 16) | (gc << 8) | bc;
+        } else if (idx <= 255) { int shade = 8 + (idx - 232) * 10; return 0xFF000000 | (shade << 16) | (shade << 8) | shade; }
+        return defaultFgColor;
     }
 }
