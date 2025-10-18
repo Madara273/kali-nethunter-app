@@ -1451,4 +1451,29 @@
     <string name="terminal_setup_later">Later</string>
     <string name="terminal_setup_setup">Setup</string>
     <string name="terminal_setup_setting_up">Setting up…</string>
+
+    <string name="terminal_initial_command">Initial Command</string>
+    <string name="terminal_initial_command_icon_desc">Initial command</string>
+    <string name="terminal_initial_command_desc">Configure a command to run automatically when opening the Terminal. Disable it if you prefer to start with a blank prompt.</string>
+    <string name="terminal_initial_command_enable">Enable initial command</string>
+    <string name="terminal_initial_command_hint">e.g., neowofetch</string>
+    <string name="terminal_initial_command_saved">Initial command saved</string>
+    <string name="presets">Presets</string>
+    <string name="terminal_preset_uname">uname -a</string>
+    <string name="terminal_preset_neowofetch">neowofetch || neofetch</string>
+    <string name="terminal_preset_clear">clear</string>
+    <string name="terminal_preset_ls">ls -la</string>
+    <string name="terminal_preset_whoami">whoami</string>
+    <string name="terminal_save">Save</string>
+    <string name="terminal_button_ctrl">CTRL</string>
+    <string name="terminal_button_clear">Clear</string>
+    <string name="terminal_button_arrow_down">▼</string>
+    <string name="terminal_button_arrow_up">▲</string>
+    <string name="terminal_button_arrow_right">→</string>
+    <string name="terminal_button_arrow_left">←</string>
+    <string name="terminal_button_goto_bottom">Go to bottom</string>
+    <string name="terminal_button_tab">Tab</string>
+    <string name="terminal_label_theme">Theme</string>
+    <string name="terminal_title_preview">Preview</string>
+    <string name="terminal_title_layout">Layout</string>
 </resources>

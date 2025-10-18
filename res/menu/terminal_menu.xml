@@ -21,6 +21,12 @@
         app:showAsAction="ifRoom" />
 
     <item
+        android:id="@+id/action_initial_command"
+        android:icon="@drawable/ic_action_keyboard"
+        android:title="@string/terminal_initial_command"
+        app:showAsAction="never" />
+
+    <item
         android:id="@+id/action_save_output"
         android:title="Save output"
         app:showAsAction="never" />

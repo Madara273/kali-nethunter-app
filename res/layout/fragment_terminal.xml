@@ -35,7 +35,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom|end"
                 android:layout_margin="12dp"
-                android:contentDescription="Go to bottom"
+                android:contentDescription="@string/terminal_button_goto_bottom"
                 android:visibility="gone"
                 app:srcCompat="@drawable/ic_arrow_downward"
                 app:useCompatPadding="true"
@@ -58,7 +58,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Tab"
+                android:text="@string/terminal_button_tab"
                 app:rippleColor="@color/system_tab_ripple" />
 
             <com.google.android.material.button.MaterialButton
@@ -67,7 +67,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="←"
+                android:text="@string/terminal_button_arrow_left"
                 app:rippleColor="@color/system_tab_ripple" />
 
             <com.google.android.material.button.MaterialButton
@@ -76,7 +76,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="→"
+                android:text="@string/terminal_button_arrow_right"
                 app:rippleColor="@color/system_tab_ripple" />
 
             <com.google.android.material.button.MaterialButton
@@ -85,7 +85,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="▲"
+                android:text="@string/terminal_button_arrow_up"
                 app:rippleColor="@color/system_tab_ripple" />
 
             <com.google.android.material.button.MaterialButton
@@ -94,7 +94,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="▼"
+                android:text="@string/terminal_button_arrow_down"
                 app:rippleColor="@color/system_tab_ripple" />
         </LinearLayout>
 
@@ -113,7 +113,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="CTRL"
+                android:text="@string/terminal_button_ctrl"
                 app:rippleColor="@color/system_tab_ripple" />
 
             <com.google.android.material.button.MaterialButton
@@ -122,7 +122,7 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="Clear"
+                android:text="@string/terminal_button_clear"
                 app:rippleColor="@color/system_tab_ripple" />
         </LinearLayout>
 

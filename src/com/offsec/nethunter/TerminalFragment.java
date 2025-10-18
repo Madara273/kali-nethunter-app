@@ -87,28 +87,25 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private static final String KEY_LINE_SPACING_MULT = "terminal_line_spacing_mult";
     private static final String KEY_PREF_SHELL = "preferred_shell";
     private static final String KEY_FIRST_RUN_SETUP_SHOWN = "first_run_setup_shown";
+    private static final String KEY_PREF_INITIAL_CMD_TEXT = "initial_cmd_text";
+    private static final String KEY_PREF_INITIAL_CMD_ENABLED = "initial_cmd_enabled";
     private static final String DEFAULT_HOSTNAME = "kali";
     private static final int PERSISTENT_BUFFER_SIZE = 100;
-
     private static final List<CharSequence> persistentLines = new ArrayList<>();
-
     private TextInputEditText inputEdit;
     private RecyclerView terminalRecycler;
     private TerminalAdapter terminalAdapter;
     private View ctrlButton;
     private com.google.android.material.floatingactionbutton.FloatingActionButton fabGoBottom;
-
     private Process process;
     private volatile OutputStream outputStream;
     private static volatile BufferedWriter writer;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private Thread outputThread;
     private Thread errorThread;
-
     private final List<String> commandHistory = new ArrayList<>();
     private int historyIndex = -1;
     private String pendingCurrentLine = "";
-
     private int defaultFgColor;
     private int currentFgColor;
     private final int defaultBgColor = 0x00000000;
@@ -116,19 +113,15 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private boolean currentBold = false;
     private boolean currentUnderline = false;
     private String ansiCarry = "";
-
     private volatile int ptyFd = -1;
     private volatile int ptyPid = -1;
     private volatile ParcelFileDescriptor ptyPfd;
     private volatile FileInputStream ptyIn;
     private static volatile FileOutputStream ptyOut;
     private Thread ptyReadThread;
-
     private SpannableStringBuilder currentLine = new SpannableStringBuilder();
     private int currentLineSegmentStart = 0;
-
     private ScaleGestureDetector scaleDetector;
-
     private boolean ctrlSticky = false;
     private boolean suppressTextWatcher = false;
     private int pendingInsertStart = -1;
@@ -316,6 +309,8 @@ public class TerminalFragment extends Fragment implements MenuProvider {
 
         // Show first-run setup dialog once
         handler.postDelayed(this::maybeShowFirstRunSetupDialog, 500);
+        // Run saved initial command on open if enabled
+        handler.postDelayed(() -> maybeRunSavedInitialCommand(getArguments()), 700);
         return view;
     }
 
@@ -639,6 +634,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         else if (id == R.id.action_save_output) { saveOutput(); return true; }
         else if (id == R.id.action_theme) { showThemePicker(); return true; }
         else if (id == R.id.action_open_setup) { showFirstRunSetupDialog(); return true; }
+        else if (id == R.id.action_initial_command) { showInitialCommandDialog(); return true; }
         return false;
     }
 
@@ -977,5 +973,66 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         if (ptyOut != null || writer != null) { task.run(); return; }
         // Try again shortly until shell is up
         handler.postDelayed(() -> runWhenShellReady(task), 200);
+    }
+
+    private void maybeRunSavedInitialCommand(@Nullable Bundle args) {
+        // If a one-off initial command was explicitly provided via arguments, prefer that and skip the saved preset.
+        if (args != null && args.containsKey(KEY_INITIAL_COMMAND)) return;
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        boolean enabled = prefs.getBoolean(KEY_PREF_INITIAL_CMD_ENABLED, false);
+        String cmd = prefs.getString(KEY_PREF_INITIAL_CMD_TEXT, "");
+        if (!enabled) return;
+        if (cmd == null || cmd.trim().isEmpty()) return;
+        final String toRun = cmd.trim();
+        runWhenShellReady(() -> sendSpecificCommand(toRun));
+    }
+
+    private void showInitialCommandDialog() {
+        if (!isAdded()) return;
+        LayoutInflater inflater = LayoutInflater.from(requireContext());
+        View content = inflater.inflate(R.layout.dialog_terminal_initial_command, (ViewGroup) getView(), false);
+
+        final com.google.android.material.materialswitch.MaterialSwitch switchEnable = content.findViewById(R.id.switch_enable);
+        final com.google.android.material.textfield.TextInputLayout til = content.findViewById(R.id.input_layout_cmd);
+        final com.google.android.material.textfield.TextInputEditText et = content.findViewById(R.id.input_cmd);
+        final com.google.android.material.chip.ChipGroup chips = content.findViewById(R.id.chips_initial_cmd);
+        final com.google.android.material.button.MaterialButton btnCancel = content.findViewById(R.id.btn_cancel);
+        final com.google.android.material.button.MaterialButton btnSave = content.findViewById(R.id.btn_save);
+
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        boolean enabled = prefs.getBoolean(KEY_PREF_INITIAL_CMD_ENABLED, false);
+        String savedCmd = prefs.getString(KEY_PREF_INITIAL_CMD_TEXT, "");
+        switchEnable.setChecked(enabled);
+        if (savedCmd != null) { et.setText(savedCmd); if (savedCmd != null) et.setSelection(savedCmd.length()); }
+
+        // Chip presets fill the command field
+        if (chips != null) {
+            for (int i = 0; i < chips.getChildCount(); i++) {
+                View ch = chips.getChildAt(i);
+                if (ch instanceof com.google.android.material.chip.Chip) {
+                    com.google.android.material.chip.Chip cc = (com.google.android.material.chip.Chip) ch;
+                    cc.setOnClickListener(v -> {
+                        CharSequence t = cc.getText();
+                        if (t != null) { et.setText(t.toString()); et.setSelection(t.length()); }
+                    });
+                }
+            }
+        }
+
+        final BottomSheetDialog dialog = new BottomSheetDialog(requireContext(), com.google.android.material.R.style.ThemeOverlay_Material3_BottomSheetDialog);
+        dialog.setContentView(content);
+
+        btnCancel.setOnClickListener(v -> dialog.dismiss());
+        btnSave.setOnClickListener(v -> {
+            String cmd = et.getText() != null ? et.getText().toString().trim() : "";
+            boolean en = switchEnable.isChecked();
+            prefs.edit().putBoolean(KEY_PREF_INITIAL_CMD_ENABLED, en)
+                    .putString(KEY_PREF_INITIAL_CMD_TEXT, cmd)
+                    .apply();
+            dialog.dismiss();
+            Toast.makeText(requireContext(), getString(R.string.terminal_initial_command_saved), Toast.LENGTH_SHORT).show();
+        });
+
+        dialog.show();
     }
 }

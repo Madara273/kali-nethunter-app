@@ -18,7 +18,7 @@
             android:id="@+id/label_theme"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Theme"
+            android:text="@string/terminal_label_theme"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
             android:paddingBottom="8dp" />
 
@@ -114,7 +114,7 @@
                     android:id="@+id/preview_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Preview"
+                    android:text="@string/terminal_title_preview"
                     android:textStyle="bold"
                     android:textSize="16sp" />
 
@@ -146,7 +146,7 @@
             android:id="@+id/label_format"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Layout"
+            android:text="@string/terminal_title_layout"
             android:textAppearance="@style/TextAppearance.Material3.TitleMedium"
             android:paddingBottom="8dp" />
 
