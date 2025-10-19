@@ -361,14 +361,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         int newPos = Math.min(start, end) + 1; inputEdit.setSelection(newPos);
     }
 
-    private void moveCursor(int delta) {
-        if (inputEdit == null) return;
-        int len = inputEdit.length();
-        int pos = inputEdit.getSelectionStart();
-        if (pos < 0) pos = len;
-        int newPos = Math.max(0, Math.min(len, pos + delta));
-        inputEdit.setSelection(newPos);
-    }
 
     private void navigateHistory(int direction) {
         if (commandHistory.isEmpty() || inputEdit == null) return;
@@ -751,17 +743,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         }).start();
     }
 
-    private static void sendSpecificCommand(String cmd) {
-        Log.d(TAG, "Sending specific command: " + cmd);
-        // This static method cannot access service; keep legacy writers
-        new Thread(() -> {
-            try {
-                if (ptyOut != null) { writePty(cmd + "\n"); }
-                else if (writer != null) { writer.write(cmd + "\n"); writer.flush(); }
-                else { Log.d(TAG, "[!] Shell not ready."); }
-            } catch (IOException e) { Log.e(TAG, "Error sending specific command", e); }
-        }).start();
-    }
 
     @Override
     public void onDestroyView() {
@@ -1067,7 +1048,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         boolean enabled = prefs.getBoolean(KEY_PREF_INITIAL_CMD_ENABLED, false);
         String cmd = prefs.getString(KEY_PREF_INITIAL_CMD_TEXT, "");
         if (!enabled) return;
-        if (cmd == null || cmd.trim().isEmpty()) return;
+        if (cmd.trim().isEmpty()) return;
         final String toRun = cmd.trim();
         runWhenShellReady(() -> sendLine(toRun));
     }
@@ -1078,7 +1059,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         View content = inflater.inflate(R.layout.dialog_terminal_initial_command, (ViewGroup) getView(), false);
 
         final com.google.android.material.materialswitch.MaterialSwitch switchEnable = content.findViewById(R.id.switch_enable);
-        final com.google.android.material.textfield.TextInputLayout til = content.findViewById(R.id.input_layout_cmd);
         final com.google.android.material.textfield.TextInputEditText et = content.findViewById(R.id.input_cmd);
         final com.google.android.material.chip.ChipGroup chips = content.findViewById(R.id.chips_initial_cmd);
         final com.google.android.material.button.MaterialButton btnCancel = content.findViewById(R.id.btn_cancel);
@@ -1088,7 +1068,8 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         boolean enabled = prefs.getBoolean(KEY_PREF_INITIAL_CMD_ENABLED, false);
         String savedCmd = prefs.getString(KEY_PREF_INITIAL_CMD_TEXT, "");
         switchEnable.setChecked(enabled);
-        if (savedCmd != null) { et.setText(savedCmd); if (savedCmd != null) et.setSelection(savedCmd.length()); }
+        et.setText(savedCmd);
+        et.setSelection(savedCmd.length());
 
         // Chip presets fill the command field
         if (chips != null) {
