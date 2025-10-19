@@ -42,8 +42,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
-import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -63,12 +61,6 @@ public class TerminalService extends Service {
         void onSessionClosed(int sessionId, int exitCode);
     }
 
-    public static class SessionInfo {
-        public final int id;
-        public final String title;
-        SessionInfo(int id, String title) { this.id = id; this.title = title; }
-    }
-
     private static class Session {
         final int id;
         final String title;
@@ -79,9 +71,9 @@ public class TerminalService extends Service {
         volatile FileOutputStream out;
         volatile Thread readThread;
         volatile boolean stopping = false;
-        // ring buffer of recent events
+        volatile boolean closedNotified = false;
         final ArrayDeque<TerminalEvent> buffer = new ArrayDeque<>();
-        final int bufferMax = 1024; // events, not lines; conservative to cap memory
+        final int bufferMax = 1024;
         final CopyOnWriteArrayList<TerminalListener> listeners = new CopyOnWriteArrayList<>();
 
         Session(int id, String title) { this.id = id; this.title = title; }
@@ -112,6 +104,8 @@ public class TerminalService extends Service {
     private Handler worker;
     private volatile boolean foregroundStarted = false;
 
+    public static final String ACTION_STOP_ALL_SESSIONS = BuildConfig.APPLICATION_ID + ".ACTION_STOP_ALL_SESSIONS";
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -130,6 +124,18 @@ public class TerminalService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null && ACTION_STOP_ALL_SESSIONS.equals(intent.getAction())) {
+            closeAllSessions();
+            // If no sessions remain, stop foreground and self
+            if (sessions.isEmpty()) {
+                try { stopForeground(true); } catch (Throwable ignored) {}
+                stopSelf();
+                foregroundStarted = false;
+            } else {
+                updateForegroundNotification();
+            }
+            return START_NOT_STICKY;
+        }
         if (!foregroundStarted) {
             foregroundStarted = true;
             startInForeground();
@@ -168,12 +174,6 @@ public class TerminalService extends Service {
         startPtyForSession(ctx, s, explicitCmd);
         updateForegroundNotification();
         return id;
-    }
-
-    public synchronized List<SessionInfo> listSessions() {
-        List<SessionInfo> list = new ArrayList<>();
-        for (Session s : sessions.values()) list.add(new SessionInfo(s.id, s.title));
-        return list;
     }
 
     public synchronized void attachListener(int sessionId, @NonNull TerminalListener l) {
@@ -220,6 +220,18 @@ public class TerminalService extends Service {
         Session s = sessions.remove(sessionId);
         if (s == null) return;
         stopPty(s);
+        updateForegroundNotification();
+    }
+
+    public synchronized void closeAllSessions() {
+        // Close a snapshot to avoid concurrent modification
+        java.util.List<Integer> ids = new java.util.ArrayList<>(sessions.keySet());
+        for (Integer id : ids) {
+            Session s = sessions.remove(id);
+            if (s != null) {
+                stopPty(s);
+            }
+        }
         updateForegroundNotification();
     }
 
@@ -271,21 +283,54 @@ public class TerminalService extends Service {
         } catch (IOException e) {
             if (!s.stopping) Log.e(TAG, "readLoop error", e);
         } finally {
-            for (TerminalListener l : s.listeners) {
-                int exit = 0; // unknown
-                mainHandler.post(() -> l.onSessionClosed(s.id, exit));
+            if (!s.closedNotified) {
+                s.closedNotified = true;
+                for (TerminalListener l : s.listeners) {
+                    int exit = 0;
+                    mainHandler.post(() -> l.onSessionClosed(s.id, exit));
+                }
             }
         }
     }
 
     private void stopPty(@NonNull Session s) {
         s.stopping = true;
-        try { if (s.out != null) { try { s.out.write("exit\n".getBytes(StandardCharsets.UTF_8)); s.out.flush(); } catch (IOException ignored) {} } } finally {
+        // Try to politely terminate the shell first
+        try {
+            if (s.out != null) {
+                try {
+                    s.out.write("exit\n".getBytes(StandardCharsets.UTF_8));
+                    s.out.flush();
+                } catch (IOException ignored) {}
+            }
+        } finally {
+            // Close input and output streams to unblock read loop
+            try { if (s.in != null) s.in.close(); } catch (IOException ignored) {}
             try { if (s.out != null) s.out.close(); } catch (IOException ignored) {}
-
+            // Close the underlying file descriptor
             try { if (s.ptyPfd != null) s.ptyPfd.close(); } catch (IOException ignored) {}
-            if (s.readThread != null) { try { s.readThread.join(200); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); } if (s.readThread.isAlive()) s.readThread.interrupt(); }
+            // Give the reader a moment to finish and deliver onSessionClosed
+            if (s.readThread != null) {
+                try { s.readThread.join(200); } catch (InterruptedException ignored) { Thread.currentThread().interrupt(); }
+                if (s.readThread.isAlive()) s.readThread.interrupt();
+            }
+            // Ensure child process is gone
             if (s.ptyPid > 0) { try { PtyNative.killChild(s.ptyPid, 9); } catch (Throwable ignored) {} }
+            // If the read thread didn't notify, notify here
+            if (!s.closedNotified) {
+                s.closedNotified = true;
+                for (TerminalListener l : s.listeners) {
+                    int exit = 0;
+                    mainHandler.post(() -> l.onSessionClosed(s.id, exit));
+                }
+            }
+            // Null out references to help GC and avoid accidental reuse
+            s.readThread = null;
+            s.in = null;
+            s.out = null;
+            s.ptyPfd = null;
+            s.ptyFd = -1;
+            s.ptyPid = -1;
         }
     }
 
@@ -326,6 +371,14 @@ public class TerminalService extends Service {
         Intent intent = new Intent(this, AppNavHomeActivity.class);
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pi = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        // Action: Stop sessions
+        Intent stopIntent = new Intent(this, TerminalService.class).setAction(ACTION_STOP_ALL_SESSIONS);
+        PendingIntent stopPi = PendingIntent.getService(this, 1, stopIntent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
+        NotificationCompat.Action stopAction = new NotificationCompat.Action(
+                R.drawable.ic_stat_ic_nh_notification,
+                getString(R.string.terminal_stop_sessions),
+                stopPi
+        );
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_stat_ic_nh_notification)
                 .setContentTitle(getString(R.string.app_name))
@@ -333,16 +386,15 @@ public class TerminalService extends Service {
                 .setOngoing(true)
                 .setOnlyAlertOnce(true)
                 .setContentIntent(pi)
+                .addAction(stopAction)
                 .build();
     }
 
-    // Helpers copied from TerminalFragment for chroot command resolution
     private boolean isChrootAvailable() {
         try { File root = new File(NhPaths.CHROOT_PATH()); return root.isDirectory() && new File(root, "bin/bash").exists(); } catch (Throwable t) { return false; }
     }
 
     private String resolvePreferredShell(@NonNull Context ctx) {
-        // Mirror TerminalFragment: prefer bash fallback
         String root = NhPaths.CHROOT_PATH();
         List<String> candidates = new ArrayList<>();
         candidates.add("/bin/bash"); candidates.add("/usr/bin/bash");
@@ -375,4 +427,3 @@ public class TerminalService extends Service {
                 " TERM=xterm-256color COLORTERM=truecolor CLICOLOR_FORCE=1 FORCE_COLOR=1 LANG=en_US.UTF-8 LC_ALL=C PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH";
     }
 }
-
