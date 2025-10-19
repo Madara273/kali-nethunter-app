@@ -53,12 +53,12 @@
             android:weightSum="5">
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_tab"
+                android:id="@+id/btn_esc"
                 style="@style/Tech.Button.Primary.Compact"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/terminal_button_tab"
+                android:text="@string/terminal_button_esc"
                 app:rippleColor="@color/system_tab_ripple" />
 
             <com.google.android.material.button.MaterialButton
@@ -105,7 +105,16 @@
             android:layout_marginTop="4dp"
             android:orientation="horizontal"
             android:gravity="center_vertical"
-            android:weightSum="2">
+            android:weightSum="3">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_tab"
+                style="@style/Tech.Button.Primary.Compact"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/terminal_button_tab"
+                app:rippleColor="@color/system_tab_ripple" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btn_ctrl"

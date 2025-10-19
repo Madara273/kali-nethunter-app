@@ -236,6 +236,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         View btnRight = view.findViewById(R.id.btn_right);
         View btnUp = view.findViewById(R.id.btn_up);
         View btnDown = view.findViewById(R.id.btn_down);
+        View btnEsc = view.findViewById(R.id.btn_esc);
         ctrlButton = view.findViewById(R.id.btn_ctrl);
         View btnClear = view.findViewById(R.id.terminal_cmd_clear);
         if (btnClear != null) btnClear.setOnClickListener(v -> clearTerminal());
@@ -308,6 +309,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         if (btnRight != null) btnRight.setOnClickListener(v -> moveCursor(1));
         if (btnUp != null) btnUp.setOnClickListener(v -> navigateHistory(-1));
         if (btnDown != null) btnDown.setOnClickListener(v -> navigateHistory(1));
+        if (btnEsc != null) btnEsc.setOnClickListener(v -> sendControlCode(27));
         if (ctrlButton != null) ctrlButton.setOnClickListener(v -> { ctrlSticky = !ctrlSticky; updateCtrlVisualState(); });
 
         Bundle args = getArguments();
