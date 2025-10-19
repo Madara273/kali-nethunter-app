@@ -160,6 +160,13 @@
             android:paddingBottom="8dp">
 
             <com.google.android.material.chip.Chip
+                android:id="@+id/chip_format_minimal"
+                style="@style/Widget.Material3.Chip.Filter.Elevated"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Minimal" />
+
+            <com.google.android.material.chip.Chip
                 android:id="@+id/chip_format_compact"
                 style="@style/Widget.Material3.Chip.Filter.Elevated"
                 android:layout_width="wrap_content"

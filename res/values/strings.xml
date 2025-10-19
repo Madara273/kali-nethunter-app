@@ -1476,5 +1476,5 @@
     <string name="terminal_label_theme">Theme</string>
     <string name="terminal_title_preview">Preview</string>
     <string name="terminal_title_layout">Layout</string>
-    <string name="terminal_stop_sessions">Stop Sessions</string>
+    <string name="terminal_stop_sessions">Stop Session</string>
 </resources>

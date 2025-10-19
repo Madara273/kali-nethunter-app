@@ -573,7 +573,9 @@ public class TerminalFragment extends Fragment implements MenuProvider {
 
         String fmtPref = prefs.getString(KEY_FORMAT_PRESET, "Compact");
         int fmtChipId = R.id.chip_format_compact;
-        if ("Comfortable".equalsIgnoreCase(fmtPref)) fmtChipId = R.id.chip_format_comfortable; else if ("Large".equalsIgnoreCase(fmtPref)) fmtChipId = R.id.chip_format_large;
+        if ("Minimal".equalsIgnoreCase(fmtPref)) fmtChipId = R.id.chip_format_minimal;
+        else if ("Comfortable".equalsIgnoreCase(fmtPref)) fmtChipId = R.id.chip_format_comfortable;
+        else if ("Large".equalsIgnoreCase(fmtPref)) fmtChipId = R.id.chip_format_large;
         chipsFormat.check(fmtChipId);
 
         final int originalBg = curBg; final int originalFg = curFg;
@@ -587,11 +589,18 @@ public class TerminalFragment extends Fragment implements MenuProvider {
             if (checkedId != View.NO_ID) { Chip c = content.findViewById(checkedId); if (c != null && c.getTag() instanceof Integer) themeIdx = (Integer) c.getTag(); }
             ThemePreset sel = THEME_PRESETS[themeIdx];
             String fmt = "Compact"; int checkedFmt = chipsFormat.getCheckedChipId();
-            if (checkedFmt == R.id.chip_format_comfortable) fmt = "Comfortable"; else if (checkedFmt == R.id.chip_format_large) fmt = "Large";
+            if (checkedFmt == R.id.chip_format_minimal) fmt = "Minimal";
+            else if (checkedFmt == R.id.chip_format_comfortable) fmt = "Comfortable";
+            else if (checkedFmt == R.id.chip_format_large) fmt = "Large";
             previewCard.setCardBackgroundColor(sel.bg);
             int fg = sel.fg; previewTitle.setTextColor(fg); previewL1.setTextColor(fg); previewL2.setTextColor(fg); previewL3.setTextColor(fg);
             float sizeSp; float extraPx; float mult;
-            switch (fmt) { case "Comfortable": sizeSp = 14f; extraPx = dp(2f); mult = 1.08f; break; case "Large": sizeSp = 16f; extraPx = dp(4f); mult = 1.12f; break; default: sizeSp = 12f; extraPx = dp(0f); mult = 1.0f; break; }
+            switch (fmt) {
+                case "Minimal": sizeSp = MIN_TEXT_SP; extraPx = dp(0f); mult = 1.0f; break;
+                case "Comfortable": sizeSp = 14f; extraPx = dp(2f); mult = 1.08f; break;
+                case "Large": sizeSp = 16f; extraPx = dp(4f); mult = 1.12f; break;
+                default: sizeSp = 12f; extraPx = dp(0f); mult = 1.0f; break;
+            }
             previewL1.setTextSize(sizeSp); previewL2.setTextSize(sizeSp); previewL3.setTextSize(sizeSp);
             previewL1.setLineSpacing(extraPx, mult); previewL2.setLineSpacing(extraPx, mult); previewL3.setLineSpacing(extraPx, mult);
             applyThemeColors(sel.bg, sel.fg, false); applyFormatPreset(fmt, false);
@@ -611,7 +620,9 @@ public class TerminalFragment extends Fragment implements MenuProvider {
             if (checkedId != View.NO_ID) { Chip c = content.findViewById(checkedId); if (c != null && c.getTag() instanceof Integer) themeIdx = (Integer) c.getTag(); }
             ThemePreset sel = THEME_PRESETS[themeIdx]; applyThemeColors(sel.bg, sel.fg, true);
             int checkedFmt = chipsFormat.getCheckedChipId(); String fmt = "Compact";
-            if (checkedFmt == R.id.chip_format_comfortable) fmt = "Comfortable"; else if (checkedFmt == R.id.chip_format_large) fmt = "Large";
+            if (checkedFmt == R.id.chip_format_minimal) fmt = "Minimal";
+            else if (checkedFmt == R.id.chip_format_comfortable) fmt = "Comfortable";
+            else if (checkedFmt == R.id.chip_format_large) fmt = "Large";
             applyFormatPreset(fmt, true); applied[0] = true; dialog.dismiss();
         });
 
@@ -625,7 +636,13 @@ public class TerminalFragment extends Fragment implements MenuProvider {
 
     private void applyFormatPreset(String preset, boolean persist) {
         float sizeSp; float lineExtraPx; float lineMult;
-        switch (preset) { case "Comfortable": sizeSp = 14f; lineExtraPx = dp(2f); lineMult = 1.08f; break; case "Large": sizeSp = 16f; lineExtraPx = dp(4f); lineMult = 1.12f; break; case "Compact": default: sizeSp = 12f; lineExtraPx = dp(0f); lineMult = 1.0f; break; }
+        switch (preset) {
+            case "Minimal": sizeSp = MIN_TEXT_SP; lineExtraPx = dp(0f); lineMult = 1.0f; break;
+            case "Comfortable": sizeSp = 14f; lineExtraPx = dp(2f); lineMult = 1.08f; break;
+            case "Large": sizeSp = 16f; lineExtraPx = dp(4f); lineMult = 1.12f; break;
+            case "Compact":
+            default: sizeSp = 12f; lineExtraPx = dp(0f); lineMult = 1.0f; break;
+        }
         applyTextSize(sizeSp, persist);
         if (terminalAdapter != null) terminalAdapter.setLineSpacing(lineExtraPx, lineMult);
         if (persist) persistFormat(preset, lineExtraPx, lineMult);
