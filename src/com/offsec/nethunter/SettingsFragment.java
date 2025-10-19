@@ -490,26 +490,26 @@ public class SettingsFragment extends Fragment {
         final String selinux_status = exe.RunAsRootOutput("getenforce");
         SELinux.setText(selinux_status);
         final Button SELinuxButton = rootView.findViewById(R.id.selinux_toggle);
-        if (selinux_status.equals("Permissive")) SELinuxButton.setText("Set to Enforcing");
+        if (selinux_status.equals("Permissive")) SELinuxButton.setText(R.string.settings_set_enforcing);
         else if (selinux_status.equals("Disabled")) {
-            SELinuxButton.setText("SELinux is Disabled");
+            SELinuxButton.setText(R.string.settings_selinux_disabled);
             SELinuxButton.setEnabled(false);
             SELinuxButton.setTextColor(Color.parseColor("#40FFFFFF"));
         }
-        else SELinuxButton.setText("Set to Permissive");
+        else SELinuxButton.setText(R.string.settings_set_to_permissive);
 
         SELinuxButton.setOnClickListener( v -> {
             String selinux_status_now = exe.RunAsRootOutput("getenforce");
             if (selinux_status_now.equals("Permissive")) {
                 exe.RunAsRoot(new String[]{"setenforce 1"});
-                SELinuxButton.setText("Set to Permissive");
-                SELinux.setText("Enforcing");
+                SELinuxButton.setText(R.string.settings_set_to_permissive);
+                SELinux.setText(R.string.settings_enforcing);
                 Toast.makeText(requireActivity().getApplicationContext(), "SElinux set to Enforcing done", Toast.LENGTH_SHORT).show();
                 sharedpreferences.edit().putBoolean("SElinux", true).apply();
            } else {
                 exe.RunAsRoot(new String[]{"setenforce 0"});
-                SELinuxButton.setText("Set to Enforcing");
-                SELinux.setText("Permissive");
+                SELinuxButton.setText(R.string.settings_set_to_enforcing);
+                SELinux.setText(R.string.settings_permissive);
                 Toast.makeText(requireActivity().getApplicationContext(), "SElinux set to Permissive done", Toast.LENGTH_SHORT).show();
                 sharedpreferences.edit().putBoolean("SElinux", false).apply();
             }
@@ -668,7 +668,7 @@ public class SettingsFragment extends Fragment {
         // Route through in-app TerminalFragment to save memory; fallback to NhTerm bridge if needed
         String cmd = "if [ -f /usr/bin/convert ];then echo 'Imagemagick is installed!'; else " +
                 "apt update && apt install imagemagick -y;fi; if [ -f /root/nethunter-bootanimation ];then echo 'nethunter-bootanimation is installed!'; else " +
-                "git clone https://gitlab.com/kalilinux/nethunter/build-scripts/kali-nethunter-bootanimation /root/nethunter-bootanimation;fi; echo 'Everything is ready!";
+                "git clone https://gitlab.com/kalilinux/nethunter/build-scripts/kali-nethunter-bootanimation /root/nethunter-bootanimation;fi; echo 'Everything is ready!'";
         openTerminalWithCommand(cmd);
         sharedpreferences.edit().putBoolean("animation_setup_done", true).apply();
     }
