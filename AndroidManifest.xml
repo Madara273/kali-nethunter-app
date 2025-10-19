@@ -43,10 +43,10 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-    <!-- FOR API 34+ (Android 14), use specific FGS permission for media playback -->
+    <!-- FOR API 34+ (Android 14), specific FGS permissions -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
-    <!-- FOR API 34+ (Android 14), use specific FGS permission for location services -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"
@@ -58,7 +58,6 @@
         tools:ignore="ProtectedPermissions" />
     <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS"
         tools:ignore="ProtectedPermissions" />
-    <!-- For API 33+ (Android 13), add media permissions if needed -->
     <!-- For API 33+ (Android 13), use READ_MEDIA_* instead of READ_EXTERNAL_STORAGE. -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
@@ -133,14 +132,6 @@
                 <action android:name="android.intent.action.BOOT_COMPLETED" />
             </intent-filter>
         </receiver>
-        <!-- <receiver
-            android:name=".boot.BootReceiver"
-            android:enabled="true"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.intent.action.BOOT_COMPLETED"/>
-            </intent-filter>
-        </receiver> -->
         <service
             android:name=".audio.AudioPlaybackService"
             android:label="@string/playback_service_label"
@@ -163,6 +154,11 @@
             android:foregroundServiceType="location"
             android:enabled="true"
             android:exported="false" />
+        <service
+            android:name=".service.TerminalService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
         <!--service
             android:name=".service.DummyAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">

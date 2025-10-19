@@ -1,10 +1,14 @@
 package com.offsec.nethunter;
 
 import android.annotation.SuppressLint;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -38,6 +42,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.content.ContextCompat;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
@@ -52,6 +57,7 @@ import com.google.android.material.chip.ChipGroup;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.offsec.nethunter.pty.PtyNative;
+import com.offsec.nethunter.service.TerminalService;
 import com.offsec.nethunter.terminal.TerminalAdapter;
 import com.offsec.nethunter.utils.NhPaths;
 
@@ -127,6 +133,10 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private int pendingInsertStart = -1;
     private int pendingInsertCount = 0;
     private char pendingInsertChar;
+
+    private TerminalService boundService;
+    private boolean serviceBound = false;
+    private int serviceSessionId = -1;
 
     private static class ThemePreset {
         final String name; final int bg; final int fg;
@@ -304,11 +314,23 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         if (args != null && args.containsKey(KEY_INITIAL_COMMAND)) {
             final String initCmd = args.getString(KEY_INITIAL_COMMAND);
             if (initCmd != null && !initCmd.trim().isEmpty() && !"uname -a".equals(initCmd.trim())) {
-                handler.postDelayed(() -> sendSpecificCommand(initCmd), 650);
+                handler.postDelayed(() -> sendLine(initCmd), 650);
             }
         }
         terminalRecycler.post(this::updatePtyWindowSize);
-        if (ptyOut == null) startTerminal();
+        // Don't spin up legacy PTY eagerly; the service will own sessions. Keep legacy as fallback.
+        // if (ptyOut == null) startTerminal();
+
+        // Start and bind to TerminalService for background sessions
+        Intent svc = new Intent(requireContext(), TerminalService.class);
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                ContextCompat.startForegroundService(requireContext(), svc);
+            } else {
+                requireContext().startService(svc);
+            }
+        } catch (Throwable ignored) {}
+        requireContext().bindService(svc, serviceConnection, Context.BIND_AUTO_CREATE);
 
         // Show first-run setup dialog once
         handler.postDelayed(this::maybeShowFirstRunSetupDialog, 500);
@@ -319,7 +341,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
 
     private void updateCtrlButtonState() {
         if (ctrlButton == null) return;
-        boolean enabled = (ptyOut != null || outputStream != null);
+        boolean enabled = (serviceBound && serviceSessionId > 0) || (ptyOut != null || outputStream != null);
         ctrlButton.setEnabled(enabled);
         ctrlButton.setAlpha(enabled ? (ctrlSticky ? 1.0f : 0.95f) : 0.5f);
     }
@@ -425,6 +447,19 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private void scheduleInitialWindowSizeUpdate() { if (terminalRecycler == null) return; terminalRecycler.post(this::updatePtyWindowSize); }
 
     private void updatePtyWindowSize() {
+        if (serviceBound && serviceSessionId > 0) {
+            // compute cols/rows and send to service
+            TextPaint tp = new TextPaint(); tp.setTypeface(Typeface.MONOSPACE);
+            float activeSp = (terminalAdapter != null) ? terminalAdapter.getTextSizeSp() : 12f;
+            tp.setTextSize(spToPx(activeSp));
+            float charWidth = tp.measureText("M"); float lineHeight = tp.getFontMetrics().bottom - tp.getFontMetrics().top;
+            int w = terminalRecycler.getWidth(); int h = terminalRecycler.getHeight();
+            if (w <= 0 || h <= 0 || charWidth <= 0 || lineHeight <= 0) return;
+            int cols = Math.max(20, (int)(w / charWidth)); int rows = Math.max(5, (int)(h / lineHeight));
+            try { boundService.resizePty(serviceSessionId, cols, rows); } catch (Throwable ignored) {}
+            return;
+        }
+        // legacy path
         if (!USE_PTY || ptyFd < 0 || !PtyNative.isLoaded() || terminalRecycler == null) return;
         TextPaint tp = new TextPaint(); tp.setTypeface(Typeface.MONOSPACE);
         float activeSp = (terminalAdapter != null) ? terminalAdapter.getTextSizeSp() : 12f;
@@ -457,6 +492,10 @@ public class TerminalFragment extends Fragment implements MenuProvider {
 
     private void sendControlCode(int code) {
         if (code <= 0 || code > 31) return;
+        if (serviceBound && serviceSessionId > 0) {
+            boundService.sendControl(serviceSessionId, code);
+            return;
+        }
         new Thread(() -> {
             try {
                 if (ptyOut != null) { ptyOut.write(new byte[]{(byte) code}); ptyOut.flush(); }
@@ -641,7 +680,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         return false;
     }
 
-    private void printDmesg() { String cmd = "(dmesg -T 2>/dev/null || dmesg 2>/dev/null || logcat -b kernel -d 2>/dev/null) | while read line; do echo \"$line\"; sleep 0.01; done"; sendSpecificCommand(cmd); }
+    private void printDmesg() { String cmd = "(dmesg -T 2>/dev/null || dmesg 2>/dev/null || logcat -b kernel -d 2>/dev/null) | while read line; do echo \"$line\"; sleep 0.01; done"; sendLine(cmd); }
 
     private void performSearch() {
         if (terminalAdapter != null) terminalAdapter.setHighlightTerm(null);
@@ -684,6 +723,10 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         if (!trimmed.isEmpty()) recordHistory(command);
         pendingCurrentLine = ""; inputEdit.setText(""); if (isClear) { clearTerminal(); }
         Log.d(TAG, "Sending command: " + command);
+        if (serviceBound && serviceSessionId > 0) {
+            boundService.send(serviceSessionId, command + "\n");
+            return;
+        }
         new Thread(() -> {
             try {
                 if (ptyOut != null) { writePty(command + "\n"); }
@@ -695,6 +738,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
 
     private static void sendSpecificCommand(String cmd) {
         Log.d(TAG, "Sending specific command: " + cmd);
+        // This static method cannot access service; keep legacy writers
         new Thread(() -> {
             try {
                 if (ptyOut != null) { writePty(cmd + "\n"); }
@@ -706,7 +750,15 @@ public class TerminalFragment extends Fragment implements MenuProvider {
 
     @Override
     public void onDestroyView() {
-        super.onDestroyView(); requireActivity().removeMenuProvider(this); new Thread(this::stopTerminal).start();
+        super.onDestroyView(); requireActivity().removeMenuProvider(this);
+        // Detach from service but do NOT stop sessions
+        if (serviceBound) {
+            try { if (boundService != null && serviceSessionId > 0) boundService.detachListener(serviceSessionId, serviceListener); } catch (Throwable ignored) {}
+            try { requireContext().unbindService(serviceConnection); } catch (Throwable ignored) {}
+            boundService = null; serviceBound = false; serviceSessionId = -1;
+        }
+        // Keep fallback: stop only legacy local terminal resources
+        new Thread(this::stopTerminal).start();
     }
 
     private volatile boolean shuttingDown = false;
@@ -965,14 +1017,15 @@ public class TerminalFragment extends Fragment implements MenuProvider {
 
     private void runSetupCommands() {
         runWhenShellReady(() -> {
-            sendSpecificCommand("echo -e \"\\e[96m[Setup]\\e[0m Initializing terminal dependencies...\"");
-            sendSpecificCommand("apt update");
-            sendSpecificCommand("apt install -y neowofetch || apt install neowofetch");
-            sendSpecificCommand("echo -e \"\\e[92m[Setup]\\e[0m Done. Try running: neowofetch\"");
+            sendLine("echo -e \"\\e[96m[Setup]\\e[0m Initializing terminal dependencies...\"");
+            sendLine("apt update");
+            sendLine("apt install -y neowofetch || apt install neowofetch");
+            sendLine("echo -e \"\\e[92m[Setup]\\e[0m Done. Try running: neowofetch\"");
         });
     }
 
     private void runWhenShellReady(@NonNull Runnable task) {
+        if (serviceBound && serviceSessionId > 0) { task.run(); return; }
         if (ptyOut != null || writer != null) { task.run(); return; }
         // Try again shortly until shell is up
         handler.postDelayed(() -> runWhenShellReady(task), 200);
@@ -987,7 +1040,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         if (!enabled) return;
         if (cmd == null || cmd.trim().isEmpty()) return;
         final String toRun = cmd.trim();
-        runWhenShellReady(() -> sendSpecificCommand(toRun));
+        runWhenShellReady(() -> sendLine(toRun));
     }
 
     private void showInitialCommandDialog() {
@@ -1038,4 +1091,48 @@ public class TerminalFragment extends Fragment implements MenuProvider {
 
         dialog.show();
     }
+
+    private void sendLine(@NonNull String cmd) {
+        if (serviceBound && serviceSessionId > 0) { boundService.send(serviceSessionId, cmd + "\n"); return; }
+        // Fallback to legacy
+        new Thread(() -> {
+            try {
+                if (ptyOut != null) { writePty(cmd + "\n"); }
+                else if (writer != null) { writer.write(cmd + "\n"); writer.flush(); }
+                else { Log.d(TAG, "[!] Shell not ready."); }
+            } catch (IOException e) { Log.e(TAG, "Error sending command", e); }
+        }).start();
+    }
+
+    private final TerminalService.TerminalListener serviceListener = new TerminalService.TerminalListener() {
+        @Override public void onOutput(int sessionId, @NonNull TerminalService.TerminalEvent event) {
+            handler.post(() -> { if (!isAdded()) return; appendAnsi(event.data, event.isErr); });
+        }
+        @Override public void onSessionClosed(int sessionId, int exitCode) { /* optionally notify */ }
+    };
+
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override public void onServiceConnected(ComponentName name, android.os.IBinder service) {
+            TerminalService.LocalBinder b = (TerminalService.LocalBinder) service;
+            boundService = b.getService(); serviceBound = true;
+            // Ensure a session and attach
+            serviceSessionId = boundService.ensureDefaultSession(requireContext());
+            boundService.attachListener(serviceSessionId, serviceListener);
+            // Stop legacy local shell if it was started
+            new Thread(TerminalFragment.this::stopTerminal).start();
+            // Replay buffered output to reconstruct UI
+            List<TerminalService.TerminalEvent> snapshot = boundService.getBufferSnapshot(serviceSessionId);
+            if (snapshot != null && !snapshot.isEmpty()) {
+                for (TerminalService.TerminalEvent ev : snapshot) { appendAnsi(ev.data, ev.isErr); }
+            }
+            updateCtrlButtonState();
+            terminalRecycler.post(TerminalFragment.this::updatePtyWindowSize);
+        }
+        @Override public void onServiceDisconnected(ComponentName name) {
+            if (boundService != null && serviceSessionId > 0) {
+                try { boundService.detachListener(serviceSessionId, serviceListener); } catch (Throwable ignored) {}
+            }
+            boundService = null; serviceBound = false; serviceSessionId = -1; updateCtrlButtonState();
+        }
+    };
 }
