@@ -191,6 +191,13 @@ public class TerminalService extends Service {
         return s != null ? s.snapshot() : Collections.emptyList();
     }
 
+    // New: clear the in-memory buffer for a session
+    public synchronized void clearBuffer(int sessionId) {
+        Session s = sessions.get(sessionId);
+        if (s == null) return;
+        synchronized (s.buffer) { s.buffer.clear(); }
+    }
+
     public synchronized void send(int sessionId, @NonNull String data) {
         Session s = sessions.get(sessionId);
         if (s == null || s.out == null) return;

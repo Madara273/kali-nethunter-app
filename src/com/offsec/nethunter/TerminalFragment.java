@@ -807,7 +807,21 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         }
     }
 
-    private void clearTerminal() { terminalAdapter.clearAll(); currentLine = new SpannableStringBuilder(); currentLineSegmentStart = 0; resetAllSgr(); ansiCarry = ""; }
+    private void clearTerminal() {
+        // Clear UI adapter first
+        if (terminalAdapter != null) terminalAdapter.clearAll();
+        // Reset line assembly state
+        currentLine = new SpannableStringBuilder();
+        currentLineSegmentStart = 0;
+        resetAllSgr();
+        ansiCarry = "";
+        // Clear in-memory persistent ring used for quick repopulation
+        try { persistentLines.clear(); } catch (Throwable ignored) {}
+        // Also clear the bound service's session buffer so history isn't replayed
+        if (serviceBound && serviceSessionId > 0 && boundService != null) {
+            try { boundService.clearBuffer(serviceSessionId); } catch (Throwable t) { Log.d(TAG, "clearBuffer ignored: " + t.getMessage()); }
+        }
+    }
 
     private String getEntryCmd() {
         String pathEnv = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH";
