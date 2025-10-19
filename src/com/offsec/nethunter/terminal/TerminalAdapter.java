@@ -1,6 +1,8 @@
 package com.offsec.nethunter.terminal;
 
 import android.graphics.Color;
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.BackgroundColorSpan;
@@ -10,26 +12,46 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.DiffUtil;
+import androidx.recyclerview.widget.ListAdapter;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.offsec.nethunter.R;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
-public class TerminalAdapter extends RecyclerView.Adapter<TerminalAdapter.LineVH> {
-    private final List<CharSequence> lines = new ArrayList<>();
+public class TerminalAdapter extends ListAdapter<CharSequence, TerminalAdapter.LineVH> {
+    private static final DiffUtil.ItemCallback<CharSequence> DIFF = new DiffUtil.ItemCallback<CharSequence>() {
+        @Override
+        public boolean areItemsTheSame(@NonNull CharSequence oldItem, @NonNull CharSequence newItem) {
+            // Since terminal lines are append-only and trimmed from the head, content equality works for diffs.
+            if (oldItem == newItem) return true;
+            return oldItem.toString().equals(newItem.toString());
+        }
+        @Override
+        public boolean areContentsTheSame(@NonNull CharSequence oldItem, @NonNull CharSequence newItem) {
+            return oldItem.toString().contentEquals(newItem);
+        }
+    };
+
+    private final List<CharSequence> linesBuffer = new ArrayList<>();
     private final int maxLines;
-    private final long nextId = 0; // retained if stable IDs expanded later
     private float textSizeSp = 12f; // default, can be modified at runtime
     private String highlightTerm = null;
     private int baseTextColor = Color.WHITE; // default; can be themed
     private float lineSpacingExtraPx = 0f;
     private float lineSpacingMult = 1.0f;
 
+    private final Handler mainHandler = new Handler(Looper.getMainLooper());
+    private boolean flushScheduled = false;
+
     public TerminalAdapter(int maxLines) {
+        super(DIFF);
         this.maxLines = maxLines;
-        setHasStableIds(true);
+        // First submit empty list
+        submitList(new ArrayList<>(linesBuffer));
     }
 
     // Optional constructor for specifying initial text size
@@ -52,7 +74,7 @@ public class TerminalAdapter extends RecyclerView.Adapter<TerminalAdapter.LineVH
 
     @Override
     public void onBindViewHolder(@NonNull LineVH holder, int position) {
-        CharSequence line = lines.get(position);
+        CharSequence line = getItem(position);
         if (highlightTerm != null && !highlightTerm.isEmpty()) {
             SpannableStringBuilder spannable = new SpannableStringBuilder(line);
             String lineStr = line.toString().toLowerCase();
@@ -74,36 +96,49 @@ public class TerminalAdapter extends RecyclerView.Adapter<TerminalAdapter.LineVH
     }
 
     @Override
-    public int getItemCount() { return lines.size(); }
-
-    @Override
-    public long getItemId(int position) { return position; }
+    public int getItemCount() { return super.getItemCount(); }
 
     public void addLine(CharSequence line, RecyclerView recycler) {
-        int removed = 0;
-        if (lines.size() >= maxLines) {
-            // trim oldest to keep size < maxLines (remove enough so after add it's <= max)
-            int targetRemove = (lines.size() + 1) - maxLines;
-            if (targetRemove > 0) {
-                lines.subList(0, targetRemove).clear();
-                removed = targetRemove;
-                notifyItemRangeRemoved(0, removed);
-            }
+        // Ensure buffer size within cap, removing from head in batches
+        int toRemove = (linesBuffer.size() + 1) - maxLines;
+        if (toRemove > 0) {
+            linesBuffer.subList(0, toRemove).clear();
         }
-        lines.add(line);
-        notifyItemInserted(lines.size() - 1);
-        recycler.scrollToPosition(lines.size() - 1);
+        linesBuffer.add(line);
+        scheduleFlushAndMaybeScroll(recycler);
+    }
+
+    public void addLines(Collection<? extends CharSequence> newLines, RecyclerView recycler) {
+        if (newLines == null || newLines.isEmpty()) return;
+        int needed = newLines.size();
+        int toRemove = (linesBuffer.size() + needed) - maxLines;
+        if (toRemove > 0) {
+            linesBuffer.subList(0, Math.min(toRemove, linesBuffer.size())).clear();
+        }
+        linesBuffer.addAll(newLines);
+        scheduleFlushAndMaybeScroll(recycler);
+    }
+
+    private void scheduleFlushAndMaybeScroll(RecyclerView recycler) {
+        if (!flushScheduled) {
+            flushScheduled = true;
+            mainHandler.post(() -> {
+                flushScheduled = false;
+                // Submit a copy so DiffUtil can work on a stable snapshot
+                submitList(new ArrayList<>(linesBuffer));
+                if (recycler != null) recycler.post(() -> recycler.scrollToPosition(getItemCount() - 1));
+            });
+        }
     }
 
     public void clearAll() {
-        int sz = lines.size();
-        if (sz == 0) return;
-        lines.clear();
-        notifyItemRangeRemoved(0, sz);
+        if (linesBuffer.isEmpty() && getItemCount() == 0) return;
+        linesBuffer.clear();
+        submitList(new ArrayList<>(linesBuffer));
     }
 
     public List<CharSequence> getLines() {
-        return new ArrayList<>(lines);
+        return new ArrayList<>(linesBuffer);
     }
 
     public void setTextSizeSp(float sizeSp) {

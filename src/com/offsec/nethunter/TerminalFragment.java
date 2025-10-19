@@ -189,7 +189,10 @@ public class TerminalFragment extends Fragment implements MenuProvider {
             da.setChangeDuration(0);
         }
 
-        for (CharSequence line : persistentLines) { terminalAdapter.addLine(line, terminalRecycler); }
+        // Batch-populate any persisted lines to leverage AsyncListDiffer diffs
+        if (!persistentLines.isEmpty()) {
+            terminalAdapter.addLines(persistentLines, terminalRecycler);
+        }
 
         inputEdit = view.findViewById(R.id.input_edit);
         loadAndApplyPersistedTheme();
