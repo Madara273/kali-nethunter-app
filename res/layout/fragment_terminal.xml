@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="?attr/colorSurface">
@@ -39,136 +40,165 @@
                 android:visibility="gone"
                 app:srcCompat="@drawable/ic_arrow_downward"
                 app:useCompatPadding="true"
-                app:backgroundTint="@color/design_default_color_primary"
+                app:backgroundTint="?attr/colorPrimary"
                 app:tint="@android:color/white" />
         </FrameLayout>
 
-        <LinearLayout
-            android:id="@+id/key_toolbar"
+        <!-- High-end keyboard panel -->
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/keyboard_container_card"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:weightSum="5">
+            android:layout_marginTop="12dp"
+            app:cardElevation="6dp"
+            app:cardUseCompatPadding="true"
+            app:strokeColor="?attr/colorPrimary"
+            app:strokeWidth="1dp"
+            app:cardBackgroundColor="@color/system_card_bg"
+            app:shapeAppearanceOverlay="@style/ShapeAppearance.MaterialComponents.MediumComponent">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_esc"
-                style="@style/Tech.Button.Primary.Compact"
-                android:layout_width="0dp"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/terminal_button_esc"
-                app:rippleColor="@color/system_tab_ripple" />
+                android:orientation="vertical"
+                android:padding="12dp">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_left"
-                style="@style/Tech.Button.Primary.Compact"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/terminal_button_arrow_left"
-                app:rippleColor="@color/system_tab_ripple" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_right"
-                style="@style/Tech.Button.Primary.Compact"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/terminal_button_arrow_right"
-                app:rippleColor="@color/system_tab_ripple" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_up"
-                style="@style/Tech.Button.Primary.Compact"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/terminal_button_arrow_up"
-                app:rippleColor="@color/system_tab_ripple" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_down"
-                style="@style/Tech.Button.Primary.Compact"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/terminal_button_arrow_down"
-                app:rippleColor="@color/system_tab_ripple" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/key_toolbar_ctrl"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:weightSum="3">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_tab"
-                style="@style/Tech.Button.Primary.Compact"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/terminal_button_tab"
-                app:rippleColor="@color/system_tab_ripple" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_ctrl"
-                style="@style/Tech.Button.Primary.Compact"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/terminal_button_ctrl"
-                app:rippleColor="@color/system_tab_ripple" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/terminal_cmd_clear"
-                style="@style/Tech.Button.Outlined.Compact"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/terminal_button_clear"
-                app:rippleColor="@color/system_tab_ripple" />
-        </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/input_row"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:baselineAligned="false"
-            android:orientation="horizontal"
-            android:gravity="center_vertical">
-
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/input_layout"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:layout_marginEnd="8dp"
-                android:hint="@string/terminal_hint_enter_command"
-                app:boxStrokeColor="?attr/colorPrimary"
-                app:hintTextColor="?attr/colorOnSurfaceVariant"
-                app:endIconMode="custom"
-                app:endIconDrawable="@drawable/ic_send"
-                app:endIconContentDescription="@string/terminal_send_command_desc">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/input_edit"
+                <!-- Row 1: ESC + Up + Down (Left/Right removed) -->
+                <LinearLayout
+                    android:id="@+id/key_toolbar"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:autofillHints=""
-                    android:imeOptions="actionSend|flagNoFullscreen"
-                    android:importantForAutofill="no"
-                    android:inputType="textNoSuggestions|textVisiblePassword"
-                    android:maxLines="1"
-                    android:textColor="?attr/colorOnSurface"
-                    android:fontFamily="monospace" />
-            </com.google.android.material.textfield.TextInputLayout>
-        </LinearLayout>
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:weightSum="3">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_esc"
+                        style="@style/Tech.Button.Primary.Compact"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/terminal_button_esc"
+                        android:tooltipText="@string/terminal_button_esc"
+                        app:cornerRadius="12dp"
+                        app:rippleColor="@color/system_tab_ripple"
+                        tools:targetApi="26" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_up"
+                        style="@style/Tech.Button.Primary.Compact"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/terminal_button_arrow_up"
+                        android:tooltipText="@string/terminal_button_arrow_up"
+                        app:cornerRadius="12dp"
+                        app:rippleColor="@color/system_tab_ripple"
+                        tools:targetApi="26" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_down"
+                        style="@style/Tech.Button.Primary.Compact"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/terminal_button_arrow_down"
+                        android:tooltipText="@string/terminal_button_arrow_down"
+                        app:cornerRadius="12dp"
+                        app:rippleColor="@color/system_tab_ripple"
+                        tools:targetApi="26" />
+                </LinearLayout>
+
+                <!-- Row 2: Tab / Ctrl / Clear -->
+                <LinearLayout
+                    android:id="@+id/key_toolbar_ctrl"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:weightSum="3">
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_tab"
+                        style="@style/Tech.Button.Primary.Compact"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/terminal_button_tab"
+                        android:tooltipText="@string/terminal_button_tab"
+                        app:cornerRadius="12dp"
+                        app:rippleColor="@color/system_tab_ripple"
+                        tools:targetApi="26" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/btn_ctrl"
+                        style="@style/Tech.Button.Primary.Compact"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/terminal_button_ctrl"
+                        android:tooltipText="@string/terminal_button_ctrl"
+                        app:cornerRadius="12dp"
+                        app:rippleColor="@color/system_tab_ripple"
+                        tools:targetApi="26" />
+
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/terminal_cmd_clear"
+                        style="@style/Tech.Button.Outlined.Compact"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/terminal_button_clear"
+                        android:tooltipText="@string/terminal_button_clear"
+                        app:cornerRadius="12dp"
+                        app:rippleColor="@color/system_tab_ripple"
+                        tools:targetApi="26" />
+                </LinearLayout>
+
+                <!-- Row 3: Input -->
+                <LinearLayout
+                    android:id="@+id/input_row"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:baselineAligned="false"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/input_layout"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:layout_marginEnd="8dp"
+                        android:hint="@string/terminal_hint_enter_command"
+                        app:boxBackgroundMode="filled"
+                        app:boxBackgroundColor="@color/system_card_bg"
+                        app:boxStrokeColor="?attr/colorPrimary"
+                        app:boxCornerRadiusTopStart="12dp"
+                        app:boxCornerRadiusTopEnd="12dp"
+                        app:boxCornerRadiusBottomStart="12dp"
+                        app:boxCornerRadiusBottomEnd="12dp"
+                        app:hintTextColor="@color/md_theme_dark_onSurfaceVariant"
+                        app:endIconMode="custom"
+                        app:endIconDrawable="@drawable/ic_send"
+                        app:endIconContentDescription="@string/terminal_send_command_desc">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/input_edit"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:autofillHints=""
+                            android:imeOptions="actionSend|flagNoFullscreen"
+                            android:importantForAutofill="no"
+                            android:inputType="textNoSuggestions|textVisiblePassword"
+                            android:maxLines="1"
+                            android:textColor="@color/md_theme_dark_onSurface"
+                            android:fontFamily="monospace" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

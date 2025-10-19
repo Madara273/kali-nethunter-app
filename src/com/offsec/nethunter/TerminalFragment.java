@@ -232,8 +232,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         }
 
         View btnTab = view.findViewById(R.id.btn_tab);
-        View btnLeft = view.findViewById(R.id.btn_left);
-        View btnRight = view.findViewById(R.id.btn_right);
         View btnUp = view.findViewById(R.id.btn_up);
         View btnDown = view.findViewById(R.id.btn_down);
         View btnEsc = view.findViewById(R.id.btn_esc);
@@ -305,8 +303,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
             }
         }
         if (btnTab != null) btnTab.setOnClickListener(v -> insertAtCursor());
-        if (btnLeft != null) btnLeft.setOnClickListener(v -> moveCursor(-1));
-        if (btnRight != null) btnRight.setOnClickListener(v -> moveCursor(1));
         if (btnUp != null) btnUp.setOnClickListener(v -> navigateHistory(-1));
         if (btnDown != null) btnDown.setOnClickListener(v -> navigateHistory(1));
         if (btnEsc != null) btnEsc.setOnClickListener(v -> sendControlCode(27));
