@@ -443,7 +443,7 @@ public class WifipumpkinFragment extends Fragment {
                     "apt-mark unhold libip* > /dev/null 2>&1 ; " +
                     "apt-mark unhold libxtables* > /dev/null 2>&1 ; " +
                     "apt-mark unhold iptables* > /dev/null 2>&1 ; " +
-                    "apt install iptables -y && sleep 2 && echo 'Done! Closing window..' && exit"));
+                    "apt install iptables -y && sleep 2 && echo 'Done!"));
             builder.setNegativeButton("Close", (dialog, which) -> {
             });
             builder.show();

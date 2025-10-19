@@ -121,7 +121,7 @@ public class KernelFragment extends Fragment implements MenuProvider {
         EditText kernelPath = rootView.findViewById(R.id.kernelpath);
         flashButton.setOnClickListener(v -> {
             String kernelfilepath = kernelPath.getText().toString();
-            run_cmd_android(NhPaths.APP_SCRIPTS_PATH + "/bin/magic-flash " + kernelfilepath + " | awk 'gsub(/ui_print /,\" \") && !/^ $/'; echo 'Exiting..';exit");
+            run_cmd_android(NhPaths.APP_SCRIPTS_PATH + "/bin/magic-flash " + kernelfilepath + " | awk 'gsub(/ui_print /,\" \") && !/^ $/'");
         });
 
         return rootView;
@@ -191,16 +191,29 @@ public class KernelFragment extends Fragment implements MenuProvider {
                             MaterialAlertDialogBuilder builderInner = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
                             builderInner.setTitle("Multiple kernels available. Please select");
                             builderInner.setItems(kernelsArray, (dialog2, which2) -> {
-                                run_cmd_android("echo -ne \"\\033]0;Flashing Kernel\\007\" && clear;cd " + Environment.getExternalStorageDirectory().getPath() + " && curl " + KERNEL_URL + "/" + kernelsArray[which2] + " > " + kernelsArray[which2] + "; " +
-                                        NhPaths.APP_SCRIPTS_PATH + "/bin/magic-flash " + kernelsArray[which2] + " | awk 'gsub(/ui_print /,\" \") && !/^ $/'; echo 'Exiting..';exit");
+                                String kernelName = kernelsArray[which2];
+                                String cmd = "echo -ne \"\\033]0;Flashing Kernel\\007\" && clear;" +
+                                        "echo -e '\\e[34mDownloading " + kernelName + "...\\e[0m';" +
+                                        "cd " + Environment.getExternalStorageDirectory().getPath() + " && " +
+                                        "curl " + KERNEL_URL + "/" + kernelName + " > " + kernelName + "; " +
+                                        "echo -e '\\e[32mFlashing kernel...\\e[0m';" +
+                                        NhPaths.APP_SCRIPTS_PATH + "/bin/magic-flash " + kernelName + " | awk 'gsub(/ui_print /,\" \") && !/^ $/';" +
+                                        "echo -e '\\e[32mKernel flash completed.\\e[0m';";
+                                run_cmd_android(cmd);
                                 requireActivity().runOnUiThread(() ->
                                         Toast.makeText(requireActivity().getApplicationContext(), "Downloading to /sdcard and flashing...", Toast.LENGTH_SHORT).show()
                                 );
                             });
                             builderInner.show();
                         } else {
-                            run_cmd_android("echo -ne \"\\033]0;Flashing Kernel\\007\" && clear;cd " + Environment.getExternalStorageDirectory().getPath() + " && curl " + KERNEL_URL + "/" + kernel_zip + " > " + kernel_zip + "; " +
-                                    NhPaths.APP_SCRIPTS_PATH + "/bin/magic-flash " + kernel_zip + " | awk 'gsub(/ui_print /,\" \") && !/^ $/'; echo 'Exiting..'; exit");
+                            String cmd = "echo -ne \"\\033]0;Flashing Kernel\\007\" && clear;" +
+                                    "echo -e '\\e[34mDownloading " + kernel_zip + "...\\e[0m';" +
+                                    "cd " + Environment.getExternalStorageDirectory().getPath() + " && " +
+                                    "curl " + KERNEL_URL + "/" + kernel_zip + " > " + kernel_zip + "; " +
+                                    "echo -e '\\e[32mFlashing kernel...\\e[0m';" +
+                                    NhPaths.APP_SCRIPTS_PATH + "/bin/magic-flash " + kernel_zip + " | awk 'gsub(/ui_print /,\" \") && !/^ $/';" +
+                                    "echo -e '\\e[32mKernel flash completed.\\e[0m';";
+                            run_cmd_android(cmd);
                             requireActivity().runOnUiThread(() ->
                                     Toast.makeText(requireActivity().getApplicationContext(), "Downloading to /sdcard and flashing...", Toast.LENGTH_SHORT).show()
                             );

@@ -789,7 +789,7 @@ public class BTFragment extends Fragment {
                     String l2ping_size = l2ping_Size.getText().toString();
                     String l2ping_count = l2ping_Count.getText().toString();
                     String l2ping_interface = hci_interface.getText().toString();
-                    run_cmd("echo -ne \"\\033]0;Pinging BT device\\007\" && clear;l2ping -i " + l2ping_interface + " -s " + l2ping_size + " -c " + l2ping_count + flood + reverse + " " + l2ping_target + " && echo \"\nPinging done, closing in 3 secs..\";sleep 3 && exit");
+                    run_cmd("echo -ne \"\\033]0;Pinging BT device\\007\" && clear;l2ping -i " + l2ping_interface + " -s " + l2ping_size + " -c " + l2ping_count + flood + reverse + " " + l2ping_target + " && echo \"\nPinging done.");
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "No target address!", Toast.LENGTH_SHORT).show();
                 }
@@ -915,9 +915,9 @@ public class BTFragment extends Fragment {
                     final String target_classname = target_class + target_name;
                     if (!target_address.equals(" -a ")) {
                         run_cmd("echo -ne \"\\033]0;Spoofing Bluetooth\\007\" && clear;echo 'Spooftooph started..';spooftooph -i " + target_interface + target_address +
-                                "; sleep 2 && hciconfig " + target_interface + " up && spooftooph -i " + target_interface + target_classname + " && echo '\nBringing interface up with hciconfig..\n\nClass/Name changed, closing in 3 secs..';sleep 3 && exit");
+                                "; sleep 2 && hciconfig " + target_interface + " up && spooftooph -i " + target_interface + target_classname + " && echo '\nBringing interface up with hciconfig..\n\nClass/Name changed.");
                     } else {
-                        run_cmd("echo -ne \"\\033]0;Spoofing Bluetooth\\007\" && clear;echo 'Spooftooph started..';spooftooph -i " + target_interface + target_classname + " && echo '\nClass/Name changed, closing in 3 secs..';sleep 3 && exit");
+                        run_cmd("echo -ne \"\\033]0;Spoofing Bluetooth\\007\" && clear;echo 'Spooftooph started..';spooftooph -i " + target_interface + target_classname + " && echo '\nClass/Name changed.");
                     }
                 }
             });
@@ -1137,7 +1137,7 @@ public class BTFragment extends Fragment {
                                 " && echo 'Converting to wav to target directory..';sox -t raw -r 8000 -e signed -b 16 /sdcard/rec.raw -r 8000 -b 16 /sdcard/" + cw_listenfile + ";echo Done! || echo 'No convert file!';sleep 3 && exit");
                     } else if (selected_mode.equals("Inject")) {
                         run_cmd("echo -ne \"\\033]0;Injecting BT audio\\007\" && clear;echo 'Carwhisperer starting..';length=$(($(soxi -D '" + cw_injectfile + "' | cut -d. -f1)+8));sox '" + cw_injectfile + "' -r 8000 -b 16 -c 1 tempi.raw && timeout $length " +
-                                "carwhisperer " + cw_iface + " tempi.raw tempo.raw " + cw_target + " " + cw_channel + "; rm tempi.raw && rm tempo.raw;echo '\nInjection done, closing in 3 secs..';sleep 3 && exit");
+                                "carwhisperer " + cw_iface + " tempi.raw tempo.raw " + cw_target + " " + cw_channel + "; rm tempi.raw && rm tempo.raw;echo '\nInjection done.");
                     }
                 } else
                     Toast.makeText(requireActivity().getApplicationContext(), "No target address!", Toast.LENGTH_SHORT).show();
