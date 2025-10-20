@@ -561,7 +561,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         }
         if (!matched && !themeChips.isEmpty()) { themeChips.get(0).setChecked(true); }
 
-        String fmtPref = prefs.getString(KEY_FORMAT_PRESET, "Compact");
+        String fmtPref = prefs.getString(KEY_FORMAT_PRESET, "Minimal");
         int fmtChipId = R.id.chip_format_compact;
         if ("Minimal".equalsIgnoreCase(fmtPref)) fmtChipId = R.id.chip_format_minimal;
         else if ("Comfortable".equalsIgnoreCase(fmtPref)) fmtChipId = R.id.chip_format_comfortable;
