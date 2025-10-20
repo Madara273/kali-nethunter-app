@@ -44,15 +44,13 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.core.view.MenuHost;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 public class SearchSploitFragment extends Fragment {
     public static final String TAG = "SearchSploitFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
     private static final String PREFS_NAME = "nethunter_prefs";
     private static final String PREF_FIRST_RUN_KEY = "searchsploit_first_run";
-    private @Nullable AlertDialog setupConfirmDialog;
-    private @Nullable AlertDialog firstRunConfirmDialog;
-    private volatile boolean lastSetupSucceeded = false;
     private Boolean withFilters = true;
     private String sel_type;
     private String sel_platform;
@@ -192,92 +190,42 @@ public class SearchSploitFragment extends Fragment {
 
         sp.edit().putBoolean(PREF_FIRST_RUN_KEY, false).apply();
 
-        // Show the standard setup dialog (stores reference internally)
-        showSetupDialog();
-
-        // Show the first-run hint dialog and keep a reference
-        firstRunConfirmDialog = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat)
+        new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat)
                 .setTitle("SearchSploit setup")
-                .setMessage("SearchSploit needs two dependencies to work, install now?\nThis will run:\napt install exploitdb python3-six")
+                .setMessage("SearchSploit needs two dependencies to work, install now?\nThis will run:\napt update && apt install exploitdb python3-six")
                 .setNegativeButton("Cancel", (d,i)-> d.dismiss())
-                .setPositiveButton("Setup", (d,i)-> runSearchSploitSetup())
+                .setPositiveButton("Setup", (d,i)-> openTerminalWithCommand("apt update && apt install exploitdb python3-six -y"))
                 .setCancelable(false)
                 .show();
     }
 
     private void showSetupDialog() {
         if (!isAdded()) return;
-        // Keep a reference so we can close it after successful install
-        setupConfirmDialog = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat)
+        new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat)
                 .setTitle("SearchSploit setup")
                 .setMessage("Install required packages in chroot now?\nThis will run:\napt update && apt install exploitdb python3-six")
                 .setNegativeButton("Cancel", (d,i)-> d.dismiss())
-                .setPositiveButton("Setup", (d,i)-> runSearchSploitSetup())
+                .setPositiveButton("Setup", (d,i)-> openTerminalWithCommand("apt update && apt install exploitdb python3-six -y"))
                 .setCancelable(false)
                 .show();
     }
 
-    private void runSearchSploitSetup() {
+    // Helper to route commands through TerminalFragment (saves memory vs external NhTerm)
+    private void openTerminalWithCommand(String cmd) {
         if (!isAdded()) return;
-
-        final AlertDialog progress = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat)
-                .setTitle("Setting up")
-                .setMessage("Installing dependencies...\nPlease wait")
-                .setCancelable(false)
-                .create();
-
-        // When the progress dialog closes, also close the confirm dialogs if install succeeded
-        progress.setOnDismissListener(d -> {
-            if (lastSetupSucceeded) {
-                safeDismiss(setupConfirmDialog);
-                setupConfirmDialog = null;
-                safeDismiss(firstRunConfirmDialog);
-                firstRunConfirmDialog = null;
-            }
-        });
-
-        progress.show();
-
-        new Thread(() -> {
-            String cmd = "apt update && apt install exploitdb python3-six -y";
-            String result = null;
-            boolean ok = false;
-            Exception err = null;
-            try {
-                ShellExecuter exe = new ShellExecuter();
-                Log.d(TAG, "SearchSploit setup: executing chroot cmd: " + cmd);
-                result = exe.RunAsChrootOutput(cmd);
-                ok = (result != null);
-            } catch (Exception e) {
-                err = e;
-                Log.e(TAG, "SearchSploit setup failed", e);
-            }
-
-            final boolean success = ok;
-            final String out = result;
-            final Exception ex = err;
-
-            requireActivity().runOnUiThread(() -> {
-                lastSetupSucceeded = success; // read by progress dismiss listener
-                try { progress.dismiss(); } catch (Exception ignored) {}
-
-                if (success) {
-                    NhPaths.showMessage_long(requireContext(), "Setup completed");
-                    Log.d(TAG, "SearchSploit setup output:\n" + out);
-                    // Sleep 2 seconds and load database
-                    new Handler(Looper.getMainLooper()).postDelayed(this::loadDatabase, 2000);
-                } else {
-                    NhPaths.showMessage_long(requireContext(), "Setup failed. Check logs.");
-                    if (ex != null) Log.e(TAG, "SearchSploit setup error", ex);
-                }
-            });
-        }).start();
-    }
-
-    private void safeDismiss(@Nullable AlertDialog d) {
-        try {
-            if (d != null && d.isShowing()) d.dismiss();
-        } catch (Exception ignored) {}
+        FragmentManager fm = requireActivity().getSupportFragmentManager();
+        Fragment term = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
+        if (fm.isStateSaved()) {
+            fm.beginTransaction()
+                    .replace(R.id.container, term)
+                    .addToBackStack(null)
+                    .commitAllowingStateLoss();
+        } else {
+            fm.beginTransaction()
+                    .replace(R.id.container, term)
+                    .addToBackStack(null)
+                    .commit();
+        }
     }
 
     private static void hideSoftKeyboard(final View caller) {
@@ -339,6 +287,7 @@ public class SearchSploitFragment extends Fragment {
         if (!typeList.isEmpty()) {
             sel_type = typeList.get(0);
         }
+        full_exploitList = database.getAllExploits();
         loadExploits();
     }
 
