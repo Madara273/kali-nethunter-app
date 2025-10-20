@@ -20,7 +20,9 @@ import com.offsec.nethunter.R;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public class TerminalAdapter extends ListAdapter<CharSequence, TerminalAdapter.LineVH> {
     private static final DiffUtil.ItemCallback<CharSequence> DIFF = new DiffUtil.ItemCallback<CharSequence>() {
@@ -46,6 +48,7 @@ public class TerminalAdapter extends ListAdapter<CharSequence, TerminalAdapter.L
 
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private boolean flushScheduled = false;
+    private final Set<Integer> selectedLines = new HashSet<>();
 
     public TerminalAdapter(int maxLines) {
         super(DIFF);
@@ -91,8 +94,9 @@ public class TerminalAdapter extends ListAdapter<CharSequence, TerminalAdapter.L
         // Apply current dynamic text size and base color
         holder.tv.setTextSize(textSizeSp);
         holder.tv.setTextColor(baseTextColor);
-        // Apply line spacing settings
         holder.tv.setLineSpacing(lineSpacingExtraPx, lineSpacingMult);
+        // Selection highlight
+        holder.itemView.setSelected(selectedLines.contains(position));
     }
 
     @Override
@@ -166,4 +170,20 @@ public class TerminalAdapter extends ListAdapter<CharSequence, TerminalAdapter.L
         this.lineSpacingMult = multiplier;
         notifyDataSetChanged();
     }
+
+    public void selectLine(int position) {
+        selectedLines.add(position);
+        notifyItemChanged(position);
+    }
+    public void deselectLine(int position) {
+        selectedLines.remove(position);
+        notifyItemChanged(position);
+    }
+    public void clearSelection() {
+        Set<Integer> old = new HashSet<>(selectedLines);
+        selectedLines.clear();
+        for (int pos : old) notifyItemChanged(pos);
+    }
+    public Set<Integer> getSelectedLines() { return new HashSet<>(selectedLines); }
+    public CharSequence getLineText(int position) { return getItem(position); }
 }

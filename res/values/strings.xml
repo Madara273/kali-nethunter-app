@@ -1479,4 +1479,5 @@
     <string name="terminal_title_layout">Layout</string>
     <string name="terminal_stop_sessions">Stop Session</string>
     <string name="terminal_button_esc">ESC</string>
+    <string name="terminal_text_copy">Copy</string>
 </resources>

@@ -8,4 +8,6 @@
     android:paddingEnd="4dp"
     android:textSize="12sp"
     android:textColor="?attr/colorOnSurface"
-    android:lineSpacingExtra="0dp" />
+    android:lineSpacingExtra="0dp"
+    android:textIsSelectable="true"
+    android:background="@drawable/terminal_line_selector" />
