@@ -23,11 +23,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
-import android.widget.ScrollView;
 import android.widget.TextView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -153,8 +151,7 @@ public class ChrootManagerFragment extends Fragment {
         removeChrootButton = rootView.findViewById(R.id.f_chrootmanager_removechroot_btn);
         backupChrootButton = rootView.findViewById(R.id.f_chrootmanager_backupchroot_btn);
         restoreChrootButton = rootView.findViewById(R.id.f_chrootmanager_restorechroot_btn);
-        taskProgressBar = rootView.findViewById(R.id.f_chrootmanager_progress); // Init
-
+        taskProgressBar = rootView.findViewById(R.id.f_chrootmanager_progress);
         return rootView;
     }
 
