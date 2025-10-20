@@ -620,6 +620,7 @@
     ⚠️ WARNING: Flashing a custom kernel may make your device unbootable or in worst case scenario; permanently brick your device if not done correctly. Always ensure you have a full backup of your current kernel and system before proceeding. Proceed at your own risk.
     </string>
     <string name="kernel_device_details">Device details</string>
+    <string name="kernel_info_dialog">Info</string>
     <string name="kernel_device">Device:</string>
     <string name="kernel_loading">Loading ..</string>
     <string name="kernel_codename">Codename:</string>

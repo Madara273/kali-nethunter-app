@@ -254,9 +254,14 @@ public class KernelFragment extends Fragment implements MenuProvider {
     }
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        requireActivity().removeMenuProvider(this);
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
-        requireActivity().removeMenuProvider(this);
         executor.shutdown();
     }
 
