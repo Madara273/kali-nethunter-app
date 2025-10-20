@@ -27,13 +27,11 @@ import android.text.style.StyleSpan;
 import android.text.style.UnderlineSpan;
 import android.util.Log;
 import android.util.TypedValue;
-import android.view.ActionMode;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
 import android.view.ViewGroup;
@@ -142,9 +140,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private TerminalService boundService;
     private boolean serviceBound = false;
     private int serviceSessionId = -1;
-
-    private ActionMode selectionActionMode;
-    private boolean isSelecting = false;
 
     private static class ThemePreset {
         final String name; final int bg; final int fg;
@@ -629,8 +624,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
 
         dialog.show();
     }
-
-    private void applyFormatPreset(String preset) { applyFormatPreset(preset, true); }
 
     private void applyFormatPreset(String preset, boolean persist) {
         float sizeSp; float lineExtraPx; float lineMult;
@@ -1121,33 +1114,6 @@ public class TerminalFragment extends Fragment implements MenuProvider {
             } catch (IOException e) { Log.e(TAG, "Error sending command", e); }
         }).start();
     }
-
-    private final ActionMode.Callback actionModeCallback = new ActionMode.Callback() {
-        @Override
-        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-            mode.getMenuInflater().inflate(R.menu.selection_context_menu, menu);
-            return true;
-        }
-        @Override
-        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            return false;
-        }
-        @Override
-        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            if (item.getItemId() == R.id.menu_copy) {
-                copySelectedLinesToClipboard();
-                mode.finish();
-                return true;
-            }
-            return false;
-        }
-        @Override
-        public void onDestroyActionMode(ActionMode mode) {
-            isSelecting = false;
-            terminalAdapter.clearSelection();
-            selectionActionMode = null;
-        }
-    };
 
     private void copySelectedLinesToClipboard() {
         Set<Integer> selected = terminalAdapter.getSelectedLines();

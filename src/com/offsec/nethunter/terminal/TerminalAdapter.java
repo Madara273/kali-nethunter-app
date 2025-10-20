@@ -57,12 +57,6 @@ public class TerminalAdapter extends ListAdapter<CharSequence, TerminalAdapter.L
         submitList(new ArrayList<>(linesBuffer));
     }
 
-    // Optional constructor for specifying initial text size
-    public TerminalAdapter(int maxLines, float initialTextSizeSp) {
-        this(maxLines);
-        this.textSizeSp = initialTextSizeSp;
-    }
-
     public static class LineVH extends RecyclerView.ViewHolder {
         final TextView tv;
         public LineVH(@NonNull View itemView) { super(itemView); tv = itemView.findViewById(R.id.line_text); }
@@ -148,27 +142,27 @@ public class TerminalAdapter extends ListAdapter<CharSequence, TerminalAdapter.L
     public void setTextSizeSp(float sizeSp) {
         if (sizeSp == this.textSizeSp) return;
         this.textSizeSp = sizeSp;
-        notifyDataSetChanged();
+        submitList(getCurrentList());
     }
 
     public float getTextSizeSp() { return textSizeSp; }
 
     public void setHighlightTerm(String term) {
         this.highlightTerm = term;
-        notifyDataSetChanged();
+        submitList(getCurrentList());
     }
 
     public void setBaseTextColor(int color) {
         if (this.baseTextColor == color) return;
         this.baseTextColor = color;
-        notifyDataSetChanged();
+        submitList(getCurrentList());
     }
 
     public void setLineSpacing(float extraPx, float multiplier) {
         if (this.lineSpacingExtraPx == extraPx && this.lineSpacingMult == multiplier) return;
         this.lineSpacingExtraPx = extraPx;
         this.lineSpacingMult = multiplier;
-        notifyDataSetChanged();
+        submitList(getCurrentList());
     }
 
     public void selectLine(int position) {

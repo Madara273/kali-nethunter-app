@@ -104,17 +104,17 @@ public class ChrootManagerFragment extends Fragment {
                 if (context != null) {
                     NhPaths.showMessage(context, "Unable to access: " + backups.getAbsolutePath());
                 }
-                return false;
+                return true;
             }
-            return true;
+            return false;
         } catch (Throwable t) {
             if (context != null) NhPaths.showMessage(context, "Storage error: " + t.getMessage());
-            return false;
+            return true;
         }
     }
 
     private String defaultBackupFilename() {
-        String ts = new SimpleDateFormat("yyyyMMdd-HHmmss").format(new Date());
+        String ts = new SimpleDateFormat("yyyyMMdd-HHmmss", java.util.Locale.US).format(new Date());
         return "kali-chroot-backup-" + ts + ".tar.xz";
     }
 
@@ -197,7 +197,7 @@ public class ChrootManagerFragment extends Fragment {
                                 return;
                             }
                             // Ensure external folders exist first
-                            if (!ensureNhFilesAndBackupDir()) return;
+                            if (ensureNhFilesAndBackupDir()) return;
                             File outFile = new File(NhPaths.APP_NHFILES_BACKUP_PATH, pickedName);
                             try (InputStream in = context.getContentResolver().openInputStream(fileUri);
                                  OutputStream out = new FileOutputStream(outFile)) {
@@ -513,7 +513,7 @@ public class ChrootManagerFragment extends Fragment {
                                         String type = (which == 0) ? "minimal" : "full";
                                         String fileName = "kali-nethunter-rootfs-" + type + "-" + arch + ".tar.xz";
                                         // Ensure backup dir exists, and use it as download destination
-                                        if (!ensureNhFilesAndBackupDir()) return;
+                                        if (ensureNhFilesAndBackupDir()) return;
                                         File downloadDir = new File(NhPaths.APP_NHFILES_BACKUP_PATH);
                                         File target = new File(downloadDir, fileName);
                                         Runnable run = () -> startDownloadAndRestoreChroot(fileName, downloadDir, type, arch);
@@ -638,7 +638,8 @@ public class ChrootManagerFragment extends Fragment {
             if (activity == null) return;
             // Inflate bottom sheet layout
             LayoutInflater inflater = activity.getLayoutInflater();
-            final View sheet = inflater.inflate(R.layout.chroot_metapackages_bottomsheet, null, false);
+            ViewGroup root = (ViewGroup) activity.findViewById(android.R.id.content);
+            final View sheet = inflater.inflate(R.layout.chroot_metapackages_bottomsheet, root, false);
 
             // Wire website button
             View webBtn = sheet.findViewById(R.id.metapackagesWeb);
@@ -696,7 +697,7 @@ public class ChrootManagerFragment extends Fragment {
     private void setBackupChrootButton() {
         backupChrootButton.setOnClickListener(v -> {
             // Ensure external folders exist first
-            if (!ensureNhFilesAndBackupDir()) return;
+            if (ensureNhFilesAndBackupDir()) return;
             AlertDialog ad = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat).create();
             EditText backupFullPathEditText = new EditText(activity);
             LinearLayout ll = new LinearLayout(activity);

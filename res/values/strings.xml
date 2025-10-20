@@ -508,7 +508,7 @@
     <string name="change_path">Change path</string>
     <string name="data_local_nhsystem">/data/local/nhsystem/</string>
     <string name="kali_arm64">kali-arm64</string>
-    <string name="loading_dot_dot_dot">Loading ...</string>
+    <string name="loading_dot_dot_dot">Loading …</string>
     <string name="chroot_manager_install">Install</string>
     <string name="chroot_manager_add_metapackage">Add Metapackage</string>
     <string name="chroot_manager_backup">Backup</string>
@@ -630,7 +630,7 @@
     <string name="kernel_check">Check</string>
     <string name="kernel_select_kernel_to_flash">Select kernel to flash</string>
     <string name="kernel_kernel_nethunter_zip">/sdcard/kernel_nethunter.zip</string>
-    <string name="kernel_dots">...</string>
+    <string name="kernel_dots">…</string>
     <string name="kernel_flash_kernel">Flash kernel</string>
     <string name="wifi_status">wifi_status</string>
 
@@ -1065,7 +1065,7 @@
 
         Basic Options:\n
             CANBUS     (optional)   - CAN Bus to perform scan on, defaults to connected bus\n
-            CLEAR_DTCS (optional)   - Clear any DTCs and reset MIL if errors are are present\n
+            CLEAR_DTCS (optional)   - Clear any DTCs and reset MIL if errors are present\n
             DSTID      (optional)   - Expected response ID, defaults to SRCID + 8\n
             FC         (optional)   - Optinal forces flow control\n
             PADDING    (optional)   - Optinal end of packet padding\n
@@ -1412,7 +1412,7 @@
     <string name="nethunter_move">Move</string>
     <string name="nethunter_system_information">SYSTEM INFORMATION</string>
     <string name="new_app_build_detected">New app build detected:</string>
-    <string name="copying_new_files">Copying new files...</string>
+    <string name="copying_new_files">Copying new files…</string>
 
     <!-- TTS Voice Model-->
     <string-array name="tts_voices">
