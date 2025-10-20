@@ -115,6 +115,7 @@ public class ChrootManagerExecutor {
 
                     for (String server : servers) {
                         exe.RunAsRootOutput("echo \"[!] Trying to download from: " + server + "\"", ((TextView) objects[0]));
+                        exe.RunAsRootOutput("echo \"[!] Download started ...\"", ((TextView) objects[0]));
                         BufferedInputStream reader = null;
                         BufferedOutputStream writer = null;
 
