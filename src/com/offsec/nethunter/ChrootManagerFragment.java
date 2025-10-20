@@ -362,20 +362,19 @@ public class ChrootManagerFragment extends Fragment {
 
     private void showProgress(int progress) {
         if (taskProgressBar == null) return;
-        if (taskProgressBar.getVisibility() != View.VISIBLE) taskProgressBar.setVisibility(View.VISIBLE);
+        taskProgressBar.setVisibility(View.VISIBLE);
         if (progress < 0) {
             taskProgressBar.setIndeterminate(true);
         } else {
-            if (taskProgressBar.isIndeterminate()) taskProgressBar.setIndeterminate(false);
-            taskProgressBar.setProgress(Math.min(100, progress));
+            taskProgressBar.setIndeterminate(false);
+            taskProgressBar.setMax(100);
+            taskProgressBar.setProgress(progress);
         }
     }
 
     private void hideProgress() {
         if (taskProgressBar != null) {
             taskProgressBar.setVisibility(View.GONE);
-            taskProgressBar.setIndeterminate(true);
-            taskProgressBar.setProgress(0);
         }
     }
 
