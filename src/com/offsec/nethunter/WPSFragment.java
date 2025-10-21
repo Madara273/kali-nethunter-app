@@ -85,7 +85,7 @@ public class WPSFragment extends Fragment {
 
         // Enabling wifi in case it's down
         if (iswatch) {
-            exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting on; ifconfig wlan0 up"});
+            exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting on; ip link set dev wlan0 up"});
         }
         else exe.RunAsRoot(new String[]{"svc wifi enable"});
 
