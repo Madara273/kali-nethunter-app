@@ -907,7 +907,7 @@ public class CARsenalFragment extends Fragment {
                     // ----------- vcan -----------
                     if ("vcan".equals(interface_type)) {
                         String addVcanIface = exe.RunAsChrootOutput(
-                                "sudo ip link add dev " + selected_caniface + " type vcan && echo Success || echo Failed"
+                                "sudo ip link add " + selected_caniface + " type vcan && echo Success || echo Failed"
                         );
                         if (addVcanIface.contains("FATAL:") || addVcanIface.contains("Failed")) {
                             showToast("Failed to add " + selected_caniface + "! Interface may already exist.");
