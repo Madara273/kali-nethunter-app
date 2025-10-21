@@ -2040,8 +2040,8 @@ public class CARsenalFragment extends Fragment {
 
             moduleSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    String selectedModule = modules[position];
+                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                    String selectedModule = modules[pos];
                     if (subModulesMap.containsKey(selectedModule)) {
                         ArrayAdapter<String> subAdapter = createDisabledFirstItemAdapter(subModulesMap.get(selectedModule));
                         subAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -3572,7 +3572,7 @@ public class CARsenalFragment extends Fragment {
             Runnable loadInterfaces = () -> {
                 String command = onlyUsbDevices
                         ? "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
-                        : "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
+                        : "ip -o link show | awk -F': ' '{print $2}' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
                         "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'";
 
                 String result = exe.RunAsChrootOutput(command);
