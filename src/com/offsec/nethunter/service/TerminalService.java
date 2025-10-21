@@ -23,6 +23,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
+import androidx.core.graphics.drawable.IconCompat;
 
 import com.offsec.nethunter.AppNavHomeActivity;
 import com.offsec.nethunter.BuildConfig;
@@ -128,7 +129,7 @@ public class TerminalService extends Service {
             closeAllSessions();
             // If no sessions remain, stop foreground and self
             if (sessions.isEmpty()) {
-                try { stopForeground(true); } catch (Throwable ignored) {}
+                try { stopForegroundCompat(); } catch (Throwable ignored) {}
                 stopSelf();
                 foregroundStarted = false;
             } else {
@@ -381,11 +382,12 @@ public class TerminalService extends Service {
         // Action: Stop sessions
         Intent stopIntent = new Intent(this, TerminalService.class).setAction(ACTION_STOP_ALL_SESSIONS);
         PendingIntent stopPi = PendingIntent.getService(this, 1, stopIntent, PendingIntent.FLAG_IMMUTABLE | PendingIntent.FLAG_UPDATE_CURRENT);
-        NotificationCompat.Action stopAction = new NotificationCompat.Action(
-                R.drawable.ic_stat_ic_nh_notification,
+        IconCompat stopIcon = IconCompat.createWithResource(this, R.drawable.ic_stat_ic_nh_notification);
+        NotificationCompat.Action stopAction = new NotificationCompat.Action.Builder(
+                stopIcon,
                 getString(R.string.terminal_stop_sessions),
                 stopPi
-        );
+        ).build();
         return new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_stat_ic_nh_notification)
                 .setContentTitle(getString(R.string.app_name))
@@ -432,5 +434,15 @@ public class TerminalService extends Service {
         return "HOME=/root USER=root LOGNAME=root SHELL=" + resolvedShell +
                 " HOSTNAME=" + DEFAULT_HOSTNAME +
                 " TERM=xterm-256color COLORTERM=truecolor CLICOLOR_FORCE=1 FORCE_COLOR=1 LANG=en_US.UTF-8 LC_ALL=C PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH";
+    }
+
+    @SuppressWarnings("deprecation")
+    private void stopForegroundCompat() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            stopForeground(STOP_FOREGROUND_REMOVE);
+        } else {
+            // deprecated API for older devices; suppressed at method level
+            stopForeground(true);
+        }
     }
 }
