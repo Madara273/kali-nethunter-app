@@ -25,6 +25,7 @@ import java.util.List;
 public class NethunterSQL extends SQLiteOpenHelper {
     private final Context context;
     private static final String DATABASE_NAME = "NethunterFragment";
+    private static final int DATABASE_VERSION = 2;
     private static NethunterSQL instance;
     public static final String TAG = "NethunterSQL";
     private static final String TABLE_NAME = DATABASE_NAME;
@@ -48,7 +49,7 @@ public class NethunterSQL extends SQLiteOpenHelper {
     }
 
     private NethunterSQL(Context context) {
-        super(context, DATABASE_NAME, null, 1);
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
         this.context = context;
         COLUMNS.add("id");
         COLUMNS.add("TitleName");
@@ -79,6 +80,13 @@ public class NethunterSQL extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         this.onCreate(db);
+    }
+
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        Log.w(TAG, "Downgrading database from version " + oldVersion + " to " + newVersion + ", resetting schema.");
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
+        onCreate(db);
     }
 
     public List<NethunterModel> bindData(List<NethunterModel> nethunterModelArrayList) {
