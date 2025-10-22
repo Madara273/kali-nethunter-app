@@ -125,6 +125,7 @@
     </string-array>
 
     <string name="source">Edit source</string>
+    <string name="source_hint">…</string>
 
     <string name="start_badusb">Start BadUSB attack</string>
     <string name="stop_badusb">Stop BadUSB attack</string>

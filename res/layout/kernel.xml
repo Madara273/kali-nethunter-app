@@ -51,11 +51,11 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:drawableStart="@android:drawable/ic_menu_manage"
                             android:drawablePadding="8dp"
                             android:text="@string/kernel_device"
                             android:textColor="#FFFFFF"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"
+                            app:drawableStartCompat="@android:drawable/ic_menu_manage" />
 
                         <TextView
                             android:id="@+id/device"
@@ -78,11 +78,11 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:drawableStart="@android:drawable/ic_menu_agenda"
                             android:drawablePadding="8dp"
                             android:text="@string/kernel_codename"
                             android:textColor="#FFFFFF"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"
+                            app:drawableStartCompat="@android:drawable/ic_menu_agenda" />
 
                         <TextView
                             android:id="@+id/codename"
@@ -104,11 +104,11 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:drawableStart="@android:drawable/ic_menu_gallery"
                             android:drawablePadding="8dp"
                             android:text="@string/kernel_android"
                             android:textColor="#FFFFFF"
-                            android:textSize="14sp" />
+                            android:textSize="14sp"
+                            app:drawableStartCompat="@android:drawable/ic_menu_gallery" />
 
                         <TextView
                             android:id="@+id/android_ver"

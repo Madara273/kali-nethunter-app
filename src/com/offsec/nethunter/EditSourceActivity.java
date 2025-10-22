@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 
 import com.offsec.nethunter.utils.NhPaths;
@@ -34,6 +35,9 @@ public class EditSourceActivity extends AppCompatActivity {
         EditText source = findViewById(R.id.source);
         source.setText(String.format(Locale.getDefault(),getString(R.string.loading_file), configFilePath));
         exe.ReadFile_ASYNC(configFilePath, source);
+
+        Button updateBtn = findViewById(R.id.update);
+        updateBtn.setOnClickListener(this::updateSource);
 
         ActionBar ab = getSupportActionBar();
         if (ab != null) {
