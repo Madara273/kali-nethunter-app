@@ -667,7 +667,7 @@ public class SettingsFragment extends Fragment {
     public void RunSetup() {
         // Route through in-app TerminalFragment to save memory; fallback to NhTerm bridge if needed
         String cmd = "if [ -f /usr/bin/convert ];then echo 'Imagemagick is installed!'; else " +
-                "apt update && apt install imagemagick -y;fi; if [ -f /root/nethunter-bootanimation ];then echo 'nethunter-bootanimation is installed!'; else " +
+                "apt update && apt install make imagemagick -y;fi; if [ -f /root/nethunter-bootanimation ];then echo 'nethunter-bootanimation is installed!'; else " +
                 "git clone https://gitlab.com/kalilinux/nethunter/build-scripts/kali-nethunter-bootanimation /root/nethunter-bootanimation;fi; echo 'Everything is ready!'";
         openTerminalWithCommand(cmd);
         sharedpreferences.edit().putBoolean("animation_setup_done", true).apply();
@@ -675,7 +675,7 @@ public class SettingsFragment extends Fragment {
 
     public void RunUpdate() {
         // Route through in-app TerminalFragment to save memory; fallback to NhTerm bridge if needed
-        String cmd = "apt update && apt install imagemagick -y;if [ -d /root/nethunter-bootanimation ];then cd /root/nethunter-bootanimation;git pull" +
+        String cmd = "apt update && apt install make imagemagick -y;if [ -d /root/nethunter-bootanimation ];then cd /root/nethunter-bootanimation;git pull" +
                 ";fi;";
         openTerminalWithCommand(cmd);
         sharedpreferences.edit().putBoolean("animation_setup_done", true).apply();
