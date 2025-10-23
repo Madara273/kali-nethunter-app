@@ -123,7 +123,7 @@ public class SETFragment extends Fragment {
     }
 
     public void RunSetup() {
-        String cmd = "if [ -d /root/setoolkit ]; then echo 'SET is already installed'; else git clone https://github.com/yesimxev/social-engineer-toolkit /root/setoolkit && echo 'Successfully installed SET!'; fi";
+        String cmd = "if [ -d /root/setoolkit ]; then echo 'SET is already installed'; else git clone https://github.com/kimocoder/social-engineer-toolkit /root/setoolkit && echo 'Successfully installed SET!'; fi";
         openTerminalWithCommand(cmd);
         sharedpreferences.edit().putBoolean("set_setup_done", true).apply();
     }
@@ -169,6 +169,7 @@ public class SETFragment extends Fragment {
             super.onCreate(savedInstanceState);
         }
 
+        @SuppressLint("SetJavaScriptEnabled")
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
