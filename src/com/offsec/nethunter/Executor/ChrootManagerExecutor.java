@@ -66,8 +66,29 @@ public class ChrootManagerExecutor {
                 resultCode = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"status\" -p " + objects[1].toString(), ((TextView) objects[0]));
                 break;
             case MOUNT_CHROOT:
-                resultCode = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali_init", ((TextView) objects[0]));
-                exe.RunAsRootOutput("sleep 1 && " + NhPaths.CHROOT_INITD_SCRIPT_PATH, ((TextView) objects[0]));
+                resultCode = exe.RunAsRootOutput(
+                        NhPaths.APP_SCRIPTS_PATH + "/bootkali_init",
+                        (TextView) objects[0]);
+                exe.RunAsRootOutput("sleep 1 && " + NhPaths.CHROOT_INITD_SCRIPT_PATH,
+                        (TextView) objects[0]);
+
+                if (resultCode == 0) {
+                    String symlinkCheckCmd =
+                            "ARCH=\"" + NhPaths.ARCH_FOLDER + "\"; " +
+                                    "BASE=\"/data/local/nhsystem\"; " +
+                                    "TARGET=\"$BASE/$ARCH\"; " +
+                                    "LINK=\"$BASE/kalifs\"; " +
+                                    "if [ ! -d \"$TARGET\" ]; then " +
+                                    "  echo \"[-] Chroot directory missing: $TARGET\"; " +
+                                    "elif [ ! -L \"$LINK\" ] || [ \"$(readlink -f \"$LINK\")\" != \"$(readlink -f \"$TARGET\")\" ]; then " +
+                                    "  echo \"[i] Fixing kalifs symlink -> $TARGET\"; " +
+                                    "  rm -f \"$LINK\" && ln -s \"$TARGET\" \"$LINK\" && " +
+                                    "    echo \"[+] kalifs symlink fixed.\" || echo \"[-] Failed to create kalifs symlink.\"; " +
+                                    "else " +
+                                    "  echo \"[i] kalifs symlink OK -> $(readlink -f \"$LINK\")\"; " +
+                                    "fi";
+                    exe.RunAsRootOutput(symlinkCheckCmd, (TextView) objects[0]);
+                }
                 break;
             case UNMOUNT_CHROOT:
                 resultCode = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/killkali", ((TextView) objects[0]));
@@ -94,6 +115,7 @@ public class ChrootManagerExecutor {
 
                     for (String server : servers) {
                         exe.RunAsRootOutput("echo \"[!] Trying to download from: " + server + "\"", ((TextView) objects[0]));
+                        exe.RunAsRootOutput("echo \"[!] Download started ...\"", ((TextView) objects[0]));
                         BufferedInputStream reader = null;
                         BufferedOutputStream writer = null;
 

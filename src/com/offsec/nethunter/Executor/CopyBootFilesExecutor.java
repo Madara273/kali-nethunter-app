@@ -2,10 +2,10 @@ package com.offsec.nethunter.Executor;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.AssetManager;
 import android.net.Uri;
@@ -16,12 +16,16 @@ import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
+import android.widget.TextView;
 
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.appcompat.app.AlertDialog;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.progressindicator.CircularProgressIndicator;
 import com.offsec.nethunter.AppNavHomeActivity;
-import com.offsec.nethunter.BuildConfig;
+import com.offsec.nethunter.R;
 import com.offsec.nethunter.utils.CheckForRoot;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.SharePrefTag;
@@ -34,76 +38,26 @@ import java.io.InputStream;
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.Locale;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/**
- * Executor to copy boot files from assets to the appropriate directories.
- * This class handles the copying of files, checking for root permissions,
- * and updating preferences.
- * <p>
- * TODO:
- * - Decrease debug and add it to a dynamic switch for 'enable' and 'disable' + log levels
- * <p>
- * This class is part of the NetHunter project, which is an Android-based penetration testing platform.
- * It is designed to run on rooted devices and provides various tools and scripts for security testing.
- * * This class is responsible for copying necessary boot files from the application's assets to the device's
- * storage, ensuring that the files are correctly placed and have the appropriate permissions.
- * It also handles symlinking scripts to the system's bin directory for easy access.
- * * The class uses a background thread to perform the file operations to avoid blocking the UI thread.
- * It provides a listener interface to notify when the operations are complete.
- * * Note: This class requires root permissions to function correctly, as it performs operations that
- * require elevated privileges, such as modifying system files and directories.
- * * Usage:
- * To use this class, create an instance of `CopyBootFilesExecutor` and call the `execute()` method.
- * The class will handle the copying of files and notify the listener when the operation is complete.
- * * Example:
- * CopyBootFilesExecutor executor = new CopyBootFilesExecutor(context, activity, progressDialog);
- * executor.setListener(new CopyBootFilesExecutor.CopyBootFilesExecutorListener() {
- *     @Override
- *     public void onExecutorPrepare() {
- *     // Prepare for execution, e.g., show a progress dialog
- *     }
- *     @Override
- *     public void onExecutorFinished(Object result) {
- *     // Handle the result of the execution, e.g., dismiss the progress dialog
- *     }
- *    });
- * executor.execute();
- *
- *
- */
-
 public class CopyBootFilesExecutor {
     public static final String TAG = "CopyBootFilesExecutor";
     private String objects = "";
-    private String tag = TAG;
-
-    private void ensureNhFilesOnSdcard() {
-        File nhFilesDir = new File(NhPaths.SD_PATH, "nh_files");
-        if (!nhFilesDir.exists() || !nhFilesDir.isDirectory()) {
-            copyAssetFolder("nh_files", NhPaths.SD_PATH + "/nh_files");
-            logDebug(TAG, "\"nh_files\" directory copied to: " + nhFilesDir.getAbsolutePath());
-        } else {
-            logDebug(TAG, "\"nh_files\" already exists at: " + nhFilesDir.getAbsolutePath());
-        }
-    }
-
-    private void fixPermissions() {
-        exe.RunAsRoot(new String[] {
-                "find " + NhPaths.APP_SCRIPTS_PATH + " " + NhPaths.APP_INITD_PATH + " -type f -exec chmod 700 {} \\;"
-        });
-        logDebug(TAG, "Permissions fixed for scripts and init.d files.");
-    }
-
     private final Handler progressHandler = new Handler(Looper.getMainLooper());
     private String lastMessage = "";
-    private final Runnable progressRunnable = () -> logDebug(TAG, "Progress: " + lastMessage);
+    private WeakReference<TextView> progressMessageRef = new WeakReference<>(null);
+    private final Runnable progressRunnable = () -> {
+        // Update dialog message (UI) and log to logcat
+        updateProgressDialogMessage(lastMessage);
+        logDebug(TAG, "Progress: " + lastMessage);
+    };
     private final String buildTime;
     private Boolean shouldRun;
     private final Activity activity;
-    private final WeakReference<ProgressDialog> progressDialogRef;
+    private WeakReference<AlertDialog> progressDialogRef;
     private CopyBootFilesExecutorListener listener;
     private static final String result = "";
     private final SharedPreferences prefs;
@@ -112,62 +66,40 @@ public class CopyBootFilesExecutor {
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final AssetManager assetManager;
-    // Debug logging: 0=off, 1=on
     public final int NH_SYSTEM_LOGGING = 0;
 
-    // Logging wrapper attached to 'NH_SYSTEM_LOGGING' variable ("1" = enabled, "0" = disabled)
-    // Howto add logging around this wrapper with the switch;
-    //   logDebug(TAG, "Your debug message here");
-    //
-    private void logDebug(String message, Throwable throwable) {
-        switch (NH_SYSTEM_LOGGING) {
-            case 1: // Logging enabled (low)
-                if (throwable != null) {
-                    logDebug(CopyBootFilesExecutor.TAG, message, throwable);
-                } else {
-                    logDebug(CopyBootFilesExecutor.TAG, message);
-                }
-                break;
-            case 0: // Logging disabled
-            default:
-                // Do nothing
-                break;
-        }
-    }
-
     private void logDebug(String tag, String message, Throwable throwable) {
+        if (NH_SYSTEM_LOGGING != 1) return;
         if (throwable != null) {
             Log.d(tag, message, throwable);
         } else {
             Log.d(tag, message);
         }
-        //Enable if debugging
-        //logToast(message); // Show toast for debug messages
+        logToast(message);
     }
 
     private void logToast(String message) {
-        Toast.makeText(requireActivity().getApplicationContext(), message, Toast.LENGTH_SHORT).show();
+        mainHandler.post(() ->
+                Toast.makeText(requireActivity().getApplicationContext(), message, Toast.LENGTH_SHORT).show()
+        );
     }
 
     private Context requireActivity() {
         Context ctx = context.get();
         if (ctx == null) {
-            throw new IllegalStateException("Context is not available");
+            throw new IllegalStateException("Context reference is null. Ensure the executor is initialized with a valid context.");
         }
         return ctx;
     }
 
-    public CopyBootFilesExecutor(Context context, Activity activity, ProgressDialog progressDialog) {
+    public CopyBootFilesExecutor(Context context, Activity activity) {
         this.context = new WeakReference<>(context);
         this.activity = activity;
-        this.progressDialogRef = new WeakReference<>(progressDialog);
+        this.progressDialogRef = new WeakReference<>(null);
         this.assetManager = context.getAssets();
-        File sdCardDir = new File(NhPaths.APP_SD_FILES_PATH);
-        File scriptsDir = new File(NhPaths.APP_SCRIPTS_PATH);
-        File etcDir = new File(NhPaths.APP_INITD_PATH);
-        this.prefs = context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
+        this.prefs = context.getSharedPreferences(context.getPackageName(), Context.MODE_PRIVATE);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd KK:mm:ss a zzz", Locale.getDefault());
-        this.buildTime = sdf.format(BuildConfig.BUILD_TIME);
+        this.buildTime = sdf.format(new Date());
         this.shouldRun = true;
     }
 
@@ -183,14 +115,26 @@ public class CopyBootFilesExecutor {
         boolean filesCopied = prefs.getBoolean("files_copied", false);
         if (!filesCopied) {
             logDebug(TAG, "COPYING NEW FILES", null);
-            ProgressDialog progressDialog = progressDialogRef.get();
-            if (progressDialog != null) {
-                progressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
-                progressDialog.setTitle("New app build detected:");
-                progressDialog.setMessage("Copying new files...");
-                progressDialog.setCancelable(false);
-                progressDialog.show();
+            // Inflate and show a Material-styled progress dialog
+            android.view.View content = activity.getLayoutInflater().inflate(
+                    com.offsec.nethunter.R.layout.dialog_progress_material, null, false);
+            TextView msgView = content.findViewById(com.offsec.nethunter.R.id.progress_message);
+            TextView titleView = content.findViewById(com.offsec.nethunter.R.id.progress_title);
+            CircularProgressIndicator spinner = content.findViewById(com.offsec.nethunter.R.id.progress_indicator);
+            if (spinner != null) {
+                spinner.setIndeterminate(true);
+                spinner.show();
             }
+            if (titleView != null) titleView.setText(R.string.new_app_build_detected);
+            if (msgView != null) msgView.setText(R.string.copying_new_files);
+            this.progressMessageRef = new WeakReference<>(msgView);
+
+            AlertDialog dialog = new MaterialAlertDialogBuilder(activity, com.offsec.nethunter.R.style.DialogStyleCompat)
+                    .setView(content)
+                    .setCancelable(false)
+                    .create();
+            dialog.show();
+            setProgressDialog(dialog);
         } else {
             logDebug(TAG, "NO NEW FILES TO COPY. Skipping file copy.", null);
             shouldRun = false;
@@ -200,9 +144,12 @@ public class CopyBootFilesExecutor {
         }
     }
 
-    private void logDebug(String s) {
-        this.tag = CopyBootFilesExecutor.TAG;
-        logDebug(s, (Throwable) null);
+    private void setProgressDialog(AlertDialog dialog) {
+        this.progressDialogRef = new WeakReference<>(dialog);
+    }
+
+    private void logDebug(String message) {
+        logDebug(TAG, message, null);
     }
 
     private String doInBackground() {
@@ -212,15 +159,6 @@ public class CopyBootFilesExecutor {
         if (!CheckForRoot.isRoot()) {
             prefs.edit().putBoolean(AppNavHomeActivity.CHROOT_INSTALLED_TAG, false).apply();
             return "Root permission is required!!";
-        }
-        if (prefs.getBoolean("files_copied", false)) {
-            File nhFilesDir = new File(NhPaths.SD_PATH, "nh_files");
-            if (nhFilesDir.exists() && nhFilesDir.isDirectory()) {
-                logDebug("Files already copied, skipping copy operation.");
-                return result;
-            } else {
-                ensureNhFilesOnSdcard();
-            }
         } else {
             logDebug("Proceeding with copy and symlink operations.");
         }
@@ -230,10 +168,12 @@ public class CopyBootFilesExecutor {
         copyAssetFolder("etc/init.d", NhPaths.APP_INITD_PATH);
         copyAssetFolder("scripts", NhPaths.APP_SCRIPTS_PATH);
         copyAssetFolder("nh_files", NhPaths.APP_NHFILES_PATH);
-        ensureNhFilesOnSdcard();
 
         publishProgress("Fixing permissions for new files");
         setPermissions(NhPaths.APP_SCRIPTS_PATH, NhPaths.APP_INITD_PATH);
+
+        // Ensure busybox_nh exists and is executable before any subsequent usage
+        ensureBusyboxNh();
 
         publishProgress("Checking for encrypted /data....");
         CheckEncrypted();
@@ -246,12 +186,15 @@ public class CopyBootFilesExecutor {
         Symlink("bootkali_login");
         Symlink("killkali");
         Symlink("busybox_nh");
+        Symlink("curl");
+        Symlink("iw");
+
         disableMagiskNotification();
 
         prefs.edit()
                 .putBoolean("files_copied", true)
                 .putString(TAG, buildTime)
-                .putInt(SharePrefTag.VERSION_CODE_TAG, BuildConfig.VERSION_CODE)
+                .putInt(SharePrefTag.VERSION_CODE_TAG, getVersionCodeSafe())
                 .apply();
 
         publishProgress("Checking for chroot....");
@@ -259,9 +202,10 @@ public class CopyBootFilesExecutor {
         if ("1".equals(exe.RunAsRootOutput(command))) {
             prefs.edit().putBoolean(AppNavHomeActivity.CHROOT_INSTALLED_TAG, true).apply();
             publishProgress("Chroot Found!");
-            publishProgress(exe.RunAsRootOutput(NhPaths.BUSYBOX + " mount -o remount,suid /data && chmod +s " +
-                    NhPaths.CHROOT_PATH() + "/usr/bin/sudo" +
-                    " && echo \"Initial setup done!\""));
+            publishProgress(exe.RunAsRootOutput(
+                    NhPaths.BUSYBOX + " mount -o remount,suid /data && chmod +s " +
+                            NhPaths.CHROOT_PATH() + "/usr/bin/sudo" +
+                            " && echo \"Initial setup done!\""));
         } else {
             publishProgress("Chroot not Found, install it in Chroot Manager");
         }
@@ -269,9 +213,12 @@ public class CopyBootFilesExecutor {
         publishProgress("Installing additional apps....");
         installApks(NhPaths.APP_SD_FILES_PATH + "/cache/apk/");
 
+        // After installing APKs, ensure we can write to external storage and sync nh_files to SD
         if (!checkStoragePermission()) {
             return "Permission required to manage external storage.";
         }
+        publishProgress("Syncing nh_files to /sdcard/nh_files ...");
+        syncNhFilesToSdcard();
 
         File nhFilesDir = new File(NhPaths.SD_PATH, "nh_files");
         if (nhFilesDir.exists() && nhFilesDir.isDirectory()) {
@@ -283,20 +230,55 @@ public class CopyBootFilesExecutor {
         return result;
     }
 
+    private void ensureBusyboxNh() {
+        try {
+            if (!CheckForRoot.isRoot()) {
+                logDebug(TAG, "Root not available; skipping busybox_nh ensure.");
+                return;
+            }
+            final String source = NhPaths.APP_SCRIPTS_BIN_PATH + "/busybox_nh";
+            final String target = "/system/bin/busybox_nh";
+
+            // Ensure source exists and is executable (0755)
+            exe.RunAsRootReturnValue("chmod 755 " + source);
+
+            // Best-effort remount (may fail on modern Android; ignore errors)
+            exe.RunAsRoot(new String[]{
+                    "mount -o remount,rw /",
+                    "mount -o remount,rw /system",
+                    "mount -o remount,rw /system/bin"
+            });
+
+            // Recreate symlink if missing or wrong
+            String checkCmd = "[ -L " + target + " ] && [ \"$(readlink " + target + ")\" = \"" + source + "\" ]";
+            if (exe.RunAsRootReturnValue(checkCmd) != 0) {
+                exe.RunAsRootReturnValue("rm -f " + target);
+                Symlink("busybox_nh");
+            }
+            logDebug(TAG, "busybox_nh symlink ensured at: " + target);
+        } catch (Exception e) {
+            logDebug(TAG, "ensureBusyboxNh() failed: " + e.getMessage(), e);
+        }
+    }
+
     private void setPermissions(String... paths) {
+        // Use 0755 so root shell and other processes can execute the scripts during early app lifecycle
         for (String path : paths) {
-            exe.RunAsRoot("find " + path + " -type f -exec chmod 700 {} \\;");
+            exe.RunAsRoot("find " + path + " -type d -exec chmod 755 {} \\;");
+            exe.RunAsRoot("find " + path + " -type f -exec chmod 755 {} \\;");
         }
     }
 
     private void installApks(String folderPath) {
         for (String apk : FetchFiles(folderPath)) {
-            if (apk.endsWith(".apk")) {
-                String apkPath = folderPath + "/" + apk;
-                String command = String.format("mv %s /data/local/tmp/ && pm install /data/local/tmp/%s && rm -f /data/local/tmp/%s", apkPath, apk, apk);
-                if (exe.RunAsRootReturnValue(command) != 0) {
-                    logDebug("Failed to install APK: " + apkPath);
-                }
+            if (!apk.endsWith(".apk")) continue;
+            String src = folderPath + "/" + apk;
+            String safeSrc = "'" + src.replace("'", "'\\''") + "'";
+            String safeName = "'" + apk.replace("'", "'\\''") + "'";
+            String cmd = "mv " + safeSrc + " /data/local/tmp/ && pm install -r --user 0 /data/local/tmp/" + safeName +
+                    " && rm -f /data/local/tmp/" + safeName;
+            if (exe.RunAsRootReturnValue(cmd) != 0) {
+                logDebug("Failed to install APK: " + src);
             }
         }
     }
@@ -304,26 +286,67 @@ public class CopyBootFilesExecutor {
     private boolean checkStoragePermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (!Environment.isExternalStorageManager()) {
-                Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
-                intent.setData(Uri.parse("package:" + context.get().getPackageName()));
-                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                context.get().startActivity(intent);
+                // Mark that we need to resume SD sync once the user grants the permission
+                prefs.edit().putBoolean("pending_sd_sync", true).apply();
+                // Prefer per‑app All files access page; fall back to the generic one if needed
+                Runnable launch = () -> {
+                    try {
+                        Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
+                        intent.setData(Uri.parse("package:" + activity.getPackageName()));
+                        activity.startActivity(intent);
+                    } catch (Exception e) {
+                        Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                        activity.startActivity(intent);
+                    }
+                };
+                mainHandler.post(launch);
                 return false;
             }
         } else {
-            if (ContextCompat.checkSelfPermission(context.get(), Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-                ActivityCompat.requestPermissions((Activity) context.get(), new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1001);
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
+                return true; // install-time permission
+            }
+            if (ContextCompat.checkSelfPermission(activity, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                mainHandler.post(() -> ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE}, 1001));
                 return false;
             }
         }
         return true;
     }
 
+    // Public method: if the user has just granted the All files access, finish the SD card sync only.
+    public void resumePendingSyncIfPermitted() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            boolean pending = prefs.getBoolean("pending_sd_sync", false);
+            if (!pending) return;
+            if (!Environment.isExternalStorageManager()) return;
+
+            // Clear the flag before starting work to avoid re-entry
+            prefs.edit().putBoolean("pending_sd_sync", false).apply();
+
+            publishProgress("Finalizing setup: syncing nh_files to SD card...");
+            new Thread(() -> {
+                try {
+                    syncNhFilesToSdcard();
+                    File nhFilesDir = new File(NhPaths.SD_PATH, "nh_files");
+                    if (nhFilesDir.exists() && nhFilesDir.isDirectory()) {
+                        logDebug("\"nh_files\" successfully copied to: " + nhFilesDir.getAbsolutePath());
+                    } else {
+                        logDebug("\"nh_files\" directory does NOT exist at: " + nhFilesDir.getAbsolutePath());
+                        publishProgress("Failed to copy nh_files to SD card!");
+                    }
+                } catch (Exception e) {
+                    logDebug(TAG, "resumePendingSyncIfPermitted error: " + e.getMessage(), e);
+                }
+            }).start();
+        }
+    }
+
     private void copyAssetFolder(String assetFolder, String destFolder) {
         try {
             copyAssetFolderRecursive(assetFolder, destFolder);
         } catch (IOException e) {
-            logDebug("Error copying asset folder: " + assetFolder + " to " + destFolder, e);
+            logDebug("Error copying asset folder: " + assetFolder + " to " + destFolder, String.valueOf(e));
         }
     }
 
@@ -347,7 +370,6 @@ public class CopyBootFilesExecutor {
 
     private void copyAssetFile(String assetFile, String destFile) {
         try {
-            // Skip copying placeholder, replaceholder, or directory assets
             String[] children = assetManager.list(assetFile);
             if (assetFile.endsWith("/placeholder") || assetFile.equals("placeholder") ||
                     assetFile.endsWith("/replaceholder") || assetFile.equals("replaceholder") ||
@@ -356,15 +378,12 @@ public class CopyBootFilesExecutor {
                 return;
             }
 
-            // Use renameAssetIfneeded for the destination file name
             File outFile = new File(renameAssetIfneeded(destFile));
             File parent = outFile.getParentFile();
             if (parent != null && !parent.exists() && !parent.mkdirs()) {
                 logDebug("Failed to create parent directories for: " + outFile.getAbsolutePath());
                 return;
             }
-
-            // If file exists, try to delete it before overwriting
             if (outFile.exists() && !outFile.delete()) {
                 logDebug("File is busy and cannot be overwritten: " + outFile.getAbsolutePath());
                 return;
@@ -381,42 +400,118 @@ public class CopyBootFilesExecutor {
                 logDebug("Copied asset file: " + assetFile + " to " + outFile.getAbsolutePath());
             }
 
-            // Set executable permissions for files in scripts/bin/
-            if (destFile.contains("/scripts/bin/")) {
-                boolean permissionsSet = outFile.setExecutable(true, true) &&
-                        outFile.setReadable(true, true) &&
-                        outFile.setWritable(true, true);
-
+            // Apply 0755-like permissions for anything under /scripts/ (includes chrootmgr and bin/)
+            if (destFile.contains("/scripts/")) {
+                boolean permissionsSet = outFile.setReadable(true, false)
+                        && outFile.setExecutable(true, false)
+                        && outFile.setWritable(true, true);
                 logDebug(permissionsSet
-                        ? "Set executable, readable, and writable permissions for: " + outFile.getAbsolutePath()
+                        ? "Set 0755 permissions for: " + outFile.getAbsolutePath()
                         : "Failed to set permissions for: " + outFile.getAbsolutePath());
             }
         } catch (IOException e) {
-            logDebug("Error copying asset file: " + assetFile + " to " + destFile, e);
+            logDebug("Error copying asset file: " + assetFile + " to " + destFile, String.valueOf(e));
         } catch (SecurityException e) {
-            logDebug("Security exception while copying asset file: " + assetFile + " to " + destFile, e);
+            logDebug("Security exception while copying asset file: " + assetFile + " to " + destFile, String.valueOf(e));
         }
     }
 
-    private void logDebug(String tag, String s) {
-        Log.d(tag, s);
+    private void logDebug(String tag, String message) {
+        logDebug(tag, message, null);
     }
 
     private void CheckEncrypted() {
-        logDebug("Checking if /data is encrypted...");
-        String encrypted = exe.RunAsRootOutput("getprop ro.crypto.state");
-        logDebug("/data is " + encrypted);
-        if (encrypted.equals("encrypted")) {
-            logDebug("Fixing pam.d and inet in chroot");
-            exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd sed -i \"s/pam_keyinit.so/pam_keyinit.so #/\" /etc/pam.d/*"});
-            exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd echo 'APT::Sandbox::User \"root\";' > /etc/apt/apt.conf.d/01-android-nosandbox"});
-            exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd groupadd -g 3003 aid_inet;usermod -G nogroup -g aid_inet _apt"});
+        // Robust detection of encrypted /data and application of compatibility fixes inside chroot
+        try {
+            logDebug("Checking if /data is encrypted...");
+            boolean encrypted = isDeviceEncrypted();
+            logDebug("Encrypted status: " + encrypted);
+
+            // Ensure chroot exists before attempting any fix
+            String chrootPath = NhPaths.CHROOT_PATH();
+            if (exe.RunAsRootReturnValue("[ -d " + chrootPath + " ]") != 0) {
+                logDebug("Chroot path not found: " + chrootPath);
+                return;
+            }
+
+            // Always apply core Android compatibility environment regardless of encryption status
+            logDebug("Applying core Android compatibility environment inside chroot...");
+
+            // Ensure /tmp and /var/tmp exist and are sticky world-writable
+            chrootExec("mkdir -p /tmp /var/tmp && chmod 1777 /tmp /var/tmp", "Ensure tmp directories with 1777 perms");
+
+            // Persist TMPDIR=/tmp for interactive and non-interactive shells
+            chrootExec(
+                    "mkdir -p /etc/profile.d && sh -c \"printf '%s\\n' 'export TMPDIR=/tmp' > /etc/profile.d/99-android-tmpdir.sh\" && chmod 644 /etc/profile.d/99-android-tmpdir.sh",
+                    "Install TMPDIR export in /etc/profile.d"
+            );
+            // Fallback for shells not sourcing /etc/profile
+            chrootExec(
+                    "sh -c \"grep -qxF 'export TMPDIR=/tmp' /root/.profile || echo 'export TMPDIR=/tmp' >> /root/.profile\"",
+                    "Ensure TMPDIR in /root/.profile"
+            );
+
+            if (!encrypted) {
+                logDebug("Device is not encrypted. Skipping encrypted-data specific fixes.");
+                return;
+            }
+
+            logDebug("Applying encrypted-device compatibility fixes inside chroot...");
+
+            // 1) Disable APT sandbox which often breaks on Android (seccomp/user namespaces)
+            chrootExec("mkdir -p /etc/apt/apt.conf.d", "Ensure apt.conf.d exists");
+            chrootExec(
+                    "sh -c \"printf '%s\\n' 'APT::Sandbox::User \\\"root\\\";' > /etc/apt/apt.conf.d/01-android-nosandbox\"",
+                    "Write 01-android-nosandbox apt config");
+
+            // 2) Ensure _apt can reach network by being in inet (GID 3003)
+            chrootExec(
+                    "sh -c 'GN=$(getent group 3003 | cut -d: -f1 || true); " +
+                            "if [ -z \"$GN\" ]; then " +
+                            "  if getent group aid_inet >/dev/null 2>&1; then GN=aid_inet; else groupadd -g 3003 -o aid_inet || true; fi; " +
+                            "fi; " +
+                            "if id -u _apt >/dev/null 2>&1; then usermod -a -G \"$GN\" _apt || true; fi'",
+                    "Ensure _apt is in a group with GID 3003 (inet/aid_inet)"
+            );
+
+            // 3) Comment out pam_keyinit occurrences which can cause issues under Android
+            chrootExec("sed -i 's/pam_keyinit\\.so/& # disabled on Android/' /etc/pam.d/*", "Patch pam_keyinit in /etc/pam.d/*");
+
+            // Validation logs
+            chrootExec("getent group 3003 || getent group aid_inet || true", "Show group with gid 3003 or aid_inet info");
+            chrootExec("id _apt || true", "Show _apt user info after group change");
+            chrootExec("grep -m1 'APT::Sandbox::User' /etc/apt/apt.conf.d/01-android-nosandbox || true", "Verify apt nosandbox config");
+        } catch (Exception e) {
+            logDebug(TAG, "CheckEncrypted() encountered an error: " + e.getMessage(), e);
+        }
+    }
+
+    // Determine if device storage is encrypted (FBE/Full-Disk) using multiple signals
+    private boolean isDeviceEncrypted() {
+        try {
+            String state = exe.RunAsRootOutput("getprop ro.crypto.state");
+            if (state != null) state = state.trim();
+            String type = exe.RunAsRootOutput("getprop ro.crypto.type");
+            if (type != null) type = type.trim();
+            String dataMount = exe.RunAsRootOutput("mount | grep ' /data '");
+            if (dataMount == null) dataMount = "";
+
+            boolean propEncrypted = "encrypted".equalsIgnoreCase(state);
+            boolean fbe = type != null && type.equalsIgnoreCase("file");
+            boolean mountHints = dataMount.contains("dm-crypt") || dataMount.contains("fscrypt") || dataMount.contains("fileencryption") || dataMount.contains("inlinecrypt");
+
+            logDebug("ro.crypto.state=\"" + (state == null ? "" : state) + "\" ro.crypto.type=\"" + (type == null ? "" : type) + "\"");
+            logDebug("mount /data => " + dataMount.replace('\n',' '));
+            return propEncrypted || fbe || mountHints;
+        } catch (Exception e) {
+            logDebug(TAG, "isDeviceEncrypted() error: " + e.getMessage(), e);
+            // Conservative default: assume not encrypted on error
+            return false;
         }
     }
 
     private void Symlink(String filename) {
-        // Symlink "bootkali*" and "killkali"; copy "busybox_nh"
-        if (!(filename.startsWith("bootkali") || filename.equals("killkali") || filename.equals("busybox_nh"))) {
+        if (!(filename.startsWith("bootkali") || filename.equals("killkali") || filename.equals("busybox_nh") || filename.equals("curl") || filename.equals("iw"))) {
             logDebug("Skipping symlink/copy for: " + filename);
             return;
         }
@@ -424,30 +519,47 @@ public class CopyBootFilesExecutor {
         logDebug("Checking for " + filename + " presence....");
         if (target.exists()) return;
 
-        if (filename.equals("busybox_nh")) {
-            String sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/busybox_nh";
-            String targetPath = "/system/bin/" + filename;
-            logDebug("Copying " + sourcePath + " to " + targetPath);
-            int result = exe.RunAsRootReturnValue(
-                    "cp -p " + sourcePath + " " + targetPath +
-                            " && chown root:root " + targetPath +
-                            " && chmod 0755 " + targetPath
-            );
-            if (result != 0) {
-                logDebug("Failed to copy: " + filename);
+        // Skip early if /system is read-only
+        String mountInfo = exe.RunAsRootOutput("mount | grep ' /system ' || true");
+        if (mountInfo != null && mountInfo.contains(" ro,")) {
+            logDebug("/system is mounted read-only. Cannot create symlink for: " + filename);
+            return;
+        }
+
+        String targetPath = "/system/bin/" + filename;
+        int rc;
+        switch (filename) {
+            case "busybox_nh": {
+                String sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/busybox_nh";
+                logDebug("command output: ln -s " + sourcePath + " " + targetPath);
+                rc = exe.RunAsRootReturnValue("ln -s " + sourcePath + " " + targetPath);
+                break;
             }
-        } else {
-            String sourcePath = NhPaths.APP_SCRIPTS_PATH + "/" + filename;
-            logDebug("command output: ln -s " + sourcePath + " /system/bin/" + filename);
-            int result = exe.RunAsRootReturnValue("ln -s " + sourcePath + " /system/bin/" + filename);
-            if (result != 0) {
-                logDebug("Failed to create symlink for: " + filename);
+            case "iw": {
+                String sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/iw";
+                logDebug("command output: ln -s " + sourcePath + " " + targetPath);
+                rc = exe.RunAsRootReturnValue("ln -s " + sourcePath + " " + targetPath);
+                break;
             }
+            case "curl": {
+                String sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/curl";
+                logDebug("command output: ln -s " + sourcePath + " " + targetPath);
+                rc = exe.RunAsRootReturnValue("ln -s " + sourcePath + " " + targetPath);
+                break;
+            }
+            default: {
+                String sourcePath = NhPaths.APP_SCRIPTS_PATH + "/" + filename;
+                logDebug("command output: ln -s " + sourcePath + " " + targetPath);
+                rc = exe.RunAsRootReturnValue("ln -s " + sourcePath + " " + targetPath);
+                break;
+            }
+        }
+        if (rc != 0) {
+            logDebug("Failed to create symlink for: " + filename);
         }
     }
 
     private void SymlinkScriptsToSystemBin() {
-        // Remount system partitions as read-write
         exe.RunAsRoot(new String[]{
                 "mount -o remount,rw /",
                 "mount -o remount,rw /system",
@@ -468,28 +580,24 @@ public class CopyBootFilesExecutor {
                     String targetPath = "/system/bin/" + scriptName;
                     String sourcePath = script.getAbsolutePath();
 
-                    // Check if /system is read-only before attempting to modify
-                    String mountInfo = exe.RunAsRootOutput("mount | grep ' /system '");
-                    if (mountInfo.contains("ro,")) {
+                    String mountInfo = exe.RunAsRootOutput("mount | grep ' /system ' || true");
+                    if (mountInfo != null && mountInfo.contains("ro,")) {
                         logDebug("/system is mounted read-only. Cannot create symlink for: " + scriptName);
                         continue;
                     }
 
-                    // Check if the symlink already exists and points to the correct source
-                    String linkCheck = exe.RunAsRootOutput("ls -l " + targetPath + " | grep '" + sourcePath + "'");
-                    if (linkCheck.contains(sourcePath)) {
+                    String linkCheck = exe.RunAsRootOutput("ls -l " + targetPath + " | grep '" + sourcePath + "' || true");
+                    if (linkCheck != null && linkCheck.contains(sourcePath)) {
                         logDebug("Symlink already exists for: " + scriptName);
                         continue;
                     }
 
-                    // Try to remove the target if it exists
                     int rmResult = exe.RunAsRootReturnValue("rm -f " + targetPath);
                     if (rmResult != 0) {
                         logDebug("Failed to remove existing file at " + targetPath + ". rmResult=" + rmResult);
                         continue;
                     }
 
-                    // Try to create the symlink
                     int lnResult = exe.RunAsRootReturnValue("ln -s " + sourcePath + " " + targetPath);
                     if (lnResult == 0) {
                         logDebug("Symlinked " + sourcePath + " to " + targetPath);
@@ -501,14 +609,16 @@ public class CopyBootFilesExecutor {
         }
     }
 
-    // This rename the filename which suffix is either [name]-arm64 or [name]-armhf to [name] according to the user's CPU ABI.
-    private String renameAssetIfneeded(String asset) {
-        String cpuAbi;
-        if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
-            cpuAbi = Build.SUPPORTED_ABIS[0];
-        } else {
-            cpuAbi = Build.CPU_ABI;
+    // Helper to get the device's primary ABI without using deprecated fields on modern SDKs
+    private String getPrimaryAbi() {
+        if (Build.SUPPORTED_ABIS != null && Build.SUPPORTED_ABIS.length > 0) {
+            return Build.SUPPORTED_ABIS[0] != null ? Build.SUPPORTED_ABIS[0] : "";
         }
+        return "";
+    }
+
+    private String renameAssetIfneeded(String asset) {
+        String cpuAbi = getPrimaryAbi();
 
         if (asset.matches("^.*-arm64$")) {
             if (cpuAbi.equals("arm64-v8a")) {
@@ -517,56 +627,56 @@ public class CopyBootFilesExecutor {
         } else if (asset.matches("^.*-armeabi$") && !cpuAbi.equals("arm64-v8a")) {
             return asset.replaceAll("-armeabi$", "");
         }
-
         return asset;
     }
 
-    // Get a list of files from a directory
     private ArrayList<String> FetchFiles(String folder) {
         logDebug("Fetching files from " + folder);
-        return new ArrayList<>();
+        ArrayList<String> files = new ArrayList<>();
+        try {
+            File dir = new File(folder);
+            File[] list = dir.listFiles();
+            if (list == null) return files;
+            for (File f : list) {
+                files.add(f.getName());
+            }
+        } catch (Exception e) {
+            logDebug(TAG, "FetchFiles error for folder: " + folder + ", " + e.getMessage());
+        }
+        return files;
     }
 
     private void publishProgress(String message) {
         lastMessage = message;
         progressHandler.removeCallbacks(progressRunnable);
-        progressHandler.postDelayed(progressRunnable, 500); // Debounce updates
+        // Update quickly for the user; slight debounce to avoid spamming UI when many updates arrive
+        progressHandler.postDelayed(progressRunnable, 200);
     }
 
     private void onPostExecute(String objects) {
         this.objects = objects;
-        ProgressDialog progressDialog = progressDialogRef.get();
-        if (progressDialog != null) {
+        AlertDialog progressDialog = progressDialogRef.get();
+        if (progressDialog != null && progressDialog.isShowing()) {
             progressDialog.dismiss();
         }
-
         if (listener != null) {
             listener.onExecutorFinished(result);
         }
+        // Prevent thread leaks
+        executor.shutdown();
     }
 
     public void setListener(CopyBootFilesExecutorListener listener) {
         this.listener = listener;
     }
-
     public String getObjects() {
         return objects;
     }
-
     public void setObjects(String objects) {
         this.objects = objects;
     }
-
     public Activity getActivity() {
         return activity;
-    }
-
-    public String getTag() {
-        return tag;
-    }
-
-    public void setTag(String tag) {
-        this.tag = tag;
     }
 
     public interface CopyBootFilesExecutorListener {
@@ -577,17 +687,103 @@ public class CopyBootFilesExecutor {
     private void disableMagiskNotification() {
         if (exe.RunAsRootReturnValue("[ -f " + NhPaths.MAGISK_DB_PATH + " ]") == 0) {
             logDebug(TAG, "Disabling Magisk notification and log for nethunter app.");
+            String pkg = getPackageNameSafe();
             if (exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_BIN_PATH +
                     "/sqlite3 " + NhPaths.MAGISK_DB_PATH + " \"SELECT * from policies\" | grep " +
-                    BuildConfig.APPLICATION_ID).startsWith(BuildConfig.APPLICATION_ID)) {
+                    pkg).startsWith(pkg)) {
                 exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_BIN_PATH +
                         "/sqlite3 " + NhPaths.MAGISK_DB_PATH + " \"UPDATE policies SET logging='0',notification='0' WHERE package_name='" +
-                        BuildConfig.APPLICATION_ID + "';\"");
+                        pkg + "';\"");
                 logDebug(TAG, "Updated magisk db successfully.");
             } else {
                 exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_BIN_PATH + "/sqlite3 " +
                         NhPaths.MAGISK_DB_PATH + " \"UPDATE policies SET logging='0',notification='0' WHERE uid='$(stat -c %u /data/data/" +
-                        BuildConfig.APPLICATION_ID + ")';\"");
+                        pkg + ")';\"");
+            }
+        }
+    }
+
+    private String getPackageNameSafe() {
+        Context c = context.get();
+        return c != null ? c.getPackageName() : "";
+    }
+
+    @SuppressWarnings("deprecation")
+    private int getVersionCodeSafe() {
+        try {
+            Context c = context.get();
+            if (c == null) return 0;
+            PackageManager pm = c.getPackageManager();
+            PackageInfo pi = pm.getPackageInfo(c.getPackageName(), 0);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                return (int) pi.getLongVersionCode();
+            } else {
+                return pi.versionCode;
+            }
+        } catch (Exception e) {
+            return 0;
+        }
+    }
+
+    // Helper to run and log a command inside the chroot, capturing exit code/stdout/stderr
+    private void chrootExec(String cmd, String description) {
+        ShellExecuter.ShellResult res = exe.RunAsChrootWithResult(cmd);
+        String prefix = (description == null || description.isEmpty()) ? "ChrootExec" : description;
+        logDebug(prefix + " => exit=" + res.exitCode);
+        if (!res.stdout.isEmpty()) {
+            logDebug(prefix + " stdout: " + res.stdout);
+        }
+        if (!res.stderr.isEmpty()) {
+            logDebug(prefix + " stderr: " + res.stderr);
+        }
+    }
+
+    // Mirror /data/data/com.offsec.nethunter/nh_files to /sdcard/nh_files without overwriting user changes
+    private void syncNhFilesToSdcard() {
+        try {
+            final String src = NhPaths.APP_NHFILES_PATH;
+            final String dst = NhPaths.SD_PATH + "/nh_files";
+
+            // Ensure destination exists
+            int mkres = exe.RunAsRootReturnValue("mkdir -p '" + dst + "'");
+            if (mkres != 0) {
+                logDebug(TAG, "Failed to create destination nh_files directory on SD card");
+                return;
+            }
+
+            // Prefer busybox cp -au to copy only missing/newer files and preserve attrs
+            String bb = NhPaths.BUSYBOX != null ? NhPaths.BUSYBOX.trim() : "";
+            String cmd;
+            if (!bb.isEmpty()) {
+                cmd = bb + " cp -au '" + src + "/.' '" + dst + "/'";
+            } else {
+                // Fallback to toolbox cp -rn; do not overwrite existing files
+                cmd = "sh -c 'cp -rn " + src + "/. " + dst + "/'";
+            }
+            int rc = exe.RunAsRootReturnValue(cmd);
+            if (rc != 0) {
+                logDebug(TAG, "syncNhFilesToSdcard: copy command failed rc=" + rc);
+            } else {
+                logDebug(TAG, "syncNhFilesToSdcard: SD card nh_files synced.");
+            }
+        } catch (Exception e) {
+            logDebug(TAG, "syncNhFilesToSdcard() error: " + e.getMessage(), e);
+        }
+    }
+
+    // Update the message text in the progress dialog if it's showing
+    private void updateProgressDialogMessage(String message) {
+        TextView tv = progressMessageRef.get();
+        if (tv != null) {
+            tv.setText(message);
+            return;
+        }
+        AlertDialog dialog = progressDialogRef.get();
+        if (dialog != null) {
+            TextView tv2 = dialog.findViewById(com.offsec.nethunter.R.id.progress_message);
+            if (tv2 != null) {
+                tv2.setText(message);
+                progressMessageRef = new WeakReference<>(tv2);
             }
         }
     }

@@ -31,7 +31,6 @@ import com.offsec.nethunter.models.KaliServicesModel;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.viewmodels.KaliServicesViewModel;
 
-import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -39,6 +38,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.view.MenuHost;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -67,7 +68,6 @@ public class KaliServicesFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
         this.context = getContext();
         this.activity = getActivity();
     }
@@ -109,99 +109,101 @@ public class KaliServicesFragment extends Fragment {
             servicesDesc.setVisibility(View.GONE);
             servicesButtons.setVisibility(View.GONE);
         }
-    }
 
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.kaliservices, menu);
-        final MenuItem searchItem = menu.findItem(R.id.f_kaliservices_action_search);
-        final SearchView searchView = (SearchView) searchItem.getActionView();
-        // WearOS optimisation
-        boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
-        if(iswatch) {
-            searchItem.setVisible(false);
-        }
-
-        assert searchView != null;
-        searchView.setOnSearchClickListener(v -> menu.setGroupVisible(R.id.f_kaliservices_menu_group1, false));
-        searchView.setOnCloseListener(() -> {
-            menu.setGroupVisible(R.id.f_kaliservices_menu_group1, true);
-            return false;
-        });
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        MenuHost menuHost = requireActivity();
+        menuHost.addMenuProvider(new MenuProvider() {
             @Override
-            public boolean onQueryTextSubmit(String query) {
-                return false;
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+                inflater.inflate(R.menu.kaliservices, menu);
+                MenuItem searchItem = menu.findItem(R.id.f_kaliservices_action_search);
+                SearchView searchView = (SearchView) searchItem.getActionView();
+                boolean isWatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
+                if (isWatch) searchItem.setVisible(false);
+                if (searchView != null) {
+                    searchView.setOnSearchClickListener(v -> menu.setGroupVisible(R.id.f_kaliservices_menu_group1, false));
+                    searchView.setOnCloseListener(() -> {
+                        menu.setGroupVisible(R.id.f_kaliservices_menu_group1, true);
+                        return false;
+                    });
+                    searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                        @Override public boolean onQueryTextSubmit(String query) { return false; }
+                        @Override public boolean onQueryTextChange(String newText) {
+                            if (kaliServicesRecyclerViewAdapter != null) {
+                                kaliServicesRecyclerViewAdapter.getFilter().filter(newText);
+                            }
+                            return false;
+                        }
+                    });
+                }
             }
 
             @Override
-            public boolean onQueryTextChange(String newText) {
-                kaliServicesRecyclerViewAdapter.getFilter().filter(newText);
+            public boolean onMenuItemSelected(@NonNull MenuItem item) {
+                LayoutInflater li = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                int id = item.getItemId();
+                View promptView = li.inflate(R.layout.kaliservices_custom_dialog_view, null);
+                TextView titleTextView = promptView.findViewById(R.id.f_kaliservices_adb_tv_title1);
+                EditText storedpathEditText = promptView.findViewById(R.id.f_kaliservices_adb_et_storedpath);
+
+                if (id == R.id.f_kaliservices_menu_backupDB) {
+                    titleTextView.setText(R.string.kaliservices_full_path_save_db);
+                    storedpathEditText.setText(String.format("%s/FragmentKaliServices", NhPaths.APP_SD_SQLBACKUP_PATH));
+                    AlertDialog dlg = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+                            .setView(promptView)
+                            .setNegativeButton("Cancel", (d,w)->d.dismiss())
+                            .setPositiveButton("OK", (d,w)->{})
+                            .create();
+                    dlg.setOnShowListener(dd -> {
+                        Button ok = dlg.getButton(DialogInterface.BUTTON_POSITIVE);
+                        ok.setOnClickListener(v -> {
+                            String res = KaliServicesData.getInstance()
+                                    .backupData(KaliServicesSQL.getInstance(context), storedpathEditText.getText().toString());
+                            if (res == null) {
+                                NhPaths.showMessage(context, "db is successfully backup to " + storedpathEditText.getText());
+                                dlg.dismiss();
+                            } else {
+                                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat)
+                                        .setTitle("Failed to backup the DB.")
+                                        .setMessage(res)
+                                        .create().show();
+                            }
+                        });
+                    });
+                    dlg.show();
+                    return true;
+                } else if (id == R.id.f_kaliservices_menu_restoreDB) {
+                    titleTextView.setText(R.string.kaliservices_full_path_restore_db);
+                    storedpathEditText.setText(String.format("%s/FragmentKaliServices", NhPaths.APP_SD_SQLBACKUP_PATH));
+                    AlertDialog dlg = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+                            .setView(promptView)
+                            .setNegativeButton("Cancel", (d,w)->d.dismiss())
+                            .setPositiveButton("OK", (d,w)->{})
+                            .create();
+                    dlg.setOnShowListener(dd -> {
+                        Button ok = dlg.getButton(DialogInterface.BUTTON_POSITIVE);
+                        ok.setOnClickListener(v -> {
+                            String res = KaliServicesData.getInstance()
+                                    .restoreData(KaliServicesSQL.getInstance(context), storedpathEditText.getText().toString());
+                            if (res == null) {
+                                NhPaths.showMessage(context, "db is successfully restored to " + storedpathEditText.getText());
+                                dlg.dismiss();
+                            } else {
+                                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat)
+                                        .setTitle("Failed to restore the DB.")
+                                        .setMessage(res)
+                                        .create().show();
+                            }
+                        });
+                    });
+                    dlg.show();
+                    return true;
+                } else if (id == R.id.f_kaliservices_menu_ResetToDefault) {
+                    KaliServicesData.getInstance().resetData(KaliServicesSQL.getInstance(context));
+                    return true;
+                }
                 return false;
             }
-        });
-        super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        final LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        final View promptView = inflater.inflate(R.layout.kaliservices_custom_dialog_view, null);
-        final TextView titleTextView = promptView.findViewById(R.id.f_kaliservices_adb_tv_title1);
-        final EditText storedpathEditText = promptView.findViewById(R.id.f_kaliservices_adb_et_storedpath);
-
-        int id = item.getItemId();
-        if (id == R.id.f_kaliservices_menu_backupDB) {
-            titleTextView.setText(R.string.kaliservices_full_path_save_db);
-            storedpathEditText.setText(MessageFormat.format("{0}/FragmentKaliServices", NhPaths.APP_SD_SQLBACKUP_PATH));
-            MaterialAlertDialogBuilder adbBackup = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-            adbBackup.setView(promptView);
-            adbBackup.setCancelable(true);
-            adbBackup.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-            adbBackup.setPositiveButton("OK", (dialog, which) -> { });
-            final AlertDialog adBackup = adbBackup.create();
-            adBackup.setOnShowListener(dialog -> {
-                final Button buttonOK = adBackup.getButton(DialogInterface.BUTTON_POSITIVE);
-                buttonOK.setOnClickListener(v -> {
-                    String returnedResult = KaliServicesData.getInstance().backupData(KaliServicesSQL.getInstance(context), storedpathEditText.getText().toString());
-                    if (returnedResult == null) {
-                        NhPaths.showMessage(context, "db is successfully backup to " + storedpathEditText.getText().toString());
-                    } else {
-                        dialog.dismiss();
-                        new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to backup the DB.").setMessage(returnedResult).create().show();
-                    }
-                    dialog.dismiss();
-                });
-            });
-            adBackup.show();
-        } else if (id == R.id.f_kaliservices_menu_restoreDB) {
-            titleTextView.setText(R.string.kaliservices_full_path_restore_db);
-            storedpathEditText.setText(MessageFormat.format("{0}/FragmentKaliServices", NhPaths.APP_SD_SQLBACKUP_PATH));
-            MaterialAlertDialogBuilder adbRestore = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-            adbRestore.setView(promptView);
-            adbRestore.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-            adbRestore.setPositiveButton("OK", (dialog, which) -> { });
-            final AlertDialog adRestore = adbRestore.create();
-            adRestore.setOnShowListener(dialog -> {
-                final Button buttonOK = adRestore.getButton(DialogInterface.BUTTON_POSITIVE);
-                buttonOK.setOnClickListener(v -> {
-                    String returnedResult = KaliServicesData.getInstance().restoreData(KaliServicesSQL.getInstance(context), storedpathEditText.getText().toString());
-                    if (returnedResult == null) {
-                        NhPaths.showMessage(context, "db is successfully restored to " + storedpathEditText.getText().toString());
-                    } else {
-                        dialog.dismiss();
-                        new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to restore the DB.").setMessage(returnedResult).create().show();
-                    }
-                    dialog.dismiss();
-                });
-            });
-            adRestore.show();
-        } else if (id == R.id.f_kaliservices_menu_ResetToDefault) {
-            KaliServicesData.getInstance().resetData(KaliServicesSQL.getInstance(context));
-        } else {
-            throw new IllegalStateException("Unexpected value: " + id);
-        }
-        return super.onOptionsItemSelected(item);
+        }, getViewLifecycleOwner(), androidx.lifecycle.Lifecycle.State.RESUMED);
     }
 
     @Override

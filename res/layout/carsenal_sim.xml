@@ -154,7 +154,9 @@
                             app:strokeColor="@color/nh_box_stroke_spinner"
                             app:strokeWidth="2dp"
                             app:boxStrokeWidthFocused="3dp"
-                            android:padding="4dp">
+                            android:padding="4dp"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:layout_constraintBottom_toBottomOf="parent">
 
                             <Spinner
                                 android:id="@+id/level_spinner"
@@ -164,6 +166,7 @@
                         </com.google.android.material.card.MaterialCardView>
                     </androidx.constraintlayout.widget.ConstraintLayout>
                 </LinearLayout>
+
                 <!-- Input File Row -->
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -205,7 +208,6 @@
                         android:background="?attr/selectableItemBackgroundBorderless"
                         android:padding="8dp"/>
                 </LinearLayout>
-
             </LinearLayout>
 
             <!-- ICSIM WebView -->
@@ -263,7 +265,6 @@
                     android:layout_height="200dp"
                     android:visibility="gone" />
             </com.google.android.material.card.MaterialCardView>
-
         </LinearLayout>
     </ScrollView>
 </com.google.android.material.card.MaterialCardView>

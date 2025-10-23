@@ -1,5 +1,6 @@
 package com.offsec.nethunter;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -38,6 +39,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
+import androidx.appcompat.app.AppCompatActivity;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.offsec.nethunter.bridge.Bridge;
@@ -46,6 +48,7 @@ import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Locale;
 import java.util.Objects;
@@ -359,8 +362,8 @@ public class SettingsFragment extends Fragment {
             screen_height = windowMetrics.getBounds().height();
             screen_width = windowMetrics.getBounds().width();
         } else {
-            DisplayMetrics displaymetrics = new DisplayMetrics();
-            wm.getDefaultDisplay().getMetrics(displaymetrics);
+            // Use Resources display metrics for legacy devices to avoid deprecated Display APIs
+            DisplayMetrics displaymetrics = getResources().getDisplayMetrics();
             screen_height = displaymetrics.heightPixels;
             screen_width = displaymetrics.widthPixels;
         }
@@ -410,7 +413,7 @@ public class SettingsFragment extends Fragment {
             String finalRES = FinalWidth.getText().toString() + "x" + FinalHeight.getText().toString();
             String finalFPS = FPS.getText().toString();
             run_cmd("echo -ne \"\\033]0;Building animation\\007\" && clear;cd /root/nethunter-bootanimation &&" + imagesCMD + " && cp " + animation_dir[0] +
-                    "/desc.txt new/ && sed -i '1s/.*/" + finalRES + " " + finalFPS +"/' new/desc.txt && sed -i 's/x/ /g' new/desc.txt && cd new && zip -0 -FSr -q /sdcard/bootanimation.zip * && cd .. && rm -r new && echo \"Done. Head back to NetHunter to install the bootanimation! Exiting in 3secs..\" && sleep 3 && exit");
+                    "/desc.txt new/ && sed -i '1s/.*/" + finalRES + " " + finalFPS +"/' new/desc.txt && sed -i 's/x/ /g' new/desc.txt && cd new && zip -0 -FSr -q /sdcard/bootanimation.zip * && cd .. && rm -r new && echo \"Done. Head back to NetHunter to install the bootanimation!");
         });
 
         // Install bootanimation
@@ -424,11 +427,11 @@ public class SettingsFragment extends Fragment {
                     String mount_path = exe.RunAsRootOutput("mount | grep \"media/bootanimation\" | awk {'print $3'}");
                     run_cmd_android("echo -ne \"\\033]0;Installing animation\\007\" && clear;grep ' / ' /proc/mounts | grep -qv 'rootfs' || grep -q ' /system_root ' /proc/mounts && SYSTEM=/ || SYSTEM=/system " +
                             "&& mount -o rw,remount " + mount_path + " && cp " + NhPaths.SD_PATH + "/bootanimation.zip " + BootanimationPath.getText().toString() + " " +
-                            "&& echo \"Done. Please reboot to check the result! Exiting in 3secs..\" && sleep 3 && exit");
+                            "&& echo \"Done. Please reboot to check the result!");
                 } else {
                     run_cmd_android("echo -ne \"\\033]0;Installing animation\\007\" && clear;grep ' / ' /proc/mounts | grep -qv 'rootfs' || grep -q ' /system_root ' /proc/mounts && SYSTEM=/ || SYSTEM=/system " +
                             "&& mount -o rw,remount $SYSTEM && cp " + NhPaths.SD_PATH + "/bootanimation.zip " + BootanimationPath.getText().toString() + " " +
-                            "&& echo \"Done. Please reboot to check the result! Exiting in 3secs..\" && sleep 3 && exit");
+                            "&& echo \"Done. Please reboot to check the result!");
                 }
             }
         });
@@ -473,7 +476,7 @@ public class SettingsFragment extends Fragment {
             Toast.makeText(requireActivity().getApplicationContext(), "NetHunter was not flashed as system app! Please remove it from Android settings.", Toast.LENGTH_LONG).show();
         } else {
             run_cmd_android("echo -ne \"\\033]0;Uninstalling NetHunter\\007\" && clear;grep ' / ' /proc/mounts | grep -qv 'rootfs' || grep -q ' /system_root ' /proc/mounts && SYSTEM=/ || SYSTEM=/system " +
-                        "&& mount -o rw,remount $SYSTEM && rm " + NhSystemApp + " && pm clear com.offsec.nethunter && echo 'Done! Reboot your device to complete the process. Exiting in 3secs..' && sleep 3 && exit");
+                        "&& mount -o rw,remount $SYSTEM && rm " + NhSystemApp + " && pm clear com.offsec.nethunter && echo 'Done! Reboot your device to complete the process.");
                 }
         });
 
@@ -487,26 +490,26 @@ public class SettingsFragment extends Fragment {
         final String selinux_status = exe.RunAsRootOutput("getenforce");
         SELinux.setText(selinux_status);
         final Button SELinuxButton = rootView.findViewById(R.id.selinux_toggle);
-        if (selinux_status.equals("Permissive")) SELinuxButton.setText("Set to Enforcing");
+        if (selinux_status.equals("Permissive")) SELinuxButton.setText(R.string.settings_set_enforcing);
         else if (selinux_status.equals("Disabled")) {
-            SELinuxButton.setText("SELinux is Disabled");
+            SELinuxButton.setText(R.string.settings_selinux_disabled);
             SELinuxButton.setEnabled(false);
             SELinuxButton.setTextColor(Color.parseColor("#40FFFFFF"));
         }
-        else SELinuxButton.setText("Set to Permissive");
+        else SELinuxButton.setText(R.string.settings_set_to_permissive);
 
         SELinuxButton.setOnClickListener( v -> {
             String selinux_status_now = exe.RunAsRootOutput("getenforce");
             if (selinux_status_now.equals("Permissive")) {
                 exe.RunAsRoot(new String[]{"setenforce 1"});
-                SELinuxButton.setText("Set to Permissive");
-                SELinux.setText("Enforcing");
+                SELinuxButton.setText(R.string.settings_set_to_permissive);
+                SELinux.setText(R.string.settings_enforcing);
                 Toast.makeText(requireActivity().getApplicationContext(), "SElinux set to Enforcing done", Toast.LENGTH_SHORT).show();
                 sharedpreferences.edit().putBoolean("SElinux", true).apply();
            } else {
                 exe.RunAsRoot(new String[]{"setenforce 0"});
-                SELinuxButton.setText("Set to Enforcing");
-                SELinux.setText("Permissive");
+                SELinuxButton.setText(R.string.settings_set_to_enforcing);
+                SELinux.setText(R.string.settings_permissive);
                 Toast.makeText(requireActivity().getApplicationContext(), "SElinux set to Permissive done", Toast.LENGTH_SHORT).show();
                 sharedpreferences.edit().putBoolean("SElinux", false).apply();
             }
@@ -530,37 +533,49 @@ public class SettingsFragment extends Fragment {
 
         final String[] busybox_file = {null};
 
-        // Version Spinner
-        String commandBB = new File(busyboxPath).exists() ? ("ls " + new File(busyboxPath).getParent() + " | grep busybox_nh- | cut -f 2 -d '-'") : "echo ''";
-        String outputBB = exe.RunAsRootOutput(commandBB);
-        final String[] bbArray = outputBB.isEmpty() ? new String[0] : outputBB.split("\n");
+        // Version Spinner (only files starting with 'busybox_nh')
+        String binDir = new File(busyboxPath).getParent();
+        String[] bbFiles = new String[0];
+        if (binDir != null) {
+            File dirFile = new File(binDir);
+            String[] list = dirFile.list((d, name) -> {
+                String lname = name.toLowerCase(Locale.ROOT);
+                return name.startsWith("busybox_nh")
+                        && !lname.contains("arm64")
+                        && !lname.contains("armeabi");
+            });
+            if (list != null) {
+                Arrays.sort(list);
+                bbFiles = list;
+            }
+        }
         Spinner busybox_spinner = rootView.findViewById(R.id.bb_spinner);
-        ArrayAdapter<String> usersadapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, bbArray);
+        ArrayAdapter<String> usersadapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, bbFiles);
         busybox_spinner.setAdapter(usersadapter);
 
-        // Select Version
+        // Select Version -> store the full filename (e.g., busybox_nh-1.32)
         busybox_spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
-                String selected_version = parentView.getItemAtPosition(pos).toString();
-                if (selected_version.equals("1.25")) {
-                    busybox_file[0] = "busybox_nh-1.25";
-                } else if (selected_version.equals("1.32")) {
-                    busybox_file[0] = "busybox_nh-1.32";
-                }
+                String selectedName = parentView.getItemAtPosition(pos).toString();
+                busybox_file[0] = selectedName;
             }
             @Override
             public void onNothingSelected(AdapterView<?> parentView) {
+                busybox_file[0] = null;
             }
         });
 
-        // Apply button
+        // Apply button stays compatible because it already uses the filename:
         final Button BusyboxButton = rootView.findViewById(R.id.select_bb);
         String finalBusyboxPath = busyboxPath;
         BusyboxButton.setOnClickListener(v -> {
             if (busybox_file[0] != null) {
                 File busybox = new File(new File(finalBusyboxPath).getParent() + "/" + busybox_file[0]);
-                exe.RunAsRoot(new String[]{"if [ \"$(getprop ro.build.system_root_image)\" == \"true\" ]; then export SYSTEM=/; else export SYSTEM=/system;fi;mount -o rw,remount $SYSTEM && rm /system/bin/busybox_nh;ln -s " + busybox + " /system/bin/busybox_nh"});
+                exe.RunAsRoot(new String[]{
+                        "if [ \"$(getprop ro.build.system_root_image)\" == \"true\" ]; then export SYSTEM=/; else export SYSTEM=/system;fi;" +
+                                "mount -o rw,remount $SYSTEM && rm /system/bin/busybox_nh;ln -s " + busybox + " /system/bin/busybox_nh"
+                });
                 Toast.makeText(requireActivity().getApplicationContext(), "NetHunter BusyBox version has been successfully modified", Toast.LENGTH_SHORT).show();
             } else {
                 Toast.makeText(requireActivity().getApplicationContext(), "Please select a BusyBox version first!", Toast.LENGTH_SHORT).show();
@@ -650,16 +665,41 @@ public class SettingsFragment extends Fragment {
     }
 
     public void RunSetup() {
-        run_cmd("echo -ne \"\\033]0;Bootanimation Setup\\007\" && clear;if [[ -f /usr/bin/convert ]];then echo 'Imagemagick is installed!'; else " +
-                "apt update && apt install imagemagick -y;fi; if [[ -f /root/nethunter-bootanimation ]];then echo 'nethunter-bootanimation is installed!'; else " +
-                "git clone https://gitlab.com/kalilinux/nethunter/build-scripts/kali-nethunter-bootanimation /root/nethunter-bootanimation;fi; echo 'Everything is ready! Closing in 3secs..'; sleep 3 && exit ");
+        // Route through in-app TerminalFragment to save memory; fallback to NhTerm bridge if needed
+        String cmd = "if [ -f /usr/bin/convert ];then echo 'Imagemagick is installed!'; else " +
+                "apt update && apt install make imagemagick -y;fi; if [ -f /root/nethunter-bootanimation ];then echo 'nethunter-bootanimation is installed!'; else " +
+                "git clone https://gitlab.com/kalilinux/nethunter/build-scripts/kali-nethunter-bootanimation /root/nethunter-bootanimation;fi; echo 'Everything is ready!'";
+        openTerminalWithCommand(cmd);
         sharedpreferences.edit().putBoolean("animation_setup_done", true).apply();
     }
 
     public void RunUpdate() {
-        run_cmd("echo -ne \"\\033]0;Bootanimation Update\\007\" && clear;apt update && apt install imagemagick -y;if [[ -d /root/nethunter-bootanimation ]];then cd /root/nethunter-bootanimation;git pull" +
-                ";fi; echo 'Done! Closing in 3secs..'; sleep 3 && exit ");
+        // Route through in-app TerminalFragment to save memory; fallback to NhTerm bridge if needed
+        String cmd = "apt update && apt install make imagemagick -y;if [ -d /root/nethunter-bootanimation ];then cd /root/nethunter-bootanimation;git pull" +
+                ";fi;";
+        openTerminalWithCommand(cmd);
         sharedpreferences.edit().putBoolean("animation_setup_done", true).apply();
+    }
+
+    // Helper: open TerminalFragment with an initial command; if not possible, fallback to legacy bridge
+    private void openTerminalWithCommand(@NonNull String cmd) {
+        Activity act = getActivity();
+        try {
+            if (act instanceof AppCompatActivity) {
+                AppCompatActivity app = (AppCompatActivity) act;
+                TerminalFragment tf = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
+                app.getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.container, tf)
+                        .addToBackStack(null)
+                        .commitAllowingStateLoss();
+                return;
+            }
+        } catch (Throwable t) {
+            Log.d(TAG, "openTerminalWithCommand fallback due to: " + t.getMessage());
+        }
+        // Fallback to previous behavior using NhTerm bridge
+        run_cmd(cmd);
     }
 
     private void addClickListener(Button _button, View.OnClickListener onClickListener) {
@@ -671,12 +711,12 @@ public class SettingsFragment extends Fragment {
     ////
 
     public void run_cmd(String cmd) {
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
         activity.startActivity(intent);
     }
 
     public void run_cmd_android(String cmd) {
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/android-su", cmd);
+        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/android-su", cmd);
         activity.startActivity(intent);
     }
 }

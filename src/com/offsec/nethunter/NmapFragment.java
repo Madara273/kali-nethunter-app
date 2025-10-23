@@ -1,8 +1,8 @@
 package com.offsec.nethunter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -85,7 +85,7 @@ public class NmapFragment extends Fragment {
         // Default advanced options as invisible
         final LinearLayout AdvLayout = rootView.findViewById(R.id.nmap_adv_layout);
         AdvLayout.setVisibility(View.GONE);
-        SharedPreferences sharedpreferences = context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
+        context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
 
         // Switch to activate open/close of advanced options
         SwitchCompat advswitch = rootView.findViewById(R.id.nmap_adv_switch);
@@ -450,7 +450,7 @@ public class NmapFragment extends Fragment {
     ////
 
     public void run_cmd(String cmd) {
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
         requireContext().startActivity(intent);
     }
 }

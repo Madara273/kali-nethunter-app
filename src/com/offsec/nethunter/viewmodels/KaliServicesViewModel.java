@@ -13,7 +13,6 @@ import com.offsec.nethunter.models.NethunterModel;
 
 import java.util.List;
 
-
 /*
     ViewModel class for kaliservices model, this is to be observed the List of KaliServicesModel class.
     This class should be initiated every time the KaliServicesFragment is created.
@@ -23,7 +22,7 @@ public class KaliServicesViewModel extends ViewModel {
     private MutableLiveData<List<KaliServicesModel>> mutableLiveDataKaliServicesModelList;
 
     public void init(Context context){
-        if (mutableLiveDataKaliServicesModelList != null){
+        if (mutableLiveDataKaliServicesModelList != null) {
             return;
         }
         KaliServicesData kaliServicesData = KaliServicesData.getInstance();
@@ -34,7 +33,7 @@ public class KaliServicesViewModel extends ViewModel {
         }
     }
 
-    public LiveData<List<KaliServicesModel>> getLiveDataKaliServicesModelList(){
+    public LiveData<List<KaliServicesModel>> getLiveDataKaliServicesModelList() {
         return mutableLiveDataKaliServicesModelList;
     }
 }

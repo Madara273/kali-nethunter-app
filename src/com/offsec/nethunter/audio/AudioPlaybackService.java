@@ -14,7 +14,9 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.PowerManager;
+import android.os.Looper;
 import android.widget.RemoteViews;
+import android.content.pm.ServiceInfo;
 
 import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
@@ -23,8 +25,6 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.ServiceCompat;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-
-import android.util.Log;
 
 import static com.offsec.nethunter.audio.AudioPlayState.BUFFERING;
 import static com.offsec.nethunter.audio.AudioPlayState.STARTING;
@@ -44,7 +44,7 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
     private NotificationManager notifManager;
     private PowerManager.WakeLock wakeLock;
     private PendingIntent togglePendingIntent;
-    private final Handler handler = new Handler();
+    private final Handler handler = new Handler(Looper.getMainLooper());
     @Nullable
     private AudioPlaybackWorker playWorker = null;
     @Nullable
@@ -109,13 +109,13 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
         // Release WakeLock
         if (wakeLock != null && wakeLock.isHeld()) {
             wakeLock.release();
-            Log.d("AudioFragment", "WakeLock released.");
+            //Log.d("AudioFragment", "WakeLock released.");
         }
         wakeLock = null;
 
         // Clean handler callbacks (do not reassign final handler)
         handler.removeCallbacksAndMessages(null);
-        Log.d("AudioFragment", "Handler callbacks removed.");
+        //Log.d("AudioFragment", "Handler callbacks removed.");
 
         // Cancel notifications
         if (notifManager != null) {
@@ -125,8 +125,7 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
 
         // Update state
         playState.setValue(AudioPlayState.STOPPED);
-
-        Log.d("AudioFragment", "AudioPlaybackService destroyed and cleaned up.");
+        //Log.d("AudioFragment", "AudioPlaybackService destroyed and cleaned up.");
     }
 
     @SuppressLint("InlinedApi")
@@ -174,7 +173,13 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
         playWorker.setBufferUsec(headroomUsec, latencyUsec);
         playWorkerThread = new Thread(playWorker);
 
-        startForeground(NOTIFICATION, createNotification(STARTING));
+        // Start as a typed foreground service for API 34+
+        ServiceCompat.startForeground(
+                this,
+                NOTIFICATION,
+                createNotification(STARTING),
+                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK
+        );
         notifyState(STARTING);
         playWorkerThread.start();
 
@@ -207,11 +212,9 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
     public String getServerPref() {
         return sharedPrefs.getString("server", "");
     }
-
     public int getPortPref() {
         return sharedPrefs.getInt("port", -1);
     }
-
     public boolean getAutostartPref() {
         return sharedPrefs.getBoolean("auto_start", false);
     }
@@ -227,7 +230,6 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
     public long getBufferHeadroom() {
         return headroomUsec;
     }
-
     public long getTargetLatency() {
         return latencyUsec;
     }
@@ -273,7 +275,6 @@ public class AudioPlaybackService extends Service implements AudioPlaybackWorker
     public LiveData<AudioPlayState> playState() {
         return playState;
     }
-
     public Throwable getError() {
         return playWorker == null ? null : playWorker.getError();
     }

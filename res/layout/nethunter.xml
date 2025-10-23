@@ -13,7 +13,7 @@
         android:gravity="center"
         android:textSize="18sp"
         app:layout_constraintTop_toTopOf="parent"
-        android:text="SYSTEM INFORMATION">
+        android:text="@string/nethunter_system_information">
     </TextView>
 
     <TextView
@@ -65,28 +65,25 @@
                 android:id="@+id/f_nethunter_refreshButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Refresh" />
+                android:text="@string/nethunter_refresh" />
 
             <Button
                 android:id="@+id/f_nethunter_addItemButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Add" />
+                android:text="@string/nethunter_add" />
 
             <Button
                 android:id="@+id/f_nethunter_deleteItemButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Delete" />
+                android:text="@string/nethunter_delete" />
 
             <Button
                 android:id="@+id/f_nethunter_moveItemButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Move" />
-
+                android:text="@string/nethunter_move" />
         </LinearLayout>
     </HorizontalScrollView>
-
 </androidx.constraintlayout.widget.ConstraintLayout>
-

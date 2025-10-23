@@ -34,7 +34,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.view.MenuHost;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -68,7 +71,6 @@ public class CustomCommandsFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
         this.context = getContext();
         this.activity = getActivity();
     }
@@ -82,14 +84,16 @@ public class CustomCommandsFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         TextView customBanner;
         super.onViewCreated(view, savedInstanceState);
+
         CustomCommandsViewModel customCommandsViewModel = new ViewModelProvider(this).get(CustomCommandsViewModel.class);
         customCommandsViewModel.init(context);
-        customCommandsViewModel.getLiveDataCustomCommandsModelList().observe(getViewLifecycleOwner(), customCommandsModelList -> customCommandsRecyclerViewAdapter.notifyDataSetChanged());
+        customCommandsViewModel.getLiveDataCustomCommandsModelList()
+                .observe(getViewLifecycleOwner(), l -> customCommandsRecyclerViewAdapter.notifyDataSetChanged());
 
-        customCommandsRecyclerViewAdapter = new CustomCommandsRecyclerViewAdapter(context, customCommandsViewModel.getLiveDataCustomCommandsModelList().getValue());
+        customCommandsRecyclerViewAdapter =
+                new CustomCommandsRecyclerViewAdapter(context, customCommandsViewModel.getLiveDataCustomCommandsModelList().getValue());
         RecyclerView recyclerView = view.findViewById(R.id.f_customcommands_recyclerview);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
-        recyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false));
         recyclerView.setAdapter(customCommandsRecyclerViewAdapter);
 
         addButton = view.findViewById(R.id.f_customcommands_addItemButton);
@@ -101,107 +105,108 @@ public class CustomCommandsFragment extends Fragment {
         onDeleteItemSetup();
         onMoveItemSetup();
 
-        //WearOS optimisation
         SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
-        if (iswatch) {
-            customBanner.setVisibility(View.GONE);
-        }
-    }
+        boolean iswatchPref = sharedpreferences.getBoolean("running_on_wearos", false);
+        if (iswatchPref) customBanner.setVisibility(View.GONE);
 
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        inflater.inflate(R.menu.custom_commands, menu);
-        final MenuItem searchItem = menu.findItem(R.id.f_customcommands_action_search);
-        final SearchView searchView = (SearchView) searchItem.getActionView();
-        //WearOS optimisation
-        boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
-        if(iswatch) {
-            searchItem.setVisible(false);
-        }
-        assert searchView != null;
-        searchView.setOnSearchClickListener(v -> menu.setGroupVisible(R.id.f_customcommands_menu_group1, false));
-        searchView.setOnCloseListener(() -> {
-            menu.setGroupVisible(R.id.f_customcommands_menu_group1, true);
-            return false;
-        });
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        MenuHost menuHost = requireActivity();
+        menuHost.addMenuProvider(new MenuProvider() {
             @Override
-            public boolean onQueryTextSubmit(String query) { //when you press the search button
-                customCommandsRecyclerViewAdapter.getFilter().filter(query);
-                return false;
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+                inflater.inflate(R.menu.custom_commands, menu);
+                MenuItem searchItem = menu.findItem(R.id.f_customcommands_action_search);
+                boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
+                if (iswatch) searchItem.setVisible(false);
+
+                SearchView searchView = (SearchView) searchItem.getActionView();
+                if (searchView != null) {
+                    searchView.setOnSearchClickListener(v1 -> menu.setGroupVisible(R.id.f_customcommands_menu_group1, false));
+                    searchView.setOnCloseListener(() -> {
+                        menu.setGroupVisible(R.id.f_customcommands_menu_group1, true);
+                        return false;
+                    });
+                    searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                        @Override public boolean onQueryTextSubmit(String query) {
+                            customCommandsRecyclerViewAdapter.getFilter().filter(query);
+                            return false;
+                        }
+                        @Override public boolean onQueryTextChange(String newText) {
+                            customCommandsRecyclerViewAdapter.getFilter().filter(newText);
+                            return false;
+                        }
+                    });
+                }
             }
 
             @Override
-            public boolean onQueryTextChange(String newText) {
-                customCommandsRecyclerViewAdapter.getFilter().filter(newText);
+            public boolean onMenuItemSelected(@NonNull MenuItem item) {
+                LayoutInflater li = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+                int id = item.getItemId();
+                if (id == R.id.f_customcommands_menu_backupDB) {
+                    View promptViewBackup = li.inflate(R.layout.customcommands_custom_dialog_view, null);
+                    TextView titleTextView = promptViewBackup.findViewById(R.id.f_customcommands_adb_tv_title1);
+                    EditText storedpathEditText = promptViewBackup.findViewById(R.id.f_customcommands_adb_et_storedpath);
+                    titleTextView.setText(R.string.customcommands_full_path_db_save);
+                    storedpathEditText.setText(String.format("%s/FragmentCustomCommands", NhPaths.APP_SD_SQLBACKUP_PATH));
+                    AlertDialog dialog = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+                            .setView(promptViewBackup)
+                            .setNegativeButton("Cancel", (d,w)->d.dismiss())
+                            .setPositiveButton("OK", (d,w)->{})
+                            .create();
+                    dialog.setOnShowListener(dlg -> {
+                        Button ok = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                        ok.setOnClickListener(v -> {
+                            String res = CustomCommandsData.getInstance()
+                                    .backupData(CustomCommandsSQL.getInstance(context), storedpathEditText.getText().toString());
+                            if (res == null) {
+                                NhPaths.showMessage(context, "db is successfully backup to " + storedpathEditText.getText());
+                            } else {
+                                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat)
+                                        .setTitle("Failed to backup the DB.")
+                                        .setMessage(res)
+                                        .create().show();
+                            }
+                            dialog.dismiss();
+                        });
+                    });
+                    dialog.show();
+                    return true;
+                } else if (id == R.id.f_customcommands_menu_restoreDB) {
+                    View promptViewRestore = li.inflate(R.layout.customcommands_custom_dialog_view, null);
+                    TextView titleTextView = promptViewRestore.findViewById(R.id.f_customcommands_adb_tv_title1);
+                    EditText storedpathEditText = promptViewRestore.findViewById(R.id.f_customcommands_adb_et_storedpath);
+                    titleTextView.setText(R.string.customcommands_full_path_db_restore);
+                    storedpathEditText.setText(String.format("%s/FragmentCustomCommands", NhPaths.APP_SD_SQLBACKUP_PATH));
+                    AlertDialog dialog = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+                            .setView(promptViewRestore)
+                            .setNegativeButton("Cancel", (d,w)->d.dismiss())
+                            .setPositiveButton("OK", (d,w)->{})
+                            .create();
+                    dialog.setOnShowListener(dlg -> {
+                        Button ok = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+                        ok.setOnClickListener(v -> {
+                            String res = CustomCommandsData.getInstance()
+                                    .restoreData(CustomCommandsSQL.getInstance(context), storedpathEditText.getText().toString());
+                            if (res == null) {
+                                NhPaths.showMessage(context, "db is successfully restored to " + storedpathEditText.getText());
+                            } else {
+                                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat)
+                                        .setTitle("Failed to restore the DB.")
+                                        .setMessage(res)
+                                        .create().show();
+                            }
+                            dialog.dismiss();
+                        });
+                    });
+                    dialog.show();
+                    return true;
+                } else if (id == R.id.f_customcommands_menu_ResetToDefault) {
+                    CustomCommandsData.getInstance().resetData(CustomCommandsSQL.getInstance(context));
+                    return true;
+                }
                 return false;
             }
-        });
-        super.onCreateOptionsMenu(menu, inflater);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        final LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-
-        int id = item.getItemId();
-        if (id == R.id.f_customcommands_menu_backupDB) {
-            View promptViewBackup = inflater.inflate(R.layout.customcommands_custom_dialog_view, null);
-            final TextView titleTextView = promptViewBackup.findViewById(R.id.f_customcommands_adb_tv_title1);
-            final EditText storedpathEditText = promptViewBackup.findViewById(R.id.f_customcommands_adb_et_storedpath);
-
-            titleTextView.setText(R.string.customcommands_full_path_db_save);
-            storedpathEditText.setText(String.format("%s/FragmentCustomCommands", NhPaths.APP_SD_SQLBACKUP_PATH));
-            MaterialAlertDialogBuilder adbBackup = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-            adbBackup.setView(promptViewBackup);
-            adbBackup.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-            adbBackup.setPositiveButton("OK", (dialog, which) -> { });
-            final AlertDialog adBackup = adbBackup.create();
-            adBackup.setOnShowListener(dialog -> {
-                final Button buttonOK = adBackup.getButton(DialogInterface.BUTTON_POSITIVE);
-                buttonOK.setOnClickListener(v -> {
-                    String returnedResult = CustomCommandsData.getInstance().backupData(CustomCommandsSQL.getInstance(context), storedpathEditText.getText().toString());
-                    if (returnedResult == null) {
-                        NhPaths.showMessage(context, "db is successfully backup to " + storedpathEditText.getText().toString());
-                    } else {
-                        dialog.dismiss();
-                        new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to backup the DB.").setMessage(returnedResult).create().show();
-                    }
-                    dialog.dismiss();
-                });
-            });
-            adBackup.show();
-        } else if (id == R.id.f_customcommands_menu_restoreDB) {
-            View promptViewRestore = inflater.inflate(R.layout.customcommands_custom_dialog_view, null);
-            final TextView titleTextView = promptViewRestore.findViewById(R.id.f_customcommands_adb_tv_title1);
-            final EditText storedpathEditText = promptViewRestore.findViewById(R.id.f_customcommands_adb_et_storedpath);
-
-            titleTextView.setText(R.string.customcommands_full_path_db_restore);
-            storedpathEditText.setText(String.format("%s/FragmentCustomCommands", NhPaths.APP_SD_SQLBACKUP_PATH));
-            MaterialAlertDialogBuilder adbRestore = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-            adbRestore.setView(promptViewRestore);
-            adbRestore.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-            adbRestore.setPositiveButton("OK", (dialog, which) -> { });
-            final AlertDialog adRestore = adbRestore.create();
-            adRestore.setOnShowListener(dialog -> {
-                final Button buttonOK = adRestore.getButton(DialogInterface.BUTTON_POSITIVE);
-                buttonOK.setOnClickListener(v -> {
-                    String returnedResult = CustomCommandsData.getInstance().restoreData(CustomCommandsSQL.getInstance(context), storedpathEditText.getText().toString());
-                    if (returnedResult == null) {
-                        NhPaths.showMessage(context, "db is successfully restored to " + storedpathEditText.getText().toString());
-                    } else {
-                        dialog.dismiss();
-                        new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to restore the DB.").setMessage(returnedResult).create().show();
-                    }
-                    dialog.dismiss();
-                });
-            });
-            adRestore.show();
-        } else if (id == R.id.f_customcommands_menu_ResetToDefault) {
-            CustomCommandsData.getInstance().resetData(CustomCommandsSQL.getInstance(context));
-        }
-        return super.onOptionsItemSelected(item);
+        }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
     }
 
     @Override

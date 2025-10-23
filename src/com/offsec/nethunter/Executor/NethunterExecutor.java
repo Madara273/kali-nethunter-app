@@ -2,13 +2,11 @@ package com.offsec.nethunter.Executor;
 
 import android.os.Handler;
 import android.os.Looper;
-import android.util.Log;
 
 import com.offsec.nethunter.NetHunterFragment;
 import com.offsec.nethunter.SQL.NethunterSQL;
 import com.offsec.nethunter.models.NethunterModel;
 import com.offsec.nethunter.utils.ShellExecuter;
-import com.offsec.nethunter.utils.VulkanChecker;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -73,14 +71,6 @@ public class NethunterExecutor {
         this.nethunterSQL = nethunterSQL;
     }
 
-    public static void checkVulkanSupportOnStart(NetHunterFragment netHunterFragment) {
-        if (VulkanChecker.isVulkanSupported(netHunterFragment.getContext())) {
-            Log.d("NethunterExecutor", "Vulkan is supported on this device.");
-        } else {
-            Log.d("NethunterExecutor", "Vulkan is NOT supported on this device.");
-        }
-    }
-
     public void execute(List<NethunterModel> nethunterModelList) {
         if (listener != null) {
             mainHandler.post(listener::onPrepare);
@@ -101,7 +91,8 @@ public class NethunterExecutor {
         switch (actionCode) {
             case GETITEMRESULTS:
                 if (nethunterModelList != null) {
-                    for (NethunterModel model : nethunterModelList) {
+                    List<NethunterModel> snapshot = new ArrayList<>(nethunterModelList);
+                    for (NethunterModel model : snapshot) {
                         model.setResult(model.getRunOnCreate().equals("1")
                                 ? new ShellExecuter().RunAsRootOutput(model.getCommand()).split("\\n")
                                 : "Please click RUN button manually.".split("\\n"));
@@ -148,9 +139,10 @@ public class NethunterExecutor {
                 break;
             case DELETEDATA:
                 if (nethunterModelList != null) {
-                    Collections.sort(selectedPositionsIndex, Collections.reverseOrder());
-                    for (Integer selectedPosition : selectedPositionsIndex) {
-                        nethunterModelList.remove((int) selectedPosition);
+                    List<Integer> idxSnapshot = new ArrayList<>(selectedPositionsIndex);
+                    Collections.sort(idxSnapshot, Collections.reverseOrder());
+                    for (Integer positionsIndex : idxSnapshot) {
+                        nethunterModelList.remove((int) positionsIndex);
                     }
                     nethunterSQL.deleteData(selectedTargetIds);
                 }

@@ -1,5 +1,6 @@
 package com.offsec.nethunter;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -11,7 +12,6 @@ import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -83,10 +83,14 @@ public class VNCFragment extends Fragment {
     //   logDebug(TAG, "Your debug message here");
     //
     private void logDebug(String tag, String message) {
-        int NH_SYSTEM_LOGGING = 0;
-        if (NH_SYSTEM_LOGGING > 0) {
-            Log.d(tag, "[Level " + NH_SYSTEM_LOGGING + "] " + message);
+        if (getLoggingLevel() > 0) {
+            Log.d(tag, "[Level " + getLoggingLevel() + "] " + message);
         }
+    }
+
+    // Central place to compute logging level; change return value or source as needed
+    private int getLoggingLevel() {
+        return 0; // 0 disables logs; increase to enable
     }
 
     private void logToast(String message) {
@@ -181,17 +185,9 @@ public class VNCFragment extends Fragment {
         }
 
         // Screen size
-        DisplayMetrics displaymetrics = new DisplayMetrics();
-        WindowManager wm = (WindowManager) activity.getApplicationContext().getSystemService(Context.WINDOW_SERVICE);
-        Display disp = wm.getDefaultDisplay();
-        int API_LEVEL =  Build.VERSION.SDK_INT;
-        if (API_LEVEL >= 17) {
-            disp.getRealMetrics(displaymetrics);
-        } else {
-            disp.getMetrics(displaymetrics);
-        }
-        final int screen_height = displaymetrics.heightPixels;
-        final int screen_width = displaymetrics.widthPixels;
+        int[] size = getScreenSizeCompat(requireContext());
+        final int screen_width = size[0];
+        final int screen_height = size[1];
 
         // Because height and width changes on screen rotation, use the largest as width
         String xwidth;
@@ -328,7 +324,7 @@ public class VNCFragment extends Fragment {
         });
 
         // Last selected resolution
-        Integer prevres = sharedpreferences.getInt("last_kex_res", 0);
+        int prevres = sharedpreferences.getInt("last_kex_res", 0);
         String prevres_string = sharedpreferences.getString("last_kex_res_string", "");
         if (exe.RunAsRootOutput("grep " + prevres_string + " " + NhPaths.APP_SD_FILES_PATH + "/configs/vnc-resolutions").equals(prevres_string)) {
             vncresolution.setSelection(prevres);
@@ -507,7 +503,7 @@ public class VNCFragment extends Fragment {
             } else {
                 if (iswatch) {
                     logToast("Use password 123456 with root user for KeX on Smartwatch.");
-                    run_cmd("echo -ne \"\\033]0;KeX Setup\\007\" && clear;echo 'Setting root:123456 KeX credentials..' && sleep 2 && echo 123456\\\\n123456\\\\nn\\\\n | vncpasswd;echo 'Done! Exiting..' && sleep 2 && exit");
+                    run_cmd("echo -ne \"\\033]0;KeX Setup\\007\" && clear;echo 'Setting root:123456 KeX credentials..' && sleep 2 && echo 123456\\n123456\\nn\\n | vncpasswd;echo 'Done! Exiting..' && sleep 2 && exit");
                 } else run_cmd("echo -ne \"\\033]0;Setting up Server\\007\" && clear;chmod +x ~/.vnc/xstartup && clear;echo $'\n'\"Please enter your new VNC server password\"$'\n' && " + "if [ \"" + selected_user + "\" == \"root\" ]; then " + "  if [ ! -d /root/.config/tigervnc ]; then mkdir -p -m 0777 /root/.config/tigervnc; fi; " + "  sudo -u root vncpasswd; " + "  if [ ! -f ~/.vnc/passwd ]; then cp -rf ~/.config/tigervnc/passwd ~/.vnc/; fi; " + "else " + " user_uid=$(id -u " + selected_user + "); " + " if [ \"$user_uid\" -eq 100000 ] || [ \"$user_uid\" -eq 9000 ]; then " + " if [ ! -d /home/" + selected_user + "/.config/tigervnc ]; then mkdir -p -m 0777 /home/" + selected_user + "/.config/tigervnc; fi; " + "  sudo -u " + selected_user + " vncpasswd; " + "  if [ ! -f /home/" + selected_user + "/.vnc/passwd ]; then cp -rf /home/" + selected_user + "/.config/tigervnc/passwd /home/" + selected_user + "/.vnc/; fi; " + " fi; " + "fi && sleep 2 && exit"); // since is a kali command we can send it as is
             }
         });
@@ -643,6 +639,20 @@ public class VNCFragment extends Fragment {
         return rootView;
     }
 
+    // Helper for computing screen size compatibly. Uses WindowMetrics on API 30+,
+    // and Resources metrics for older devices (no deprecated Display API usage).
+    private static int[] getScreenSizeCompat(Context ctx) {
+        WindowManager wm = (WindowManager) ctx.getSystemService(Context.WINDOW_SERVICE);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            final android.view.WindowMetrics windowMetrics = wm.getCurrentWindowMetrics();
+            final android.graphics.Rect bounds = windowMetrics.getBounds();
+            return new int[]{bounds.width(), bounds.height()};
+        } else {
+            DisplayMetrics dm = ctx.getResources().getDisplayMetrics();
+            return new int[]{dm.widthPixels, dm.heightPixels};
+        }
+    }
+
     // Helper method to check if sudo is available
     private boolean isSuAvailable() {
         try {
@@ -664,10 +674,10 @@ public class VNCFragment extends Fragment {
 
     // Helper method to check user permissions
     private boolean checkUserPermissions(String user) {
-        if (!isSuAvailable()) return false;  // Return early if sudo is unavailable
+        if (!isSuAvailable()) return false;  // Return early if su is unavailable
 
         try {
-            Process process = Runtime.getRuntime().exec("sudo -l -U " + user);
+            Process process = Runtime.getRuntime().exec(new String[]{"su", "-c", BUSYBOX_NH + " chroot " + NhPaths.CHROOT_PATH() + " sudo -l -U " + user});
             BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
             String output;
             while ((output = reader.readLine()) != null) {
@@ -895,14 +905,14 @@ public class VNCFragment extends Fragment {
 
     public void run_cmd(String cmd) {
         logDebug(TAG, "run_cmd: Executing command: " + cmd);
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
         activity.startActivity(intent);
         logDebug(TAG, "run_cmd: Command execution started");
     }
 
     public void run_cmd_android(String cmd) {
         logDebug(TAG, "run_cmd_android: Executing Android command: " + cmd);
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/android-su", cmd);
+        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/android-su", cmd);
         activity.startActivity(intent);
         logDebug(TAG, "run_cmd_android: Android command execution started");
     }

@@ -436,16 +436,14 @@
                             android:id="@+id/f_usbarsenal_et_inquiryString"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
                             android:autofillHints="none"
                             android:ems="10"
                             android:inputType="text" />
 
                         <Button
                             android:id="@+id/f_usbarsenal_btn_changeInquiryString"
-                            android:layout_width="match_parent"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_weight="3"
                             android:text="Change" />
                     </LinearLayout>
                 </LinearLayout>

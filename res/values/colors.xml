@@ -77,4 +77,5 @@
     <item name="system_card_bg" type="color">#181C24</item>
     <item name="system_tab_ripple" type="color">#33B0BEC5</item>
     <item name="system_card_button_bg" type="color">#1A2233</item>
+    <item name="terminal_line_selected" type="color">#FFCC80</item>
 </resources>

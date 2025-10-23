@@ -1,8 +1,8 @@
 package com.offsec.nethunter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.LinkAddress;
 import android.net.LinkProperties;
@@ -26,6 +26,7 @@ import java.net.InetAddress;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 public class MPCFragment extends Fragment {
@@ -40,6 +41,7 @@ public class MPCFragment extends Fragment {
     private NetworkRequest.Builder builder;
 
     public MPCFragment() {
+        // Required empty public constructor
     }
 
     public static MPCFragment newInstance(int sectionNumber) {
@@ -62,7 +64,7 @@ public class MPCFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.payload_maker, container, false);
-        SharedPreferences sharedpreferences = context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
+        context.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
 
         // Payload Type Spinner
         Spinner typeSpinner = rootView.findViewById(R.id.mpc_type_spinner);
@@ -201,7 +203,7 @@ public class MPCFragment extends Fragment {
 
             @Override
             public void onNothingSelected(AdapterView<?> parent) {
-                //Another interface callback
+                // Another interface callback
             }
         });
 
@@ -261,8 +263,10 @@ public class MPCFragment extends Fragment {
                                 if (address instanceof Inet4Address) {
                                     String ip = address.getHostAddress();
                                     // IP Text Field
-                                    EditText ipaddress = rootView.findViewById(R.id.mpc_ip_address);
-                                    ipaddress.setText(ip);
+                                    requireActivity().runOnUiThread(() -> {
+                                        EditText ipaddress = rootView.findViewById(R.id.mpc_ip_address);
+                                        ipaddress.setText(ip);
+                                    });
                                 }
                             }
                         }
@@ -301,7 +305,19 @@ public class MPCFragment extends Fragment {
     ////
 
     public void run_cmd(String cmd) {
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
-        requireContext().startActivity(intent);
+        // Prefer in-app TerminalFragment to save memory
+        if (getActivity() instanceof AppCompatActivity) {
+            AppCompatActivity app = (AppCompatActivity) getActivity();
+            TerminalFragment tf = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
+            app.getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.container, tf)
+                    .addToBackStack(null)
+                    .commitAllowingStateLoss();
+        } else {
+            // Fallback to legacy bridge if fragment manager is unavailable
+            @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+            requireContext().startActivity(intent);
+        }
     }
 }

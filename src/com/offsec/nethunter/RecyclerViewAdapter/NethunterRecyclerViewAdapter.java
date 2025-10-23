@@ -27,7 +27,6 @@ import com.offsec.nethunter.utils.NhPaths;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 public class NethunterRecyclerViewAdapter extends RecyclerView.Adapter<NethunterRecyclerViewAdapter.ItemViewHolder> implements Filterable {
     public static final String TAG = "NethunterRecyclerView";
@@ -54,9 +53,8 @@ public class NethunterRecyclerViewAdapter extends RecyclerView.Adapter<Nethunter
         holder.resultRecyclerView.setAdapter(new NethunterRecyclerViewAdapterResult(context, nethunterModelList.get(position).getResult()));
         holder.runButton.setOnClickListener(v -> NethunterData.getInstance().runCommandforItem(position));
         holder.titleTextView.setOnLongClickListener(v -> {
-            final ViewGroup nullParent = null;
             final LayoutInflater mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            final View promptViewEdit = mInflater.inflate(R.layout.nethunter_edit_dialog_view, nullParent);
+            final View promptViewEdit = mInflater.inflate(R.layout.nethunter_edit_dialog_view, null);
             final EditText titleEditText = promptViewEdit.findViewById(R.id.f_nethunter_edit_adb_et_title);
             final EditText cmdEditText = promptViewEdit.findViewById(R.id.f_nethunter_edit_adb_et_command);
             final EditText delimiterEditText = promptViewEdit.findViewById(R.id.f_nethunter_edit_adb_et_delimiter);
@@ -156,13 +154,13 @@ public class NethunterRecyclerViewAdapter extends RecyclerView.Adapter<Nethunter
         @Override
         protected FilterResults performFiltering(CharSequence constraint) {
             FilterResults results = new FilterResults();
-            if (constraint == null || constraint.length() == 0){
+            if (constraint == null || constraint.length() == 0) {
                 results.values = new ArrayList<>(NethunterData.getInstance().nethunterModelListFull);
             } else {
                 String filterPattern = constraint.toString().toLowerCase().trim();
                 List<NethunterModel> tempNethunterModelList = new ArrayList<>();
-                for (NethunterModel nethunterModel: NethunterData.getInstance().nethunterModelListFull){
-                    if (nethunterModel.getTitle().toLowerCase().contains(filterPattern)){
+                for (NethunterModel nethunterModel: NethunterData.getInstance().nethunterModelListFull) {
+                    if (nethunterModel.getTitle().toLowerCase().contains(filterPattern)) {
                         tempNethunterModelList.add(nethunterModel);
                     }
                 }
@@ -173,23 +171,30 @@ public class NethunterRecyclerViewAdapter extends RecyclerView.Adapter<Nethunter
 
         @Override
         protected void publishResults(CharSequence constraint, FilterResults results) {
-            Objects.requireNonNull(NethunterData.getInstance().getNethunterModels().getValue()).clear();
-            NethunterData.getInstance().getNethunterModels().getValue().addAll((List<NethunterModel>) results.values);
-            NethunterData.getInstance().getNethunterModels().postValue(NethunterData.getInstance().getNethunterModels().getValue());
+            List<NethunterModel> live = NethunterData.getInstance().getNethunterModels().getValue();
+            if (live == null || results.values == null) return;
+            if (results.values instanceof List<?>) {
+                live.clear();
+                for (Object o : (List<?>) results.values) {
+                    if (o instanceof NethunterModel) {
+                        live.add((NethunterModel) o);
+                    }
+                }
+                NethunterData.getInstance().getNethunterModels().postValue(live);
+            }
         }
     };
 
-    static class ItemViewHolder extends RecyclerView.ViewHolder{
+    public static class ItemViewHolder extends RecyclerView.ViewHolder {
         private final TextView titleTextView;
         private final RecyclerView resultRecyclerView;
         private final Button runButton;
-        //private Button editButton;
-        private ItemViewHolder(View view) {
+
+        public ItemViewHolder(View view) {
             super(view);
             titleTextView = view.findViewById(R.id.f_nethunter_item_title_tv);
             resultRecyclerView = view.findViewById(R.id.f_nethunter_item_result_recyclerview);
             runButton = view.findViewById(R.id.f_nethunter_item_run_btn);
-            //editButton = view.findViewById(R.id.f_nethunter_item_edit_btn);
         }
     }
 }

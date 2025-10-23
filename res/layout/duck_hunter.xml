@@ -1,14 +1,18 @@
-<androidx.viewpager.widget.ViewPager xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/pagerDuckHunter"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content">
-    
-    <androidx.viewpager.widget.PagerTabStrip
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/tabsDuckHunter"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="top"
-        android:paddingBottom="10dp"
-        android:paddingTop="10dp"
-        android:textColor="#FFFFFF" />
-</androidx.viewpager.widget.ViewPager>
-   
+        app:tabIndicatorFullWidth="false" />
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/pagerDuckHunter"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+</LinearLayout>

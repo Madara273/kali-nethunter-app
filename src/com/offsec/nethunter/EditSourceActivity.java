@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.os.Bundle;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 
 import com.offsec.nethunter.utils.NhPaths;
@@ -15,7 +16,6 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NavUtils;
 import androidx.core.content.ContextCompat;
-
 
 public class EditSourceActivity extends AppCompatActivity {
     private String configFilePath = "";
@@ -36,6 +36,9 @@ public class EditSourceActivity extends AppCompatActivity {
         source.setText(String.format(Locale.getDefault(),getString(R.string.loading_file), configFilePath));
         exe.ReadFile_ASYNC(configFilePath, source);
 
+        Button updateBtn = findViewById(R.id.update);
+        updateBtn.setOnClickListener(this::updateSource);
+
         ActionBar ab = getSupportActionBar();
         if (ab != null) {
             ab.setDisplayHomeAsUpEnabled(true);
@@ -51,20 +54,6 @@ public class EditSourceActivity extends AppCompatActivity {
         }
         return super.onOptionsItemSelected(item);
     }
-
-    /* Not usable?
-    public void updateSource() {
-
-        EditText source = (EditText) findViewById(R.id.source);
-        String newSource = source.getText().toString();
-        Boolean isSaved = exe.SaveFileContents(newSource, configFilePath);
-        if(isSaved){
-            NhPaths.showMessage("Source updated");
-        } else {
-            NhPaths.showMessage("Source not updated");
-        }
-    }
-    */
 
     public void updateSource(View view) {
         EditText source = findViewById(R.id.source);

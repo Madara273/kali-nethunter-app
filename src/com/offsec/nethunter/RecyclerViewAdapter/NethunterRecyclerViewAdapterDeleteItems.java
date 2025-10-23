@@ -14,7 +14,6 @@ import com.offsec.nethunter.models.NethunterModel;
 
 import java.util.List;
 
-
 public class NethunterRecyclerViewAdapterDeleteItems extends RecyclerView.Adapter<NethunterRecyclerViewAdapterDeleteItems.ItemViewHolder>{
 	public static final String TAG = "NethunterRecyclerView";
 	private final Context context;
@@ -42,11 +41,11 @@ public class NethunterRecyclerViewAdapterDeleteItems extends RecyclerView.Adapte
 		return nethunterModelList.size();
 	}
 
-	static class ItemViewHolder extends RecyclerView.ViewHolder{
-		private final CheckBox checkBox;
-		private ItemViewHolder(View view){
-			super(view);
-			checkBox = view.findViewById(R.id.f_nethunter_recyclerview_dialog_chkbox);
-		}
-	}
+    public static class ItemViewHolder extends RecyclerView.ViewHolder {
+        private final CheckBox checkBox;
+        public ItemViewHolder(View view) {
+            super(view);
+            checkBox = view.findViewById(R.id.f_nethunter_recyclerview_dialog_chkbox);
+        }
+    }
 }

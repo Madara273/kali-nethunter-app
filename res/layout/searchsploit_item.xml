@@ -1,135 +1,139 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:longClickable="true"
-    android:paddingBottom="5dp">
+    android:layout_height="wrap_content"
+    android:layout_margin="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp"
+    android:longClickable="true">
 
-    <TextView
-        android:id="@+id/description"
-        android:layout_width="wrap_content"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentStart="true"
-        android:layout_alignParentTop="true"
-        android:layout_marginTop="18dp"
-        android:layout_marginBottom="18dp"
-        android:layout_toStartOf="@+id/searchsploit_sendhid_button"
-        android:gravity="center_vertical"
-        android:paddingLeft="@dimen/base_listItem_LR"
-        android:paddingRight="@dimen/base_listItem_LR"
-        android:text="description"
-        android:textAppearance="?android:attr/textAppearanceLarge"
-        android:textColor="@android:color/white" />
+        android:padding="16dp">
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="PLATFORM"
-        android:id="@+id/textView8"
-        android:paddingLeft="@dimen/base_listItem_LR"
-        android:paddingRight="@dimen/base_listItem_LR"
-        android:textColor="@color/accent_material_dark"
-        android:layout_below="@+id/textView4"
-        android:layout_alignParentStart="true" />
+        <TextView
+            android:id="@+id/description"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="description"
+            android:textAppearance="?android:attr/textAppearanceLarge"
+            android:textColor="@android:color/white"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/searchsploit_sendhid_button"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="TYPE"
-        android:id="@+id/textView4"
-        android:paddingLeft="@dimen/base_listItem_LR"
-        android:layout_marginTop="-7dp"
-        android:textColor="@color/accent_material_dark"
-        android:paddingRight="@dimen/base_listItem_LR"
-        android:layout_below="@+id/description"
-        android:layout_alignParentStart="true" />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="DATE"
-        android:paddingLeft="@dimen/base_listItem_LR"
-        android:textColor="@color/accent_material_dark"
-        android:paddingRight="@dimen/base_listItem_LR"
-        android:layout_below="@+id/textView9"
-        android:layout_alignParentStart="true" />
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/searchsploit_sendhid_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="SEND HID"
+            app:backgroundTint="@android:color/holo_red_dark"
+            app:icon="@android:drawable/ic_menu_send"
+            app:iconGravity="textStart"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-    <Button
-        android:id="@+id/viewSource"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/searchsploit_sendhid_button"
-        android:layout_alignStart="@+id/openWeb"
-        android:layout_marginEnd="@dimen/base_listItem_LR"
-        android:text="View Source" />
+        <TextView
+            android:id="@+id/textView4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="TYPE: "
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="@color/accent_material_dark"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/description" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="type"
-        android:id="@+id/type"
-        android:textColor="@color/accent_material_light"
-        android:layout_above="@+id/textView8"
-        android:layout_toEndOf="@+id/textView8" />
+        <TextView
+            android:id="@+id/type"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="type"
+            android:textColor="@color/accent_material_light"
+            app:layout_constraintStart_toEndOf="@+id/textView4"
+            app:layout_constraintTop_toTopOf="@+id/textView4" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="platform"
-        android:id="@+id/platform"
-        android:textColor="@color/accent_material_light"
-        android:layout_alignTop="@+id/textView8"
-        android:layout_toEndOf="@+id/textView8" />
+        <TextView
+            android:id="@+id/textView8"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PLATFORM: "
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="@color/accent_material_dark"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView4" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="AUTHOR"
-        android:id="@+id/textView9"
-        android:paddingLeft="@dimen/base_listItem_LR"
-        android:textColor="@color/accent_material_dark"
-        android:paddingRight="@dimen/base_listItem_LR"
-        android:layout_below="@+id/textView8"
-        android:layout_alignParentStart="true" />
+        <TextView
+            android:id="@+id/platform"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="platform"
+            android:textColor="@color/accent_material_light"
+            app:layout_constraintStart_toEndOf="@+id/textView8"
+            app:layout_constraintTop_toTopOf="@+id/textView8" />
 
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="YES/NO"
-        android:id="@+id/author"
-        android:textColor="@color/accent_material_light"
-        android:layout_below="@+id/textView8"
-        android:layout_toEndOf="@+id/textView8" />
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textAppearance="?android:attr/textAppearanceSmall"
-        android:text="date"
-        android:id="@+id/exploit_date"
-        android:textColor="@color/accent_material_light"
-        android:layout_below="@+id/author"
-        android:layout_alignStart="@+id/author" />
+        <TextView
+            android:id="@+id/textView9"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="AUTHOR: "
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="@color/accent_material_dark"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView8" />
 
-    <Button
-        android:id="@+id/openWeb"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_below="@+id/viewSource"
-        android:layout_alignParentEnd="true"
-        android:layout_marginEnd="@dimen/base_listItem_LR"
-        android:text="View in www" />
+        <TextView
+            android:id="@+id/author"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="YES/NO"
+            android:textColor="@color/accent_material_light"
+            app:layout_constraintStart_toEndOf="@+id/textView9"
+            app:layout_constraintTop_toTopOf="@+id/textView9" />
 
-    <Button
-        android:id="@+id/searchsploit_sendhid_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignStart="@+id/viewSource"
-        android:layout_alignEnd="@+id/viewSource"
-        android:layout_alignParentTop="true"
-        android:text="SEND HID" />
-</RelativeLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="DATE: "
+            android:textAppearance="?android:attr/textAppearanceSmall"
+            android:textColor="@color/accent_material_dark"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/textView9" />
+
+        <TextView
+            android:id="@+id/exploit_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="date"
+            android:textColor="@color/accent_material_light"
+            app:layout_constraintStart_toEndOf="@+id/textView9"
+            app:layout_constraintTop_toBottomOf="@+id/textView9" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/viewSource"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="View Source"
+            app:backgroundTint="@android:color/holo_blue_dark"
+            app:icon="@android:drawable/ic_menu_agenda"
+            app:iconGravity="textStart"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/exploit_date"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/openWeb"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="View in www"
+            app:backgroundTint="@android:color/holo_green_dark"
+            app:icon="@android:drawable/ic_menu_view"
+            app:iconGravity="textStart"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/exploit_date"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

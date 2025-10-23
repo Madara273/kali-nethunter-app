@@ -7,6 +7,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.offsec.nethunter.BuildConfig;
 import com.offsec.nethunter.models.NethunterModel;
@@ -24,6 +25,7 @@ import java.util.List;
 public class NethunterSQL extends SQLiteOpenHelper {
     private final Context context;
     private static final String DATABASE_NAME = "NethunterFragment";
+    private static final int DATABASE_VERSION = 2;
     private static NethunterSQL instance;
     public static final String TAG = "NethunterSQL";
     private static final String TABLE_NAME = DATABASE_NAME;
@@ -47,7 +49,7 @@ public class NethunterSQL extends SQLiteOpenHelper {
     }
 
     private NethunterSQL(Context context) {
-        super(context, DATABASE_NAME, null, 1);
+        super(context, DATABASE_NAME, null, DATABASE_VERSION);
         this.context = context;
         COLUMNS.add("id");
         COLUMNS.add("TitleName");
@@ -78,6 +80,13 @@ public class NethunterSQL extends SQLiteOpenHelper {
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
         this.onCreate(db);
+    }
+
+    @Override
+    public void onDowngrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+        Log.w(TAG, "Downgrading database from version " + oldVersion + " to " + newVersion + ", resetting schema.");
+        db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
+        onCreate(db);
     }
 
     public List<NethunterModel> bindData(List<NethunterModel> nethunterModelArrayList) {
@@ -206,7 +215,7 @@ public class NethunterSQL extends SQLiteOpenHelper {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "backupData failed", e);
             return e.toString();
         }
         return null;
@@ -233,16 +242,16 @@ public class NethunterSQL extends SQLiteOpenHelper {
                          FileChannel dst = fos.getChannel()) {
                         dst.transferFrom(src, 0, src.size());
                     } catch (FileNotFoundException e) {
-                        e.printStackTrace();
+                        Log.e(TAG, "restoreData file not found: " + storedDBpath, e);
                         return "File not found: " + e.getMessage();
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        Log.e(TAG, "restoreData I/O error while copying db from: " + storedDBpath, e);
                         return "I/O error: " + e.getMessage();
                     }
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "restoreData unexpected error", e);
             return e.toString();
         }
         return null;

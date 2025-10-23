@@ -1,9 +1,12 @@
 package com.offsec.nethunter.service;
 
-import android.app.IntentService;
+import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.IBinder;
+import android.os.Process;
 
 import androidx.annotation.Nullable;
 
@@ -12,45 +15,34 @@ import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.SharePrefTag;
 import com.offsec.nethunter.utils.ShellExecuter;
 
-public class CompatCheckService extends IntentService {
+public class CompatCheckService extends Service {
     public static final String TAG = "CompatCheckService";
-    private int RESULTCODE = -1;
     private SharedPreferences sharedPreferences;
-
-    public CompatCheckService() {
-        super("CompatCheckService");
-    }
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return super.onBind(intent);
-    }
-
-    @Override
-    protected void onHandleIntent(@Nullable Intent intent) {
-        if (intent != null) {
-            RESULTCODE = intent.getIntExtra("RESULTCODE", -1);
-        }
-
-        if (!checkCompat()) {
-            String message = "";
-            getApplicationContext().sendBroadcast(new Intent()
-                    .putExtra("message", message)
-                    .setAction(BuildConfig.APPLICATION_ID + ".CHECKCOMPAT")
-                    .setPackage(BuildConfig.APPLICATION_ID));
-        }
-    }
+    private HandlerThread workerThread;
+    private Handler workerHandler;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        sharedPreferences = getApplicationContext().getSharedPreferences(BuildConfig.APPLICATION_ID, MODE_PRIVATE);
+        sharedPreferences = getApplicationContext()
+                .getSharedPreferences(BuildConfig.APPLICATION_ID, MODE_PRIVATE);
+        workerThread = new HandlerThread("CompatCheckServiceWorker",
+                Process.THREAD_PRIORITY_BACKGROUND);
+        workerThread.start();
+        workerHandler = new Handler(workerThread.getLooper());
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public int onStartCommand(@Nullable Intent intent, int flags, int startId) {
+        workerHandler.post(() -> {
+            int resultCode = -1;
+            if (intent != null) {
+                resultCode = intent.getIntExtra("RESULTCODE", -1);
+            }
+            processCompatCheck(resultCode);
+            stopSelf(startId);
+        });
+        return START_NOT_STICKY;
     }
 
     @Override
@@ -58,36 +50,63 @@ public class CompatCheckService extends IntentService {
         super.onTaskRemoved(rootIntent);
     }
 
-    private boolean checkCompat() {
+    @Override
+    public void onDestroy() {
+        if (workerThread != null) {
+            workerThread.quitSafely();
+        }
+        super.onDestroy();
+    }
+
+    @Nullable
+    @Override
+    public IBinder onBind(Intent intent) {
+        return null; // Not a bound service
+    }
+
+    private void processCompatCheck(int resultCode) {
+        ensureChrootPrefsAndSelinux();
+
+        if (resultCode == -1) {
+            boolean isChrootValid = new ShellExecuter().RunAsRootReturnValue(
+                    NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"status\" -p " + NhPaths.CHROOT_PATH()) == 0;
+            broadcastChrootStatus(isChrootValid);
+        } else {
+            broadcastChrootStatus(resultCode == 0);
+        }
+
+        if (!compatCondition()) {
+            getApplicationContext().sendBroadcast(new Intent()
+                    .putExtra("message", "")
+                    .setAction(BuildConfig.APPLICATION_ID + ".CHECKCOMPAT")
+                    .setPackage(BuildConfig.APPLICATION_ID));
+        }
+    }
+
+    // Preserved original semantic: always returns true now; adapt if logic added later
+    private boolean compatCondition() {
+        return true;
+    }
+
+    private void ensureChrootPrefsAndSelinux() {
         if (!sharedPreferences.contains("SElinux")) {
             new ShellExecuter().RunAsRootOutput("[ ! \"$(getenforce | grep Permissive)\" ] && setenforce 0");
         }
 
         if (sharedPreferences.getString(SharePrefTag.CHROOT_ARCH_SHAREPREF_TAG, null) == null) {
-            String[] chrootDirs = new ShellExecuter().RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"findchroot\"").split("\\n");
-            if (chrootDirs.length > 0 && !chrootDirs[0].isEmpty()) {
-                sharedPreferences.edit().putString(SharePrefTag.CHROOT_ARCH_SHAREPREF_TAG, chrootDirs[0]).apply();
-                sharedPreferences.edit().putString(SharePrefTag.CHROOT_PATH_SHAREPREF_TAG, NhPaths.NH_SYSTEM_PATH + "/" + chrootDirs[0]).apply();
-                new ShellExecuter().RunAsRootOutput("ln -sfn " + NhPaths.NH_SYSTEM_PATH + "/" + chrootDirs[0] + " " + NhPaths.CHROOT_SYMLINK_PATH);
-            } else {
-                sharedPreferences.edit().putString(SharePrefTag.CHROOT_ARCH_SHAREPREF_TAG, "kali-arm64").apply();
-                sharedPreferences.edit().putString(SharePrefTag.CHROOT_PATH_SHAREPREF_TAG, NhPaths.NH_SYSTEM_PATH + "/kali-arm64").apply();
-                new ShellExecuter().RunAsRootOutput("ln -sfn " + NhPaths.NH_SYSTEM_PATH + "/kali-arm64 " + NhPaths.CHROOT_SYMLINK_PATH);
-            }
+            String output = new ShellExecuter().RunAsRootOutput(
+                    NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"findchroot\"");
+            String[] chrootDirs = output.split("\\n");
+            String arch = (chrootDirs.length > 0 && !chrootDirs[0].isEmpty()) ? chrootDirs[0] : "kali-arm64";
+            sharedPreferences.edit().putString(SharePrefTag.CHROOT_ARCH_SHAREPREF_TAG, arch).apply();
+            sharedPreferences.edit().putString(SharePrefTag.CHROOT_PATH_SHAREPREF_TAG,
+                    NhPaths.NH_SYSTEM_PATH + "/" + arch).apply();
+            new ShellExecuter().RunAsRootOutput("ln -sfn " +
+                    NhPaths.NH_SYSTEM_PATH + "/" + arch + " " + NhPaths.CHROOT_SYMLINK_PATH);
         }
-
-        if (RESULTCODE == -1) {
-            boolean isChrootValid = new ShellExecuter().RunAsRootReturnValue(
-                    NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"status\" -p " + NhPaths.CHROOT_PATH()) == 0;
-            broadcastCompatCheck(isChrootValid);
-        } else {
-            broadcastCompatCheck(RESULTCODE == 0);
-        }
-
-        return true;
     }
 
-    private void broadcastCompatCheck(boolean enableFragment) {
+    private void broadcastChrootStatus(boolean enableFragment) {
         getApplicationContext().sendBroadcast(new Intent()
                 .putExtra("ENABLEFRAGMENT", enableFragment)
                 .setAction(BuildConfig.APPLICATION_ID + ".CHECKCHROOT")

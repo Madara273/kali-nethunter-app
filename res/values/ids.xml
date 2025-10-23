@@ -21,4 +21,6 @@
     <item name="rtlamr_checkbox" type="id" />
     <item name="rtladsb_checkbox" type="id" />
     <item name="mousejack_checkbox" type="id" />
+    <item name="action_restart" type="id" />
+    <item name="btn_custom_command" type="id" />
 </resources>

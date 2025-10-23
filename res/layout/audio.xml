@@ -34,10 +34,10 @@
                     android:textSize="18sp"
                     android:textColor="@android:color/holo_orange_light"
                     android:gravity="center_vertical"
-                    android:drawableEnd="@drawable/ic_expand_more"
-                    android:drawableTint="@color/orange"
+                    app:drawableTint="@color/orange"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:focusable="true"
+                    app:drawableEndCompat="@drawable/ic_expand_more" />
 
                 <!-- Expandable content -->
                 <LinearLayout
@@ -89,7 +89,7 @@
                             android:id="@+id/targetLatencySpinner"
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
-                            android:layout_weight="0.5"/>
+                            android:layout_weight="0.5" />
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>

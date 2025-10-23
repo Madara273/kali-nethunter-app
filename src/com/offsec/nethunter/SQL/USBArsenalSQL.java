@@ -26,8 +26,9 @@ public class USBArsenalSQL extends SQLiteOpenHelper {
     private static final String USBNETWORK_TABLE_NAME = "USBNetwork";
     private static final ArrayList<String> COLUMNS_USBSWITCH = new ArrayList<>();
     private static final ArrayList<String> COLUMNS_USBNETWORK = new ArrayList<>();
+    private final Context appContext;
 
-    public static synchronized USBArsenalSQL getInstance(Context context){
+    public static synchronized USBArsenalSQL getInstance(Context context) {
         if (instance == null) {
             instance = new USBArsenalSQL(context.getApplicationContext());
         }
@@ -36,6 +37,7 @@ public class USBArsenalSQL extends SQLiteOpenHelper {
 
     private USBArsenalSQL(Context context) {
         super(context, DATABASE_NAME, null, 1);
+        this.appContext = context.getApplicationContext();
         COLUMNS_USBSWITCH.add("target");
         COLUMNS_USBSWITCH.add("functions");
         COLUMNS_USBSWITCH.add("idVendor");
@@ -205,20 +207,20 @@ public class USBArsenalSQL extends SQLiteOpenHelper {
         return usbArsenalUSBNetworkModel;
     }
 
-    public boolean setUSBSwitchColumnData(String functionName, int targetColumnIndex, String targetOSName, String content){
+    public boolean setUSBSwitchColumnData(String functionName, int targetColumnIndex, String targetOSName, String content) {
         try {
             SQLiteDatabase db = this.getWritableDatabase();
             db.execSQL("UPDATE " + USBSWITCH_TABLE_NAME + " SET " +
                     COLUMNS_USBSWITCH.get(targetColumnIndex) + " = '" + content + "'" +
                     " WHERE " + COLUMNS_USBSWITCH.get(0) + " = '" + targetOSName + "'" + " AND " + COLUMNS_USBSWITCH.get(1) + " = '" + functionName + "';");
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "setUSBSwitchColumnData failed", e);
             return false;
         }
         return true;
     }
 
-    public boolean setUSBNetworkColumnData(int usbNetworkAttackModePosition, USBArsenalUSBNetworkModel usbArsenalUSBNetworkModel){
+    public boolean setUSBNetworkColumnData(int usbNetworkAttackModePosition, USBArsenalUSBNetworkModel usbArsenalUSBNetworkModel) {
         try {
             SQLiteDatabase db = this.getWritableDatabase();
             db.execSQL("UPDATE " + USBNETWORK_TABLE_NAME + " SET " +
@@ -229,50 +231,50 @@ public class USBArsenalSQL extends SQLiteOpenHelper {
                     COLUMNS_USBNETWORK.get(5) + " = '" + usbArsenalUSBNetworkModel.getip_subnetmask() + "'" +
                     " WHERE " + COLUMNS_USBNETWORK.get(0) + " = '" + usbNetworkAttackModePosition + "';");
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "setUSBNetworkColumnData failed", e);
             return false;
         }
         return true;
     }
 
-    public boolean resetData(){
+    public boolean resetData() {
         try {
             SQLiteDatabase db = this.getWritableDatabase();
             db.execSQL("DROP TABLE IF EXISTS " + USBSWITCH_TABLE_NAME);
             db.execSQL("DROP TABLE IF EXISTS " + USBNETWORK_TABLE_NAME);
             this.onCreate(db);
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "resetData failed", e);
             return false;
         }
         return true;
     }
-
     public String backupData(String storedDBpath) {
         try {
             File data = Environment.getDataDirectory();
-            File sd = Environment.getExternalStorageDirectory();
+            File sd = appContext.getExternalFilesDir(null);
             String currentDBPath = data.getAbsolutePath() + "/data/" + BuildConfig.APPLICATION_ID + "/databases/" + getDatabaseName();
-            if (sd.canWrite()) {
+            if (sd != null && sd.canWrite()) {
                 File currentDB = new File(currentDBPath);
                 File backupDB = new File(storedDBpath);
                 if (currentDB.exists()) {
-                    FileChannel src = new FileInputStream(currentDB).getChannel();
-                    FileChannel dst = new FileOutputStream(backupDB).getChannel();
-                    dst.transferFrom(src, 0, src.size());
-                    src.close();
-                    dst.close();
+                    try (FileInputStream fis = new FileInputStream(currentDB);
+                         FileOutputStream fos = new FileOutputStream(backupDB);
+                         FileChannel src = fis.getChannel();
+                         FileChannel dst = fos.getChannel()) {
+                        dst.transferFrom(src, 0, src.size());
+                    }
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "backupData failed", e);
             return e.toString();
         }
         return null;
     }
 
     public String restoreData(String storedDBpath) {
-        if (!new File(storedDBpath).exists()){
+        if (!new File(storedDBpath).exists()) {
             return "db file not found.";
         }
 
@@ -289,28 +291,28 @@ public class USBArsenalSQL extends SQLiteOpenHelper {
 
         try {
             File data = Environment.getDataDirectory();
-            File sd = Environment.getExternalStorageDirectory();
+            File sd = appContext.getExternalFilesDir(null);
             String currentDBPath = data.getAbsolutePath() + "/data/" + BuildConfig.APPLICATION_ID + "/databases/" + getDatabaseName();
-            if (sd.canWrite()) {
+            if (sd != null && sd.canWrite()) {
                 File currentDB = new File(currentDBPath);
                 File backupDB = new File(storedDBpath);
                 if (backupDB.exists()) {
-                    FileChannel src = new FileInputStream(backupDB).getChannel();
-                    FileChannel dst = new FileOutputStream(currentDB).getChannel();
-                    dst.transferFrom(src, 0, src.size());
-                    src.close();
-                    dst.close();
+                    try (FileInputStream fis = new FileInputStream(backupDB);
+                         FileOutputStream fos = new FileOutputStream(currentDB);
+                         FileChannel src = fis.getChannel();
+                         FileChannel dst = fos.getChannel()) {
+                        dst.transferFrom(src, 0, src.size());
+                    }
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
-            Log.e(TAG, e.toString());
+            Log.e(TAG, "restoreData failed", e);
             return e.toString();
         }
         return null;
     }
 
-    private boolean verifyDB(String storedDBpath){
+    private boolean verifyDB(String storedDBpath) {
         SQLiteDatabase tempDB = SQLiteDatabase.openDatabase(storedDBpath, null, SQLiteDatabase.OPEN_READWRITE);
         boolean isDBValid = true;
         if (ifTableExists(tempDB, USBSWITCH_TABLE_NAME)) {
@@ -322,7 +324,7 @@ public class USBArsenalSQL extends SQLiteOpenHelper {
                 c.close();
                 if (tempColumnNames.length == COLUMNS_USBSWITCH.size()) {
                     for (int i = 0; i < tempColumnNames.length; i++){
-                        if (!tempColumnNames[i].equals(COLUMNS_USBSWITCH.get(i))){
+                        if (!tempColumnNames[i].equals(COLUMNS_USBSWITCH.get(i))) {
                             isDBValid = false;
                             break;
                         }
@@ -340,7 +342,7 @@ public class USBArsenalSQL extends SQLiteOpenHelper {
                     c.close();
                     if (tempColumnNames.length == COLUMNS_USBNETWORK.size()) {
                         for (int i = 0; i < tempColumnNames.length; i++){
-                            if (!tempColumnNames[i].equals(COLUMNS_USBNETWORK.get(i))){
+                            if (!tempColumnNames[i].equals(COLUMNS_USBNETWORK.get(i))) {
                                 isDBValid = false;
                                 break;
                             }

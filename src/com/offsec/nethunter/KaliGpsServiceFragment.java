@@ -1,6 +1,7 @@
 package com.offsec.nethunter;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -18,6 +19,7 @@ import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -38,6 +40,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Lifecycle;
+import androidx.core.widget.NestedScrollView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -76,7 +79,8 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
     private static final String ARG_SECTION_NUMBER = "section_number";
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private CheckBox sdrcheckbox, sdramrcheckbox, sdradsbcheckbox, mousejackcheckbox;
-    private LinearLayout satelliteSignalContainer;
+    private ProgressBar gpsSignalStrength;
+    private NestedScrollView gpsScrollView;
     private KaliGPSUpdates.Provider gpsProvider = null;
     private TextView gpsTextView;
     private TextInputEditText satellitesEditText;
@@ -212,7 +216,8 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         gpsTextView.setMovementMethod(new android.text.method.ScrollingMovementMethod());
         TextView gpsHelpView = view.findViewById(R.id.gps_help);
         switch_gps_provider = view.findViewById(R.id.switch_gps_provider);
-        satelliteSignalContainer = view.findViewById(R.id.satellite_signal_container);
+        gpsSignalStrength = view.findViewById(R.id.gps_signal_strength);
+        gpsScrollView = view.findViewById(R.id.gps_scroll);
         switch_gpsd = view.findViewById(R.id.switch_gpsd);
         Button button_launch_app = view.findViewById(R.id.gps_button_launch_app);
         ShellExecuter exe = new ShellExecuter();
@@ -360,29 +365,18 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
     }
 
     private void updateSatelliteSignalBars(List<Integer> snrs) {
-        if (satelliteSignalContainer == null) return;
-        satelliteSignalContainer.removeAllViews();
+        if (gpsSignalStrength == null) return;
+        // gpsSignalStrength.setProgress(snrs.size());
         if (snrs == null || snrs.isEmpty()) {
-            // For debugging: show placeholder bars
-            for (int i = 0; i < 4; i++) {
-                View bar = new View(getContext());
-                LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, 16, 1f);
-                params.setMargins(4, 0, 4, 0);
-                bar.setLayoutParams(params);
-                bar.setBackgroundColor(0xFFBDBDBD); // gray
-                satelliteSignalContainer.addView(bar);
-            }
+            gpsSignalStrength.setProgress(0);
             return;
         }
+        int avgSnr = 0;
         for (int snr : snrs) {
-            View bar = new View(getContext());
-            int barHeight = Math.max(8, snr * 2); // scale for visibility
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, barHeight, 1f);
-            params.setMargins(4, 0, 4, 0);
-            bar.setLayoutParams(params);
-            bar.setBackgroundColor(snr > 30 ? 0xFF4CAF50 : 0xFFFFC107); // green if strong, yellow if weak
-            satelliteSignalContainer.addView(bar);
+            avgSnr += snr;
         }
+        avgSnr /= snrs.size();
+        gpsSignalStrength.setProgress(avgSnr);
     }
 
     @Override
@@ -439,10 +433,7 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         updateSatelliteSignalBars(snrs);
 
         gpsTextView.append(nmeaSentences + "\n");
-        gpsTextView.post(() -> {
-            int scrollAmount = gpsTextView.getLayout().getLineTop(gpsTextView.getLineCount()) - gpsTextView.getHeight();
-            gpsTextView.scrollTo(0, Math.max(scrollAmount, 0));
-        });
+        gpsScrollView.post(() -> gpsScrollView.fullScroll(View.FOCUS_DOWN));
 
         // Extract and display satellite count
         int satelliteCount = extractSatelliteCount(nmeaSentences);
@@ -497,7 +488,7 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
 
     public void run_cmd(String cmd) {
         if (context != null) {
-            Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+            @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
             context.startActivity(intent);
         }
     }

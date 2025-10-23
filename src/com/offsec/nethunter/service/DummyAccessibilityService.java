@@ -1,8 +1,10 @@
 package com.offsec.nethunter.service;
 
 import android.accessibilityservice.AccessibilityService;
+import android.annotation.SuppressLint;
 import android.view.accessibility.AccessibilityEvent;
 
+@SuppressLint("AccessibilityPolicy")
 public class DummyAccessibilityService extends AccessibilityService {
     @Override
     public void onAccessibilityEvent(AccessibilityEvent accessibilityEvent) {
