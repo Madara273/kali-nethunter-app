@@ -38,9 +38,9 @@ public class Bridge {
     return intent;
   }
 
-  // Usual callable intents
   public static Intent createExecuteIntent(String command) {
-    return createExecuteIntent(command);
+    Objects.requireNonNull(command, "command");
+    return createExecuteIntent(SessionId.NEW_SESSION, "/system/bin/sh", "-c " + command, true);
   }
 
   public static Intent createExecuteIntent(SessionId sessionId, String executablePath, String command) {
