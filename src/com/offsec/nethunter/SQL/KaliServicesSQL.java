@@ -44,12 +44,12 @@ public class KaliServicesSQL extends SQLiteOpenHelper {
 		return instance;
 	}
 
-    private KaliServicesSQL(Context context) {
-        super(context, DATABASE_NAME, null, 1);
-        this.appContext = context.getApplicationContext();
+	private KaliServicesSQL(Context context) {
+		super(context, DATABASE_NAME, null, 1);
+		this.appContext = context.getApplicationContext();
 		// Add your default column here;
-        COLUMNS.add("id");
-        COLUMNS.add("ServiceName");
+		COLUMNS.add("id");
+		COLUMNS.add("ServiceName");
 		COLUMNS.add("CommandforStartService");
 		COLUMNS.add("CommandforStopService");
 		COLUMNS.add("CommandforCheckServiceStatus");
