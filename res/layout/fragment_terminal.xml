@@ -42,6 +42,19 @@
                 app:useCompatPadding="true"
                 app:backgroundTint="?attr/colorPrimary"
                 app:tint="@android:color/white" />
+
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/fab_copy_terminal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|start"
+                android:layout_margin="12dp"
+                android:visibility="gone"
+                android:contentDescription="@string/terminal_text_copy"
+                app:srcCompat="@drawable/ic_share_black_24dp"
+                app:useCompatPadding="true"
+                app:backgroundTint="?attr/colorPrimary"
+                app:tint="@android:color/white" />
         </FrameLayout>
 
         <!-- High-end keyboard panel -->
