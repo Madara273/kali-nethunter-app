@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Dialog terminal theme strings -->
+    <string name="theme_classic_dark">Classic Dark</string>
+    <string name="theme_solarized_dark">Solarized Dark</string>
+    <string name="theme_solarized_light">Solarized Light</string>
+    <string name="theme_dracula">Dracula</string>
+    <string name="theme_one_dark">One Dark</string>
+    <string name="theme_high_contrast">High Contrast</string>
+    <string name="theme_matrix">Matrix</string>
+    <string name="theme_kali_linux">Kali Linux</string>
+
+    <string name="preview_line1_text">kali@device:~$ ls -la</string>
+    <string name="preview_line2_text">drwxr-xr-x  5 root root  4096 .</string>
+    <string name="preview_line3_text">-rw-r--r--  1 root root  1024 README.md</string>
+
+    <string name="format_minimal">Minimal</string>
+    <string name="format_compact">Compact</string>
+    <string name="format_comfortable">Comfortable</string>
+    <string name="format_large">Large</string>
+
+    <string name="terminal_btn_reset">Reset</string>
+    <string name="terminal_btn_cancel">Cancel</string>
+    <string name="terminal_btn_apply">Apply</string>
+</resources>
+
