@@ -353,25 +353,44 @@
                 android:text="Install bootanimation"
                 android:textColor="#ffffffff" />
 
-          <View
-              android:id="@+id/divider5"
-              android:layout_width="match_parent"
-              android:layout_height="1dp"
-              android:background="?android:attr/listDivider" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
 
-          <TextView
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:text="BACKUP OR RESTORE NETHUNTER FILES"
-              android:paddingTop="10dp"
-              android:padding="4dp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="IN APP TERMINAL"
+                android:paddingTop="10dp"
+                android:padding="4dp" />
 
             <Button
-              android:id="@+id/backup"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:text="Backup"
-              android:textColor="#ffffffff" />
+                android:id="@+id/inapp_term_toogle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Enable"
+                android:textColor="#ffffffff" />
+
+            <View
+                android:id="@+id/divider5"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="BACKUP OR RESTORE NETHUNTER FILES"
+                android:paddingTop="10dp"
+                android:padding="4dp" />
+
+            <Button
+                android:id="@+id/backup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Backup"
+                android:textColor="#ffffffff" />
 
             <LinearLayout
               android:layout_width="match_parent"

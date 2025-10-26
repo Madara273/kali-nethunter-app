@@ -436,6 +436,24 @@ public class SettingsFragment extends Fragment {
             }
         });
 
+        // In app terminal
+        Button TermButton = rootView.findViewById(R.id.inapp_term_toogle);
+        Boolean inappterm;
+        inappterm = sharedpreferences.getBoolean("inapp_terminal_enabled", false);
+        if (inappterm) TermButton.setText("Disable");
+        addClickListener(TermButton, v -> {
+            if (inappterm) {
+                sharedpreferences.edit().putBoolean("inapp_terminal_enabled", false).apply();
+                TermButton.setText("Enable");
+                Toast.makeText(requireActivity().getApplicationContext(), "Done! Restart the app to take effect" , Toast.LENGTH_SHORT).show();
+            }
+            else {
+                sharedpreferences.edit().putBoolean("inapp_terminal_enabled", true).apply();
+                TermButton.setText("Disable");
+                Toast.makeText(requireActivity().getApplicationContext(), "Done! Restart the app to take effect" , Toast.LENGTH_SHORT).show();
+            }
+        });
+
         // Backup
         Button BackupButton = rootView.findViewById(R.id.backup);
         SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault());
