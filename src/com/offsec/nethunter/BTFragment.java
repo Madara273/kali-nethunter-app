@@ -325,7 +325,7 @@ public class BTFragment extends Fragment {
                 "if [ -f /etc/init.d/bluetooth ] && grep -q 'noplugin=input' /etc/init.d/bluetooth 2>/dev/null; then echo 'Bluetooth service is patched!'; else echo 'Patching Bluetooth service..' && " +
                 "sed -i -e 's/.*NOPLUGIN_OPTION=\"\"/NOPLUGIN_OPTION=\"--noplugin=input\"/g' /etc/init.d/bluetooth; fi;" +
                 "echo 'Everything is installed!'";
-        openTerminalWithCommand(cmd);
+        run_cmd(cmd);
         sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
     }
 
@@ -341,7 +341,7 @@ public class BTFragment extends Fragment {
                 " make install-dev; cd /root/libglibutil/; git pull && make && make install-dev; cd /root/bt_audit; git pull; cd src && make; " +
                 " cp rfcomm_scan /usr/bin/; cd /root/badbt/; git pull; fi;" +
                 "echo 'Done!';";
-        openTerminalWithCommand(cmd);
+        run_cmd(cmd);
         sharedpreferences.edit().putBoolean("bt_setup_done", true).apply();
     }
 
@@ -1641,8 +1641,13 @@ public class BTFragment extends Fragment {
     // Bridge side functions
     ////
 
+    public void run_cmd(String cmd) {
+        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        activity.startActivity(intent);
+    }
+
     // Helper: open TerminalFragment with an initial command; if not possible, fallback to legacy bridge
-    private void openTerminalWithCommand(@NonNull String cmd) {
+    private void run_cmd_inapp(@NonNull String cmd) {
         Activity act = getActivity();
         try {
             if (act instanceof androidx.appcompat.app.AppCompatActivity) {
@@ -1659,10 +1664,5 @@ public class BTFragment extends Fragment {
             // Ignore and fallback
         }
         run_cmd(cmd);
-    }
-
-    public void run_cmd(String cmd) {
-        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
-        activity.startActivity(intent);
     }
 }

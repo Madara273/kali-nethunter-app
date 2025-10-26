@@ -337,7 +337,7 @@ public class CARsenalFragment extends Fragment {
         Log.i(TAG, "Running setup commands");
         String setupCommand = "which wget > /dev/null 2>&1 && wget -qO - https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup || curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup";
         // Prefer in-app TerminalFragment to save memory; fallback to legacy bridge
-        openTerminalWithCommand(setupCommand);
+        run_cmd(setupCommand);
         sharedpreferences.edit().putBoolean("carsenal_setup_done", true).apply();
         Log.i(TAG, "Setup initiated");
     }
@@ -350,13 +350,13 @@ public class CARsenalFragment extends Fragment {
         Log.i(TAG, "Running update commands");
         String updateCommand = "which wget > /dev/null 2>&1 && wget -qO - https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update || curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update";
         // Prefer in-app TerminalFragment to save memory; fallback to legacy bridge
-        openTerminalWithCommand(updateCommand);
+        run_cmd(updateCommand);
         sharedpreferences.edit().putBoolean("carsenal_setup_done", true).apply();
         Log.i(TAG, "Update initiated");
     }
 
     // Helper: open TerminalFragment with an initial command; if not possible, fallback to legacy bridge
-    private void openTerminalWithCommand(@NonNull String cmd) {
+    private void run_cmd_inapp(@NonNull String cmd) {
         Activity act = getActivity();
         try {
             if (act instanceof androidx.appcompat.app.AppCompatActivity) {

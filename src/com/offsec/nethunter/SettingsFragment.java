@@ -669,7 +669,7 @@ public class SettingsFragment extends Fragment {
         String cmd = "if [ -f /usr/bin/convert ];then echo 'Imagemagick is installed!'; else " +
                 "apt update && apt install make imagemagick -y;fi; if [ -f /root/nethunter-bootanimation ];then echo 'nethunter-bootanimation is installed!'; else " +
                 "git clone https://gitlab.com/kalilinux/nethunter/build-scripts/kali-nethunter-bootanimation /root/nethunter-bootanimation;fi; echo 'Everything is ready!'";
-        openTerminalWithCommand(cmd);
+        run_cmd(cmd);
         sharedpreferences.edit().putBoolean("animation_setup_done", true).apply();
     }
 
@@ -677,12 +677,12 @@ public class SettingsFragment extends Fragment {
         // Route through in-app TerminalFragment to save memory; fallback to NhTerm bridge if needed
         String cmd = "apt update && apt install make imagemagick -y;if [ -d /root/nethunter-bootanimation ];then cd /root/nethunter-bootanimation;git pull" +
                 ";fi;";
-        openTerminalWithCommand(cmd);
+        run_cmd(cmd);
         sharedpreferences.edit().putBoolean("animation_setup_done", true).apply();
     }
 
     // Helper: open TerminalFragment with an initial command; if not possible, fallback to legacy bridge
-    private void openTerminalWithCommand(@NonNull String cmd) {
+    private void run_cmd_inapp(@NonNull String cmd) {
         Activity act = getActivity();
         try {
             if (act instanceof AppCompatActivity) {

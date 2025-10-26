@@ -2,6 +2,7 @@ package com.offsec.nethunter;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
@@ -23,6 +24,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
@@ -236,7 +238,7 @@ public class WPSFragment extends Fragment {
                 }
                 String cmd = "python3 /sdcard/nh_files/modules/oneshot.py -b " + selected_network +
                         " -i " + selectedInterface + pixieCMD + pixieforceCMD + bruteCMD + customPINCMD + customPIN + delayCMD + delayTIME + pbcCMD;
-                openTerminalWithCommand(cmd);
+                run_cmd(cmd);
             }
             else Toast.makeText(requireActivity().getApplicationContext(), "No target selected!", Toast.LENGTH_SHORT).show();
         });
@@ -293,8 +295,14 @@ public class WPSFragment extends Fragment {
     }
 
     ////
-    // Bridge side functions (removed in favor of TerminalFragment)
+    // Bridge side functions
     ////
+
+    public void run_cmd(String cmd) {
+        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        activity.startActivity(intent);
+    }
+
 
     // Helper to route commands through TerminalFragment (saves memory vs external NhTerm)
     private void openTerminalWithCommand(String cmd) {

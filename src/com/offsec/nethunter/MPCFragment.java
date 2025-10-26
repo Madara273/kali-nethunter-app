@@ -305,6 +305,11 @@ public class MPCFragment extends Fragment {
     ////
 
     public void run_cmd(String cmd) {
+        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        requireContext().startActivity(intent);
+    }
+
+    public void run_cmd_inapp(String cmd) {
         // Prefer in-app TerminalFragment to save memory
         if (getActivity() instanceof AppCompatActivity) {
             AppCompatActivity app = (AppCompatActivity) getActivity();

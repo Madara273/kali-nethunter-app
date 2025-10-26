@@ -3,6 +3,7 @@ package com.offsec.nethunter;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -30,6 +31,7 @@ import android.widget.Toast;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.common.io.Files;
+import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
@@ -346,7 +348,7 @@ public class WifipumpkinFragment extends Fragment {
     public void RunSetup() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         String cmd = "apt update && apt install wifipumpkin3 dnschef -y; wp3;";
-        openTerminalWithCommand(cmd);
+        run_cmd(cmd);
         sharedpreferences.edit().putBoolean("wp3_setup_done", true).apply();
     }
 
@@ -863,7 +865,7 @@ public class WifipumpkinFragment extends Fragment {
     ////
 
     public void run_cmd(String cmd) {
-        // Route all commands through TerminalFragment to save memory instead of launching NhTerm Bridge
-        openTerminalWithCommand(cmd);
+        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        activity.startActivity(intent);
     }
 }
