@@ -291,6 +291,7 @@ public class CopyBootFilesExecutor {
                 // Prefer per‑app All files access page; fall back to the generic one if needed
                 Runnable launch = () -> {
                     try {
+                        Toast.makeText(requireActivity().getApplicationContext(), "Please allow storage access and return to app", Toast.LENGTH_SHORT).show();
                         Intent intent = new Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION);
                         intent.setData(Uri.parse("package:" + activity.getPackageName()));
                         activity.startActivity(intent);
