@@ -173,6 +173,7 @@ public class SETFragment extends Fragment {
             super.onCreate(savedInstanceState);
         }
 
+        @SuppressLint("SetJavaScriptEnabled")
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {

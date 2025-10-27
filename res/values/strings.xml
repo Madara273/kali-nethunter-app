@@ -1481,4 +1481,5 @@
     <string name="terminal_stop_sessions">Stop Session</string>
     <string name="terminal_button_esc">ESC</string>
     <string name="terminal_text_copy">Copy</string>
+    <string name="terminal_copy_selected">Copy selected lines</string>
 </resources>

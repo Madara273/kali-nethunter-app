@@ -49,6 +49,17 @@ public class TerminalAdapter extends ListAdapter<CharSequence, TerminalAdapter.L
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private boolean flushScheduled = false;
     private final Set<Integer> selectedLines = new HashSet<>();
+    // Anchor for range selection (set on first long-click)
+    private Integer selectionAnchor = null;
+
+    // Callback for selection events
+    public interface SelectionListener {
+        void onSelectionChanged(Set<Integer> selectedLines);
+        void onLineLongClicked(int position, CharSequence text);
+    }
+    private SelectionListener selectionListener = null;
+
+    public void setSelectionListener(SelectionListener l) { this.selectionListener = l; }
 
     public TerminalAdapter(int maxLines) {
         super(DIFF);
@@ -91,6 +102,46 @@ public class TerminalAdapter extends ListAdapter<CharSequence, TerminalAdapter.L
         holder.tv.setLineSpacing(lineSpacingExtraPx, lineSpacingMult);
         // Selection highlight
         holder.itemView.setSelected(selectedLines.contains(position));
+
+        // Ensure previous listeners removed to avoid duplicate events
+        holder.itemView.setOnClickListener(null);
+        holder.itemView.setOnLongClickListener(null);
+
+        // Short click toggles selection when there is already at least one selected line (range selection support could be added later)
+        holder.itemView.setOnClickListener(v -> {
+            if (!selectedLines.isEmpty()) {
+                if (selectedLines.contains(position)) deselectLine(position); else selectLine(position);
+                if (selectionListener != null) selectionListener.onSelectionChanged(getSelectedLines());
+            }
+        });
+
+        // Long click supports range selection: if no anchor, set anchor and toggle. If anchor exists and different
+        // long-pressing another line selects the full inclusive range and notifies listener.
+        holder.itemView.setOnLongClickListener(v -> {
+            if (selectionAnchor == null) {
+                // start anchor at this position and toggle selection
+                selectionAnchor = position;
+                if (selectedLines.contains(position)) deselectLine(position); else selectLine(position);
+                if (selectionListener != null) selectionListener.onLineLongClicked(position, line);
+                if (selectionListener != null) selectionListener.onSelectionChanged(getSelectedLines());
+                return true;
+            } else {
+                // create a contiguous selection between anchor and this position
+                int a = Math.min(selectionAnchor, position);
+                int b = Math.max(selectionAnchor, position);
+                // compute previous selection to notify changed positions
+                Set<Integer> prev = new HashSet<>(selectedLines);
+                // Clear selection and add range
+                selectedLines.clear();
+                for (int i = a; i <= b; i++) selectedLines.add(i);
+                // notify item changes for union of prev and new
+                Set<Integer> union = new HashSet<>(prev); union.addAll(selectedLines);
+                for (int pos : union) notifyItemChanged(pos);
+                if (selectionListener != null) selectionListener.onSelectionChanged(getSelectedLines());
+                // keep anchor for potential further expansion
+                return true;
+            }
+        });
     }
 
     @Override
@@ -176,6 +227,7 @@ public class TerminalAdapter extends ListAdapter<CharSequence, TerminalAdapter.L
     public void clearSelection() {
         Set<Integer> old = new HashSet<>(selectedLines);
         selectedLines.clear();
+        selectionAnchor = null;
         for (int pos : old) notifyItemChanged(pos);
     }
     public Set<Integer> getSelectedLines() { return new HashSet<>(selectedLines); }

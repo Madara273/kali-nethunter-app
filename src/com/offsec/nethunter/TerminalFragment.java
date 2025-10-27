@@ -106,6 +106,7 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private TerminalAdapter terminalAdapter;
     private View ctrlButton;
     private com.google.android.material.floatingactionbutton.FloatingActionButton fabGoBottom;
+    private com.google.android.material.floatingactionbutton.FloatingActionButton fabCopySelected;
     private Process process;
     private volatile OutputStream outputStream;
     private static volatile BufferedWriter writer;
@@ -130,13 +131,13 @@ public class TerminalFragment extends Fragment implements MenuProvider {
     private Thread ptyReadThread;
     private SpannableStringBuilder currentLine = new SpannableStringBuilder();
     private int currentLineSegmentStart = 0;
+    private int cursorColumn = 0;
     private ScaleGestureDetector scaleDetector;
     private boolean ctrlSticky = false;
     private boolean suppressTextWatcher = false;
     private int pendingInsertStart = -1;
     private int pendingInsertCount = 0;
     private char pendingInsertChar;
-
     private TerminalService boundService;
     private boolean serviceBound = false;
     private int serviceSessionId = -1;
@@ -221,11 +222,51 @@ public class TerminalFragment extends Fragment implements MenuProvider {
                 fabGoBottom.hide();
             });
         }
+
+        fabCopySelected = view.findViewById(R.id.fab_copy_terminal);
+        if (fabCopySelected != null) {
+            fabCopySelected.hide();
+            fabCopySelected.setOnClickListener(v -> {
+                copySelectedLinesToClipboard();
+                if (terminalAdapter != null) terminalAdapter.clearSelection();
+                fabCopySelected.hide();
+                if (terminalRecycler != null) terminalRecycler.requestFocus();
+            });
+        }
+
         terminalRecycler.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override public void onScrolled(@NonNull RecyclerView rv, int dx, int dy) { updateFabVisibilityByScroll(dy); }
             @Override public void onScrollStateChanged(@NonNull RecyclerView rv, int newState) { updateFabVisibilityByScroll(0); }
         });
         updateFabVisibilityByScroll(0);
+
+        // Selection listener: show copy FAB when there are selected lines
+        if (terminalAdapter != null) {
+            terminalAdapter.setSelectionListener(new com.offsec.nethunter.terminal.TerminalAdapter.SelectionListener() {
+                @Override
+                public void onSelectionChanged(Set<Integer> selectedLines) {
+                    if (fabCopySelected == null) return;
+                    if (selectedLines != null && !selectedLines.isEmpty()) fabCopySelected.show(); else fabCopySelected.hide();
+                }
+
+                @Override
+                public void onLineLongClicked(int position, CharSequence text) {
+                    // No-op for now; long-click already toggles selection in adapter. Could show a tooltip later.
+                }
+            });
+        }
+
+        // Clear selection when touching the recycler (so tapping outside selection cancels it)
+        terminalRecycler.setOnTouchListener((v, event) -> {
+            if (terminalAdapter != null && !terminalAdapter.getSelectedLines().isEmpty()) {
+                if (event.getAction() == android.view.MotionEvent.ACTION_DOWN) {
+                    terminalAdapter.clearSelection();
+                    if (fabCopySelected != null) fabCopySelected.hide();
+                }
+            }
+            // allow normal processing (clicks/scrolls) to continue
+            return false;
+        });
 
         TextInputLayout inputLayout = view.findViewById(R.id.input_layout);
         if (inputLayout != null) {
@@ -791,6 +832,11 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         // Reset line assembly state
         currentLine = new SpannableStringBuilder();
         currentLineSegmentStart = 0;
+        cursorColumn = 0;
+        // Track if current line has any content
+        boolean lineHasContent = false;
+        // Track if last char was \r without \n
+        boolean lastWasCarriageReturn = false;
         resetAllSgr();
         ansiCarry = "";
         // Clear in-memory persistent ring used for quick repopulation
@@ -989,6 +1035,100 @@ public class TerminalFragment extends Fragment implements MenuProvider {
         return defaultFgColor;
     }
 
+    /**
+     * Parse and execute cursor control ANSI sequences.
+     * Handles CSI sequences with final bytes: G (cursor column), K (erase line), H (cursor home), J (clear screen)
+     */
+    private void parseCursorControlSequence(String params, char finalByte) {
+        try {
+            switch (finalByte) {
+                case 'G': // CSI n G - Cursor to column n (1-based)
+                    int col = params.isEmpty() ? 1 : parseIntSafe(params);
+                    if (col < 1) col = 1;
+                    setCursorColumn(col - 1); // Convert to 0-based
+                    break;
+                    
+                case 'K': // CSI n K - Erase in line
+                    int mode = params.isEmpty() ? 0 : parseIntSafe(params);
+                    eraseInLine(mode);
+                    break;
+                    
+                case 'H': // CSI H or CSI n;m H - Cursor home (we only handle home position)
+                    // For simplicity, just reset cursor to column 0
+                    setCursorColumn(0);
+                    break;
+                    
+                case 'J': // CSI n J - Erase in display
+                    int clearMode = params.isEmpty() ? 0 : parseIntSafe(params);
+                    if (clearMode == 2) {
+                        // CSI 2J - Clear entire screen
+                        handler.post(this::clearTerminal);
+                    }
+                    break;
+                    
+                default:
+                    // Ignore unknown cursor control sequences
+                    Log.d(TAG, "Unknown cursor control sequence: CSI " + params + finalByte);
+                    break;
+            }
+        } catch (Exception e) {
+            Log.d(TAG, "Error parsing cursor control sequence: CSI " + params + finalByte, e);
+        }
+    }
+
+    /**
+     * Set cursor column position with bounds checking.
+     * Clamps position to valid range [0, currentLine.length()]
+     */
+    private void setCursorColumn(int col) {
+        cursorColumn = Math.max(0, Math.min(col, currentLine.length()));
+    }
+
+    /**
+     * Erase content in the current line based on mode.
+     * Mode 0: erase from cursor to end of line
+     * Mode 1: erase from start of line to cursor
+     * Mode 2: erase entire line
+     */
+    private void eraseInLine(int mode) {
+        int len = currentLine.length();
+        if (len == 0) return;
+        
+        try {
+            switch (mode) {
+                case 0: // Erase from cursor to end of line
+                    if (cursorColumn < len) {
+                        currentLine.delete(cursorColumn, len);
+                    }
+                    break;
+                    
+                case 1: // Erase from start of line to cursor
+                    if (cursorColumn > 0) {
+                        int endPos = Math.min(cursorColumn, len);
+                        currentLine.delete(0, endPos);
+                        cursorColumn = 0;
+                        currentLineSegmentStart = 0;
+                    }
+                    break;
+                    
+                case 2: // Erase entire line
+                    currentLine.clear();
+                    cursorColumn = 0;
+                    currentLineSegmentStart = 0;
+                    break;
+                    
+                default:
+                    // Unknown mode, default to mode 0
+                    if (cursorColumn < len) {
+                        currentLine.delete(cursorColumn, len);
+                    }
+                    break;
+            }
+        } catch (Exception e) {
+            Log.d(TAG, "Error erasing line, mode=" + mode, e);
+        }
+    }
+
     private void maybeShowFirstRunSetupDialog() {
         if (!isAdded()) return;
         SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
@@ -1117,13 +1257,25 @@ public class TerminalFragment extends Fragment implements MenuProvider {
 
     private void copySelectedLinesToClipboard() {
         Set<Integer> selected = terminalAdapter.getSelectedLines();
+        if (selected == null || selected.isEmpty()) {
+            Toast.makeText(requireContext(), "No lines selected", Toast.LENGTH_SHORT).show();
+            return;
+        }
+        // Preserve original order by sorting the selected indices
+        List<Integer> positions = new ArrayList<>(selected);
+        java.util.Collections.sort(positions);
         StringBuilder sb = new StringBuilder();
-        for (int pos : selected) {
-            sb.append(terminalAdapter.getLineText(pos)).append("\n");
+        for (int pos : positions) {
+            CharSequence text = terminalAdapter.getLineText(pos);
+            if (text != null) sb.append(text);
+            sb.append('\n');
         }
         ClipboardManager clipboard = (ClipboardManager) requireContext().getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clip = ClipData.newPlainText("Terminal Output", sb.toString().trim());
         clipboard.setPrimaryClip(clip);
+        Toast.makeText(requireContext(), "Copied " + positions.size() + " lines", Toast.LENGTH_SHORT).show();
+        // clear selection after copy
+        terminalAdapter.clearSelection();
     }
 
     private final TerminalService.TerminalListener serviceListener = new TerminalService.TerminalListener() {
