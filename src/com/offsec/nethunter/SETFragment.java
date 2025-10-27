@@ -1,6 +1,7 @@
 package com.offsec.nethunter;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -45,6 +46,8 @@ public class SETFragment extends Fragment {
     protected SharedPreferences sharedpreferences;
     private static final String ARG_SECTION_NUMBER = "section_number";
     private MenuProvider menuProvider;
+    private Activity activity;
+
 
     public static SETFragment newInstance(int sectionNumber) {
         SETFragment fragment = new SETFragment();
@@ -58,6 +61,7 @@ public class SETFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         sharedpreferences = requireContext().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        activity = getActivity();
     }
 
     @Override
@@ -123,14 +127,14 @@ public class SETFragment extends Fragment {
     }
 
     public void RunSetup() {
-        String cmd = "if [ -d /root/setoolkit ]; then echo 'SET is already installed'; else git clone https://github.com/kimocoder/social-engineer-toolkit /root/setoolkit && echo 'Successfully installed SET!'; fi";
-        openTerminalWithCommand(cmd);
+        String cmd = "if [ -d /root/setoolkit ]; then echo 'SET is already installed'; else git clone https://github.com/yesimxev/social-engineer-toolkit /root/setoolkit && echo 'Successfully installed SET!'; fi";
+        run_cmd(cmd);
         sharedpreferences.edit().putBoolean("set_setup_done", true).apply();
     }
 
     public void RunUpdate() {
         String cmd = "if [ -d /root/setoolkit ]; then cd /root/setoolkit && git pull; fi";
-        openTerminalWithCommand(cmd);
+        run_cmd(cmd);
         sharedpreferences.edit().putBoolean("set_setup_done", true).apply();
     }
 
@@ -331,6 +335,11 @@ public class SETFragment extends Fragment {
     ////
 
     public void run_cmd(String cmd) {
+        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        activity.startActivity(intent);
+    }
+
+    public void run_cmd_inapp(String cmd) {
         // Prefer in-app TerminalFragment to save memory
         if (getActivity() instanceof AppCompatActivity) {
             AppCompatActivity app = (AppCompatActivity) getActivity();

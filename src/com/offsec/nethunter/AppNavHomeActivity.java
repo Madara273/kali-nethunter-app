@@ -457,6 +457,11 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         // Snowfall enable 2/2
         prefs.edit().putBoolean("snowfall_enabled", false).apply();
 
+        // inapp term enable
+        Boolean inappterm;
+        inappterm = prefs.getBoolean("inapp_terminal_enabled", false);
+        if (!inappterm) hideMenuItemIfExists(2);
+
         String model = Build.HARDWARE;
         Boolean snowfall;
         if (iswatch) {
@@ -466,16 +471,17 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
             hideMenuItemIfExists(2);
             hideMenuItemIfExists(3);
             hideMenuItemIfExists(4);
-            if (model.equals("catfish") || model.equals("catshark") || model.equals("catshark-4g")) hideMenuItemIfExists(8);
-            hideMenuItemIfExists(9);
-            hideMenuItemIfExists(14);
-            hideMenuItemIfExists(16);
+            hideMenuItemIfExists(5);
+            if (model.equals("catfish") || model.equals("catshark") || model.equals("catshark-4g")) hideMenuItemIfExists(9);
+            hideMenuItemIfExists(10);
+            hideMenuItemIfExists(15);
             hideMenuItemIfExists(17);
-            hideMenuItemIfExists(19);
+            hideMenuItemIfExists(18);
             hideMenuItemIfExists(20);
             hideMenuItemIfExists(21);
             hideMenuItemIfExists(22);
             hideMenuItemIfExists(23);
+            hideMenuItemIfExists(24);
         } else {
             snowfall = prefs.getBoolean("snowfall_enabled", true);
         }
