@@ -70,6 +70,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.Map;
@@ -337,7 +338,7 @@ public class CARsenalFragment extends Fragment {
         Log.i(TAG, "Running setup commands");
         String setupCommand = "which wget > /dev/null 2>&1 && wget -qO - https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup || curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup";
         // Prefer in-app TerminalFragment to save memory; fallback to legacy bridge
-        run_cmd(setupCommand);
+        run_cmd_inapp(setupCommand);
         sharedpreferences.edit().putBoolean("carsenal_setup_done", true).apply();
         Log.i(TAG, "Setup initiated");
     }
@@ -350,13 +351,13 @@ public class CARsenalFragment extends Fragment {
         Log.i(TAG, "Running update commands");
         String updateCommand = "which wget > /dev/null 2>&1 && wget -qO - https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update || curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update";
         // Prefer in-app TerminalFragment to save memory; fallback to legacy bridge
-        run_cmd(updateCommand);
+        run_cmd_inapp(updateCommand);
         sharedpreferences.edit().putBoolean("carsenal_setup_done", true).apply();
         Log.i(TAG, "Update initiated");
     }
 
     // Helper: open TerminalFragment with an initial command; if not possible, fallback to legacy bridge
-    private void run_cmd_inapp(@NonNull String cmd) {
+    public void run_cmd_inapp(@NonNull String cmd) {
         Activity act = getActivity();
         try {
             if (act instanceof androidx.appcompat.app.AppCompatActivity) {
@@ -2939,7 +2940,7 @@ public class CARsenalFragment extends Fragment {
                     combinedCmd += " -c \"" + udsimConfig + "\"";
                 }
                 combinedCmd += "'";
-                run_cmd(combinedCmd);
+                run_cmd_inapp(combinedCmd);
                 showToast("Running ICSim and UDSim...");
 
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
@@ -2954,7 +2955,7 @@ public class CARsenalFragment extends Fragment {
         }
 
         private void stopICSIM(WebView icsimView, WebView controlsView, WebView udsimView) {
-            run_cmd("su -c 'sh " + ICSIM_SCRIPT_PATH + " stop;sh " + UDSIM_SCRIPT_PATH + " stop'");
+            run_cmd_inapp("su -c 'sh " + ICSIM_SCRIPT_PATH + " stop;sh " + UDSIM_SCRIPT_PATH + " stop'");
             showToast("Stopping ICSim and UDSim...");
             icsimView.setBackgroundColor(Color.BLACK);
             icsimView.loadUrl("about:blank");
@@ -3489,10 +3490,7 @@ public class CARsenalFragment extends Fragment {
 
             Button msfBtn = rootView.findViewById(R.id.msfconsole_start);
             msfBtn.setOnClickListener(v -> executorService.submit(() -> {
-                run_cmd("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n); "
-                        + "if [ -n \"$msfsession\" ]; then "
-                        + "screen -wipe; screen -d \"$msfsession\"; screen -r \"$msfsession\"; "
-                        + "else screen -wipe; screen -S msf -m msfconsole;exit; fi");
+                run_cmd_inapp("msfconsole -q");
             }));
 
             Button runBtn = rootView.findViewById(R.id.run_module);
@@ -3510,20 +3508,16 @@ public class CARsenalFragment extends Fragment {
                     return;
                 }
 
-                StringBuilder msfCmd = new StringBuilder();
+                // Build a list of commands (one command per entry)
+                List<String> commands = new ArrayList<>();
                 String moduleName = selected_module.replace(".rb", "");
+
                 if (moduleName.equals("connect")) {
-                    msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use auxiliary/client/hwbridge/")
-                            .append(moduleName)
-                            .append("`echo -ne '\\015'`");
+                    commands.add("use auxiliary/client/hwbridge/" + moduleName);
                 } else if (moduleName.equals("local_hwbridge")) {
-                    msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use auxiliary/server/")
-                            .append(moduleName)
-                            .append("`echo -ne '\\015'`");
+                    commands.add("use auxiliary/server/" + moduleName);
                 } else {
-                    msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use post/hardware/automotive/")
-                            .append(moduleName)
-                            .append("`echo -ne '\\015'`");
+                    commands.add("use post/hardware/automotive/" + moduleName);
                 }
 
                 for (Map.Entry<String, EditText> entry : userInputs.entrySet()) {
@@ -3531,15 +3525,24 @@ public class CARsenalFragment extends Fragment {
                     String value = entry.getValue().getText().toString().trim();
 
                     if (!value.isEmpty()) {
+                        // sanitize single quotes so the value can be safely single-quoted on the shell
                         String sanitized = value.replace("'", "'\"'\"'");
-                        msfCmd.append("set ").append(key.toUpperCase()).append(" '").append(sanitized).append("'`echo -ne '\\015'`");
+                        // note the closing single-quote was missing before — fixed here
+                        commands.add("set " + key.toUpperCase() + " '" + sanitized + "'");
                     }
                 }
 
-                msfCmd.append("run\"`echo -ne '\\015'`;screen -d -r $msfsession;exit");
+                // final run command
+                commands.add("run");
 
+                // execute commands one-by-one on the background executor
                 executorService.submit(() -> {
-                    run_cmd(msfCmd.toString());
+                    for (String cmd : commands) {
+                        run_cmd_inapp(cmd);
+                        try {
+                            Thread.sleep(50);
+                        } catch (InterruptedException ignored) { }
+                    }
                 });
             });
 
