@@ -338,7 +338,7 @@ public class CARsenalFragment extends Fragment {
         Log.i(TAG, "Running setup commands");
         String setupCommand = "which wget > /dev/null 2>&1 && wget -qO - https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup || curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup";
         // Prefer in-app TerminalFragment to save memory; fallback to legacy bridge
-        run_cmd_inapp(setupCommand);
+        run_cmd(setupCommand);
         sharedpreferences.edit().putBoolean("carsenal_setup_done", true).apply();
         Log.i(TAG, "Setup initiated");
     }
@@ -351,7 +351,7 @@ public class CARsenalFragment extends Fragment {
         Log.i(TAG, "Running update commands");
         String updateCommand = "which wget > /dev/null 2>&1 && wget -qO - https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update || curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update";
         // Prefer in-app TerminalFragment to save memory; fallback to legacy bridge
-        run_cmd_inapp(updateCommand);
+        run_cmd(updateCommand);
         sharedpreferences.edit().putBoolean("carsenal_setup_done", true).apply();
         Log.i(TAG, "Update initiated");
     }
@@ -2940,7 +2940,7 @@ public class CARsenalFragment extends Fragment {
                     combinedCmd += " -c \"" + udsimConfig + "\"";
                 }
                 combinedCmd += "'";
-                run_cmd_inapp(combinedCmd);
+                run_cmd(combinedCmd);
                 showToast("Running ICSim and UDSim...");
 
                 new Handler(Looper.getMainLooper()).postDelayed(() -> {
@@ -2955,7 +2955,7 @@ public class CARsenalFragment extends Fragment {
         }
 
         private void stopICSIM(WebView icsimView, WebView controlsView, WebView udsimView) {
-            run_cmd_inapp("su -c 'sh " + ICSIM_SCRIPT_PATH + " stop;sh " + UDSIM_SCRIPT_PATH + " stop'");
+            run_cmd("su -c 'sh " + ICSIM_SCRIPT_PATH + " stop;sh " + UDSIM_SCRIPT_PATH + " stop'");
             showToast("Stopping ICSim and UDSim...");
             icsimView.setBackgroundColor(Color.BLACK);
             icsimView.loadUrl("about:blank");
@@ -3490,7 +3490,7 @@ public class CARsenalFragment extends Fragment {
 
             Button msfBtn = rootView.findViewById(R.id.msfconsole_start);
             msfBtn.setOnClickListener(v -> executorService.submit(() -> {
-                run_cmd_inapp("msfconsole -q");
+                run_cmd("msfconsole -q");
             }));
 
             Button runBtn = rootView.findViewById(R.id.run_module);
@@ -3538,7 +3538,7 @@ public class CARsenalFragment extends Fragment {
                 // execute commands one-by-one on the background executor
                 executorService.submit(() -> {
                     for (String cmd : commands) {
-                        run_cmd_inapp(cmd);
+                        run_cmd(cmd);
                         try {
                             Thread.sleep(50);
                         } catch (InterruptedException ignored) { }
@@ -3801,11 +3801,30 @@ public class CARsenalFragment extends Fragment {
     ////
     // Bridge side functions
     ////
-
+    Boolean inappterm;
     public String run_cmd(String cmd) {
-        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
-        activity.startActivity(intent);
-        intent.putExtra("output", cmd);
+        inappterm = sharedpreferences.getBoolean("inapp_terminal_enabled", false);
+        if (inappterm) {
+            Activity act = getActivity();
+            try {
+                if (act instanceof androidx.appcompat.app.AppCompatActivity) {
+                    androidx.appcompat.app.AppCompatActivity app = (androidx.appcompat.app.AppCompatActivity) act;
+                    TerminalFragment tf = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
+                    app.getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.container, tf)
+                            .addToBackStack(null)
+                            .commitAllowingStateLoss();
+                    return cmd;
+                }
+            } catch (Throwable t) {
+                Log.d(TAG, "openTerminalWithCommand fallback due to: " + t.getMessage());
+            }
+        } else {
+            @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+            activity.startActivity(intent);
+            intent.putExtra("output", cmd);
+        }
         return "Command executed: " + cmd;
     }
 }
