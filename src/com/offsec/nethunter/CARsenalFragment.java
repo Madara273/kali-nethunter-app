@@ -3829,22 +3829,28 @@ public class CARsenalFragment extends Fragment {
     // Helper: open TerminalFragment with an initial command; if not possible, fallback to legacy bridge
     public void run_cmd_inapp(@NonNull String cmd) {
         Activity act = getActivity();
-        try {
-            if (act instanceof androidx.appcompat.app.AppCompatActivity) {
-                androidx.appcompat.app.AppCompatActivity app = (androidx.appcompat.app.AppCompatActivity) act;
-                TerminalFragment tf = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
-                app.getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.container, tf)
-                        .addToBackStack(null)
-                        .commitAllowingStateLoss();
-                return;
+        Boolean inappterm;
+        inappterm = sharedpreferences.getBoolean("inapp_terminal_enabled", false);
+        if (inappterm) {
+            try {
+                if (act instanceof androidx.appcompat.app.AppCompatActivity) {
+                    androidx.appcompat.app.AppCompatActivity app = (androidx.appcompat.app.AppCompatActivity) act;
+                    TerminalFragment tf = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
+                    app.getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.container, tf)
+                            .addToBackStack(null)
+                            .commitAllowingStateLoss();
+                    return;
+                }
+            } catch (Throwable t) {
+                Log.d(TAG, "openTerminalWithCommand fallback due to: " + t.getMessage());
             }
-        } catch (Throwable t) {
-            Log.d(TAG, "openTerminalWithCommand fallback due to: " + t.getMessage());
+        } else {
+            // Fallback to previous behavior using NhTerm bridge
+            run_cmd(cmd);
         }
-        // Fallback to previous behavior using NhTerm bridge
-        run_cmd(cmd);
+
     }
 
     public boolean isInAppTerminalAvailable() {
