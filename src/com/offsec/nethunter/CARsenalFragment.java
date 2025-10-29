@@ -356,27 +356,6 @@ public class CARsenalFragment extends Fragment {
         Log.i(TAG, "Update initiated");
     }
 
-    // Helper: open TerminalFragment with an initial command; if not possible, fallback to legacy bridge
-    public void run_cmd_inapp(@NonNull String cmd) {
-        Activity act = getActivity();
-        try {
-            if (act instanceof androidx.appcompat.app.AppCompatActivity) {
-                androidx.appcompat.app.AppCompatActivity app = (androidx.appcompat.app.AppCompatActivity) act;
-                TerminalFragment tf = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
-                app.getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.container, tf)
-                        .addToBackStack(null)
-                        .commitAllowingStateLoss();
-                return;
-            }
-        } catch (Throwable t) {
-            Log.d(TAG, "openTerminalWithCommand fallback due to: " + t.getMessage());
-        }
-        // Fallback to previous behavior using NhTerm bridge
-        run_cmd(cmd);
-    }
-
     public void RunAbout() {
         LayoutInflater inflater = LayoutInflater.from(activity);
         View dialogView = inflater.inflate(R.layout.carsenal_about_dialog, null);
@@ -3490,12 +3469,18 @@ public class CARsenalFragment extends Fragment {
 
             Button msfBtn = rootView.findViewById(R.id.msfconsole_start);
             msfBtn.setOnClickListener(v -> executorService.submit(() -> {
-                // outside app term start msf on screen
-                // run_cmd("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n); "
-                //         + "if [ -n \"$msfsession\" ]; then "
-                //         + "screen -wipe; screen -d \"$msfsession\"; screen -r \"$msfsession\"; "
-                //         + "else screen -wipe; screen -S msf -m msfconsole;exit; fi");
-                run_cmd_inapp("msfconsole -q");
+                if (isInAppTerminalAvailable()) {
+                    // in-app terminal
+                    run_cmd_inapp("msfconsole -q");
+                } else {
+                    // use screen if inapp disabled
+                    String externalCmd =
+                            "msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n); "
+                                    + "if [ -n \"$msfsession\" ]; then "
+                                    + "screen -wipe; screen -d \"$msfsession\"; screen -r \"$msfsession\"; "
+                                    + "else screen -wipe; screen -S msf -m msfconsole; exit; fi";
+                    run_cmd(externalCmd);
+                }
             }));
 
             Button runBtn = rootView.findViewById(R.id.run_module);
@@ -3517,25 +3502,28 @@ public class CARsenalFragment extends Fragment {
                 List<String> commands = new ArrayList<>();
                 String moduleName = selected_module.replace(".rb", "");
                 // outside app term handler
-                // StringBuilder msfCmd = new StringBuilder();
+                StringBuilder msfCmd = new StringBuilder();
 
                 if (moduleName.equals("connect")) {
-                    // outside app term append run append module
-                    // msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use auxiliary/client/hwbridge/")
-                    //         .append(moduleName)
-                    //         .append("`echo -ne '\\015'`");
+                    // outside term
+                    msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use auxiliary/client/hwbridge/")
+                            .append(moduleName)
+                            .append("`echo -ne '\\015'`");
+                    // inapp term
                     commands.add("use auxiliary/client/hwbridge/" + moduleName);
                 } else if (moduleName.equals("local_hwbridge")) {
-                    // outside app term append run append module
-                    // msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use auxiliary/server/")
-                    //         .append(moduleName)
-                    //         .append("`echo -ne '\\015'`");
+                    // outside term
+                    msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use auxiliary/server/")
+                            .append(moduleName)
+                            .append("`echo -ne '\\015'`");
+                    // inapp term
                     commands.add("use auxiliary/server/" + moduleName);
                 } else {
                     // outside app term append run append module
-                    // msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use post/hardware/automotive/")
-                    //         .append(moduleName)
-                    //         .append("`echo -ne '\\015'`");
+                    msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use post/hardware/automotive/")
+                            .append(moduleName)
+                            .append("`echo -ne '\\015'`");
+                    // inapp term
                     commands.add("use post/hardware/automotive/" + moduleName);
                 }
 
@@ -3546,27 +3534,32 @@ public class CARsenalFragment extends Fragment {
                     if (!value.isEmpty()) {
                         // sanitize single quotes so the value can be safely single-quoted on the shell
                         String sanitized = value.replace("'", "'\"'\"'");
-                        // outside app term append set
-                        // msfCmd.append("set ").append(key.toUpperCase()).append(" '").append(sanitized).append("'`echo -ne '\\015'`");
-                        // note the closing single-quote was missing before — fixed here
+                        // outside term
+                        msfCmd.append("set ").append(key.toUpperCase()).append(" '").append(sanitized).append("'`echo -ne '\\015'`");
+                        // inapp term
                         commands.add("set " + key.toUpperCase() + " '" + sanitized + "'");
                     }
                 }
 
                 // final run command
-                // outside app term append run
-                // msfCmd.append("run\"`echo -ne '\\015'`;screen -d -r $msfsession;exit");
+                // outside term
+                msfCmd.append("run\"`echo -ne '\\015'`;screen -d -r $msfsession;exit");
+                // inapp term
                 commands.add("run");
 
                 // execute commands one-by-one on the background executor
                 executorService.submit(() -> {
-                    // Run outside app term
-                    // run_cmd(msfCmd.toString());
-                    for (String cmd : commands) {
-                        run_cmd_inapp(cmd);
-                        try {
-                            Thread.sleep(50);
-                        } catch (InterruptedException ignored) { }
+                    if (isInAppTerminalAvailable()) {
+                        // in-app terminal
+                        for (String cmd : commands) {
+                            run_cmd_inapp(cmd);
+                            try {
+                                Thread.sleep(50);
+                            } catch (InterruptedException ignored) { }
+                        }
+                    } else {
+                        // use screen if inapp disabled
+                        run_cmd(msfCmd.toString());
                     }
                 });
             });
@@ -3831,5 +3824,31 @@ public class CARsenalFragment extends Fragment {
         activity.startActivity(intent);
         intent.putExtra("output", cmd);
         return "Command executed: " + cmd;
+    }
+
+    // Helper: open TerminalFragment with an initial command; if not possible, fallback to legacy bridge
+    public void run_cmd_inapp(@NonNull String cmd) {
+        Activity act = getActivity();
+        try {
+            if (act instanceof androidx.appcompat.app.AppCompatActivity) {
+                androidx.appcompat.app.AppCompatActivity app = (androidx.appcompat.app.AppCompatActivity) act;
+                TerminalFragment tf = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
+                app.getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.container, tf)
+                        .addToBackStack(null)
+                        .commitAllowingStateLoss();
+                return;
+            }
+        } catch (Throwable t) {
+            Log.d(TAG, "openTerminalWithCommand fallback due to: " + t.getMessage());
+        }
+        // Fallback to previous behavior using NhTerm bridge
+        run_cmd(cmd);
+    }
+
+    public boolean isInAppTerminalAvailable() {
+        Activity act = getActivity();
+        return act instanceof androidx.appcompat.app.AppCompatActivity;
     }
 }
