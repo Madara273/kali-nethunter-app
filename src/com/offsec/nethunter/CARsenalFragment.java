@@ -3490,6 +3490,11 @@ public class CARsenalFragment extends Fragment {
 
             Button msfBtn = rootView.findViewById(R.id.msfconsole_start);
             msfBtn.setOnClickListener(v -> executorService.submit(() -> {
+                // outside app term start msf on screen
+                // run_cmd("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n); "
+                //         + "if [ -n \"$msfsession\" ]; then "
+                //         + "screen -wipe; screen -d \"$msfsession\"; screen -r \"$msfsession\"; "
+                //         + "else screen -wipe; screen -S msf -m msfconsole;exit; fi");
                 run_cmd_inapp("msfconsole -q");
             }));
 
@@ -3511,12 +3516,26 @@ public class CARsenalFragment extends Fragment {
                 // Build a list of commands (one command per entry)
                 List<String> commands = new ArrayList<>();
                 String moduleName = selected_module.replace(".rb", "");
+                // outside app term handler
+                // StringBuilder msfCmd = new StringBuilder();
 
                 if (moduleName.equals("connect")) {
+                    // outside app term append run append module
+                    // msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use auxiliary/client/hwbridge/")
+                    //         .append(moduleName)
+                    //         .append("`echo -ne '\\015'`");
                     commands.add("use auxiliary/client/hwbridge/" + moduleName);
                 } else if (moduleName.equals("local_hwbridge")) {
+                    // outside app term append run append module
+                    // msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use auxiliary/server/")
+                    //         .append(moduleName)
+                    //         .append("`echo -ne '\\015'`");
                     commands.add("use auxiliary/server/" + moduleName);
                 } else {
+                    // outside app term append run append module
+                    // msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use post/hardware/automotive/")
+                    //         .append(moduleName)
+                    //         .append("`echo -ne '\\015'`");
                     commands.add("use post/hardware/automotive/" + moduleName);
                 }
 
@@ -3527,16 +3546,22 @@ public class CARsenalFragment extends Fragment {
                     if (!value.isEmpty()) {
                         // sanitize single quotes so the value can be safely single-quoted on the shell
                         String sanitized = value.replace("'", "'\"'\"'");
+                        // outside app term append set
+                        // msfCmd.append("set ").append(key.toUpperCase()).append(" '").append(sanitized).append("'`echo -ne '\\015'`");
                         // note the closing single-quote was missing before — fixed here
                         commands.add("set " + key.toUpperCase() + " '" + sanitized + "'");
                     }
                 }
 
                 // final run command
+                // outside app term append run
+                // msfCmd.append("run\"`echo -ne '\\015'`;screen -d -r $msfsession;exit");
                 commands.add("run");
 
                 // execute commands one-by-one on the background executor
                 executorService.submit(() -> {
+                    // Run outside app term
+                    // run_cmd(msfCmd.toString());
                     for (String cmd : commands) {
                         run_cmd_inapp(cmd);
                         try {
