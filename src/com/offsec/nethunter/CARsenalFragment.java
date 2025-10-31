@@ -3467,9 +3467,11 @@ public class CARsenalFragment extends Fragment {
                 optionsContainer.setTag(userInputs);
             });
 
+            boolean inappterm;
+            inappterm = sharedpreferences.getBoolean("inapp_terminal_enabled", false);
             Button msfBtn = rootView.findViewById(R.id.msfconsole_start);
             msfBtn.setOnClickListener(v -> executorService.submit(() -> {
-                if (isInAppTerminalAvailable()) {
+                if (inappterm) {
                     // in-app terminal
                     run_cmd_inapp("msfconsole -q");
                 } else {
@@ -3549,7 +3551,7 @@ public class CARsenalFragment extends Fragment {
 
                 // execute commands one-by-one on the background executor
                 executorService.submit(() -> {
-                    if (isInAppTerminalAvailable()) {
+                    if (inappterm) {
                         // in-app terminal
                         for (String cmd : commands) {
                             run_cmd_inapp(cmd);
