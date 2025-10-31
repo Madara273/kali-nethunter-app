@@ -216,7 +216,7 @@
     </string-array>
 
     <!-- KeX -->
-    <string name="kex_description">Welcome to the Kali NetHunter Desktop Experience.\nEnjoy the full potential of Kali Linux, straight from your pocket, even on HDMI output. Audio supported, Use the Audio Manager to stream sound through KeX. Delay has been added to avoid soft reboot on some devices.</string>
+    <string name="kex_description">Welcome to the Kali NetHunter Desktop Experience!\n\nEnjoy the full potential of Kali Linux, straight from your pocket, even on HDMI output. Audio supported, Use the Audio Manager to stream sound through KeX.</string>
 
     <!-- BT Attacks -->
     <string name="bt_description">Welcome to BT Arsenal! Internal BT support is now available for devices with RFCOMM, UART H4, VHCI and BINDER_IPC enabled in kernel, or devices with bt_smd driver.</string>
@@ -1383,7 +1383,7 @@
     <string name="vnc_enable_at_boot">Enable at boot</string>
     <string name="vnc_setup_local_server">Setup Local Server</string>
     <string name="vnc_delay_start_timer">20</string>
-    <string name="vnc_understood_button">Understood</string>
+    <string name="vnc_close_button">Close</string>
     <string name="vnc_information_menu_button">Information</string>
     <string name="nethunter_full_path_savedb">Full path to where you want to save the database:</string>
     <string name="nethunter_full_path_restoredb">Full path of the db file from where you want to restore:</string>

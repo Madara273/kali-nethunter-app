@@ -126,18 +126,15 @@ public class VNCFragment extends Fragment {
                     if (activity != null) {
                         LayoutInflater inflater = LayoutInflater.from(activity);
                         View dialogView = inflater.inflate(R.layout.kex_info_dialog, null);
-                        TextView descView = dialogView.findViewById(R.id.dialog_kernel_description);
-                        descView.setText(R.string.kex_description);
-
-                        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
-                                .setView(dialogView);
-
-                        final AlertDialog dialog = builder.create();
+                        AlertDialog dialog = new AlertDialog.Builder(requireContext())
+                                .setView(dialogView)
+                                .create();
 
                         Button closeButton = dialogView.findViewById(R.id.dialog_close_button);
                         closeButton.setOnClickListener(v -> dialog.dismiss());
 
                         dialog.show();
+                        return true;
                     }
                     return true;
                 }
