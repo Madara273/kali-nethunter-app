@@ -26,23 +26,12 @@
             android:layout_marginBottom="4dp"
             android:orientation="horizontal">
 
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/f_chrootmanager_edit_btn"
-                style="@style/Tech.Button.Outlined"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/change_path"
-                app:icon="@drawable/baseline_folder_open_24"
-                app:iconGravity="textStart"
-                app:iconPadding="8dp" />
-
             <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/f_chrootmanager_base_path_tv"
-                android:layout_width="0dp"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="8dp"
-                android:gravity="center_vertical"
+                android:layout_margin="5dp"
+                android:gravity="center"
                 android:singleLine="false"
                 android:text="@string/data_local_nhsystem"
                 android:textSize="12sp"
@@ -59,27 +48,6 @@
             android:background="@drawable/bg_card_tech"
             android:padding="8dp"
             android:gravity="center">
-
-            <LinearLayout
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:layout_marginBottom="4dp"
-                android:layout_marginLeft="4dp"
-                android:layout_marginRight="4dp"
-                android:background="@android:color/transparent"
-                android:orientation="horizontal">
-
-                <com.google.android.material.textview.MaterialTextView
-                    android:id="@+id/f_chrootmanager_kalifolder_tv"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_margin="8dp"
-                    android:gravity="center"
-                    android:text="@string/kali_arm64"
-                    android:singleLine="true"
-                    style="@style/Tech.Text.Caption" />
-            </LinearLayout>
 
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -167,7 +135,6 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/f_chrootmanager_install_btn"
-                style="@style/Tech.Button.Outlined"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/chroot_manager_install"
@@ -176,7 +143,6 @@
                 android:layout_marginEnd="2dp"
                 android:layout_marginBottom="2dp"
                 android:visibility="gone"
-                app:icon="@drawable/ic_system_update_black_36dp"
                 app:iconGravity="textStart"
                 app:iconPadding="8dp"
                 app:layout_constraintStart_toEndOf="@+id/f_chrootmanager_unmount_btn"
@@ -184,7 +150,6 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/f_chrootmanager_addmetapkg_btn"
-                style="@style/Tech.Button.Outlined"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/chroot_manager_add_metapackage"
@@ -193,7 +158,6 @@
                 android:layout_marginEnd="2dp"
                 android:layout_marginBottom="2dp"
                 android:visibility="gone"
-                app:icon="@drawable/ic_action_extension"
                 app:iconGravity="textStart"
                 app:iconPadding="8dp"
                 app:layout_constraintStart_toEndOf="@+id/f_chrootmanager_install_btn"
@@ -201,7 +165,6 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/f_chrootmanager_backupchroot_btn"
-                style="@style/Tech.Button.Outlined.Compact"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/chroot_manager_backup"
@@ -210,7 +173,6 @@
                 android:layout_marginEnd="2dp"
                 android:layout_marginBottom="2dp"
                 android:visibility="gone"
-                app:icon="@drawable/ic_memory_24dp"
                 app:iconGravity="textStart"
                 app:iconPadding="4dp"
                 app:layout_constraintStart_toEndOf="@+id/f_chrootmanager_addmetapkg_btn"
@@ -218,7 +180,6 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/f_chrootmanager_restorechroot_btn"
-                style="@style/Tech.Button.Outlined.Compact"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/chroot_manager_restore"
@@ -227,7 +188,6 @@
                 android:layout_marginEnd="2dp"
                 android:layout_marginBottom="2dp"
                 android:visibility="gone"
-                app:icon="@drawable/ic_system_update_black_36dp"
                 app:iconGravity="textStart"
                 app:iconPadding="4dp"
                 app:layout_constraintStart_toEndOf="@+id/f_chrootmanager_backupchroot_btn"
@@ -235,7 +195,6 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/f_chrootmanager_mount_btn"
-                style="@style/Tech.Button.Primary.Compact"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/chroot_manager_start"
@@ -244,7 +203,6 @@
                 android:layout_marginEnd="2dp"
                 android:layout_marginBottom="2dp"
                 android:visibility="gone"
-                app:icon="@drawable/ic_action_play"
                 app:iconGravity="textStart"
                 app:iconPadding="4dp"
                 app:layout_constraintStart_toStartOf="parent"
@@ -252,7 +210,6 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/f_chrootmanager_unmount_btn"
-                style="@style/Tech.Button.Primary.Compact"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/chroot_manager_stop"
@@ -261,7 +218,6 @@
                 android:layout_marginEnd="2dp"
                 android:layout_marginBottom="2dp"
                 android:visibility="gone"
-                app:icon="@drawable/ic_action_stop"
                 app:iconGravity="textStart"
                 app:iconPadding="4dp"
                 app:layout_constraintStart_toEndOf="@+id/f_chrootmanager_mount_btn"
@@ -269,7 +225,6 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/f_chrootmanager_removechroot_btn"
-                style="@style/Tech.Button.Outlined.Compact"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="@string/chroot_manager_remove"
@@ -278,7 +233,6 @@
                 android:layout_marginEnd="2dp"
                 android:layout_marginBottom="2dp"
                 android:visibility="gone"
-                app:icon="@drawable/ic_close_red"
                 app:iconGravity="textStart"
                 app:iconPadding="4dp"
                 app:layout_constraintStart_toEndOf="@+id/f_chrootmanager_backupchroot_btn"

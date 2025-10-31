@@ -72,8 +72,6 @@ public class ChrootManagerFragment extends Fragment {
     private TextView mountStatsTextView;
     private TextView baseChrootPathTextView;
     private TextView resultViewerLoggerTextView;
-    private TextView kaliFolderTextView;
-    private Button kaliFolderEditButton;
     private Button mountChrootButton;
     private Button unmountChrootButton;
     private Button installChrootButton;
@@ -142,8 +140,6 @@ public class ChrootManagerFragment extends Fragment {
         baseChrootPathTextView = rootView.findViewById(R.id.f_chrootmanager_base_path_tv);
         mountStatsTextView = rootView.findViewById(R.id.f_chrootmanager_mountresult_tv);
         resultViewerLoggerTextView = rootView.findViewById(R.id.f_chrootmanager_viewlogger);
-        kaliFolderTextView = rootView.findViewById(R.id.f_chrootmanager_kalifolder_tv);
-        kaliFolderEditButton = rootView.findViewById(R.id.f_chrootmanager_edit_btn);
         mountChrootButton = rootView.findViewById(R.id.f_chrootmanager_mount_btn);
         unmountChrootButton = rootView.findViewById(R.id.f_chrootmanager_unmount_btn);
         installChrootButton = rootView.findViewById(R.id.f_chrootmanager_install_btn);
@@ -158,14 +154,11 @@ public class ChrootManagerFragment extends Fragment {
     @Override public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         resultViewerLoggerTextView.setMovementMethod(new ScrollingMovementMethod());
-        kaliFolderTextView.setClickable(true);
+        //kaliFolderTextView.setClickable(true);
         if (sharedPreferences != null) {
-            kaliFolderTextView.setText(sharedPreferences.getString(SharePrefTag.CHROOT_ARCH_SHAREPREF_TAG, NhPaths.ARCH_FOLDER));
+            baseChrootPathTextView.append(sharedPreferences.getString(SharePrefTag.CHROOT_ARCH_SHAREPREF_TAG, NhPaths.ARCH_FOLDER));
         }
         final LinearLayoutCompat kaliViewFolderlinearLayout = view.findViewById(R.id.f_chrootmanager_viewholder);
-        kaliViewFolderlinearLayout.setOnClickListener(v -> new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
-                .setMessage(baseChrootPathTextView.getText().toString() + kaliFolderTextView.getText().toString())
-                .create().show());
         setEditButton();
         setStopKaliButton();
         setStartKaliButton();
@@ -344,8 +337,6 @@ public class ChrootManagerFragment extends Fragment {
         mountStatsTextView = null;
         baseChrootPathTextView = null;
         resultViewerLoggerTextView = null;
-        kaliFolderTextView = null;
-        kaliFolderEditButton = null;
         mountChrootButton = null;
         unmountChrootButton = null;
         installChrootButton = null;
@@ -377,7 +368,7 @@ public class ChrootManagerFragment extends Fragment {
 
     private void setEditButton() {
         if (activity == null || sharedPreferences == null) return;
-        kaliFolderEditButton.setOnClickListener(v -> {
+        baseChrootPathTextView.setOnClickListener(v -> {
             MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
             final AlertDialog ad = adb.create();
             LinearLayout ll = new LinearLayout(activity);
@@ -413,7 +404,7 @@ public class ChrootManagerFragment extends Fragment {
                     NhPaths.showMessage(activity, "Invalid Name.");
                 } else {
                     NhPaths.ARCH_FOLDER = chrootPathEditText.getText().toString();
-                    kaliFolderTextView.setText(NhPaths.ARCH_FOLDER);
+                    baseChrootPathTextView.setText(getResources().getString(R.string.data_local_nhsystem) + NhPaths.ARCH_FOLDER);
                     sharedPreferences.edit().putString(SharePrefTag.CHROOT_ARCH_SHAREPREF_TAG, NhPaths.ARCH_FOLDER).apply();
                     sharedPreferences.edit().putString(SharePrefTag.CHROOT_PATH_SHAREPREF_TAG, NhPaths.CHROOT_PATH()).apply();
                     new ShellExecuter().RunAsRootOutput("ln -sfn " + NhPaths.CHROOT_PATH() + " " + NhPaths.CHROOT_SYMLINK_PATH);
@@ -835,7 +826,6 @@ public class ChrootManagerFragment extends Fragment {
         if (installChrootButton != null) installChrootButton.setEnabled(isEnable);
         if (addMetaPkgButton != null) addMetaPkgButton.setEnabled(isEnable);
         if (removeChrootButton != null) removeChrootButton.setEnabled(isEnable);
-        if (kaliFolderEditButton != null) kaliFolderEditButton.setEnabled(isEnable);
         if (backupChrootButton != null) backupChrootButton.setEnabled(isEnable);
         if (restoreChrootButton != null) restoreChrootButton.setEnabled(isEnable);
     }

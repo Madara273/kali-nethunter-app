@@ -5,17 +5,13 @@
         android:id="@+id/menu_autostart_chroot"
         android:title="Enable Chroot Autostart"
         android:checkable="true"
+        android:visible="false"
         app:showAsAction="never" />
 
     <item
         android:id="@+id/menu_check_encryption"
         android:title="Encryption Status"
         app:showAsAction="never" />
-
-    <item
-        android:id="@+id/menu_separator"
-        android:title=""
-        android:enabled="false" />
 
     <item
         android:id="@+id/menu_backup_chroot"
