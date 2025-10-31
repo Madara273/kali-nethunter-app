@@ -295,7 +295,7 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
 
             executor.execute(() -> {
                 exe.RunAsRoot(new String[]{"echo \"" + conf + "\" > " + NhPaths.SD_PATH + "/kismet_site.conf"});
-                exe.RunAsRoot(new String[]{"bootkali custom_cmd mv /sdcard/kismet_site.conf /etc/kismet/"});
+                exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd mv /sdcard/kismet_site.conf /etc/kismet/"});
             });
             Toast.makeText(requireActivity().getApplicationContext(), "Starting Kismet.. Web UI will be available at localhost:2501\"", Toast.LENGTH_LONG).show();
             wantKismet = true;
