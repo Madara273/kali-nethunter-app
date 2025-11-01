@@ -475,7 +475,6 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
             if (model.equals("catfish") || model.equals("catshark") || model.equals("catshark-4g")) hideMenuItemIfExists(9);
             hideMenuItemIfExists(10);
             hideMenuItemIfExists(15);
-            hideMenuItemIfExists(17);
             hideMenuItemIfExists(18);
             hideMenuItemIfExists(20);
             hideMenuItemIfExists(21);
