@@ -4,8 +4,9 @@
     <item
         android:id="@+id/action_wifi_status"
         android:icon="@drawable/ic_wifi_enabled"
-    android:title="@string/wifi_status"
-    app:showAsAction="ifRoom" />
+        android:title="@string/wifi_status"
+        app:showAsAction="ifRoom"
+        android:visible="false" />
     <item
         android:id="@+id/action_info"
         android:icon="@android:drawable/ic_menu_info_details"
@@ -14,6 +15,7 @@
     <item
         android:id="@+id/action_settings"
         android:title="@string/gps_settings"
+        android:visible="false"
         app:showAsAction="never" />
     <item
         android:id="@+id/action_rtlsdr"
