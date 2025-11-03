@@ -99,16 +99,22 @@ public class RunAtBootService extends Service {
             new ShellExecuter().RunAsRootOutput("[ ! \"$(getenforce | grep Permissive)\" ] && setenforce 0");
         }
 
-        exe.RunAsRootOutput(NhPaths.BUSYBOX + " run-parts " + NhPaths.APP_INITD_PATH);
-        if (exe.RunAsRootReturnValue(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"status\"") == 0) {
-            exe.RunAsRootOutput("rm -rf " + NhPaths.CHROOT_PATH() + "/tmp/.X1*");
-            hashMap.put("CHROOT", isOK);
+        Boolean chroot_auto = sharedPreferences.getBoolean("chroot_autostart_enabled", true);
+        if (chroot_auto) {
+            exe.RunAsRootOutput(NhPaths.BUSYBOX + " run-parts " + NhPaths.APP_INITD_PATH);
+            if (exe.RunAsRootReturnValue(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"status\"") == 0) {
+                exe.RunAsRootOutput("rm -rf " + NhPaths.CHROOT_PATH() + "/tmp/.X1*");
+                hashMap.put("CHROOT", isOK);
+            }
+        } else {
+            hashMap.put("CHROOT", "autostart disabled.");
         }
 
         String resultMsg = "Boot completed.\nEveryting is fine and Chroot has been started!";
         for (Map.Entry<String, String> entry : hashMap.entrySet()) {
             if (!entry.getValue().equals(isOK)) {
-                resultMsg = "Make sure the above requirements are met.";
+                if (chroot_auto) resultMsg = "Make sure the above requirements are met.";
+                else resultMsg = "Please start chroot as needed.";
                 break;
             }
         }

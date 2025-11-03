@@ -361,6 +361,25 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:text="CHROOT AUTO START"
+                android:paddingTop="10dp"
+                android:padding="4dp" />
+
+            <Button
+                android:id="@+id/chroot_toogle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Disable"
+                android:textColor="#ffffffff" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
                 android:text="IN APP TERMINAL"
                 android:paddingTop="10dp"
                 android:padding="4dp" />

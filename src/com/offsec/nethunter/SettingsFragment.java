@@ -436,10 +436,28 @@ public class SettingsFragment extends Fragment {
             }
         });
 
+        // Chroot autostart
+        Button ChrootButton = rootView.findViewById(R.id.chroot_toogle);
+        Boolean chroot_auto = sharedpreferences.getBoolean("chroot_autostart_enabled", true);
+        if (chroot_auto) ChrootButton.setText("Disable");
+        else ChrootButton.setText("Enable");
+
+        addClickListener(ChrootButton, v -> {
+            if (chroot_auto) {
+                sharedpreferences.edit().putBoolean("chroot_autostart_enabled", false).apply();
+                ChrootButton.setText("Enable");
+                Toast.makeText(requireActivity().getApplicationContext(), "Chroot autostart disabled" , Toast.LENGTH_SHORT).show();
+            }
+            else {
+                sharedpreferences.edit().putBoolean("chroot_autostart_enabled", true).apply();
+                ChrootButton.setText("Disable");
+                Toast.makeText(requireActivity().getApplicationContext(), "Chroot autostart enabled" , Toast.LENGTH_SHORT).show();
+            }
+        });
+
         // In app terminal
         Button TermButton = rootView.findViewById(R.id.inapp_term_toogle);
-        Boolean inappterm;
-        inappterm = sharedpreferences.getBoolean("inapp_terminal_enabled", false);
+        Boolean inappterm = sharedpreferences.getBoolean("inapp_terminal_enabled", false);
         if (inappterm) TermButton.setText("Disable");
         addClickListener(TermButton, v -> {
             if (inappterm) {
