@@ -28,6 +28,7 @@ import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -87,9 +88,8 @@ public class WPSFragment extends Fragment {
 
         // Enabling wifi in case it's down
         if (iswatch) {
-            exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting on; ip link set dev wlan0 up"});
-        }
-        else exe.RunAsRoot(new String[]{"svc wifi enable"});
+            exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting off; ifconfig wlan0 up"});
+        } else exe.RunAsRoot(new String[]{"svc wifi enable"});
 
         // Interface spinner setup
         ifaceSpinner = rootView.findViewById(R.id.wps_iface_spinner);
@@ -103,7 +103,7 @@ public class WPSFragment extends Fragment {
             //String iwVersion = exe.RunAsRootOutput(iwPath + " --version");
             //Log.d(TAG, "iw version output: " + iwVersion);
 
-            String output = exe.RunAsRootOutput(iwPath + " dev | awk '/Interface/ {print $2}' | grep '^wlan'");
+            String output = exe.RunAsRootOutput(iwPath + " dev | awk '/Interface/ {print $2}' | grep '^wlan' | sort");
             String[] interfaces = output.trim().isEmpty() ? new String[]{"wlan0"} : output.split("\n");
             if (interfaces.length == 0) interfaces = new String[]{"wlan0"};
             if (isAdded()) {
@@ -141,7 +141,7 @@ public class WPSFragment extends Fragment {
         resetifaceButton.setOnClickListener(view -> {
             ExecutorService executor = Executors.newSingleThreadExecutor();
             executor.execute(() -> requireActivity().runOnUiThread(() -> {
-                if (iswatch) exe.RunAsRoot(new String[]{"ip link set wlan0 down; sleep 1 && ip link set wlan0 up"});
+                if (iswatch) exe.RunAsRoot(new String[]{"ifconfig wlan0 down; sleep 1 && ifconfig wlan0 up"});
                 else exe.RunAsRoot(new String[]{"svc wifi disable; sleep 1 && svc wifi enable"});
                 Toast.makeText(requireActivity().getApplicationContext(), "Done", Toast.LENGTH_SHORT).show();
             }));
@@ -230,12 +230,6 @@ public class WPSFragment extends Fragment {
             customPIN = CustomPIN.getText().toString();
             delayTIME = DelayTime.getText().toString();
             if (!selected_network.isEmpty()) {
-                if (iswatch) {
-                    //WearOS needs a sort of interface reset
-                    Handler handler = new Handler(Looper.getMainLooper());
-                    handler.postDelayed(() -> exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting off"}), 10000);
-                    handler.postDelayed(() -> exe.RunAsRoot(new String[]{"ip link set wlan0 up"}), 11000);
-                }
                 String cmd = "python3 /sdcard/nh_files/modules/oneshot.py -b " + selected_network +
                         " -i " + selectedInterface + pixieCMD + pixieforceCMD + bruteCMD + customPINCMD + customPIN + delayCMD + delayTIME + pbcCMD;
                 run_cmd(cmd);
@@ -272,10 +266,16 @@ public class WPSFragment extends Fragment {
         executor.execute(() -> {
             // Use the iw binary bundled with the app to scan and extract only WPS-enabled networks as "BSSID SSID"
             String iwPath = NhPaths.APP_SCRIPTS_BIN_PATH + "/iw";
-            String cmd = iwPath + " dev " + selectedInterface +
-                    " scan | awk 'BEGIN{bssid=\"\";ssid=\"\";wps=0} /^BSS /{ if (bssid!=\"\" && ssid!=\"\" && wps==1) {print bssid, ssid} bssid=$2; sub(/\\(.*/, \"\", bssid); ssid=\"\"; wps=0 } /SSID:/{ $1=\"\"; sub(/^ /,\"\"); ssid=$0 } /WPS:/{ wps=1 } END{ if (bssid!=\"\" && ssid!=\"\" && wps==1) {print bssid, ssid} }'";
+            File awkFile = new File("/system/bin/awk");
+            String outputScanLog;
 
-            String outputScanLog = exe.RunAsRootOutput(cmd).trim();
+            if (awkFile.exists()) {
+                String cmd = iwPath + " dev " + selectedInterface +
+                        " scan | awk 'BEGIN{bssid=\"\";ssid=\"\";wps=0} /^BSS /{ if (bssid!=\"\" && ssid!=\"\" && wps==1) {print bssid, ssid} bssid=$2; sub(/\\(.*/, \"\", bssid); ssid=\"\"; wps=0 } /SSID:/{ $1=\"\"; sub(/^ /,\"\"); ssid=$0 } /WPS:/{ wps=1 } END{ if (bssid!=\"\" && ssid!=\"\" && wps==1) {print bssid, ssid} }'";
+                outputScanLog = exe.RunAsRootOutput(cmd).trim();
+            } else {
+                outputScanLog = exe.RunAsRootOutput(NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd python3 /sdcard/nh_files/modules/oneshot.py -i " + selectedInterface + " -s | grep -E '[0-9])' | tr -s ' ' | cut -d ' ' -f 2-3");
+            }
             requireActivity().runOnUiThread(() -> {
                 if (outputScanLog.isEmpty()) {
                     final ArrayList<String> notargets = new ArrayList<>();
