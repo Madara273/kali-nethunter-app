@@ -37,6 +37,8 @@ import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -85,7 +87,7 @@ public class WifipumpkinFragment extends Fragment {
                 String FilePy = exe.RunAsChrootOutput(
                         "unzip -Z1 " + shQuote(FilePath) + " | grep .py | awk -F'.' '{print $1}'");
 
-                run_cmd("wifipumpkin3 -x \"use misc.custom_captiveflask; install " + FilePy + " " +  FilePath + "; back; exit\";exit");
+                run_cmd("wifipumpkin3 -x \"use misc.custom_captiveflask; install " + FilePy + " " +  FilePath + "; back; exit\";cp -r /root/.config/wifipumpkin3/config/templates/" + FilePy + " /usr/share/wifipumpkin3/config/templates/; exit");
             });
 
     public static WifipumpkinFragment newInstance(int sectionNumber) {
@@ -156,20 +158,19 @@ public class WifipumpkinFragment extends Fragment {
                 } else {
                     PreviewCheckbox.setEnabled(true);
                     if (selected_template.equals("FlaskDemo")) {
-                    template_src = NhPaths.CHROOT_PATH() + "/root/.config/wifipumpkin3/config/templates/" + selected_template + "/templates/En/templates/login.html";
+                    template_src = NhPaths.CHROOT_PATH() + "/usr/share/wifipumpkin3/config/templates/" + selected_template + "/templates/En/templates/login.html";
                     } else {
-                    template_src = NhPaths.CHROOT_PATH() + "/root/.config/wifipumpkin3/config/templates/" + selected_template + "/templates/login.html";
+                    template_src = NhPaths.CHROOT_PATH() + "/usr/share/wifipumpkin3/config/templates/" + selected_template + "/templates/login.html";
                     }
                     myBrowser.clearCache(true);
                     myBrowser.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
                     myBrowser.getSettings().setDomStorageEnabled(true);
                     myBrowser.getSettings().setLoadsImagesAutomatically(true);
-                    //myBrowser.setInitialScale(200);
                     myBrowser.getSettings().setJavaScriptEnabled(true); // Enable JavaScript Support
                     myBrowser.setWebViewClient(new WebViewClient());
                     myBrowser.getSettings().setAllowFileAccess(true);
-                    String externalStoragePath = Environment.getExternalStorageDirectory().getPath();
-                    myBrowser.loadDataWithBaseURL("file://" + NhPaths.CHROOT_PATH() + "/root/.config/wifipumpkin3/config/templates/" + selected_template + "/static", template_src, "text/html", "UTF-8", null);
+                    String data = exe.RunAsRootOutput("cat " + template_src);
+                    //myBrowser.loadDataWithBaseURL("file:///" + NhPaths.CHROOT_PATH() + "/usr/share/wifipumpkin3/config/templates/" + selected_template, data, "text/html", "UTF-8", null);
                     myBrowser.loadUrl(template_src);
                     TemplateString[0] = selected_template;
                 }
