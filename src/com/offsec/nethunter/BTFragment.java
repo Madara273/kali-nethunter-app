@@ -390,7 +390,6 @@ public class BTFragment extends Fragment {
         @Override
         public void onResume(){
             super.onResume();
-            Toast.makeText(requireActivity().getApplicationContext(), "Status updated", Toast.LENGTH_SHORT).show();
             // Capture view safely on UI thread, then refresh off the UI thread
             final View root = getView();
             if (root != null) {
@@ -500,8 +499,13 @@ public class BTFragment extends Fragment {
                         else {
                             File bluebinder = new File(NhPaths.CHROOT_PATH() + "/usr/sbin/bluebinder");
                             if (bluebinder.exists()) {
+                                // TODO - once again, MUST enable this for only specific devices. **Most devices don't need BT off or airplane mode on** 1/2
+                                // TODO - For now, disabling only Bluetooth for phones
                                 //Ensure all services are disabled before enabling airplane mode for bluebinder
-                                exe.RunAsRoot(new String[]{
+                                if (!iswatch) {
+                                    exe.RunAsRoot(new String[]{"svc bluetooth disable"});
+                                }
+                                /*exe.RunAsRoot(new String[]{
                                         //"svc bluetooth disable",
                                         //"svc wifi disable",
                                         "settings put global bluetooth_on 0",
@@ -510,14 +514,15 @@ public class BTFragment extends Fragment {
                                         "settings put global airplane_mode_on 1",
                                         "am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true"
                                         //"pm disable com.android.bluetooth"
-                                });
+                                });*/
 
                                 // Run the Bluebinder script
                                 run_cmd("echo -ne \"\\033]0;Bluebinder\\007\" && clear;bluebinder || bluebinder;exit");
                                 Toast.makeText(requireActivity().getApplicationContext(), "Starting bluebinder...", Toast.LENGTH_SHORT).show();
 
+                                // TODO - once again, MUST enable this for only specific devices. **Most devices don't need BT off or airplane mode on** 2/2
                                 // Delay to disable airplane mode and re-enable Wi-Fi after 9 seconds
-                                new Handler(Looper.getMainLooper()).postDelayed(() -> exe.RunAsRoot(new String[]{
+                                /*new Handler(Looper.getMainLooper()).postDelayed(() -> exe.RunAsRoot(new String[]{
                                         "settings put global bluetooth_on 1",
                                         // 12 = STATE_ON | 10 = STATE_TURNING_ON
                                         "am broadcast -a android.bluetooth.adapter.action.STATE_CHANGED --ei android.bluetooth.adapter.extra.STATE 12 --ei android.bluetooth.adapter.extra.PREVIOUS_STATE 10",
@@ -537,8 +542,9 @@ public class BTFragment extends Fragment {
                     }
                     else {
                         exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd pkill bluebinder;exit"});
-                        exe.RunAsRoot(new String[]{"pm enable com.android.bluetooth"});
-                        exe.RunAsRoot(new String[]{"svc bluetooth enable"});
+                        if (!iswatch) {
+                            exe.RunAsRoot(new String[]{"svc bluetooth enable"});
+                        }
                     }
                     refresh(rootView);
                 }
@@ -1263,7 +1269,6 @@ public class BTFragment extends Fragment {
         @Override
         public void onResume(){
             super.onResume();
-            Toast.makeText(requireActivity().getApplicationContext(), "Status updated", Toast.LENGTH_SHORT).show();
             // Safely capture current view before dispatching to background
             final View root = getView();
             if (root != null) {

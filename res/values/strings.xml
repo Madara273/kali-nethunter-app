@@ -219,7 +219,7 @@
     <string name="kex_description">Welcome to the Kali NetHunter Desktop Experience!\n\nEnjoy the full potential of Kali Linux, straight from your pocket, even on HDMI output. Audio supported, Use the Audio Manager to stream sound through KeX.</string>
 
     <!-- BT Attacks -->
-    <string name="bt_description">Welcome to BT Arsenal! Internal BT support is now available for devices with RFCOMM, UART H4, VHCI and BINDER_IPC enabled in kernel, or devices with bt_smd driver.</string>
+    <string name="bt_description">Welcome to BT Arsenal! Internal BT support is available for devices with RFCOMM, UART H4, VHCI and BINDER_IPC enabled in kernel, or devices with bt_smd driver. Some devices need turning Airplane Mode on before starting bluebinder.</string>
     <string name="bt_carwhisperer">Carwhisperer script from the way back. Listen to, or inject audio to various devices like speakers, headsets, watches or even cars. Carwshisperer is not supported by internal bluetooth (VHCI or bt_smd) yet.</string>
     <string name="bt_spoof">Spoof your BT adapters address, class, and name.</string>
     <string name="bt_tools">Brute force BT device addresses, ping, and discover their services.</string>
@@ -444,7 +444,8 @@
 
     <!-- Start GPSFragment -->
     <string name="switch_gps_provider">Android GPS Provider</string>
-    <string name="switch_gpsd">gpsd in chroot</string>
+    <string name="switch_gpsd">GPSD in chroot</string>
+    <string name="switch_nexmon">Nexmon support</string>
     <string name="gps_button_launch_app">Launch %s in NH Terminal</string>
     <string name="gps_description">Converts your GPS to NMEA then provides to Kali chroot. Perfect for wardriving with Kismet or just a generic GPS server for Kali. Select your desired datasources. Make sure your wireless interface is in monitor mode before starting Kismet. Internal wireless interfaces can also be used thanks to the monitor mode by QCACLD-3.0 driver.</string>
     <string name="gps_help">You may need to give NetHunter permissions to GPS. Go to Settings > Apps > NetHunter > Permissions.</string>
