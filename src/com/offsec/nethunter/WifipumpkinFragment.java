@@ -6,6 +6,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -25,6 +27,7 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -144,7 +147,7 @@ public class WifipumpkinFragment extends Fragment {
         Spinner TemplatesSpinner = rootView.findViewById(R.id.templates);
 
         // Select Template
-        WebView myBrowser = rootView.findViewById(R.id.mybrowser);
+        ImageView previewTemplate = rootView.findViewById(R.id.preview_template);
         final String[] TemplateString = {""};
         TemplatesSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @SuppressLint("SetJavaScriptEnabled")
@@ -162,16 +165,10 @@ public class WifipumpkinFragment extends Fragment {
                     } else {
                     template_src = NhPaths.CHROOT_PATH() + "/usr/share/wifipumpkin3/config/templates/" + selected_template + "/templates/login.html";
                     }
-                    myBrowser.clearCache(true);
-                    myBrowser.getSettings().setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
-                    myBrowser.getSettings().setDomStorageEnabled(true);
-                    myBrowser.getSettings().setLoadsImagesAutomatically(true);
-                    myBrowser.getSettings().setJavaScriptEnabled(true); // Enable JavaScript Support
-                    myBrowser.setWebViewClient(new WebViewClient());
-                    myBrowser.getSettings().setAllowFileAccess(true);
-                    String data = exe.RunAsRootOutput("cat " + template_src);
-                    //myBrowser.loadDataWithBaseURL("file:///" + NhPaths.CHROOT_PATH() + "/usr/share/wifipumpkin3/config/templates/" + selected_template, data, "text/html", "UTF-8", null);
-                    myBrowser.loadUrl(template_src);
+                    String preview_path = NhPaths.CHROOT_PATH() + "/usr/share/wifipumpkin3/config/templates/" + selected_template + "/preview.png";
+                    Bitmap myBitmap = BitmapFactory.decodeFile(preview_path);
+                    if (!new File(preview_path).exists()) Toast.makeText(requireActivity().getApplicationContext(), "Preview not available", Toast.LENGTH_SHORT).show();
+                    previewTemplate.setImageBitmap(myBitmap);
                     TemplateString[0] = selected_template;
                 }
             }
@@ -351,7 +348,9 @@ public class WifipumpkinFragment extends Fragment {
 
     public void RunSetup() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        String cmd = "apt update && apt install wifipumpkin3 dnschef -y; wp3;";
+        String cmd = "echo -ne \"\\033]0;Wifipumpkin3 Setup\\007\" && clear && apt update && apt install wifipumpkin3 dnschef -y; wp3; " +
+                "cd /sdcard/nh_files/templates; for file in *; do wp3 -x \"use misc.custom_captiveflask; install `echo \"${file%%.*}\"` $file; back; exit\"; done; " +
+                "cp -r /root/.config/wifipumpkin3/config/templates/* /usr/share/wifipumpkin3/config/templates/; exit";
         run_cmd(cmd);
         sharedpreferences.edit().putBoolean("wp3_setup_done", true).apply();
     }

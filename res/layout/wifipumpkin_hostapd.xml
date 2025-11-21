@@ -232,13 +232,12 @@
         <LinearLayout
             android:id="@+id/pre_view"
             android:layout_width="match_parent"
-            android:layout_height="500dp"
-            android:paddingTop="10dp"
+            android:layout_height="match_parent"
             android:visibility="gone"
             android:layout_gravity="center">
 
-            <WebView
-                android:id="@+id/mybrowser"
+            <ImageView
+                android:id="@+id/preview_template"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_marginTop="10dp"
