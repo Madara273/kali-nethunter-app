@@ -320,8 +320,11 @@ public class WifipumpkinFragment extends Fragment {
             @Override
             public boolean onMenuItemSelected(@NonNull MenuItem item) {
                 int id = item.getItemId();
-                if (id == R.id.setup || id == R.id.update) {
+                if (id == R.id.setup) {
                     RunSetup();
+                    return true;
+                } else if (id == R.id.update) {
+                    RunUpdate();
                     return true;
                 }
                 return false;
@@ -349,11 +352,20 @@ public class WifipumpkinFragment extends Fragment {
     public void RunSetup() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         String cmd = "echo -ne \"\\033]0;Wifipumpkin3 Setup\\007\" && clear && apt update && apt install wifipumpkin3 dnschef -y; wp3; " +
-                "cd /sdcard/nh_files/templates; for file in *; do wp3 -x \"use misc.custom_captiveflask; install `echo \"${file%%.*}\"` $file; back; exit\"; done; " +
-                "cp -r /root/.config/wifipumpkin3/config/templates/* /usr/share/wifipumpkin3/config/templates/; exit";
+                "if [ -d /sdcard/nh_files/templates ];then cd /sdcard/nh_files/templates; for file in *; do wp3 -x \"use misc.custom_captiveflask; install `echo \"${file%%.*}\"` $file; back; exit\"; done; " +
+                "cp -r /root/.config/wifipumpkin3/config/templates/* /usr/share/wifipumpkin3/config/templates/; else echo 'No templates directory in /sdcard/nh_files'; fi; exit";
         run_cmd(cmd);
         sharedpreferences.edit().putBoolean("wp3_setup_done", true).apply();
     }
+    public void RunUpdate() {
+        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        String cmd = "echo -ne \"\\033]0;Wifipumpkin3 Update\\007\" && clear && apt update && apt install wifipumpkin3 dnschef -y; " +
+                "if [ -d /sdcard/nh_files/templates ];then cd /sdcard/nh_files/templates; for file in *; do wp3 -x \"use misc.custom_captiveflask; install `echo \"${file%%.*}\"` $file; back; exit\"; done; " +
+                "cp -r /root/.config/wifipumpkin3/config/templates/* /usr/share/wifipumpkin3/config/templates/; else echo 'No templates directory in /sdcard/nh_files'; fi; exit";
+        run_cmd(cmd);
+        sharedpreferences.edit().putBoolean("wp3_setup_done", true).apply();
+    }
+
 
     // Helper to route commands through TerminalFragment (saves memory vs external NhTerm)
     private void openTerminalWithCommand(String cmd) {
