@@ -502,9 +502,7 @@ public class BTFragment extends Fragment {
                                 // TODO - once again, MUST enable this for only specific devices. **Most devices don't need BT off or airplane mode on** 1/2
                                 // TODO - For now, disabling only Bluetooth for phones
                                 //Ensure all services are disabled before enabling airplane mode for bluebinder
-                                if (!iswatch) {
-                                    exe.RunAsRoot(new String[]{"svc bluetooth disable"});
-                                }
+                                exe.RunAsRoot(new String[]{"svc bluetooth disable"});
                                 /*exe.RunAsRoot(new String[]{
                                         //"svc bluetooth disable",
                                         //"svc wifi disable",
@@ -542,9 +540,7 @@ public class BTFragment extends Fragment {
                     }
                     else {
                         exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd pkill bluebinder;exit"});
-                        if (!iswatch) {
-                            exe.RunAsRoot(new String[]{"svc bluetooth enable"});
-                        }
+                        exe.RunAsRoot(new String[]{"svc bluetooth enable"});
                     }
                     refresh(rootView);
                 }
