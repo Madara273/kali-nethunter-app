@@ -245,11 +245,11 @@ public class USBArsenalFragment extends Fragment {
         targetOSSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position == 2){
+                /*if (position == 2){
                     usbFuncSpinner.setAdapter(usbFuncMACArrayAdapter);
                 } else {
                     usbFuncSpinner.setAdapter(usbFuncWinArrayAdapter);
-                }
+                }*/
                 refreshUSBSwitchInfos(gettargetOSSpinnerString(), getusbFuncSpinnerString());
             }
 
