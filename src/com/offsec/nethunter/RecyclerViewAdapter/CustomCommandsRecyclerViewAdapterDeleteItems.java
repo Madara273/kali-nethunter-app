@@ -14,12 +14,12 @@ import com.offsec.nethunter.models.CustomCommandsModel;
 
 import java.util.List;
 
-public class CustomCommandsRecyclerViewAdapterDeleteItems extends RecyclerView.Adapter<CustomCommandsRecyclerViewAdapterDeleteItems.ItemViewHolder>{
+public class CustomCommandsRecyclerViewAdapterDeleteItems extends RecyclerView.Adapter<CustomCommandsRecyclerViewAdapterDeleteItems.ItemViewHolder> {
 	public static final String TAG = "CustomCommandsRVA_Delete";
 	private final Context context;
 	private final List<CustomCommandsModel> customCommandsModelList;
 
-	public CustomCommandsRecyclerViewAdapterDeleteItems(Context context, List<CustomCommandsModel> customCommandsModelList){
+	public CustomCommandsRecyclerViewAdapterDeleteItems(Context context, List<CustomCommandsModel> customCommandsModelList) {
 		this.context = context;
 		this.customCommandsModelList = customCommandsModelList;
 	}
@@ -41,11 +41,11 @@ public class CustomCommandsRecyclerViewAdapterDeleteItems extends RecyclerView.A
 		return customCommandsModelList.size();
 	}
 
-	static class ItemViewHolder extends RecyclerView.ViewHolder{
-		private final CheckBox runOnChrootStartCheckBox;
-		private ItemViewHolder(View view){
-			super(view);
-			runOnChrootStartCheckBox = view.findViewById(R.id.f_customcommands_recyclerview_dialog_chkbox);
-		}
-	}
+    public static class ItemViewHolder extends RecyclerView.ViewHolder {
+        private final CheckBox runOnChrootStartCheckBox;
+        public ItemViewHolder(View view){
+            super(view);
+            runOnChrootStartCheckBox = view.findViewById(R.id.f_customcommands_recyclerview_dialog_chkbox);
+        }
+    }
 }

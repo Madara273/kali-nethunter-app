@@ -13,14 +13,12 @@ import com.offsec.nethunter.utils.ShellExecuter;
 import java.util.LinkedList;
 import java.util.List;
 
-
 class SearchSploitSQL extends SQLiteOpenHelper {
     private final ShellExecuter exe = new ShellExecuter();
     private static final int DATABASE_VERSION = 1;
     private static final String DATABASE_NAME = "SearchSploit";
     SearchSploitSQL(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
-
     }
 
     public void onCreate(SQLiteDatabase database) {
@@ -125,7 +123,6 @@ class SearchSploitSQL extends SQLiteOpenHelper {
         cursor.close();
         return commandList;
     }
-
 
     List<String> getTypes() {
         String query = "SELECT DISTINCT " + SearchSploit.TYPE +

@@ -1,47 +1,39 @@
 package com.offsec.nethunter;
 
-import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.Environment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.offsec.nethunter.RecyclerViewAdapter.NethunterRecyclerViewAdapter;
-import com.offsec.nethunter.RecyclerViewAdapter.NethunterRecyclerViewAdapterDeleteItems;
 import com.offsec.nethunter.RecyclerViewData.NethunterData;
 import com.offsec.nethunter.SQL.NethunterSQL;
 import com.offsec.nethunter.models.NethunterModel;
 import com.offsec.nethunter.utils.NhPaths;
-import com.offsec.nethunter.viewmodels.NethunterViewModel;
-import com.offsec.nethunter.Executor.NethunterExecutor;
+import com.offsec.nethunter.utils.ShellExecuter;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.widget.SearchView;
 import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -50,15 +42,14 @@ import static com.offsec.nethunter.R.id.f_nethunter_action_snowfall;
 
 public class NetHunterFragment extends Fragment {
     private static final String ARG_SECTION_NUMBER = "section_number";
-    private Context context;
-    private Activity activity;
     private NethunterRecyclerViewAdapter nethunterRecyclerViewAdapter;
+    private static final AtomicBoolean NH_FILES_COPY_SCHEDULED = new AtomicBoolean(false);
+    private final android.os.Handler nhHandler = new android.os.Handler(android.os.Looper.getMainLooper());
     private Button refreshButton;
     private MenuItem snowfallButton;
     private Button addButton;
     private Button deleteButton;
     private Button moveButton;
-    private static int targetPositionId;
     private SharedPreferences sharedpreferences;
 
     public static NetHunterFragment newInstance(int sectionNumber) {
@@ -72,10 +63,7 @@ public class NetHunterFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        NethunterExecutor.checkVulkanSupportOnStart(this);
-        setHasOptionsMenu(true);
-        this.context = getContext();
-        this.activity = getActivity();
+        ensureNhFilesOnSdcard();
     }
 
     @Nullable
@@ -87,17 +75,69 @@ public class NetHunterFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        NethunterViewModel nethunterViewModel = new ViewModelProvider(this).get(NethunterViewModel.class);
-        nethunterViewModel.init(context);
 
-        nethunterViewModel.getLiveDataNethunterModelList().observe(getViewLifecycleOwner(), nethunterModelList -> nethunterRecyclerViewAdapter.notifyDataSetChanged());
+        androidx.core.view.MenuHost menuHost = requireActivity();
+        menuHost.addMenuProvider(new androidx.core.view.MenuProvider() {
+            @Override
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+                inflater.inflate(R.menu.nethunter, menu);
+                MenuItem searchItem = menu.findItem(R.id.f_nethunter_action_search);
+                sharedpreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
-        nethunterRecyclerViewAdapter = new NethunterRecyclerViewAdapter(context, nethunterViewModel.getLiveDataNethunterModelList().getValue());
-        RecyclerView itemRecyclerView = view.findViewById(R.id.f_nethunter_recyclerview);
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
-        itemRecyclerView.setLayoutManager(linearLayoutManager);
-        itemRecyclerView.setAdapter(nethunterRecyclerViewAdapter);
+                boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
+                boolean snowfall = iswatch
+                        ? sharedpreferences.getBoolean("snowfall_enabled", false)
+                        : sharedpreferences.getBoolean("snowfall_enabled", true);
 
+                if (iswatch) searchItem.setVisible(false);
+
+                snowfallButton = menu.findItem(R.id.f_nethunter_action_snowfall);
+                if (snowfall) snowfallButton.setIcon(R.drawable.snowflake_trigger);
+                else snowfallButton.setIcon(R.drawable.snowflake_trigger_bw);
+
+                SearchView searchView = (SearchView) searchItem.getActionView();
+                if (searchView != null) {
+                    searchView.setOnSearchClickListener(v -> menu.setGroupVisible(R.id.f_nethunter_menu_group1, false));
+                    searchView.setOnCloseListener(() -> {
+                        menu.setGroupVisible(R.id.f_nethunter_menu_group1, true);
+                        return false;
+                    });
+                    searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                        @Override public boolean onQueryTextSubmit(String query) { return false; }
+                        @Override public boolean onQueryTextChange(String newText) {
+                            if (nethunterRecyclerViewAdapter != null) {
+                                nethunterRecyclerViewAdapter.getFilter().filter(newText);
+                            }
+                            return false;
+                        }
+                    });
+                }
+            }
+
+            @Override
+            public boolean onMenuItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+                if (id == f_nethunter_action_search) return true;
+                if (id == f_nethunter_action_snowfall) {
+                    trigger_snowfall();
+                    return true;
+                }
+                return false;
+            }
+        }, getViewLifecycleOwner());
+
+        RecyclerView recyclerView = view.findViewById(R.id.f_nethunter_recyclerview);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        List<NethunterModel> initList = NethunterData.getInstance().getNethunterModels(requireContext()).getValue();
+        if (initList == null) initList = new ArrayList<>();
+        nethunterRecyclerViewAdapter = new NethunterRecyclerViewAdapter(getContext(), initList);
+        recyclerView.setAdapter(nethunterRecyclerViewAdapter);
+        // Observe data changes and notify adapter
+        NethunterData.getInstance().getNethunterModels(requireContext()).observe(getViewLifecycleOwner(), list -> {
+            if (nethunterRecyclerViewAdapter != null) nethunterRecyclerViewAdapter.notifyDataSetChanged();
+        });
+
+        // Fix button IDs to match layout
         refreshButton = view.findViewById(R.id.f_nethunter_refreshButton);
         addButton = view.findViewById(R.id.f_nethunter_addItemButton);
         deleteButton = view.findViewById(R.id.f_nethunter_deleteItemButton);
@@ -108,120 +148,16 @@ public class NetHunterFragment extends Fragment {
         onDeleteItemSetup();
         onMoveItemSetup();
 
-        //WearOS optimisation
+        // WearOS optimisation
         TextView NHDesc = view.findViewById(R.id.f_nethunter_banner2);
         LinearLayout NHButtons = view.findViewById(R.id.f_nethunter_linearlayoutBtn);
-        Boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
-        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
+        sharedpreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         sharedpreferences.edit().putBoolean("running_on_wearos", iswatch).apply();
-        if(iswatch) {
+        if (iswatch) {
             NHDesc.setVisibility(View.GONE);
             NHButtons.setVisibility(View.GONE);
         }
-    }
-
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.nethunter, menu);
-        final MenuItem searchItem = menu.findItem(f_nethunter_action_search);
-
-        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-
-        //WearOS optimisation
-        Boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
-        Boolean snowfall;
-        if (iswatch) {
-            snowfall = sharedpreferences.getBoolean("snowfall_enabled", false);
-            searchItem.setVisible(false);
-        } else {
-            snowfall = sharedpreferences.getBoolean("snowfall_enabled", true);
-        }
-        final SearchView searchView = (SearchView) searchItem.getActionView();
-        assert searchView != null;
-        searchView.setOnSearchClickListener(v -> menu.setGroupVisible(R.id.f_nethunter_menu_group1, false));
-        searchView.setOnCloseListener(() -> {
-            menu.setGroupVisible(R.id.f_nethunter_menu_group1, true);
-            return false;
-        });
-
-        // Snowfall
-        snowfallButton = menu.findItem(f_nethunter_action_snowfall);
-        if (snowfall) snowfallButton.setIcon(R.drawable.snowflake_trigger);
-        else snowfallButton.setIcon(R.drawable.snowflake_trigger_bw);
-
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                return false;
-            }
-
-            @Override
-            public boolean onQueryTextChange(String newText) {
-                nethunterRecyclerViewAdapter.getFilter().filter(newText);
-                return false;
-            }
-        });
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        final LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        final View promptView = inflater.inflate(R.layout.nethunter_custom_dialog_view, null);
-        final TextView titleTextView = promptView.findViewById(R.id.f_nethunter_adb_tv_title1);
-        final EditText storedpathEditText = promptView.findViewById(R.id.f_nethunter_adb_et_storedpath);
-
-        int id = item.getItemId();
-        if (id == R.id.f_nethunter_menu_backupDB) {
-            titleTextView.setText(R.string.nethunter_full_path_savedb);
-            storedpathEditText.setText(String.format("%s/FragmentNethunter", NhPaths.APP_SD_SQLBACKUP_PATH));
-            MaterialAlertDialogBuilder adbBackup = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-            adbBackup.setView(promptView);
-            adbBackup.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-            adbBackup.setPositiveButton("OK", (dialog, which) -> { });
-            final androidx.appcompat.app.AlertDialog adBackup = adbBackup.create();
-            adBackup.setOnShowListener(dialog -> {
-                final Button buttonOK = adBackup.getButton(DialogInterface.BUTTON_POSITIVE);
-                buttonOK.setOnClickListener(v -> {
-                    String returnedResult = NethunterData.getInstance().backupData(NethunterSQL.getInstance(context), storedpathEditText.getText().toString());
-                    if (returnedResult == null){
-                        NhPaths.showMessage(context, "db is successfully backup to " + storedpathEditText.getText().toString());
-                    } else {
-                        dialog.dismiss();
-                        new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to backup the DB.").setMessage(returnedResult).create().show();
-                    }
-                    dialog.dismiss();
-                });
-            });
-            adBackup.show();
-        } else if (id == R.id.f_nethunter_menu_restoreDB) {
-            titleTextView.setText(R.string.nethunter_full_path_restoredb);
-            storedpathEditText.setText(String.format("%s/FragmentNethunter", NhPaths.APP_SD_SQLBACKUP_PATH));
-            MaterialAlertDialogBuilder adbRestore = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-            adbRestore.setView(promptView);
-            adbRestore.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-            adbRestore.setPositiveButton("OK", (dialog, which) -> { });
-            final androidx.appcompat.app.AlertDialog adRestore = adbRestore.create();
-            adRestore.setOnShowListener(dialog -> {
-                final Button buttonOK = adRestore.getButton(DialogInterface.BUTTON_POSITIVE);
-                buttonOK.setOnClickListener(v -> {
-                    String returnedResult = NethunterData.getInstance().restoreData(NethunterSQL.getInstance(context), storedpathEditText.getText().toString());
-                    if (returnedResult == null) {
-                        NhPaths.showMessage(context, "db is successfully restored to " + storedpathEditText.getText().toString());
-                    } else {
-                        dialog.dismiss();
-                        new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Failed to restore the DB.").setMessage(returnedResult).create().show();
-                    }
-                    dialog.dismiss();
-                });
-            });
-            adRestore.show();
-        } else if (id == R.id.f_nethunter_menu_ResetToDefault) {
-            NethunterData.getInstance().resetData(NethunterSQL.getInstance(context));
-        } else if (id == f_nethunter_action_snowfall) {
-            trigger_snowfall();
-        }
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -244,15 +180,84 @@ public class NetHunterFragment extends Fragment {
         refreshButton.setOnClickListener(v -> NethunterData.getInstance().refreshData());
     }
 
-    private void trigger_snowfall(){
-        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        Boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
-        Boolean snowfall;
-        if (iswatch) {
-            snowfall = sharedpreferences.getBoolean("snowfall_enabled", false);
-        } else {
-            snowfall = sharedpreferences.getBoolean("snowfall_enabled", true);
+    private void ensureNhFilesOnSdcard() {
+        if (!NH_FILES_COPY_SCHEDULED.compareAndSet(false, true)) {
+            Log.d("NetHunterFragment", "nh_files copy already scheduled; skipping.");
+            return;
         }
+        if (nhFilesExists()) {
+            Log.i("NetHunterFragment", "nh_files exists on SD; will perform a safe sync to ensure content is present.");
+        } else {
+            Log.i("NetHunterFragment", "nh_files not found on SD; will create and sync.");
+        }
+        Log.i("NetHunterFragment", "Deferring nh_files sync by 10s to wait for storage permission.");
+        nhHandler.postDelayed(() -> {
+            try {
+                if (!isStoragePermissionGranted()) {
+                    Log.w("NetHunterFragment", "Storage permission not granted after delay; skipping nh_files sync.");
+                    return;
+                }
+                // Always perform a safe sync; it only adds missing/newer files
+                syncNhFilesToSdcard();
+                if (nhFilesExists()) {
+                    Log.i("NetHunterFragment", "nh_files present on /sdcard and synced.");
+                } else {
+                    Log.e("NetHunterFragment", "nh_files still missing after sync attempt.");
+                }
+            } catch (Exception e) {
+                Log.e("NetHunterFragment", "Exception while syncing nh_files: ", e);
+            } finally {
+                NH_FILES_COPY_SCHEDULED.set(false);
+            }
+        }, 10_000);
+    }
+
+    private synchronized boolean nhFilesExists() {
+        File nhFilesDir = new File(Environment.getExternalStorageDirectory().getPath() + "/nh_files");
+        return nhFilesDir.exists() && nhFilesDir.isDirectory();
+    }
+
+    private boolean isStoragePermissionGranted() {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            return Environment.isExternalStorageManager();
+        } else {
+            Context ctx = getContext();
+            if (ctx == null) return false;
+            return androidx.core.content.ContextCompat.checkSelfPermission(
+                    ctx, android.Manifest.permission.WRITE_EXTERNAL_STORAGE
+            ) == android.content.pm.PackageManager.PERMISSION_GRANTED;
+        }
+    }
+
+    // Safely mirror internal nh_files to /sdcard/nh_files without overwriting user changes
+    private void syncNhFilesToSdcard() {
+        try {
+            final String src = NhPaths.APP_NHFILES_PATH;
+            final String dst = NhPaths.SD_PATH + "/nh_files";
+            ShellExecuter exe = new ShellExecuter();
+
+            // Ensure destination exists
+            exe.RunAsRootOutput("mkdir -p '" + dst + "'");
+
+            String bb = NhPaths.BUSYBOX != null ? NhPaths.BUSYBOX.trim() : "";
+            String cmd;
+            if (!bb.isEmpty()) {
+                cmd = bb + " cp -au '" + src + "/.' '" + dst + "/'";
+            } else {
+                // Fallback: do not overwrite existing files
+                cmd = "sh -c 'cp -rn " + src + "/. " + dst + "/'";
+            }
+            String out = exe.RunAsRootOutput(cmd);
+            Log.d("NetHunterFragment", "syncNhFilesToSdcard cmd output: " + (out == null ? "" : out));
+        } catch (Exception e) {
+            Log.e("NetHunterFragment", "syncNhFilesToSdcard error", e);
+        }
+    }
+
+    private void trigger_snowfall() {
+        sharedpreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
+        boolean snowfall = sharedpreferences.getBoolean("snowfall_enabled", !iswatch);
         if (snowfall) {
             sharedpreferences.edit().putBoolean("snowfall_enabled", false).apply();
             snowfallButton.setIcon(R.drawable.snowflake_trigger_bw);
@@ -264,228 +269,238 @@ public class NetHunterFragment extends Fragment {
         }
     }
 
-    private void onAddItemSetup(){
+    private void onAddItemSetup() {
         addButton.setOnClickListener(v -> {
-            List<NethunterModel> nethunterModelList = NethunterData.getInstance().nethunterModelListFull;
-            if (nethunterModelList == null) return;
-            final LayoutInflater mInflater = (LayoutInflater) activity.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            final View promptView = mInflater.inflate(R.layout.nethunter_add_dialog_view, null);
-            final EditText titleEditText = promptView.findViewById(R.id.f_nethunter_add_adb_et_title);
-            final EditText cmdEditText = promptView.findViewById(R.id.f_nethunter_add_adb_et_command);
-            final EditText delimiterEditText = promptView.findViewById(R.id.f_nethunter_add_adb_et_delimiter);
-            final CheckBox runOnCreateCheckbox = promptView.findViewById(R.id.f_nethunters_add_adb_checkbox_runoncreate);
-            final Spinner insertPositions = promptView.findViewById(R.id.f_nethunter_add_adb_spr_positions);
-            final Spinner insertTitles = promptView.findViewById(R.id.f_nethunter_add_adb_spr_titles);
-            ArrayList<String> titleArrayList = new ArrayList<>();
-            for (NethunterModel nethunterModel: nethunterModelList){
-                titleArrayList.add(nethunterModel.getTitle());
-            }
-            ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_item, titleArrayList);
-            arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            List<NethunterModel> fullList = NethunterData.getInstance().nethunterModelListFull;
+            // Do not reassign fullList to keep it effectively final; use a local snapshot for titles only
+            List<NethunterModel> snapshot = (fullList == null) ? new ArrayList<>() : new ArrayList<>(fullList);
 
-            final FloatingActionButton readmeButton1 = promptView.findViewById(R.id.f_nethunter_add_btn_info_fab1);
-            final FloatingActionButton readmeButton2 = promptView.findViewById(R.id.f_nethunter_add_btn_info_fab2);
-            final FloatingActionButton readmeButton3 = promptView.findViewById(R.id.f_nethunter_add_btn_info_fab3);
+            // Build titles for dropdown from snapshot
+            ArrayList<String> titles = new ArrayList<>();
+            for (NethunterModel model : snapshot) titles.add(model.getTitle());
 
-            readmeButton1.setOnClickListener(view -> {
-                MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                adb.setTitle("HOW TO USE:")
-                        .setMessage(activity.getString(R.string.nethunter_howtouse_cmd))
-                        .setNegativeButton("Close", (dialogInterface, i) -> dialogInterface.dismiss());
-                final AlertDialog ad = adb.create();
-                ad.setCancelable(true);
-                ad.show();
-            });
+            LayoutInflater inflater = LayoutInflater.from(requireContext());
+            View sheet = inflater.inflate(R.layout.nethunter_add_bottomsheet, null, false);
 
-            readmeButton2.setOnClickListener(view -> {
-                MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                adb.setTitle("HOW TO USE:")
-                        .setMessage(activity.getString(R.string.nethunter_howtouse_delimiter))
-                        .setNegativeButton("Close", (dialogInterface, i) -> dialogInterface.dismiss());
-                final AlertDialog ad = adb.create();
-                ad.setCancelable(true);
-                ad.show();
-            });
+            com.google.android.material.textfield.TextInputLayout titleTil = sheet.findViewById(R.id.add_title_til);
+            com.google.android.material.textfield.TextInputLayout cmdTil = sheet.findViewById(R.id.add_command_til);
+            com.google.android.material.textfield.TextInputLayout delimTil = sheet.findViewById(R.id.add_delimiter_til);
+            com.google.android.material.textfield.TextInputEditText titleEt = sheet.findViewById(R.id.add_title_et);
+            com.google.android.material.textfield.TextInputEditText cmdEt = sheet.findViewById(R.id.add_command_et);
+            com.google.android.material.textfield.TextInputEditText delimEt = sheet.findViewById(R.id.add_delimiter_et);
+            com.google.android.material.checkbox.MaterialCheckBox runCb = sheet.findViewById(R.id.add_run_checkbox);
 
-            readmeButton3.setOnClickListener(view -> {
-                MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                adb.setTitle("HOW TO USE:")
-                        .setMessage(activity.getString(R.string.nethunter_howtouse_runoncreate))
-                        .setNegativeButton("Close", (dialogInterface, i) -> dialogInterface.dismiss());
-                final AlertDialog ad = adb.create();
-                ad.setCancelable(true);
-                ad.show();
-            });
+            android.widget.AutoCompleteTextView targetActv = sheet.findViewById(R.id.add_target_actv);
+            com.google.android.material.button.MaterialButtonToggleGroup posGroup = sheet.findViewById(R.id.add_position_group);
 
-            delimiterEditText.setText("\\n");
-            runOnCreateCheckbox.setChecked(true);
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, titles);
+            targetActv.setAdapter(adapter);
 
-            insertPositions.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    //if Insert to Top
-                    if (position == 0) {
-                        insertTitles.setVisibility(View.INVISIBLE);
-                        targetPositionId = 1;
-                        //if Insert to Bottom
-                    } else if (position == 1) {
-                        insertTitles.setVisibility(View.INVISIBLE);
-                        targetPositionId = nethunterModelList.size() + 1;
-                        //if Insert Before
-                    } else if (position == 2) {
-                        insertTitles.setVisibility(View.VISIBLE);
-                        insertTitles.setAdapter(arrayAdapter);
-                        insertTitles.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                            @Override
-                            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                                targetPositionId = position + 1;
-                            }
-                            @Override
-                            public void onNothingSelected(AdapterView<?> parent) {
+            // Defaults
+            if (!titles.isEmpty()) targetActv.setText(titles.get(0), false);
+            posGroup.check(R.id.add_after);
 
-                            }
-                        });
-                        //if Insert After
-                    } else {
-                        insertTitles.setVisibility(View.VISIBLE);
-                        insertTitles.setAdapter(arrayAdapter);
-                        insertTitles.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                            @Override
-                            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                                targetPositionId = position + 2;
-                            }
-                            @Override
-                            public void onNothingSelected(AdapterView<?> parent) {
+            com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+            dialog.setContentView(sheet);
 
-                            }
-                        });
+            View cancelBtn = sheet.findViewById(R.id.add_cancel_btn);
+            View saveBtn = sheet.findViewById(R.id.add_save_btn);
+
+            cancelBtn.setOnClickListener(x -> dialog.dismiss());
+            saveBtn.setOnClickListener(x -> {
+                // Clear previous errors
+                titleTil.setError(null);
+                cmdTil.setError(null);
+                delimTil.setError(null);
+
+                String titleString = titleEt.getText() == null ? "" : titleEt.getText().toString().trim();
+                String commandString = cmdEt.getText() == null ? "" : cmdEt.getText().toString().trim();
+                String delimiterString = delimEt.getText() == null ? "" : delimEt.getText().toString().trim();
+                String runOnCreateString = runCb.isChecked() ? "1" : "0";
+
+                boolean hasError = false;
+                if (titleString.isEmpty()) { titleTil.setError("Required"); hasError = true; }
+                if (commandString.isEmpty()) { cmdTil.setError("Required"); hasError = true; }
+                if (delimiterString.isEmpty()) { delimTil.setError("Required"); hasError = true; }
+                if (hasError) return;
+
+                // Use current data size at click time to avoid captured non-final variable
+                List<NethunterModel> current = NethunterData.getInstance().nethunterModelListFull;
+                int size = (current == null) ? 0 : current.size();
+
+                String tgtTitle = String.valueOf(targetActv.getText());
+                int targetItemIndex = titles.indexOf(tgtTitle); // -1 if not found in snapshot
+
+                boolean placeBefore = posGroup.getCheckedButtonId() == R.id.add_before;
+
+                int targetPositionId; // 1-based for DB
+                if (size == 0) {
+                    targetPositionId = 1; // first insert
+                } else {
+                    if (targetItemIndex < 0) {
+                        Toast.makeText(requireContext(), "Select a target item", Toast.LENGTH_SHORT).show();
+                        return;
                     }
+                    // 0-based
+                    targetPositionId = targetItemIndex + 1 + (placeBefore ? 0 : 1);
+                    if (targetPositionId < 1) targetPositionId = 1;
+                    if (targetPositionId > size + 1) targetPositionId = size + 1;
                 }
-                @Override
-                public void onNothingSelected(AdapterView<?> parent) {
 
-                }
+                ArrayList<String> dataArrayList = new ArrayList<>();
+                dataArrayList.add(titleString);
+                dataArrayList.add(commandString);
+                dataArrayList.add(delimiterString);
+                dataArrayList.add(runOnCreateString);
+
+                NethunterData.getInstance().addData(targetPositionId, dataArrayList, NethunterSQL.getInstance(requireContext()));
+                dialog.dismiss();
             });
 
-            MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-            adb.setNegativeButton("Cancel", (dialog, which) -> dialog.dismiss());
-            adb.setPositiveButton("OK", (dialog, which) -> { });
-            final androidx.appcompat.app.AlertDialog ad = adb.create();
-            ad.setView(promptView);
-            ad.setCancelable(true);
-            ad.setOnShowListener(dialog -> {
-                final Button buttonAdd = ad.getButton(DialogInterface.BUTTON_POSITIVE);
-                buttonAdd.setOnClickListener(v1 -> {
-                    if (titleEditText.getText().toString().isEmpty()){
-                        NhPaths.showMessage(context, "Title cannot be empty");
-                    } else if (cmdEditText.getText().toString().isEmpty()){
-                        NhPaths.showMessage(context, "Command cannot be empty");
-                    } else if (delimiterEditText.getText().toString().isEmpty()){
-                        NhPaths.showMessage(context, "Delimiter cannot be empty");
-                    } else {
-                        ArrayList<String> dataArrayList = new ArrayList<>();
-                        dataArrayList.add(titleEditText.getText().toString());
-                        dataArrayList.add(cmdEditText.getText().toString());
-                        dataArrayList.add(delimiterEditText.getText().toString());
-                        dataArrayList.add(runOnCreateCheckbox.isChecked() ? "1" : "0");
-                        NethunterData.getInstance().addData(targetPositionId, dataArrayList, NethunterSQL.getInstance(context));
-                        ad.dismiss();
-                    }
-                });
-            });
-            ad.show();
-        });
-    }
-
-    private void onDeleteItemSetup(){
-        deleteButton.setOnClickListener(v -> {
-            List<NethunterModel> nethunterModelList = NethunterData.getInstance().nethunterModelListFull;
-            if (nethunterModelList == null) return;
-            final LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            final View promptViewDelete = inflater.inflate(R.layout.nethunter_delete_dialog_view, null, false);
-            final RecyclerView recyclerViewDeleteItem = promptViewDelete.findViewById(R.id.f_nethunter_delete_recyclerview);
-            NethunterRecyclerViewAdapterDeleteItems nethunterRecyclerViewAdapterDeleteItems = new NethunterRecyclerViewAdapterDeleteItems(context, nethunterModelList);
-            LinearLayoutManager linearLayoutManagerDelete = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
-            recyclerViewDeleteItem.setLayoutManager(linearLayoutManagerDelete);
-            recyclerViewDeleteItem.setAdapter(nethunterRecyclerViewAdapterDeleteItems);
-
-            MaterialAlertDialogBuilder adbDelete = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-            adbDelete.setView(promptViewDelete);
-            adbDelete.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-            adbDelete.setPositiveButton("Delete", (dialog, which) -> { });
-            //If you want the dialog to stay open after clicking OK, you need to do it this way...
-            final androidx.appcompat.app.AlertDialog adDelete = adbDelete.create();
-            adDelete.setMessage("Select the item you want to remove: ");
-            adDelete.setOnShowListener(dialog -> {
-                final Button buttonDelete = adDelete.getButton(DialogInterface.BUTTON_POSITIVE);
-                buttonDelete.setOnClickListener(v1 -> {
-                    RecyclerView.ViewHolder viewHolder;
-                    ArrayList<Integer> selectedPosition = new ArrayList<>();
-                    ArrayList<Integer> selectedTargetIds = new ArrayList<>();
-                    for (int i = 0; i < recyclerViewDeleteItem.getChildCount(); i++) {
-                        viewHolder = recyclerViewDeleteItem.findViewHolderForAdapterPosition(i);
-                        if (viewHolder != null){
-                            CheckBox box = viewHolder.itemView.findViewById(R.id.f_nethunter_recyclerview_dialog_chkbox);
-                            if (box.isChecked()){
-                                selectedPosition.add(i);
-                                selectedTargetIds.add(i+1);
-                            }
-                        }
-                    }
-                    if (!selectedPosition.isEmpty()) {
-                        NethunterData.getInstance().deleteData(selectedPosition, selectedTargetIds, NethunterSQL.getInstance(context));
-                        NhPaths.showMessage(context, "Successfully deleted " + selectedPosition.size() + " items.");
-                        adDelete.dismiss();
-                    } else NhPaths.showMessage(context, "Nothing to be deleted.");
-                });
-            });
-            adDelete.show();
+            dialog.show();
         });
     }
 
     private void onMoveItemSetup() {
         moveButton.setOnClickListener(v -> {
-            List<NethunterModel> nethunterModelList = NethunterData.getInstance().nethunterModelListFull;
-            if (nethunterModelList == null) return;
-            final LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            final View promptViewMove = inflater.inflate(R.layout.nethunter_move_dialog_view, null, false);
-            final Spinner titlesBefore = promptViewMove.findViewById(R.id.f_nethunter_move_adb_spr_titlesbefore);
-            final Spinner titlesAfter = promptViewMove.findViewById(R.id.f_nethunter_move_adb_spr_titlesafter);
-            final Spinner actions = promptViewMove.findViewById(R.id.f_nethunter_move_adb_spr_actions);
-            ArrayList<String> titleArrayList = new ArrayList<>();
-            for (NethunterModel nethunterModel: nethunterModelList){
-                titleArrayList.add(nethunterModel.getTitle());
+            List<NethunterModel> fullList = NethunterData.getInstance().nethunterModelListFull;
+            if (fullList == null || fullList.isEmpty()) {
+                Toast.makeText(requireContext(), "Nothing to move.", Toast.LENGTH_SHORT).show();
+                return;
             }
-            ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(context, android.R.layout.simple_spinner_item, titleArrayList);
-            arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-            titlesBefore.setAdapter(arrayAdapter);
-            titlesAfter.setAdapter(arrayAdapter);
 
-            MaterialAlertDialogBuilder adbMove = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-            adbMove.setView(promptViewMove);
-            adbMove.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-            adbMove.setPositiveButton("Move", (dialog, which) -> {
+            // Build titles for dropdowns
+            ArrayList<String> titles = new ArrayList<>();
+            for (NethunterModel model : fullList) titles.add(model.getTitle());
 
+            // Inflate bottom sheet layout
+            LayoutInflater inflater = LayoutInflater.from(requireContext());
+            View sheet = inflater.inflate(R.layout.nethunter_move_bottomsheet, null, false);
+
+            // Setup dropdown adapters
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, titles);
+            android.widget.AutoCompleteTextView sourceActv = sheet.findViewById(R.id.move_source_actv);
+            android.widget.AutoCompleteTextView targetActv = sheet.findViewById(R.id.move_target_actv);
+            sourceActv.setAdapter(adapter);
+            targetActv.setAdapter(adapter);
+
+            // Sensible defaults: source first item, target second (or first if only one)
+            int defaultSource = 0;
+            int defaultTarget = Math.min(1, titles.size() - 1);
+            if (!titles.isEmpty()) sourceActv.setText(titles.get(defaultSource), false);
+            if (!titles.isEmpty()) targetActv.setText(titles.get(defaultTarget), false);
+
+            com.google.android.material.button.MaterialButtonToggleGroup posGroup = sheet.findViewById(R.id.move_position_group);
+            // Default to After for a more natural append-like move
+            posGroup.check(R.id.move_after);
+
+            com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+            dialog.setContentView(sheet);
+
+            View cancelBtn = sheet.findViewById(R.id.move_cancel_btn);
+            View confirmBtn = sheet.findViewById(R.id.move_confirm_btn);
+
+            cancelBtn.setOnClickListener(x -> dialog.dismiss());
+            confirmBtn.setOnClickListener(x -> {
+                String srcTitle = String.valueOf(sourceActv.getText());
+                String tgtTitle = String.valueOf(targetActv.getText());
+
+                if (srcTitle.isEmpty()) { sourceActv.setError("Select an item"); return; }
+                if (tgtTitle.isEmpty()) { targetActv.setError("Select a target"); return; }
+
+                int originalIndex = adapter.getPosition(srcTitle);
+                int targetItemIndex = adapter.getPosition(tgtTitle);
+                if (originalIndex < 0 || targetItemIndex < 0) {
+                    Toast.makeText(requireContext(), "Invalid selection", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                boolean placeBefore = posGroup.getCheckedButtonId() == R.id.move_before;
+                int targetIndex = targetItemIndex + (placeBefore ? 0 : 1);
+
+                // Clamp to [0, size]
+                int size = fullList.size();
+                if (targetIndex < 0) targetIndex = 0;
+                if (targetIndex > size) targetIndex = size;
+
+                // No-op checks: moving an item before itself or after just itself yields same order
+                if (originalIndex == targetItemIndex && (placeBefore || originalIndex + 1 == targetIndex)) {
+                    Toast.makeText(requireContext(), "No change", Toast.LENGTH_SHORT).show();
+                    dialog.dismiss();
+                    return;
+                }
+
+                NethunterData.getInstance().moveData(originalIndex, targetIndex, NethunterSQL.getInstance(requireContext()));
+                dialog.dismiss();
             });
-            final AlertDialog adMove = adbMove.create();
-            adMove.setOnShowListener(dialog -> {
-                final Button buttonMove = adMove.getButton(DialogInterface.BUTTON_POSITIVE);
-                buttonMove.setOnClickListener(v1 -> {
-                    int originalPositionIndex = titlesBefore.getSelectedItemPosition();
-                    int targetPositionIndex = titlesAfter.getSelectedItemPosition();
-                    if (originalPositionIndex == targetPositionIndex ||
-                            (actions.getSelectedItemPosition() == 0 && targetPositionIndex == (originalPositionIndex + 1)) ||
-                            (actions.getSelectedItemPosition() == 1 && targetPositionIndex == (originalPositionIndex - 1))) {
-                        NhPaths.showMessage(context, "You are moving the item to the same position, nothing to be moved.");
-                    } else {
-                        if (actions.getSelectedItemPosition() == 1) targetPositionIndex += 1;
-                        NethunterData.getInstance().moveData(originalPositionIndex, targetPositionIndex, NethunterSQL.getInstance(context));
-                        NhPaths.showMessage(context, "Successfully moved item.");
-                        adMove.dismiss();
+
+            dialog.show();
+        });
+    }
+
+    private void onDeleteItemSetup(){
+        deleteButton.setOnClickListener(v -> {
+            List<NethunterModel> fullList = NethunterData.getInstance().nethunterModelListFull;
+            if (fullList == null || fullList.isEmpty()) {
+                Toast.makeText(requireContext(), "Nothing to delete.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Build titles
+            ArrayList<String> titles = new ArrayList<>();
+            for (NethunterModel model : fullList) titles.add(model.getTitle());
+
+            // Inflate bottom sheet
+            LayoutInflater inflater = LayoutInflater.from(requireContext());
+            View sheet = inflater.inflate(R.layout.nethunter_delete_bottomsheet, null, false);
+            LinearLayout container = sheet.findViewById(R.id.delete_list_container);
+
+            // Add a checkbox per item
+            for (int i = 0; i < titles.size(); i++) {
+                com.google.android.material.checkbox.MaterialCheckBox cb = new com.google.android.material.checkbox.MaterialCheckBox(requireContext());
+                cb.setText(titles.get(i));
+                cb.setChecked(false);
+                cb.setTag(i); // store 0-based position index
+                container.addView(cb);
+            }
+
+            com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+            dialog.setContentView(sheet);
+
+            View cancelBtn = sheet.findViewById(R.id.delete_cancel_btn);
+            View confirmBtn = sheet.findViewById(R.id.delete_confirm_btn);
+
+            cancelBtn.setOnClickListener(x -> dialog.dismiss());
+            confirmBtn.setOnClickListener(x -> {
+                ArrayList<Integer> selectedPositionsIndex = new ArrayList<>();
+                ArrayList<Integer> selectedTargetIds = new ArrayList<>();
+
+                final int childCount = container.getChildCount();
+                for (int i = 0; i < childCount; i++) {
+                    View child = container.getChildAt(i);
+                    if (child instanceof com.google.android.material.checkbox.MaterialCheckBox) {
+                        com.google.android.material.checkbox.MaterialCheckBox cb = (com.google.android.material.checkbox.MaterialCheckBox) child;
+                        if (cb.isChecked()) {
+                            Object tag = cb.getTag();
+                            if (tag instanceof Integer) {
+                                int pos = (Integer) tag; // 0-based adapter/index
+                                selectedPositionsIndex.add(pos);
+                                selectedTargetIds.add(pos + 1); // DB id is 1-based
+                            }
+                        }
                     }
-                });
+                }
+
+                if (selectedPositionsIndex.isEmpty()) {
+                    Toast.makeText(requireContext(), "Select at least one item", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+
+                NethunterData.getInstance().deleteData(selectedPositionsIndex, selectedTargetIds, NethunterSQL.getInstance(requireContext()));
+                dialog.dismiss();
             });
-            adMove.show();
+
+            dialog.show();
         });
     }
 }

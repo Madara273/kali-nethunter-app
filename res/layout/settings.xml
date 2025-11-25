@@ -115,8 +115,8 @@
 
             <LinearLayout
                 android:id="@+id/pre_view"
-                android:layout_width="756px"
-                android:layout_height="1344px"
+                android:layout_width="756dp"
+                android:layout_height="1344dp"
                 android:paddingTop="10dp"
                 android:visibility="gone"
                 android:layout_gravity="center">
@@ -353,25 +353,63 @@
                 android:text="Install bootanimation"
                 android:textColor="#ffffffff" />
 
-          <View
-              android:id="@+id/divider5"
-              android:layout_width="match_parent"
-              android:layout_height="1dp"
-              android:background="?android:attr/listDivider" />
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
 
-          <TextView
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:text="BACKUP OR RESTORE NETHUNTER FILES"
-              android:paddingTop="10dp"
-              android:padding="4dp" />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="CHROOT AUTO START"
+                android:paddingTop="10dp"
+                android:padding="4dp" />
 
             <Button
-              android:id="@+id/backup"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:text="Backup"
-              android:textColor="#ffffffff" />
+                android:id="@+id/chroot_toogle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Disable"
+                android:textColor="#ffffffff" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="IN APP TERMINAL"
+                android:paddingTop="10dp"
+                android:padding="4dp" />
+
+            <Button
+                android:id="@+id/inapp_term_toogle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Enable"
+                android:textColor="#ffffffff" />
+
+            <View
+                android:id="@+id/divider5"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="?android:attr/listDivider" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="BACKUP OR RESTORE NETHUNTER FILES"
+                android:paddingTop="10dp"
+                android:padding="4dp" />
+
+            <Button
+                android:id="@+id/backup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Backup"
+                android:textColor="#ffffffff" />
 
             <LinearLayout
               android:layout_width="match_parent"
@@ -445,74 +483,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Loading.."
-                android:textColor="#ffffffff" />
-
-            <View
-                android:id="@+id/divider9"
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="?android:attr/listDivider" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_horizontal"
-            android:orientation="horizontal">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="CURRENT BUSYBOX VERSION"
-                android:paddingTop="10dp"
-                android:padding="4dp"
-                android:layout_weight="1"/>
-
-            <TextView
-                android:id="@+id/busybox_version"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Loading.."
-                android:paddingTop="10dp"
-                android:padding="4dp"
-                android:layout_weight="3"/>
-        </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="NEW VERSION"
-                    android:padding="4dp"/>
-
-            <Spinner
-                android:id="@+id/bb_spinner"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="5dp"
-                android:layout_marginEnd="5dp"
-                android:dropDownWidth="match_parent"
-                android:saveEnabled="false" />
-
-            <Button
-                android:id="@+id/select_bb"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:paddingBottom="10dp"
-                android:text="Apply"
-                android:textColor="#ffffffff" />
-        </LinearLayout>
-
-            <Button
-                android:id="@+id/system_bb"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:paddingBottom="10dp"
-                android:text="Use as default system busybox"
                 android:textColor="#ffffffff" />
 
             <View

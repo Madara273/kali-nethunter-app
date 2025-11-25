@@ -10,7 +10,7 @@ public class VulkanChecker {
     private static final String TAG = "VulkanChecker";
 
     public static boolean isVulkanSupported(Context context) {
-        Log.d(TAG, "Checking if Vulkan is supported...");
+        //Log.d(TAG, "Checking if Vulkan is supported...");
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             PackageManager pm = context.getPackageManager();
             FeatureInfo[] features = pm.getSystemAvailableFeatures();

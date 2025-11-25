@@ -2,9 +2,9 @@ package com.offsec.nethunter;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,6 +15,8 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.Nullable;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -34,10 +36,9 @@ import java.util.Collections;
 import java.util.List;
 
 public class BtDuckyFragment extends BTFragment {
+    private static final String TAG = "BtDuckyFragment";
     private EditText editSource;
     final String tmpfilePath = NhPaths.SD_PATH + "/nh_files/.tmpbtdfile.txt";
-    private static final int PICK_FILE_REQUEST_CODE = 1;
-    private static final int SAVE_FILE_REQUEST_CODE = 2;
     private Context context;
     private Activity activity;
 
@@ -102,12 +103,6 @@ public class BtDuckyFragment extends BTFragment {
         Collections.sort(result);
         return result.toArray(new String[0]);
     }
-    private void openFile() {
-        Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("*/*"); // All files
-        startActivityForResult(intent, PICK_FILE_REQUEST_CODE);
-    }
 
     public void saveFile(boolean tmp) {
         String content = editSource.getText().toString();
@@ -160,28 +155,18 @@ public class BtDuckyFragment extends BTFragment {
             alert.show();
         }
     }
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
 
-        if (resultCode == Activity.RESULT_OK) {
-            switch (requestCode) {
-                case PICK_FILE_REQUEST_CODE:
-                    if (data != null) {
-                        Uri selectedFileUri = data.getData();
-                        String fileContent = readFileContent(selectedFileUri);
-                        editSource.setText(fileContent);
-                    }
-                    break;
-                case SAVE_FILE_REQUEST_CODE:
-                    if (data != null) {
-                        Uri uri = data.getData();
-                        saveContentToFile(uri);
-                    }
-                    break;
-            }
-        }
+    private final ActivityResultLauncher<String[]> openFileLauncher =
+            registerForActivityResult(new ActivityResultContracts.OpenDocument(), uri -> {
+                if (uri != null) {
+                    editSource.setText(readFileContent(uri));
+                }
+            });
+
+    private void openFile() {
+        openFileLauncher.launch(new String[]{"*/*"});
     }
+
     private String readFileContent(Uri uri) {
         StringBuilder content = new StringBuilder();
         try {
@@ -197,7 +182,7 @@ public class BtDuckyFragment extends BTFragment {
             assert inputStream != null;
             inputStream.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error reading file", e);
             Toast.makeText(requireContext(), "Error reading file", Toast.LENGTH_SHORT).show();
         }
 
@@ -215,7 +200,7 @@ public class BtDuckyFragment extends BTFragment {
             Toast.makeText(requireContext(), "File saved", Toast.LENGTH_SHORT).show();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error saving file", e);
             Toast.makeText(requireContext(), "Error saving file", Toast.LENGTH_SHORT).show();
         }
     }

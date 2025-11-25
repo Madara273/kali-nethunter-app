@@ -84,7 +84,6 @@ public class LocationUpdateService extends Service {
     // this gets called if we launch via an Intent or from the command line, instead of the app
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand");
         requestUpdates(null); // request updates, but no widget to receive them as we don't have the app running
         return Service.START_NOT_STICKY;
     }
@@ -202,13 +201,11 @@ public class LocationUpdateService extends Service {
 
     @Override
     public IBinder onBind(Intent intent) {
-        Log.d(TAG, "onBind");
         this.startService(intent);
         return binder;
     }
 
     public void requestUpdates(KaliGPSUpdates.Receiver receiver) {
-        Log.d(TAG, "In requestUpdates");
         if (receiver != null)
             this.updateReceiver = receiver;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -217,7 +214,6 @@ public class LocationUpdateService extends Service {
     }
 
     public void stopUpdates() {
-        Log.d(TAG, "In stopUpdates");
         stopSelf();
     }
 
@@ -227,7 +223,6 @@ public class LocationUpdateService extends Service {
         if (locationUpdatesStarted)
             return;
         locationUpdatesStarted = true;
-        Log.d(TAG, "In startLocationUpdates");
 
         final LocationRequest lr = new LocationRequest.Builder(Priority.PRIORITY_HIGH_ACCURACY, 1000L / 2L)
                 .setMinUpdateIntervalMillis(100L)
@@ -410,9 +405,9 @@ public class LocationUpdateService extends Service {
     }
 
     private final GpsStatus.NmeaListener nmeaListener = (l, s) -> {
-        if(!s.startsWith("$GPGGA")) {
+        if (!s.startsWith("$GPGGA")) {
             // if we're using the real GPS as our source, go ahead and send these extra information strings to gpsd
-            if("GPS".equals(lastLocationSourcePublished))
+            if ("GPS".equals(lastLocationSourcePublished))
                 sendUdpPacket(s);
             return;
         }
@@ -455,7 +450,6 @@ public class LocationUpdateService extends Service {
             String ew = fields[5];
             int sats = Integer.parseInt(fields[7]);
             double accuracy = Float.parseFloat(fields[8]) * 19.0; // why 19.0?  see https://gitlab.com/gpsd/gpsd/-/blob/master/libgpsd_core.c, P_UERE_NO_DGPS
-
             int latDeg = Integer.parseInt(latStr.substring(0, 2));
             double latMin = Float.parseFloat(latStr.substring(2));
             double lat = latDeg + latMin/60.0;
@@ -485,7 +479,6 @@ public class LocationUpdateService extends Service {
             }
             updateReceiver.onPositionUpdate(nmeaSentence);
         }
-
         sendUdpPacket(nmeaSentence);
     }
 
@@ -550,7 +543,7 @@ public class LocationUpdateService extends Service {
             removeNmeaListener.invoke(locationManager, nmeaListener);
             Log.d(TAG, "removeNmeaListener success");
         } catch (Exception exception) {
-            // ignore
+            Log.d(TAG, "Failed to remove NMEA listener: " + exception.getMessage());
         }
         fusedLocationClient.removeLocationUpdates(locationListener);
     }
@@ -567,10 +560,8 @@ public class LocationUpdateService extends Service {
 
     @Override
     public void onDestroy() {
-        Log.d(TAG, "OnDestroy");
         instance = null;
         firstupdate = true;
-
         // stop our Notification update timer
         stopTimers();
         stopLocationUpdates();

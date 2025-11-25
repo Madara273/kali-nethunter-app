@@ -1,6 +1,7 @@
 package com.offsec.nethunter;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -96,29 +97,30 @@ public class ModulesFragment extends Fragment implements MenuProvider {
     }
 
     public boolean onMenuItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.action_sort:
-                if (isAdded() && getView() != null) {
-                    AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-                    builder.setTitle("Sort Modules")
-                            .setItems(new String[]{"Alphabetical", "Reverse"}, (dialog, which) -> {
-                                currentSortOrder = which;
-                                refreshModules(requireView());
-                            })
-                            .show();
-                }
-                return true;
-            case R.id.action_enable_faulty_check:
-                if (isAdded()) {
-                    boolean isChecked = !item.isChecked();
-                    item.setChecked(isChecked);
-                    SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-                    SharedPreferences.Editor editor = sharedPreferences.edit();
-                    editor.putBoolean("enable_faulty_check", isChecked).apply();
-                }
-                return true;
-            default:
-                return false;
+        int id = item.getItemId();
+
+        if (id == R.id.action_sort) {
+            if (isAdded() && getView() != null) {
+                AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
+                builder.setTitle("Sort Modules")
+                        .setItems(new String[]{"Alphabetical", "Reverse"}, (dialog, which) -> {
+                            currentSortOrder = which;
+                            refreshModules(requireView());
+                        })
+                        .show();
+            }
+            return true;
+        } else if (id == R.id.action_enable_faulty_check) {
+            if (isAdded()) {
+                boolean isChecked = !item.isChecked();
+                item.setChecked(isChecked);
+                SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                editor.putBoolean("enable_faulty_check", isChecked).apply();
+            }
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -609,23 +611,6 @@ public class ModulesFragment extends Fragment implements MenuProvider {
         }
     }
 
-    public void onReceive(Context context, Intent intent) {
-        if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
-            SharedPreferences preferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-            String defaultPath = "/system/lib/modules";
-            String modulesPath = preferences.getString("last_modulespath", defaultPath);
-            Map<String, ?> allEntries = preferences.getAll();
-            for (Map.Entry<String, ?> entry : allEntries.entrySet()) {
-                if (entry.getKey().startsWith("autoload_") && Boolean.TRUE.equals(entry.getValue())) {
-                    String moduleName = entry.getKey().replace("autoload_", "");
-                    String modulePath = modulesPath + "/" + moduleName + ".ko";
-                    ShellExecuter exe = new ShellExecuter();
-                    exe.RunAsRootOutput("insmod " + modulePath);
-                }
-            }
-        }
-    }
-
     // Check for missing permissions
     // This method should be called in the onCreate method of the fragment, add 'logMissingPermissions()' to the onCreate method
     // And add import 'androidx.core.content.ContextCompat;'
@@ -659,23 +644,7 @@ public class ModulesFragment extends Fragment implements MenuProvider {
     ////
 
     public void run_cmd(String cmd) {
-        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
         activity.startActivity(intent);
-    }
-
-    public static class PreferencesData {
-        private static final String PREF_NAME = "com.offsec.nethunter_preferences";
-
-        private static SharedPreferences getSharedPreferences(Context context) {
-            return context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        }
-
-        public static void saveString(Context context, String key, String value) {
-            getSharedPreferences(context).edit().putString(key, value).apply();
-        }
-
-        public static String getString(Context context, String key, String defaultValue) {
-            return getSharedPreferences(context).getString(key, defaultValue);
-        }
     }
 }

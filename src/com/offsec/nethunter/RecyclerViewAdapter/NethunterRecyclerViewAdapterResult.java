@@ -14,7 +14,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.offsec.nethunter.R;
 import com.offsec.nethunter.utils.NhPaths;
 
-public class NethunterRecyclerViewAdapterResult extends RecyclerView.Adapter<NethunterRecyclerViewAdapterResult.ItemViewHolder>{
+public class NethunterRecyclerViewAdapterResult extends RecyclerView.Adapter<NethunterRecyclerViewAdapterResult.ItemViewHolder> {
     public static final String TAG = "NethunterRecyclerView";
     private final String[] resultStrings;
     private final Context context;
@@ -53,9 +53,9 @@ public class NethunterRecyclerViewAdapterResult extends RecyclerView.Adapter<Net
         return super.getItemId(position);
     }
 
-    static class ItemViewHolder extends RecyclerView.ViewHolder{
+    public static class ItemViewHolder extends RecyclerView.ViewHolder {
         private final TextView resultTextView;
-        private ItemViewHolder(View view) {
+        public ItemViewHolder(View view) {
             super(view);
             resultTextView = view.findViewById(R.id.f_nethunter_item_result_tv);
         }

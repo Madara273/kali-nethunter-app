@@ -11,6 +11,10 @@
             android:icon="@drawable/ic_action_android"
             android:title="@string/drawertitlecreatechroot" />
         <item
+            android:id="@+id/terminal_item"
+            android:icon="@drawable/ic_action_terminal"
+            android:title="@string/drawertitleterminal" />
+        <item
             android:id="@+id/settings_item"
             android:icon="@drawable/ic_action_settings_applications"
             android:title="@string/drawertitlesettings" />

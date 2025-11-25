@@ -14,12 +14,12 @@ import com.offsec.nethunter.models.KaliServicesModel;
 
 import java.util.List;
 
-public class KaliServicesRecyclerViewAdapterDeleteItems extends RecyclerView.Adapter<KaliServicesRecyclerViewAdapterDeleteItems.ItemViewHolder>{
+public class KaliServicesRecyclerViewAdapterDeleteItems extends RecyclerView.Adapter<KaliServicesRecyclerViewAdapterDeleteItems.ItemViewHolder> {
 	public static final String TAG = "KaliServiceRecycleViewChild";
 	private final Context context;
 	private final List<KaliServicesModel> kaliServicesModelList;
 
-	public KaliServicesRecyclerViewAdapterDeleteItems(Context context, List<KaliServicesModel> kaliServicesModelList){
+	public KaliServicesRecyclerViewAdapterDeleteItems(Context context, List<KaliServicesModel> kaliServicesModelList) {
 		this.context = context;
 		this.kaliServicesModelList = kaliServicesModelList;
 	}
@@ -41,11 +41,11 @@ public class KaliServicesRecyclerViewAdapterDeleteItems extends RecyclerView.Ada
 		return kaliServicesModelList.size();
 	}
 
-	static class ItemViewHolder extends RecyclerView.ViewHolder{
-		private final CheckBox runOnChrootStartCheckBox;
-		private ItemViewHolder(View view){
-			super(view);
-			runOnChrootStartCheckBox = view.findViewById(R.id.f_kaliservices_recyclerview_dialog_chkbox);
-		}
-	}
+    public static class ItemViewHolder extends RecyclerView.ViewHolder {
+        private final CheckBox runOnChrootStartCheckBox;
+        public ItemViewHolder(View view){
+            super(view);
+            runOnChrootStartCheckBox = view.findViewById(R.id.f_kaliservices_recyclerview_dialog_chkbox);
+        }
+    }
 }

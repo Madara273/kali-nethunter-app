@@ -3,9 +3,12 @@ package com.offsec.nethunter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -20,7 +23,7 @@ import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.ProgressBar;
-import android.widget.SearchView;
+import androidx.appcompat.widget.SearchView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -38,11 +41,16 @@ import java.util.Locale;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
+import androidx.core.view.MenuHost;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 public class SearchSploitFragment extends Fragment {
     public static final String TAG = "SearchSploitFragment";
     private static final String ARG_SECTION_NUMBER = "section_number";
+    private static final String PREFS_NAME = "nethunter_prefs";
+    private static final String PREF_FIRST_RUN_KEY = "searchsploit_first_run";
     private Boolean withFilters = true;
     private String sel_type;
     private String sel_platform;
@@ -52,10 +60,10 @@ public class SearchSploitFragment extends Fragment {
     private Boolean isLoaded = false;
     private ListView searchSploitListView;
     private List<SearchSploit> full_exploitList;
-    // Create and handle database
     private SearchSploitSQL database;
     private Context context;
     private Activity activity;
+    private View rootView;
 
     public static SearchSploitFragment newInstance(int sectionNumber) {
         SearchSploitFragment fragment = new SearchSploitFragment();
@@ -75,9 +83,8 @@ public class SearchSploitFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        final View rootView = inflater.inflate(R.layout.searchsploit, container, false);
+        rootView = inflater.inflate(R.layout.searchsploit, container, false);
 
-        setHasOptionsMenu(true);
         database = new SearchSploitSQL(context);
         MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
         builder.setTitle("Exploit Database Archive");
@@ -112,89 +119,113 @@ public class SearchSploitFragment extends Fragment {
             }
         });
         // Load/reload database button
-        final Button searchSearchSploit = rootView.findViewById(R.id.serchsploit_loadDB);
         final ProgressBar progressBar = rootView.findViewById(R.id.progressBar);
-        searchSearchSploit.setOnClickListener(v -> {
-            progressBar.setVisibility(View.VISIBLE);
-            new Thread(() -> {
-                final Boolean isFeeded = database.doDbFeed();
-                searchSearchSploit.post(() -> {
-                    if (isFeeded) {
-                        NhPaths.showMessage_long(context, "DB FEED DONE");
-                        try {
-                            String sd = Environment.getExternalStorageDirectory().getPath();
-                            String data = NhPaths.APP_PATH + "/";
-                            String DATABASE_NAME = "SearchSploit";
-                            String currentDBPath = "databases/" + DATABASE_NAME;
-                            String backupDBPath = "/nh_files/" + DATABASE_NAME;
-
-                            File backupDB = new File(data, currentDBPath);
-                            File currentDB = new File(sd, backupDBPath);
-
-                            try (FileInputStream fis = new FileInputStream(currentDB);
-                                 FileOutputStream fos = new FileOutputStream(backupDB);
-                                 FileChannel src = fis.getChannel();
-                                 FileChannel dst = fos.getChannel()) {
-                                dst.transferFrom(src, 0, src.size());
-                            }
-                            Log.d("importDB", "Successfully imported " + DATABASE_NAME);
-                            main(rootView);
-                        } catch (Exception e) {
-                            Log.d("importDB", e.toString());
-                        }
-                    } else {
-                        NhPaths.showMessage_long(context,
-                                "Unable to find Searchsploit files.csv database. Install exploitdb in chroot");
-                    }
-                    progressBar.setVisibility(View.GONE);
-                });
-            }).start();
-        });
         //prevents menu stuck
-        new android.os.Handler().postDelayed(
-                () -> main(rootView), 250);
-
+        rootView.postDelayed(() -> initUi(rootView), 250);
 
         return rootView;
     }
 
     @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.searchsploit, menu);
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        // First run setup
+        maybeShowFirstRunSetup();
+
+        MenuHost menuHost = requireActivity();
+        menuHost.addMenuProvider(new MenuProvider() {
+            @Override
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+                inflater.inflate(R.menu.searchsploit, menu);
+                MenuItem raw = menu.findItem(R.id.rawSearch_ON);
+                if (raw != null) {
+                    raw.setTitle(withFilters ? "Enable Raw search" : "Disable Raw search");
+                }
+            }
+
+            @Override
+            public boolean onMenuItemSelected(@NonNull MenuItem item) {
+                int id = item.getItemId();
+                if (id == R.id.rawSearch_ON) {
+                    if (!withFilters) {
+                        view.findViewById(R.id.search_filters).setVisibility(View.VISIBLE);
+                        withFilters = true;
+                        item.setTitle("Enable Raw search");
+                        loadExploits();
+                        hideSoftKeyboard(view);
+                    } else {
+                        new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
+                                .setTitle("Raw search warning")
+                                .setMessage("The exploit db is pretty big (+30K exploits), activating raw search will make the search slow.\nIs useful to do global searches when you don't find a exploit.")
+                                .setNegativeButton("Cancel", (d,i)->d.dismiss())
+                                .setPositiveButton("Enable", (d,i)->{
+                                    view.findViewById(R.id.search_filters).setVisibility(View.GONE);
+                                    item.setTitle("Disable Raw search");
+                                    withFilters = false;
+                                    loadExploits();
+                                    hideSoftKeyboard(view);
+                                })
+                                .setCancelable(false)
+                                .show();
+                    }
+                    return true;
+                } else if (id == R.id.action_setup_searchsploit) {
+                    showSetupDialog();
+                    return true;
+                } else if (id == R.id.action_reload_searchsploit) {
+                    loadDatabase();
+                    return true;
+                }
+                return false;
+            }
+        }, getViewLifecycleOwner(), androidx.lifecycle.Lifecycle.State.RESUMED);
     }
 
-    @Override
-    public boolean onOptionsItemSelected(final MenuItem item) {
-        if (item.getItemId() == R.id.rawSearch_ON) {
-            if (getView() == null) return true;
-            if (!withFilters) {
-                assert getView() != null;
-                requireView().findViewById(R.id.search_filters).setVisibility(View.VISIBLE);
-                withFilters = true;
-                item.setTitle("Enable Raw search");
-                loadExploits();
-                hideSoftKeyboard(getView());
-            } else {
-                MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                builder.setTitle("Raw search warning");
+    private void maybeShowFirstRunSetup() {
+        if (!isAdded()) return;
+        SharedPreferences sp = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        boolean firstRun = sp.getBoolean(PREF_FIRST_RUN_KEY, true);
+        if (!firstRun) return;
 
-                builder.setMessage("The exploit db is pretty big (+30K exploits), activating raw search will make the search slow.\nIs useful to do global searches when you don't find a exploit.")
-                        .setNegativeButton("Cancel", (dialog, id) -> dialog.dismiss())
-                        .setPositiveButton("Enable", (dialog, id) -> {
-                            getView().findViewById(R.id.search_filters).setVisibility(View.GONE);
-                            item.setTitle("Disable Raw search");
-                            withFilters = false;
-                            loadExploits();
-                            hideSoftKeyboard(getView());
-                        });
+        sp.edit().putBoolean(PREF_FIRST_RUN_KEY, false).apply();
 
-                AlertDialog ad = builder.create();
-                ad.setCancelable(false);
-                ad.show();
-            }
-            return true;
+        new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat)
+                .setTitle("SearchSploit setup")
+                .setMessage("SearchSploit needs two dependencies to work, install now?\nThis will run:\napt update && apt install exploitdb python3-six")
+                .setNegativeButton("Cancel", (d,i)-> d.dismiss())
+                .setPositiveButton("Setup", (d,i)-> openTerminalWithCommand("apt update && apt install exploitdb python3-six -y"))
+                .setCancelable(false)
+                .show();
+    }
+
+    private void showSetupDialog() {
+        if (!isAdded()) return;
+        new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat)
+                .setTitle("SearchSploit setup")
+                .setMessage("Install required packages in chroot now?\nThis will run:\napt update && apt install exploitdb python3-six")
+                .setNegativeButton("Cancel", (d,i)-> d.dismiss())
+                .setPositiveButton("Setup", (d,i)-> openTerminalWithCommand("apt update && apt install exploitdb python3-six -y"))
+                .setCancelable(false)
+                .show();
+    }
+
+    // Helper to route commands through TerminalFragment (saves memory vs external NhTerm)
+    private void openTerminalWithCommand(String cmd) {
+        if (!isAdded()) return;
+        FragmentManager fm = requireActivity().getSupportFragmentManager();
+        Fragment term = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
+        if (fm.isStateSaved()) {
+            fm.beginTransaction()
+                    .replace(R.id.container, term)
+                    .addToBackStack(null)
+                    .commitAllowingStateLoss();
+        } else {
+            fm.beginTransaction()
+                    .replace(R.id.container, term)
+                    .addToBackStack(null)
+                    .commit();
         }
-        return super.onOptionsItemSelected(item);
     }
 
     private static void hideSoftKeyboard(final View caller) {
@@ -204,19 +235,16 @@ public class SearchSploitFragment extends Fragment {
         }, 100);
     }
 
-    private void main(final View rootView) {
+    private void initUi(final View rootView) {
         searchSploitListView = rootView.findViewById(R.id.searchResultsList);
-        Long exploitCount = database.getCount();
-        Button searchSearchSploit = rootView.findViewById(R.id.serchsploit_loadDB);
+        long exploitCount = database.getCount();
         if (exploitCount == 0) {
-            searchSearchSploit.setVisibility(View.VISIBLE);
             rootView.findViewById(R.id.search_filters).setVisibility(View.GONE);
             adi.dismiss();
             hideSoftKeyboard(requireView());
             return;
         } else {
             rootView.findViewById(R.id.search_filters).setVisibility(View.VISIBLE);
-            searchSearchSploit.setVisibility(View.GONE);
         }
 
         final List<String> platformList = database.getPlatforms();
@@ -252,6 +280,14 @@ public class SearchSploitFragment extends Fragment {
             public void onNothingSelected(AdapterView<?> parentView) {
             }
         });
+        // Initialize selections to first items
+        if (!platformList.isEmpty()) {
+            sel_platform = platformList.get(0);
+        }
+        if (!typeList.isEmpty()) {
+            sel_type = typeList.get(0);
+        }
+        full_exploitList = database.getAllExploits();
         loadExploits();
     }
 
@@ -268,23 +304,57 @@ public class SearchSploitFragment extends Fragment {
                 }
             }
             if (exploitList == null) {
-                new android.os.Handler().postDelayed(
-                        this::loadExploits, 1500);
+                new Handler(Looper.getMainLooper()).postDelayed(this::loadExploits, 1500);
                 return;
             }
             numex.setText(String.format(Locale.getDefault(),"%d results", exploitList.size()));
             ExploitLoader exploitAdapter = new ExploitLoader(context, exploitList);
             searchSploitListView.setAdapter(exploitAdapter);
             if (!isLoaded) {
-                // preloading the long list lets see if is more performant
-                // preload in the background.
-                new Thread(() -> full_exploitList = database.getAllExploitsRaw("")).start();
 
                 adi.dismiss();
                 isLoaded = true;
                 hideSoftKeyboard(requireView());
             }
         }
+    }
+
+    private void loadDatabase() {
+        final ProgressBar progressBar = rootView.findViewById(R.id.progressBar);
+        progressBar.setVisibility(View.VISIBLE);
+        new Thread(() -> {
+            final Boolean isFeeded = database.doDbFeed();
+            requireActivity().runOnUiThread(() -> {
+                if (isFeeded) {
+                    NhPaths.showMessage_long(context, "DB FEED DONE");
+                    try {
+                        String sd = Environment.getExternalStorageDirectory().getPath();
+                        String data = NhPaths.APP_PATH + "/";
+                        String DATABASE_NAME = "SearchSploit";
+                        String currentDBPath = "databases/" + DATABASE_NAME;
+                        String backupDBPath = "/nh_files/" + DATABASE_NAME;
+
+                        File backupDB = new File(data, currentDBPath);
+                        File currentDB = new File(sd, backupDBPath);
+
+                        try (FileInputStream fis = new FileInputStream(currentDB);
+                             FileOutputStream fos = new FileOutputStream(backupDB);
+                             FileChannel src = fis.getChannel();
+                             FileChannel dst = fos.getChannel()) {
+                            dst.transferFrom(src, 0, src.size());
+                        }
+                        Log.d("importDB", "Successfully imported " + DATABASE_NAME);
+                        initUi(rootView);
+                    } catch (Exception e) {
+                        Log.d("importDB", e.toString());
+                    }
+                } else {
+                    NhPaths.showMessage_long(context,
+                            "Unable to find Searchsploit files.csv database. Install exploitdb in chroot");
+                }
+                progressBar.setVisibility(View.GONE);
+            });
+        }).start();
     }
 }
 
@@ -361,7 +431,7 @@ class ExploitLoader extends BaseAdapter {
         final SearchSploit exploitItem = getItem(position);
 
         final String _file = exploitItem.getFile();
-        final Long _id = exploitItem.getId();
+        final long _id = exploitItem.getId();
         String _desc = exploitItem.getDescription();
         String _date = exploitItem.getDate();
         String _author = exploitItem.getAuthor();
@@ -373,7 +443,7 @@ class ExploitLoader extends BaseAdapter {
         // set service name
         vH.description.setText(_desc);
         vH.type.setText(_type);
-	    vH.platform.setText(_platform);
+        vH.platform.setText(_platform);
         vH.author.setText(_author);
         vH.date.setText(_date);
         vH.viewSource.setOnClickListener(v -> {
@@ -383,11 +453,12 @@ class ExploitLoader extends BaseAdapter {
             _mContext.startActivity(i);
 
         });
+
         vH.sendHid.setOnClickListener(v -> {
             start("/usr/share/exploitdb/" + _file);
             //_mContext.startActivity(i);
-
         });
+
         vH.openWeb.setOnClickListener(v -> {
             Intent i = new Intent(Intent.ACTION_VIEW);
             i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);

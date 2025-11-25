@@ -7,10 +7,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Environment;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.offsec.nethunter.BuildConfig;
 import com.offsec.nethunter.models.KaliServicesModel;
-import com.offsec.nethunter.utils.NhPaths;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -19,9 +19,9 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
-
 public class KaliServicesSQL extends SQLiteOpenHelper {
 	private static KaliServicesSQL instance;
+    private final Context appContext;
 	private static final String DATABASE_NAME = "KaliServicesFragment";
 	public static final String TAG = "KaliServicesSQL";
 	private static final String TABLE_NAME = DATABASE_NAME;
@@ -37,7 +37,7 @@ public class KaliServicesSQL extends SQLiteOpenHelper {
 			{"8", "NETWORKING", "service networking start", "service networking stop", "networking", "0"},
 	};
 
-	public static synchronized KaliServicesSQL getInstance(Context context){
+	public static synchronized KaliServicesSQL getInstance(Context context) {
 		if (instance == null) {
 			instance = new KaliServicesSQL(context.getApplicationContext());
 		}
@@ -46,6 +46,7 @@ public class KaliServicesSQL extends SQLiteOpenHelper {
 
 	private KaliServicesSQL(Context context) {
 		super(context, DATABASE_NAME, null, 1);
+		this.appContext = context.getApplicationContext();
 		// Add your default column here;
 		COLUMNS.add("id");
 		COLUMNS.add("ServiceName");
@@ -141,7 +142,7 @@ public class KaliServicesSQL extends SQLiteOpenHelper {
 		db.close();
 	}
 
-	public void moveData(Integer originalPosition, Integer targetPosition){
+	public void moveData(Integer originalPosition, Integer targetPosition) {
 		SQLiteDatabase db = this.getWritableDatabase();
 		db.execSQL("UPDATE " + TABLE_NAME + " SET " + COLUMNS.get(0) + " = 0 - 1 WHERE " + COLUMNS.get(0) + " = " + (originalPosition + 1) + ";");
 		if (originalPosition < targetPosition){
@@ -156,7 +157,7 @@ public class KaliServicesSQL extends SQLiteOpenHelper {
 		db.close();
 	}
 
-	public void editData(Integer targetPosition, List<String> editData){
+	public void editData(Integer targetPosition, List<String> editData) {
 		SQLiteDatabase db = this.getWritableDatabase();
 		db.execSQL("UPDATE " + TABLE_NAME + " SET " + COLUMNS.get(1) + " = '" + editData.get(0).replace("'", "''") + "', " +
 				COLUMNS.get(2) + " = '" + editData.get(1).replace("'", "''") + "', " +
@@ -167,7 +168,7 @@ public class KaliServicesSQL extends SQLiteOpenHelper {
 		db.close();
 	}
 
-	public void resetData(){
+	public void resetData() {
 		SQLiteDatabase db = this.getWritableDatabase();
 		db.execSQL("DROP TABLE IF EXISTS " + TABLE_NAME);
 		db.execSQL("CREATE TABLE " + TABLE_NAME + " (" + COLUMNS.get(0) + " INTEGER, " +
@@ -189,57 +190,59 @@ public class KaliServicesSQL extends SQLiteOpenHelper {
 		db.close();
 	}
 
-	public String backupData(String storedDBpath) {
-		try {
-			File data = Environment.getDataDirectory();
-			File sd = Environment.getExternalStorageDirectory();
-			String currentDBPath = data.getAbsolutePath() + "/data/" + BuildConfig.APPLICATION_ID + "/databases/" + getDatabaseName();
-			if (sd.canWrite()) {
-				File currentDB = new File(currentDBPath);
-				File backupDB = new File(storedDBpath);
-				if (currentDB.exists()) {
-					FileChannel src = new FileInputStream(currentDB).getChannel();
-					FileChannel dst = new FileOutputStream(backupDB).getChannel();
-					dst.transferFrom(src, 0, src.size());
-					src.close();
-					dst.close();
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			return e.toString();
-		}
-		return null;
-	}
+    public String backupData(String storedDBpath) {
+        try {
+            File data = Environment.getDataDirectory();
+            File sd = appContext.getExternalFilesDir(null);
+            String currentDBPath = data.getAbsolutePath() + "/data/" + BuildConfig.APPLICATION_ID + "/databases/" + getDatabaseName();
+            if (sd != null && sd.canWrite()) {
+                File currentDB = new File(currentDBPath);
+                File backupDB = new File(storedDBpath);
+                if (currentDB.exists()) {
+                    try (FileInputStream fis = new FileInputStream(currentDB);
+                         FileOutputStream fos = new FileOutputStream(backupDB);
+                         FileChannel src = fis.getChannel();
+                         FileChannel dst = fos.getChannel()) {
+                        dst.transferFrom(src, 0, src.size());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "backupData failed", e); // or "restoreData failed" where appropriate
+            return e.toString();
+        }
+        return null;
+    }
 
-	public String restoreData(String storedDBpath) {
-		if (!new File(storedDBpath).exists()){
-			return "db file not found.";
-		}
-		if (!verifyDB(storedDBpath)) {
-			return "invalid columns format.";
-		}
-		try {
-			File data = Environment.getDataDirectory();
-			File sd = Environment.getExternalStorageDirectory();
-			String currentDBPath = data.getAbsolutePath() + "/data/" + BuildConfig.APPLICATION_ID + "/databases/" + getDatabaseName();
-			if (sd.canWrite()) {
-				File currentDB = new File(currentDBPath);
-				File backupDB = new File(storedDBpath);
-				if (backupDB.exists()) {
-					FileChannel src = new FileInputStream(backupDB).getChannel();
-					FileChannel dst = new FileOutputStream(currentDB).getChannel();
-					dst.transferFrom(src, 0, src.size());
-					src.close();
-					dst.close();
-				}
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-			return e.toString();
-		}
-		return null;
-	}
+    public String restoreData(String storedDBpath) {
+        if (!new File(storedDBpath).exists()) {
+            return "db file not found.";
+        }
+        if (!verifyDB(storedDBpath)) {
+            return "invalid columns format.";
+        }
+        try {
+            File data = Environment.getDataDirectory();
+            File sd = appContext.getExternalFilesDir(null);
+            String currentDBPath = data.getAbsolutePath() + "/data/" + BuildConfig.APPLICATION_ID + "/databases/" + getDatabaseName();
+            if (sd != null && sd.canWrite()) {
+                File currentDB = new File(currentDBPath);
+                File backupDB = new File(storedDBpath);
+                if (backupDB.exists()) {
+                    try (FileInputStream fis = new FileInputStream(backupDB);
+                         FileOutputStream fos = new FileOutputStream(currentDB);
+                         FileChannel src = fis.getChannel();
+                         FileChannel dst = fos.getChannel()) {
+                        dst.transferFrom(src, 0, src.size());
+                    }
+                }
+            }
+        } catch (Exception e) {
+            Log.e(TAG, "restoreData failed", e);
+            return e.toString();
+        }
+        return null;
+    }
 
 	private boolean verifyDB(String storedDBpath) {
 		SQLiteDatabase tempDB = SQLiteDatabase.openDatabase(storedDBpath, null, SQLiteDatabase.OPEN_READWRITE);
@@ -253,8 +256,8 @@ public class KaliServicesSQL extends SQLiteOpenHelper {
 				tempDB.close();
 				return false;
 			}
-			for (int i = 0; i < tempColumnNames.length; i++){
-				if (!tempColumnNames[i].equals(COLUMNS.get(i))){
+			for (int i = 0; i < tempColumnNames.length; i++) {
+				if (!tempColumnNames[i].equals(COLUMNS.get(i))) {
 					tempDB.close();
 					return false;
 				}

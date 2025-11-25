@@ -49,7 +49,7 @@
             android:layout_height="wrap_content"
             android:autofillHints="none"
             android:includeFontPadding="false"
-            android:inputType="textMultiLine"
+            android:inputType="textMultiLine|textNoSuggestions|textVisiblePassword"
             android:layout_marginLeft="1dip"
             android:layout_marginRight="1dip" />
 

@@ -7,9 +7,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
 
 /**
  * Created by jmingov on 11/15/15.
@@ -50,6 +47,7 @@ import java.util.ArrayList;
  *
  */
 public class BootKali {
+    private static final String TAG = "BootKali";
     public final String TERM_CMD;
     private final String KALI_ENV;
     private final String KALI_COMMAND;
@@ -129,15 +127,15 @@ public class BootKali {
             br.close();
             br = new BufferedReader(new InputStreamReader(stderr));
             while ((line = br.readLine()) != null) {
-                Log.e("Shell out:", output.toString());
-                Log.e("Shell Error:", line);
+                Log.e(TAG, "Shell out: " + output);
+                Log.e(TAG, "Shell Error: " + line);
             }
             br.close();
             process.waitFor();
             process.destroy();
 
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error while executing Kali command.", e);
         }
         return output.toString();
     }
@@ -158,14 +156,14 @@ public class BootKali {
                 stdin.close();
                 BufferedReader br = new BufferedReader(new InputStreamReader(stderr));
                 while ((line = br.readLine()) != null) {
-                    Log.e("Shell out:", output);
-                    Log.e("Shell Error:", line);
+                    Log.e(TAG, "Shell out: " + output);
+                    Log.e(TAG, "Shell Error: " + line);
                 }
                 br.close();
                 process.waitFor();
                 process.destroy();
             } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
+                Log.e(TAG, "Error while executing Kali command in run_bg().", e);
             }
         }).start();
     }

@@ -1,100 +1,116 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:padding="16dp">
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <SearchView
-            android:layout_width="fill_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/searchSploit_searchbar"
-            android:hint="Filter exploits"
-            android:queryHint="@string/searchsploit_searchbar"
-            android:iconifiedByDefault="false"
-            android:baselineAligned="false"
-            android:measureWithLargestChild="false"
-            android:layout_alignParentTop="true"
-            android:layout_toEndOf="@+id/numex" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/base_listItem_LR"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="numex"
-            android:id="@+id/numex"
-            android:layout_centerVertical="true"
-            android:layout_alignParentStart="true" />
-
-    </RelativeLayout>
-    <RelativeLayout
+    <com.google.android.material.card.MaterialCardView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginRight="@dimen/base_listItem_LR"
-        android:layout_marginLeft="@dimen/base_listItem_LR"
+        android:layout_marginBottom="16dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="4dp">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="16dp">
+
+            <androidx.appcompat.widget.SearchView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/searchSploit_searchbar"
+                android:hint="Filter exploits"
+                android:queryHint="@string/searchsploit_searchbar"
+                android:iconifiedByDefault="false"
+                android:baselineAligned="false"
+                android:measureWithLargestChild="false"
+                android:layout_alignParentTop="true"
+                android:layout_toEndOf="@+id/numex"
+                android:layout_alignParentEnd="true" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="8dp"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="numex"
+                android:id="@+id/numex"
+                android:layout_centerVertical="true"
+                android:layout_alignParentStart="true" />
+
+        </RelativeLayout>
+    </com.google.android.material.card.MaterialCardView>
+
+    <com.google.android.material.card.MaterialCardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp"
+        app:cardCornerRadius="8dp"
+        app:cardElevation="4dp"
         android:id="@+id/search_filters">
 
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyleLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:visibility="gone"/>
-
-        <Spinner
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:id="@+id/exdb_platform_spinner"
-            android:layout_gravity="center_horizontal"
-            android:layout_toEndOf="@+id/textView17" />
-        <Spinner
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:id="@+id/exdb_type_spinner"
-            android:layout_gravity="center_horizontal"
-            android:layout_below="@+id/exdb_platform_spinner"
-            android:layout_alignEnd="@+id/exdb_platform_spinner"
-            android:layout_alignStart="@+id/exdb_platform_spinner" />
+            android:padding="16dp">
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Platform"
-            android:id="@+id/textView17"
-            android:layout_alignParentStart="true"
-            android:layout_alignBottom="@+id/exdb_platform_spinner"
-            android:gravity="center_vertical" />
+            <ProgressBar
+                android:id="@+id/progressBar"
+                style="?android:attr/progressBarStyleLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerInParent="true"
+                android:visibility="gone"/>
 
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:textAppearance="?android:attr/textAppearanceMedium"
-            android:text="Type"
-            android:layout_alignTop="@+id/exdb_type_spinner"
-            android:layout_alignParentStart="true"
-            android:layout_alignBottom="@+id/exdb_type_spinner"
-            android:layout_toStartOf="@+id/exdb_type_spinner"
-            android:gravity="center_vertical" />
-    </RelativeLayout>
-    <Button
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="LOAD DB (1st run only)"
-        android:id="@+id/serchsploit_loadDB"
-        android:textAlignment="center" />
+            <Spinner
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/exdb_platform_spinner"
+                android:layout_gravity="center_horizontal"
+                android:layout_toEndOf="@+id/textView17" />
+            <Spinner
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/exdb_type_spinner"
+                android:layout_gravity="center_horizontal"
+                android:layout_below="@+id/exdb_platform_spinner"
+                android:layout_alignEnd="@+id/exdb_platform_spinner"
+                android:layout_alignStart="@+id/exdb_platform_spinner"
+                android:layout_marginTop="8dp" />
 
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Platform"
+                android:id="@+id/textView17"
+                android:layout_alignParentStart="true"
+                android:layout_alignBottom="@+id/exdb_platform_spinner"
+                android:gravity="center_vertical" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceMedium"
+                android:text="Type"
+                android:layout_alignTop="@+id/exdb_type_spinner"
+                android:layout_alignParentStart="true"
+                android:layout_alignBottom="@+id/exdb_type_spinner"
+                android:layout_toStartOf="@+id/exdb_type_spinner"
+                android:gravity="center_vertical" />
+        </RelativeLayout>
+    </com.google.android.material.card.MaterialCardView>
 
     <ListView
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:id="@+id/searchResultsList"
         android:divider="#333"
         android:dividerHeight="1dp" />
+
 </LinearLayout>

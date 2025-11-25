@@ -46,6 +46,7 @@ public class AudioFragment extends Fragment {
     private static final List<Long> VALUES_BUFFER_HEADROOM = Arrays.asList(0L, 15625L, 31250L, 62500L, 125000L, 250000L, 500000L, 1000000L, 2000000L);
     private static final List<Long> VALUES_TARGET_LATENCY = Arrays.asList(0L, 15625L, 31250L, 62500L, 125000L, 250000L, 500000L, 1000000L, 2000000L, 5000000L, 10000000L, -1L);
     private ActivityResultLauncher<String> audioPermissionLauncher;
+    private ActivityResultLauncher<String> notificationPermissionLauncher;
     private Button playButton;
     private Spinner bufferHeadroomSpinner;
     private Spinner targetLatencySpinner;
@@ -57,7 +58,6 @@ public class AudioFragment extends Fragment {
     private Throwable error;
     private boolean isServiceBound = false;
     private AudioPlaybackService boundService;
-    private int itemId;
 
     private final ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
@@ -73,46 +73,6 @@ public class AudioFragment extends Fragment {
             }
             playButton.setEnabled(true); // Enable play button when service is bound
             isServiceBound = true;
-        }
-
-        private void updatePlayStateInternal(AudioPlayState audioPlayState) {
-            if (audioPlayState == null) {
-                Log.e(TAG, "AudioPlayState is null in updatePlayStateInternal");
-                return;
-            }
-            Log.d(TAG, "Updating play state: " + audioPlayState);
-            playButton.setText(getPlayButtonText(audioPlayState));
-            playButton.setEnabled(true);
-
-            switch (audioPlayState) {
-                case STOPPED:
-                    appendErrorText("Disconnected State", android.R.color.holo_orange_light);
-                    appendDashes();
-                    playButton.setEnabled(true);
-                    break;
-                case STARTING:
-                    appendErrorText("Connection Starting", android.R.color.holo_green_dark);
-                    playButton.setEnabled(true);
-                    break;
-                case BUFFERING:
-                    appendErrorText("Establishing Connection", android.R.color.holo_orange_light);
-                    playButton.setEnabled(true);
-                    break;
-                case STARTED:
-                    appendErrorText("Everything is working fine! Enjoy!", android.R.color.holo_green_dark);
-                    appendDashes();
-                    playButton.setEnabled(true);
-                    break;
-                case STOPPING:
-                    appendErrorText("Connection Disconnecting", android.R.color.holo_red_light);
-                    playButton.setEnabled(false);
-                    break;
-            }
-
-            if (boundService != null && boundService.getError() != null) {
-                appendErrorText("An error occurred: " + boundService.getError().getMessage(), android.R.color.holo_red_dark);
-                appendDashes();
-            }
         }
 
         public void onServiceDisconnected(ComponentName className) {
@@ -151,7 +111,23 @@ public class AudioFragment extends Fragment {
                     } else {
                         Log.d(TAG, "Permission denied: " + permission);
                         if (errorText != null) {
-                            errorText.setText("Audio permission denied. Cannot start playback.");
+                            errorText.setText(R.string.audio_permission_denied_cannot_start_playback);
+                        }
+                    }
+                }
+        );
+        notificationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    String permission = Manifest.permission.POST_NOTIFICATIONS;
+                    if (isGranted) {
+                        Log.d(TAG, "Permission granted: " + permission);
+                        // no immediate action; play() will continue when user taps again
+                    } else {
+                        Log.d(TAG, "Permission denied: " + permission);
+                        // We still try to play, but Android 13+ may block FGS without notifications allowed
+                        if (errorText != null) {
+                            errorText.setText(R.string.notification_permission_denied);
                         }
                     }
                 }
@@ -160,15 +136,15 @@ public class AudioFragment extends Fragment {
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Log.d(TAG, "onCreateAudioFragment");
+        //Log.d(TAG, "onCreateAudioFragment");
 
         // Retrieve the itemId passed in newInstance
         if (getArguments() != null) {
-            itemId = getArguments().getInt("ITEM_ID", -1);
+            int itemId = getArguments().getInt("ITEM_ID", -1);
         }
 
         // Log or use the itemId as needed
-        Log.d(TAG, "Received itemId: " + itemId);
+        //Log.d(TAG, "Received itemId: " + itemId);
 
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.audio, container, false);
@@ -192,6 +168,7 @@ public class AudioFragment extends Fragment {
         playButton = view.findViewById(R.id.ButtonPlay);
         playButton.setEnabled(false);
         playButton.setOnClickListener(v -> {
+            if (checkAndRequestNotificationPermission()) return;
             if (checkAndRequestAudioPermission()) return;
             if (boundService != null) {
                 if (boundService.isPlaying()) {
@@ -239,6 +216,20 @@ public class AudioFragment extends Fragment {
         return false;
     }
 
+    private boolean checkAndRequestNotificationPermission() {
+        if (android.os.Build.VERSION.SDK_INT >= 33) {
+            String permission = Manifest.permission.POST_NOTIFICATIONS;
+            if (ContextCompat.checkSelfPermission(requireContext(), permission)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Log.d(TAG, "Permission check: " + permission + " NOT GRANTED, requesting...");
+                notificationPermissionLauncher.launch(permission);
+                return true;
+            }
+            Log.d(TAG, "Permission check: " + permission + " GRANTED");
+        }
+        return false;
+    }
+
     @Override
     public void onStart() {
         super.onStart();
@@ -276,22 +267,6 @@ public class AudioFragment extends Fragment {
         boundService = null;
     }
 
-    private void setupDefaultAudioConfig() {
-        serverInput.setText(R.string.audio_serverinput);
-        portInput.setText(R.string.audio_portinput);
-
-        // Format values for buffer headroom and target latency as seconds
-        List<String> formattedBufferHeadroom = formatValuesAsSeconds(VALUES_BUFFER_HEADROOM);
-        List<String> formattedTargetLatency = formatValuesAsSeconds(VALUES_TARGET_LATENCY);
-
-        // Set up adapters with the formatted string values
-        ArrayAdapter<String> bufferAdapter = new ArrayAdapter<>(requireActivity(), android.R.layout.simple_spinner_dropdown_item, formattedBufferHeadroom);
-        bufferHeadroomSpinner.setAdapter(bufferAdapter);
-
-        ArrayAdapter<String> latencyAdapter = new ArrayAdapter<>(requireActivity(), android.R.layout.simple_spinner_dropdown_item, formattedTargetLatency);
-        targetLatencySpinner.setAdapter(latencyAdapter);
-    }
-
     // Helper method to format values as seconds
     private List<String> formatValuesAsSeconds(List<Long> values) {
         List<String> formattedValues = new ArrayList<>();
@@ -307,7 +282,7 @@ public class AudioFragment extends Fragment {
 
     private void updatePrefs(AudioPlaybackService service) {
         if (service == null) {
-            Log.e(TAG, "AudioPlaybackService is null in updatePrefs");
+            //Log.e(TAG, "AudioPlaybackService is null in updatePrefs");
             return;
         }
 
@@ -413,21 +388,24 @@ public class AudioFragment extends Fragment {
 
     private void appendErrorText(String message, int colorId) {
         SpannableString spannable = new SpannableString(message + "\n");
-        spannable.setSpan(new ForegroundColorSpan(getResources().getColor(colorId)), 0, spannable.length(), 0);
-        errorText.append(spannable);
+        int color = ContextCompat.getColor(requireContext(), colorId);
+        spannable.setSpan(new ForegroundColorSpan(color), 0, spannable.length(), 0);
+        if (errorText != null) errorText.append(spannable);
     }
 
     private void appendDashes() {
         SpannableString dashes = new SpannableString("------------------\n");
-        dashes.setSpan(new ForegroundColorSpan(getResources().getColor(android.R.color.holo_purple)), 0, dashes.length(), 0);
-        errorText.append(dashes);
+        int purple = ContextCompat.getColor(requireContext(), android.R.color.holo_purple);
+        dashes.setSpan(new ForegroundColorSpan(purple), 0, dashes.length(), 0);
+        if (errorText != null) errorText.append(dashes);
     }
 
     public void play() {
         if (serverInput == null || portInput == null) {
-            Log.e(TAG, "UI elements are not initialized");
+            //Log.e(TAG, "UI elements are not initialized");
             return;
         }
+        if (checkAndRequestNotificationPermission()) return;
         if (checkAndRequestAudioPermission()) return;
         String server = serverInput.getText().toString().trim();
         int port;
@@ -455,7 +433,7 @@ public class AudioFragment extends Fragment {
         } else {
             // Handle case where service is not bound
             errorText.setText(R.string.audio_service_not_bound);
-            Log.e(TAG, "Service not bound when attempting to play.");
+            //Log.e(TAG, "Service not bound when attempting to play.");
         }
     }
 
@@ -463,14 +441,6 @@ public class AudioFragment extends Fragment {
         if (boundService != null) {
             boundService.stop();
         }
-    }
-
-    public ScrollView getFullScrollView() {
-        return fullScrollView;
-    }
-
-    public void setFullScrollView(ScrollView fullScrollView) {
-        this.fullScrollView = fullScrollView;
     }
 
     public void setError(Throwable error) {

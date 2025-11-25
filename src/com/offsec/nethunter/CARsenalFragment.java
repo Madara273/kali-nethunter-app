@@ -70,9 +70,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.Map;
+import java.lang.ref.WeakReference;
+
+import androidx.core.widget.TextViewCompat;
 
 public class CARsenalFragment extends Fragment {
     private static final String TAG = "CANFragment";
@@ -80,6 +84,37 @@ public class CARsenalFragment extends Fragment {
     private Activity activity;
     private Toast currentToast;
     private static final String ARG_SECTION_NUMBER = "section_number";
+
+    // Map module keys (derived from selected_module without .rb, lowercased) to string resources
+    private static final Map<String, Integer> MODULE_INFO_STRING_IDS = new HashMap<>();
+    private static final Map<String, Integer> MODULE_SET_STRING_IDS = new HashMap<>();
+    static {
+        // Info strings
+        MODULE_INFO_STRING_IDS.put("local_hwbridge", R.string.module_info_local_hwbridge);
+        MODULE_INFO_STRING_IDS.put("connect", R.string.module_info_connect);
+        MODULE_INFO_STRING_IDS.put("can_flood", R.string.module_info_can_flood);
+        MODULE_INFO_STRING_IDS.put("canprobe", R.string.module_info_canprobe);
+        MODULE_INFO_STRING_IDS.put("diagnostic_state", R.string.module_info_diagnostic_state);
+        MODULE_INFO_STRING_IDS.put("ecu_hard_reset", R.string.module_info_ecu_hard_reset);
+        MODULE_INFO_STRING_IDS.put("getvinfo", R.string.module_info_getvinfo);
+        MODULE_INFO_STRING_IDS.put("identifymodules", R.string.module_info_identifymodules);
+        MODULE_INFO_STRING_IDS.put("malibu_overheat", R.string.module_info_malibu_overheat);
+        MODULE_INFO_STRING_IDS.put("mazda_ic_mover", R.string.module_info_mazda_ic_mover);
+        MODULE_INFO_STRING_IDS.put("pdt", R.string.module_info_pdt);
+
+        // Options strings
+        MODULE_SET_STRING_IDS.put("local_hwbridge", R.string.module_set_local_hwbridge);
+        MODULE_SET_STRING_IDS.put("connect", R.string.module_set_connect);
+        MODULE_SET_STRING_IDS.put("can_flood", R.string.module_set_can_flood);
+        MODULE_SET_STRING_IDS.put("canprobe", R.string.module_set_canprobe);
+        MODULE_SET_STRING_IDS.put("diagnostic_state", R.string.module_set_diagnostic_state);
+        MODULE_SET_STRING_IDS.put("ecu_hard_reset", R.string.module_set_ecu_hard_reset);
+        MODULE_SET_STRING_IDS.put("getvinfo", R.string.module_set_getvinfo);
+        MODULE_SET_STRING_IDS.put("identifymodules", R.string.module_set_identifymodules);
+        MODULE_SET_STRING_IDS.put("malibu_overheat", R.string.module_set_malibu_overheat);
+        MODULE_SET_STRING_IDS.put("mazda_ic_mover", R.string.module_set_mazda_ic_mover);
+        MODULE_SET_STRING_IDS.put("pdt", R.string.module_set_pdt);
+    }
 
     public static CARsenalFragment newInstance(int sectionNumber) {
         CARsenalFragment fragment = new CARsenalFragment();
@@ -91,7 +126,6 @@ public class CARsenalFragment extends Fragment {
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
-        Log.d(TAG, "onCreate called");
         sharedpreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         super.onCreate(savedInstanceState);
         activity = getActivity();
@@ -302,11 +336,11 @@ public class CARsenalFragment extends Fragment {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
         Log.i(TAG, "Running setup commands");
-        String setupCommand = "echo -ne \"\\033]0;CARsenal Setup\\007\" && clear;which wget > /dev/null 2>&1 && wget -qO - https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup || curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup";
-        String setupResult = run_cmd(setupCommand);
-        Log.d("SetupResult",setupResult);
+        String setupCommand = "which wget > /dev/null 2>&1 && wget -qO - https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup || curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s setup";
+        // Prefer in-app TerminalFragment to save memory; fallback to legacy bridge
+        run_cmd_inapp(setupCommand);
         sharedpreferences.edit().putBoolean("carsenal_setup_done", true).apply();
-        Log.i(TAG, "Setup completed");
+        Log.i(TAG, "Setup initiated");
     }
 
     // Update item
@@ -315,11 +349,11 @@ public class CARsenalFragment extends Fragment {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
         Log.i(TAG, "Running update commands");
-        String updateCommand = "echo -ne \"\\033]0;CARsenal Update\\007\" && clear;which wget > /dev/null 2>&1 && wget -qO - https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update || curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update";
-        String updateResult = run_cmd(updateCommand);
-        Log.d("UpdateResult",updateResult);
+        String updateCommand = "which wget > /dev/null 2>&1 && wget -qO - https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update || curl -s https://raw.githubusercontent.com/V0lk3n/NetHunter-CARsenal/refs/heads/main/carsenal_setup.sh | bash -s update";
+        // Prefer in-app TerminalFragment to save memory; fallback to legacy bridge
+        run_cmd_inapp(updateCommand);
         sharedpreferences.edit().putBoolean("carsenal_setup_done", true).apply();
-        Log.i(TAG, "Update completed");
+        Log.i(TAG, "Update initiated");
     }
 
     public void RunAbout() {
@@ -853,7 +887,7 @@ public class CARsenalFragment extends Fragment {
                     // ----------- vcan -----------
                     if ("vcan".equals(interface_type)) {
                         String addVcanIface = exe.RunAsChrootOutput(
-                                "sudo ip link add dev " + selected_caniface + " type vcan && echo Success || echo Failed"
+                                "sudo ip link add " + selected_caniface + " type vcan && echo Success || echo Failed"
                         );
                         if (addVcanIface.contains("FATAL:") || addVcanIface.contains("Failed")) {
                             showToast("Failed to add " + selected_caniface + "! Interface may already exist.");
@@ -968,7 +1002,6 @@ public class CARsenalFragment extends Fragment {
                     term.setText(String.format("Error: %s - %s", e.getClass().getSimpleName(), e.getMessage()));
                 }
             });
-
             return rootView;
         }
 
@@ -1049,7 +1082,6 @@ public class CARsenalFragment extends Fragment {
         private final String[] asc2logCmd = {""};
         private final String[] log2ascCmd = {""};
 
-
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
@@ -1082,7 +1114,6 @@ public class CARsenalFragment extends Fragment {
             cannelloniCmd[0] = prefs.getString("cannelloni_cmd", "");
             asc2logCmd[0] = prefs.getString("asc2log_cmd", "");
             log2ascCmd[0] = prefs.getString("log2asc_cmd", "");
-
 
             // Interfaces
             Spinner spinner = rootView.findViewById(R.id.device_interface);
@@ -1150,7 +1181,6 @@ public class CARsenalFragment extends Fragment {
                 RootFileBrowserDialog dialog = new RootFileBrowserDialog(requireContext(), outputfilepath::setText);
                 dialog.show();
             });
-
 
             // Tools
             // CanGen
@@ -1638,7 +1668,6 @@ public class CARsenalFragment extends Fragment {
 
             // Start USB-CAN button
             rootView.findViewById(R.id.start_canusb_send).setOnClickListener(v -> runCanUsb());
-
             return rootView;
         }
 
@@ -1829,7 +1858,6 @@ public class CARsenalFragment extends Fragment {
             skipverifyContainer = rootView.findViewById(R.id.skipverify_container);
             loopContainer = rootView.findViewById(R.id.loop_container);
             padContainer = rootView.findViewById(R.id.pad_container);
-            reverseContainer = rootView.findViewById(R.id.reverse_container);
             outputContainer = rootView.findViewById(R.id.output_container);
             responsesContainer = rootView.findViewById(R.id.responses_container);
             requestsContainer = rootView.findViewById(R.id.requests_container);
@@ -1839,6 +1867,7 @@ public class CARsenalFragment extends Fragment {
             fileContainer = rootView.findViewById(R.id.file_container);
             SelectedFile = rootView.findViewById(R.id.caribou_file);
             numberContainer = rootView.findViewById(R.id.number_container);
+            reverseContainer = rootView.findViewById(R.id.reverse_container);
 
             // Spinner for ECU Reset Type
             ecuResetTypeContainer = rootView.findViewById(R.id.spinner_row_ecureset);
@@ -1898,7 +1927,6 @@ public class CARsenalFragment extends Fragment {
             ArrayAdapter<String> sessionTypeAdapter = createDisabledFirstItemAdapter(sessionTypeOptions);
             sessionTypeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             sessionTypeSpinner.setAdapter(sessionTypeAdapter);
-
             sessionTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -1928,7 +1956,6 @@ public class CARsenalFragment extends Fragment {
             ArrayAdapter<String> securityLevelAdapter = createDisabledFirstItemAdapter(securityLevelOptions);
             securityLevelAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             securityLevelSpinner.setAdapter(securityLevelAdapter);
-
             securityLevelSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -1946,7 +1973,6 @@ public class CARsenalFragment extends Fragment {
                 @Override public void onNothingSelected(AdapterView<?> parent) {}
             });
 
-
             // Browse File
             ImageButton browseButton = rootView.findViewById(R.id.cariboufilebrowse);
             browseButton.setOnClickListener(v -> {
@@ -1957,7 +1983,6 @@ public class CARsenalFragment extends Fragment {
             // Interfaces
             Spinner spinner = rootView.findViewById(R.id.device_interface);
             ImageButton refreshBtn = rootView.findViewById(R.id.refreshUSB);
-
             SpinnerUtils.setupDeviceInterfaceSpinner(
                     requireContext(),
                     executorService,
@@ -1974,7 +1999,6 @@ public class CARsenalFragment extends Fragment {
             final Spinner moduleSpinner = rootView.findViewById(R.id.module_spinner);
             final Spinner subModuleSpinner = rootView.findViewById(R.id.submodule_spinner);
             final Button startButton = rootView.findViewById(R.id.start_button);
-
             final String[] modules = {"Modules", "Dump", "Fuzzer", "Listener", "module_template", "Send", "UDS", "UDS_Fuzz", "XCP"};
             final Map<String, String[]> subModulesMap = new HashMap<>();
             subModulesMap.put("Dump", new String[]{"Sub-Modules", "None"});
@@ -1996,8 +2020,8 @@ public class CARsenalFragment extends Fragment {
 
             moduleSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
                 @Override
-                public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                    String selectedModule = modules[position];
+                public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
+                    String selectedModule = modules[pos];
                     if (subModulesMap.containsKey(selectedModule)) {
                         ArrayAdapter<String> subAdapter = createDisabledFirstItemAdapter(subModulesMap.get(selectedModule));
                         subAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
@@ -2058,6 +2082,8 @@ public class CARsenalFragment extends Fragment {
                     timeoutContainer.setVisibility(View.GONE);
                     stypeContainer.setVisibility(View.GONE);
                     dtypeContainer.setVisibility(View.GONE);
+                    messageContainer.setVisibility(View.GONE);
+                    timeoutContainer.setVisibility(View.GONE);
                     durationContainer.setVisibility(View.GONE);
                     sprContainer.setVisibility(View.GONE);
                     ecuResetTypeContainer.setVisibility(View.GONE);
@@ -2249,7 +2275,6 @@ public class CARsenalFragment extends Fragment {
                 @Override public void onNothingSelected(AdapterView<?> parent) {}
             });
 
-
             startButton.setOnClickListener(v -> {
                 String module = (String) moduleSpinner.getSelectedItem();
                 String subModule = (String) subModuleSpinner.getSelectedItem();
@@ -2348,7 +2373,6 @@ public class CARsenalFragment extends Fragment {
                 if (selected.contains("=")) {
                     return " " + selected.split("=")[0]; // take part before '=' → "1"
                 }
-
                 return " " + selected; // fallback
             }
             return "";
@@ -2439,7 +2463,6 @@ public class CARsenalFragment extends Fragment {
             String indexValue = getVisibleParam(indexContainer.getEditText(), " -index ");
             String arbIDValue = getVisibleParam(arbIDContainer.getEditText(), " ");
             String dataValue = getVisibleParam(dataContainer.getEditText(), " ");
-
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " fuzzer ";
 
             switch (fuzzer_module) {
@@ -2493,7 +2516,6 @@ public class CARsenalFragment extends Fragment {
             }
 
             String idValue = getVisibleParam(idContainer.getEditText(), " -id ");
-
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " module_template";
 
             if (moduleTemplate_module.equals("None")) {
@@ -2538,7 +2560,6 @@ public class CARsenalFragment extends Fragment {
                 }
             }
             String delayValue = getVisibleParam(delayContainer.getEditText(), " --delay ");
-
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " send ";
 
             switch (send_module) {
@@ -2710,7 +2731,6 @@ public class CARsenalFragment extends Fragment {
             String blacklistValue = getVisibleParam(blacklistContainer.getEditText(), " -blacklist ");
             String autoBlacklistValue = getVisibleParam(autoBlacklistContainer.getEditText(), " -autoblacklist ");
 
-
             String cmdBase = "printf \"[default]\ninterface = socketcan\nchannel = " + selected_caniface + "\" > $HOME/.canrc && caringcaribou -i " + selected_caniface + " xcp ";
 
             switch (xcp_module) {
@@ -2797,7 +2817,6 @@ public class CARsenalFragment extends Fragment {
                 browser.show();
             });
 
-
             WebView icsimView = ICSIMWebViewHolder.getICSIMWebView(requireContext());
             WebView controlsView = ICSIMWebViewHolder.getControlsWebView(requireContext());
             WebView udsimView = ICSIMWebViewHolder.getUDSIMWebView(requireContext());
@@ -2869,6 +2888,20 @@ public class CARsenalFragment extends Fragment {
             return rootView;
         }
 
+        @Override
+        public void onDestroyView() {
+            super.onDestroyView();
+            // Ensure floating overlay is removed and WebViews are cleaned up
+            try {
+                if (floatingContainer != null) {
+                    WindowManager wm = (WindowManager) requireContext().getSystemService(Context.WINDOW_SERVICE);
+                    wm.removeViewImmediate(floatingContainer);
+                    floatingContainer = null;
+                }
+            } catch (Exception ignored) {}
+            ICSIMWebViewHolder.release();
+        }
+
         private void runICSIM(WebView icsimView, WebView controlsView, Spinner levelList, WebView udsimView) {
             if (!selected_caniface.isEmpty() && !selected_caniface.equals("Interfaces")) {
 
@@ -2886,10 +2919,10 @@ public class CARsenalFragment extends Fragment {
                     combinedCmd += " -c \"" + udsimConfig + "\"";
                 }
                 combinedCmd += "'";
-                run_cmd(combinedCmd);
+                run_cmd_inapp(combinedCmd);
                 showToast("Running ICSim and UDSim...");
 
-                new Handler().postDelayed(() -> {
+                new Handler(Looper.getMainLooper()).postDelayed(() -> {
                     icsimView.loadUrl("http://localhost:6080/vnc.html?autoconnect=true&resize=scale&view_only=true");
                     controlsView.loadUrl("http://localhost:6081/vnc.html?autoconnect=true&resize=scale");
                     udsimView.loadUrl("http://localhost:6082/vnc.html?autoconnect=true&resize=scale");
@@ -2901,7 +2934,7 @@ public class CARsenalFragment extends Fragment {
         }
 
         private void stopICSIM(WebView icsimView, WebView controlsView, WebView udsimView) {
-            run_cmd("su -c 'sh " + ICSIM_SCRIPT_PATH + " stop;sh " + UDSIM_SCRIPT_PATH + " stop'");
+            run_cmd_inapp("su -c 'sh " + ICSIM_SCRIPT_PATH + " stop;sh " + UDSIM_SCRIPT_PATH + " stop'");
             showToast("Stopping ICSim and UDSim...");
             icsimView.setBackgroundColor(Color.BLACK);
             icsimView.loadUrl("about:blank");
@@ -3143,32 +3176,63 @@ public class CARsenalFragment extends Fragment {
         }
 
         public static class ICSIMWebViewHolder {
-            private static WebView icsimWebView;
-            private static WebView controlsWebView;
-            private static WebView udsimWebView;
+            private static WeakReference<WebView> icsimWebViewRef;
+            private static WeakReference<WebView> controlsWebViewRef;
+            private static WeakReference<WebView> udsimWebViewRef;
 
             public static WebView getICSIMWebView(Context context) {
-                if (icsimWebView == null) {
-                    icsimWebView = new WebView(context.getApplicationContext());
-                    setupWebView(icsimWebView);
+                WebView w = icsimWebViewRef != null ? icsimWebViewRef.get() : null;
+                if (w == null) {
+                    w = new WebView(context.getApplicationContext());
+                    setupWebView(w);
+                    icsimWebViewRef = new WeakReference<>(w);
                 }
-                return icsimWebView;
+                return w;
             }
 
             public static WebView getControlsWebView(Context context) {
-                if (controlsWebView == null) {
-                    controlsWebView = new WebView(context.getApplicationContext());
-                    setupWebView(controlsWebView);
+                WebView w = controlsWebViewRef != null ? controlsWebViewRef.get() : null;
+                if (w == null) {
+                    w = new WebView(context.getApplicationContext());
+                    setupWebView(w);
+                    controlsWebViewRef = new WeakReference<>(w);
                 }
-                return controlsWebView;
+                return w;
             }
 
             public static WebView getUDSIMWebView(Context context) {
-                if (udsimWebView == null) {
-                    udsimWebView = new WebView(context.getApplicationContext());
-                    setupWebView(udsimWebView);
+                WebView w = udsimWebViewRef != null ? udsimWebViewRef.get() : null;
+                if (w == null) {
+                    w = new WebView(context.getApplicationContext());
+                    setupWebView(w);
+                    udsimWebViewRef = new WeakReference<>(w);
                 }
-                return udsimWebView;
+                return w;
+            }
+
+            public static void release() {
+                destroyRef(icsimWebViewRef);
+                destroyRef(controlsWebViewRef);
+                destroyRef(udsimWebViewRef);
+                icsimWebViewRef = null;
+                controlsWebViewRef = null;
+                udsimWebViewRef = null;
+            }
+
+            private static void destroyRef(WeakReference<WebView> ref) {
+                if (ref != null) {
+                    WebView w = ref.get();
+                    if (w != null) {
+                        try {
+                            w.loadUrl("about:blank");
+                            w.stopLoading();
+                            w.clearHistory();
+                            w.removeAllViews();
+                            w.destroy();
+                        } catch (Exception ignored) {}
+                    }
+                    ref.clear();
+                }
             }
 
             @SuppressLint("SetJavaScriptEnabled")
@@ -3305,16 +3369,14 @@ public class CARsenalFragment extends Fragment {
                 }
 
                 String moduleNameKey = selected_module.replace(".rb", "").toLowerCase();
-                String resourceKey = "module_info_" + moduleNameKey;
+                Integer resIdObj = MODULE_INFO_STRING_IDS.get(moduleNameKey);
 
-                int resId = getResources().getIdentifier(resourceKey, "string", requireContext().getPackageName());
-
-                if (resId == 0) {
+                if (resIdObj == null || resIdObj == 0) {
                     showToast("No info available for this module");
                     return;
                 }
 
-                String moduleInfo = getString(resId);
+                String moduleInfo = getString(resIdObj);
 
                 // Build popup dialog
                 new Handler(Looper.getMainLooper()).post(() -> {
@@ -3342,18 +3404,16 @@ public class CARsenalFragment extends Fragment {
 
                 infoText.setVisibility(View.GONE);
 
-                int optionsStringId = getResources().getIdentifier(
-                        "module_set_" + selected_module.replace(".rb", "").toLowerCase().trim(),
-                        "string",
-                        requireContext().getPackageName());
+                String moduleKey = selected_module.replace(".rb", "").toLowerCase().trim();
+                Integer optionsStringIdObj = MODULE_SET_STRING_IDS.get(moduleKey);
 
-                if (optionsStringId == 0) {
+                if (optionsStringIdObj == null || optionsStringIdObj == 0) {
                     infoText.setVisibility(View.VISIBLE);
                     infoText.setText(R.string.can_no_options_for_module);
                     return;
                 }
 
-                String optionsText = getString(optionsStringId);
+                String optionsText = getString(optionsStringIdObj);
                 String[] optionLines = optionsText.split("\n");
 
                 LinearLayout inputLayout = new LinearLayout(requireContext());
@@ -3369,7 +3429,7 @@ public class CARsenalFragment extends Fragment {
                     if (!line.contains("|")) {
                         TextView header = new TextView(requireContext());
                         header.setText(line);
-                        header.setTextAppearance(requireContext(), android.R.style.TextAppearance_Medium);
+                        TextViewCompat.setTextAppearance(header, android.R.style.TextAppearance_Medium);
                         header.setTypeface(null, Typeface.BOLD);
                         header.setPadding(0, 30, 0, 30);
 
@@ -3407,12 +3467,22 @@ public class CARsenalFragment extends Fragment {
                 optionsContainer.setTag(userInputs);
             });
 
+            boolean inappterm;
+            inappterm = sharedpreferences.getBoolean("inapp_terminal_enabled", false);
             Button msfBtn = rootView.findViewById(R.id.msfconsole_start);
             msfBtn.setOnClickListener(v -> executorService.submit(() -> {
-                run_cmd("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n); "
-                        + "if [ -n \"$msfsession\" ]; then "
-                        + "screen -wipe; screen -d \"$msfsession\"; screen -r \"$msfsession\"; "
-                        + "else screen -wipe; screen -S msf -m msfconsole;exit; fi");
+                if (inappterm) {
+                    // in-app terminal
+                    run_cmd_inapp("msfconsole -q");
+                } else {
+                    // use screen if inapp disabled
+                    String externalCmd =
+                            "msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n); "
+                                    + "if [ -n \"$msfsession\" ]; then "
+                                    + "screen -wipe; screen -d \"$msfsession\"; screen -r \"$msfsession\"; "
+                                    + "else screen -wipe; screen -S msf -m msfconsole; exit; fi";
+                    run_cmd(externalCmd);
+                }
             }));
 
             Button runBtn = rootView.findViewById(R.id.run_module);
@@ -3430,20 +3500,33 @@ public class CARsenalFragment extends Fragment {
                     return;
                 }
 
-                StringBuilder msfCmd = new StringBuilder();
+                // Build a list of commands (one command per entry)
+                List<String> commands = new ArrayList<>();
                 String moduleName = selected_module.replace(".rb", "");
+                // outside app term handler
+                StringBuilder msfCmd = new StringBuilder();
+
                 if (moduleName.equals("connect")) {
+                    // outside term
                     msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use auxiliary/client/hwbridge/")
                             .append(moduleName)
                             .append("`echo -ne '\\015'`");
+                    // inapp term
+                    commands.add("use auxiliary/client/hwbridge/" + moduleName);
                 } else if (moduleName.equals("local_hwbridge")) {
+                    // outside term
                     msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use auxiliary/server/")
                             .append(moduleName)
                             .append("`echo -ne '\\015'`");
+                    // inapp term
+                    commands.add("use auxiliary/server/" + moduleName);
                 } else {
+                    // outside app term append run append module
                     msfCmd.append("msfsession=$(screen -ls | awk '/^[[:space:]]*[0-9]+\\.msf/ {print $1}'\n);screen -S $msfsession -X stuff \"use post/hardware/automotive/")
                             .append(moduleName)
                             .append("`echo -ne '\\015'`");
+                    // inapp term
+                    commands.add("use post/hardware/automotive/" + moduleName);
                 }
 
                 for (Map.Entry<String, EditText> entry : userInputs.entrySet()) {
@@ -3451,15 +3534,35 @@ public class CARsenalFragment extends Fragment {
                     String value = entry.getValue().getText().toString().trim();
 
                     if (!value.isEmpty()) {
+                        // sanitize single quotes so the value can be safely single-quoted on the shell
                         String sanitized = value.replace("'", "'\"'\"'");
+                        // outside term
                         msfCmd.append("set ").append(key.toUpperCase()).append(" '").append(sanitized).append("'`echo -ne '\\015'`");
+                        // inapp term
+                        commands.add("set " + key.toUpperCase() + " '" + sanitized + "'");
                     }
                 }
 
+                // final run command
+                // outside term
                 msfCmd.append("run\"`echo -ne '\\015'`;screen -d -r $msfsession;exit");
+                // inapp term
+                commands.add("run");
 
+                // execute commands one-by-one on the background executor
                 executorService.submit(() -> {
-                    run_cmd(msfCmd.toString());
+                    if (inappterm) {
+                        // in-app terminal
+                        for (String cmd : commands) {
+                            run_cmd_inapp(cmd);
+                            try {
+                                Thread.sleep(50);
+                            } catch (InterruptedException ignored) { }
+                        }
+                    } else {
+                        // use screen if inapp disabled
+                        run_cmd(msfCmd.toString());
+                    }
                 });
             });
 
@@ -3474,7 +3577,6 @@ public class CARsenalFragment extends Fragment {
 
     // Interfaces Spinner (CAN-USB usb device detection only) + Refresh button (ICSim WebView Include)
     public static class SpinnerUtils {
-
         public interface SelectionCallback {
             void onInterfaceSelected(String iface);
         }
@@ -3493,7 +3595,7 @@ public class CARsenalFragment extends Fragment {
             Runnable loadInterfaces = () -> {
                 String command = onlyUsbDevices
                         ? "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'"
-                        : "ifconfig | awk '/^[a-zA-Z0-9]/ {print $1}' | sed 's/://' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
+                        : "ip -o link show | awk -F': ' '{print $2}' | grep -E '^(can|vcan|slcan)[0-9]+$';" +
                         "ls /dev | grep -E '^(ttyUSB|rfcomm|ttyACM|ttyS)[0-9]+$' | sed 's|^|/dev/|'";
 
                 String result = exe.RunAsChrootOutput(command);
@@ -3623,7 +3725,6 @@ public class CARsenalFragment extends Fragment {
 
     // Custom Browse Button : Chroot
     public static class RootFileBrowserDialog {
-
         private final Context context;
         private final ShellExecuter exe = new ShellExecuter();
         private final OnFileSelectedListener listener;
@@ -3720,11 +3821,42 @@ public class CARsenalFragment extends Fragment {
     ////
     // Bridge side functions
     ////
-
     public String run_cmd(String cmd) {
         @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
         activity.startActivity(intent);
         intent.putExtra("output", cmd);
         return "Command executed: " + cmd;
+    }
+
+    // Helper: open TerminalFragment with an initial command; if not possible, fallback to legacy bridge
+    public void run_cmd_inapp(@NonNull String cmd) {
+        Activity act = getActivity();
+        Boolean inappterm;
+        inappterm = sharedpreferences.getBoolean("inapp_terminal_enabled", false);
+        if (inappterm) {
+            try {
+                if (act instanceof androidx.appcompat.app.AppCompatActivity) {
+                    androidx.appcompat.app.AppCompatActivity app = (androidx.appcompat.app.AppCompatActivity) act;
+                    TerminalFragment tf = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
+                    app.getSupportFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.container, tf)
+                            .addToBackStack(null)
+                            .commitAllowingStateLoss();
+                    return;
+                }
+            } catch (Throwable t) {
+                Log.d(TAG, "openTerminalWithCommand fallback due to: " + t.getMessage());
+            }
+        } else {
+            // Fallback to previous behavior using NhTerm bridge
+            run_cmd(cmd);
+        }
+
+    }
+
+    public boolean isInAppTerminalAvailable() {
+        Activity act = getActivity();
+        return act instanceof androidx.appcompat.app.AppCompatActivity;
     }
 }

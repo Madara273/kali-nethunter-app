@@ -16,20 +16,12 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.Locale;
-import java.util.Map;
 
 public class ShellExecuter {
-    private final SimpleDateFormat timeStamp = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
+    private final SimpleDateFormat timeStamp = new SimpleDateFormat("HH:mm", Locale.getDefault());
     private final static String TAG = "ShellExecuter";
-
-    public void setCustomEnv(Map<String, String> env) {
-        Map<String, String> customEnv = new HashMap<>(env);
-    }
-
-    public ShellExecuter() {
-    }
+    public ShellExecuter() { }
 
     public static Runtime cmd(String s) {
         Runtime runtime = Runtime.getRuntime();
@@ -54,7 +46,7 @@ public class ShellExecuter {
             try {
                 p.waitFor();
             } catch (InterruptedException e) {
-                Log.e(TAG, "Process was interrupted", e);
+                Log.e(TAG, "Process was interrupted while executing: " + command, e);
                 Thread.currentThread().interrupt();
             }
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()))) {
@@ -82,7 +74,7 @@ public class ShellExecuter {
             try {
                 process.waitFor();
             } catch (InterruptedException e) {
-                Log.e(TAG, "Process was interrupted", e);
+                Log.e(TAG, "Process was interrupted while executing root command", e);
                 Thread.currentThread().interrupt();
             }
         } catch (IOException e) {
@@ -115,7 +107,7 @@ public class ShellExecuter {
                 try (BufferedReader br = new BufferedReader(new InputStreamReader(stderr))) {
                     String line;
                     if ((line = br.readLine()) != null) {
-                        Log.e("Shell Error:", line);
+                        Log.e(TAG, "Shell Error: " + line);
                         throw new RuntimeException(line);
                     }
                 }
@@ -123,13 +115,13 @@ public class ShellExecuter {
             try {
                 process.waitFor();
             } catch (InterruptedException e) {
-                Log.e(TAG, "Process was interrupted", e);
+                Log.e(TAG, "Process was interrupted while executing root command", e);
                 Thread.currentThread().interrupt();
             }
             process.destroy();
             return output.toString();
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new RuntimeException("Unexpected error while executing root command", ex);
         }
     }
 
@@ -151,21 +143,21 @@ public class ShellExecuter {
             while ((line = br.readLine()) != null) {
                 output.append(line).append('\n');
             }
-            /* remove the last \n */
             if (output.length() > 0)
                 output = new StringBuilder(output.substring(0, output.length() - 1));
             br.close();
             br = new BufferedReader(new InputStreamReader(stderr));
             while ((line = br.readLine()) != null) {
-                Log.e("Shell Error:", line);
+                Log.e(TAG, "Shell Error: " + line);
             }
             br.close();
             process.waitFor();
             process.destroy();
         } catch (IOException e) {
-            Log.e(TAG, "IOException occurred while executing command", e);
+            Log.e(TAG, "IOException occurred while executing command: " + command, e);
         } catch (InterruptedException ex) {
-            Log.d(TAG, "An InterruptedException was caught: " + ex.getMessage());
+            Log.e(TAG, "Process was interrupted while executing command: " + command, ex);
+            Thread.currentThread().interrupt();
         }
         return output.toString();
     }
@@ -329,7 +321,7 @@ public class ShellExecuter {
                 output.append(line).append("\n");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error reading file: " + _path, e);
         }
         return output.toString();
     }
@@ -359,7 +351,7 @@ public class ShellExecuter {
                 output.append(line).append("\n");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Log.e(TAG, "Error reading file: " + duckyOutputFile, e);
         }
         return output.toString();
     }
@@ -416,10 +408,11 @@ public class ShellExecuter {
             try {
                 process.waitFor();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Log.e(TAG, "Process was interrupted", e);
+                Thread.currentThread().interrupt();
             }
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            Log.e(TAG, "Error executing root commands array", e);
         }
     }
 
@@ -486,5 +479,79 @@ public class ShellExecuter {
         // No resources to close in this implementation
         // If you had any resources (like sockets or files), you would close them here
         Log.d(TAG, "ShellExecuter closed");
+    }
+
+    // Run in chroot and capture stdout, stderr and real exit code from the chroot shell
+    public static class ShellResult {
+        public final int exitCode;
+        public final String stdout;
+        public final String stderr;
+        public ShellResult(int exitCode, String stdout, String stderr) {
+            this.exitCode = exitCode;
+            this.stdout = stdout == null ? "" : stdout;
+            this.stderr = stderr == null ? "" : stderr;
+        }
+    }
+
+    public ShellResult RunAsChrootWithResult(String command) {
+        final String MARKER = "__EC:";
+        StringBuilder out = new StringBuilder();
+        StringBuilder err = new StringBuilder();
+        int code = -1;
+        try {
+            Process process = Runtime.getRuntime().exec("su -mm");
+            OutputStream stdin = process.getOutputStream();
+            InputStream stderr = process.getErrorStream();
+            InputStream stdout = process.getInputStream();
+
+            // Enter chroot and start an interactive root shell
+            stdin.write((NhPaths.BUSYBOX + " chroot " + NhPaths.CHROOT_PATH() + " " + NhPaths.CHROOT_SUDO + " -E PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:$PATH su" + '\n').getBytes());
+            // Run the actual command
+            stdin.write((command + '\n').getBytes());
+            // Print the command's exit code from inside chroot shell
+            stdin.write(("echo " + MARKER + "$?\n").getBytes());
+            // Exit chroot shell and su
+            stdin.write(("exit\n").getBytes());
+            stdin.flush();
+            stdin.close();
+
+            // Read stdout
+            BufferedReader brOut = new BufferedReader(new InputStreamReader(stdout));
+            String line;
+            while ((line = brOut.readLine()) != null) {
+                if (line.startsWith(MARKER)) {
+                    try {
+                        code = Integer.parseInt(line.substring(MARKER.length()).trim());
+                    } catch (NumberFormatException ignored) {
+                        code = -1;
+                    }
+                } else {
+                    out.append(line).append('\n');
+                }
+            }
+            if (out.length() > 0 && out.charAt(out.length() - 1) == '\n') {
+                out.setLength(out.length() - 1);
+            }
+            brOut.close();
+
+            // Read stderr
+            BufferedReader brErr = new BufferedReader(new InputStreamReader(stderr));
+            while ((line = brErr.readLine()) != null) {
+                err.append(line).append('\n');
+            }
+            if (err.length() > 0 && err.charAt(err.length() - 1) == '\n') {
+                err.setLength(err.length() - 1);
+            }
+            brErr.close();
+
+            process.waitFor();
+            process.destroy();
+        } catch (IOException e) {
+            Log.e(TAG, "IOException in RunAsChrootWithResult for command: " + command, e);
+        } catch (InterruptedException e) {
+            Log.e(TAG, "Interrupted while waiting for chroot command to finish", e);
+            Thread.currentThread().interrupt();
+        }
+        return new ShellResult(code, out.toString(), err.toString());
     }
 }

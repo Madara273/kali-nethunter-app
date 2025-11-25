@@ -3,6 +3,7 @@ package com.offsec.nethunter.audio;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.media.AudioAttributes;
 import android.os.Handler;
 import android.os.PowerManager.WakeLock;
 import androidx.annotation.MainThread;
@@ -22,6 +23,7 @@ import java.net.UnknownHostException;
 import com.offsec.nethunter.exception.AudioStoppedException;
 
 public class AudioPlaybackWorker implements Runnable {
+    private static final String TAG = "AudioPlaybackWorker";
     /** How often we try to receive per second. */
     private static final int LOOPS_PER_SECOND = 8;
     private final String host;
@@ -76,6 +78,10 @@ public class AudioPlaybackWorker implements Runnable {
     public void run() {
         try {
             setup();
+            if (sock == null || !sock.isConnected()) {
+                stopWithError();
+                return;
+            }
 
             boolean didBuffer = false;
             boolean started = false;
@@ -111,13 +117,19 @@ public class AudioPlaybackWorker implements Runnable {
             if (stopped && e instanceof SocketException) {
                 handler.post(() -> listener.onPlaybackStopped(this));
             } else {
-                Log.e(AudioPlaybackWorker.class.getSimpleName(), "stopWithError: " + e.getMessage(), e);
+                //Log.e(AudioPlaybackWorker.class.getSimpleName(), "stopWithError: " + e.getMessage(), e);
                 error = e;
                 handler.post(() -> listener.onPlaybackError(this, e));
             }
         } finally {
             cleanup();
         }
+    }
+
+    private void stopWithError() {
+        Log.e(TAG, "stopWithError: " + "Socket not connected");
+        error = new Exception("Socket not connected");
+        handler.post(() -> listener.onPlaybackError(this, error));
     }
 
     private void setup() throws IOException {
@@ -136,13 +148,30 @@ public class AudioPlaybackWorker implements Runnable {
 
         connect();
 
+        if (sock == null || !sock.isConnected()) {
+            throw new ConnectException("Socket is not connected");
+        }
         audioData = sock.getInputStream();
 
-        // Always using minimum buffer size for minimum lag.
-        audioTrack = new AudioTrack(AudioManager.STREAM_MUSIC,
-                sampleRate, AudioFormat.CHANNEL_OUT_STEREO,
-                AudioFormat.ENCODING_PCM_16BIT, minBufferSize,
-                AudioTrack.MODE_STREAM);
+        // Always using minimum buffer size for minimum lag. Min SDK is 21, so use attributes/format constructor for broad compatibility
+        AudioAttributes attrs = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build();
+        AudioFormat format = new AudioFormat.Builder()
+                .setSampleRate(sampleRate)
+                .setChannelMask(AudioFormat.CHANNEL_OUT_STEREO)
+                .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
+                .build();
+        // Use the constructor available since API 21 instead of the Builder that trips minSdk checks on 21-22
+        audioTrack = new AudioTrack(
+                attrs,
+                format,
+                minBufferSize,
+                AudioTrack.MODE_STREAM,
+                AudioManager.AUDIO_SESSION_ID_GENERATE
+        );
+
         if (audioTrack.getState() != AudioTrack.STATE_INITIALIZED) {
             throw new IllegalStateException(
                     "Could not initialize AudioTrack."
@@ -267,7 +296,6 @@ public class AudioPlaybackWorker implements Runnable {
      * @throws AudioStoppedException If {@link #stopped} was set.
      */
     private void connect() throws IOException {
-
         // We may hang here to resolve a host name. No way to interrupt this so far.
         InetAddress[] addresses = InetAddress.getAllByName(host);
         if (addresses.length == 0) {
@@ -285,13 +313,7 @@ public class AudioPlaybackWorker implements Runnable {
                     sock = new Socket();
                 }
                 sock.setPerformancePreferences(0, 1, 0);
-                try {
-                    sock.connect(new InetSocketAddress(address, port));
-                } catch (ConnectException e) {
-                    Log.e(AudioPlaybackWorker.class.getSimpleName(), "Connection failed: " + e.getMessage(), e);
-                    handler.post(() -> listener.onPlaybackError(this, e));
-                    return;
-                }
+                sock.connect(new InetSocketAddress(address, port));
 
                 // We are now connected.
                 return;

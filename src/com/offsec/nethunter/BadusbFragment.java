@@ -25,7 +25,10 @@ import java.util.regex.Pattern;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.view.MenuHost;
+import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
+import androidx.lifecycle.Lifecycle;
 
 public class BadusbFragment extends Fragment {
     private String sourcePath;
@@ -58,7 +61,6 @@ public class BadusbFragment extends Fragment {
         loadOptions(rootView);
         final Button button = rootView.findViewById(R.id.updateOptions);
         button.setOnClickListener(v -> updateOptions());
-        setHasOptionsMenu(true);
         return rootView;
     }
 
@@ -89,32 +91,39 @@ public class BadusbFragment extends Fragment {
     }
 
     @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.badusb, menu);
-        // WearOS optimisation
-        final MenuItem sourceItem = menu.findItem(R.id.source_button);
-        boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
-        if (iswatch) {
-            sourceItem.setVisible(false);
-        }
-    }
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        MenuHost menuHost = requireActivity();
+        menuHost.addMenuProvider(new MenuProvider() {
+            @Override
+            public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
+                menuInflater.inflate(R.menu.badusb, menu);
+                MenuItem sourceItem = menu.findItem(R.id.source_button);
+                boolean iswatch = requireActivity().getPackageManager()
+                        .hasSystemFeature(PackageManager.FEATURE_WATCH);
+                if (iswatch) {
+                    sourceItem.setVisible(false);
+                }
+            }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-        if (id == R.id.start_service) {
-            start();
-            return true;
-        } else if (id == R.id.stop_service) {
-            stop();
-            return true;
-        } else if (id == R.id.source_button) {
-            Intent i = new Intent(activity, EditSourceActivity.class);
-            i.putExtra("path", sourcePath);
-            startActivity(i);
-            return true;
-        }
-        return super.onOptionsItemSelected(item);
+            @Override
+            public boolean onMenuItemSelected(@NonNull MenuItem menuItem) {
+                int id = menuItem.getItemId();
+                if (id == R.id.start_service) {
+                    start();
+                    return true;
+                } else if (id == R.id.stop_service) {
+                    stop();
+                    return true;
+                } else if (id == R.id.source_button) {
+                    Intent i = new Intent(activity, EditSourceActivity.class);
+                    i.putExtra("path", sourcePath);
+                    startActivity(i);
+                    return true;
+                }
+                return false;
+            }
+        }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
     }
 
     private void updateOptions() {

@@ -1,0 +1,41 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/action_search"
+        android:icon="@drawable/ic_search_black_24dp"
+        android:title="Search"
+        app:actionViewClass="androidx.appcompat.widget.SearchView"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_theme"
+        android:icon="@drawable/ic_palette"
+        android:title="Theme"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_open_setup"
+        android:icon="@drawable/ic_system_update_black_36dp"
+        android:title="@string/terminal_setup_setup"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_initial_command"
+        android:icon="@drawable/ic_action_keyboard"
+        android:title="@string/terminal_initial_command"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_save_output"
+        android:title="Save output"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_print_dmesg"
+        android:title="Print dmesg"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_restart"
+        android:title="Restart Terminal"
+        app:showAsAction="never" />
+</menu>
