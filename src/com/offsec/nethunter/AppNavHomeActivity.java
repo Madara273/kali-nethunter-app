@@ -462,6 +462,9 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         inappterm = prefs.getBoolean("inapp_terminal_enabled", false);
         if (!inappterm) hideMenuItemIfExists(2);
 
+        // hide kernel tab until fixed
+        hideMenuItemIfExists(4);
+
         String model = Build.HARDWARE;
         Boolean snowfall;
         if (iswatch) {
