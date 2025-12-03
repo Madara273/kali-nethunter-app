@@ -423,6 +423,14 @@ public class BTFragment extends Fragment {
                 else SetupDialog();
             }
 
+            // rfcomm iface
+            File bt_rfcomm = new File("/dev/bluetooth/rfcomm/0");
+            if (!bt_rfcomm.exists()) {
+                exe.RunAsRoot("mkdir -p /dev/bluetooth/rfcomm; " +
+                        "mknod -m 666 /dev/bluetooth/rfcomm/0 c 216 0; " +
+                        "mknod --mode=666 /dev/rfcomm0 c 216 0");
+            }
+
             final Spinner ifaces = rootView.findViewById(R.id.hci_interface);
 
             // Bluebinder or bt_smd
