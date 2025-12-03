@@ -400,11 +400,11 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
 
     private void check_gpsd() {
         ShellExecuter exe = new ShellExecuter();
-        String command = "pgrep gpsd";
+        String command = "ps -ef | grep gpsd";
         Log.d(TAG, "command = " + command);
         String response = exe.RunAsRootOutput(command);
         Log.d(TAG, "response = '" + response + "'");
-        setCheckedQuietly(switch_gpsd, !response.isEmpty());
+        setCheckedQuietly(switch_gpsd, response.contains("10110"));
     }
 
     @Override
