@@ -59,8 +59,8 @@ android {
         minSdk 21
         //noinspection OldTargetApi,ExpiredTargetSdkVersion
         targetSdk 34
-        //version=YYYYMMVVRR (Either "VV" for stable version OR "RR" for pre-release candidate (e.g. 0001 for rc1))
         //noinspection HighAppVersionCode
+        //version=YYYYMMVVRR (Either "VV" for stable version OR "RR" for pre-release candidate (e.g. 0001 for rc1))
         versionCode 2025110200   // 2025-11(Nov).02
         versionName '2025.4'
         multiDexEnabled true
