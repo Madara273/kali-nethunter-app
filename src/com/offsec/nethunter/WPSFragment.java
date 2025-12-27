@@ -256,12 +256,6 @@ public class WPSFragment extends Fragment {
         arrayList.add("Scanning..");
         WPSList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, arrayList));
         WPSList.setVisibility(View.VISIBLE);
-        WPSList.postDelayed(() -> {
-            arrayList.clear();
-            arrayList.add("Scanning...");
-            WPSList.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, arrayList));
-        }, 1500);
-
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
             // Use the iw binary bundled with the app to scan and extract only WPS-enabled networks as "BSSID SSID"
