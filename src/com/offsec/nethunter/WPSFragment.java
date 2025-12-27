@@ -88,7 +88,8 @@ public class WPSFragment extends Fragment {
 
         // Enabling wifi in case it's down
         if (iswatch) {
-            exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting off; ifconfig wlan0 up"});
+            //firmware may not even be loaded, so let's enable wearos wifi first, then disable, finally up interface
+            exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting on; ifconfig wlan0 up; settings put system clockwork_wifi_setting off; ifconfig wlan0 up"});
         } else exe.RunAsRoot(new String[]{"svc wifi enable"});
 
         // Interface spinner setup
