@@ -28,6 +28,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
 
@@ -58,6 +59,7 @@ public class SearchSploitFragment extends Fragment {
     private TextView numex;
     private AlertDialog adi;
     private Boolean isLoaded = false;
+    private Boolean inappterm;
     private ListView searchSploitListView;
     private List<SearchSploit> full_exploitList;
     private SearchSploitSQL database;
@@ -186,6 +188,7 @@ public class SearchSploitFragment extends Fragment {
         if (!isAdded()) return;
         SharedPreferences sp = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         boolean firstRun = sp.getBoolean(PREF_FIRST_RUN_KEY, true);
+        String cmd = "apt update && apt install exploitdb python3-six -y";
         if (!firstRun) return;
 
         sp.edit().putBoolean(PREF_FIRST_RUN_KEY, false).apply();
@@ -194,7 +197,7 @@ public class SearchSploitFragment extends Fragment {
                 .setTitle("SearchSploit setup")
                 .setMessage("SearchSploit needs two dependencies to work, install now?\nThis will run:\napt update && apt install exploitdb python3-six")
                 .setNegativeButton("Cancel", (d,i)-> d.dismiss())
-                .setPositiveButton("Setup", (d,i)-> openTerminalWithCommand("apt update && apt install exploitdb python3-six -y"))
+                .setPositiveButton("Setup", (d,i)-> check_which_cmd(cmd))
                 .setCancelable(false)
                 .show();
     }
@@ -205,27 +208,45 @@ public class SearchSploitFragment extends Fragment {
                 .setTitle("SearchSploit setup")
                 .setMessage("Install required packages in chroot now?\nThis will run:\napt update && apt install exploitdb python3-six")
                 .setNegativeButton("Cancel", (d,i)-> d.dismiss())
-                .setPositiveButton("Setup", (d,i)-> openTerminalWithCommand("apt update && apt install exploitdb python3-six -y"))
+                .setPositiveButton("Setup", (d,i)-> run_cmd_inapp("apt update && apt install exploitdb python3-six -y"))
                 .setCancelable(false)
                 .show();
     }
 
-    // Helper to route commands through TerminalFragment (saves memory vs external NhTerm)
-    private void openTerminalWithCommand(String cmd) {
-        if (!isAdded()) return;
-        FragmentManager fm = requireActivity().getSupportFragmentManager();
-        Fragment term = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
-        if (fm.isStateSaved()) {
-            fm.beginTransaction()
-                    .replace(R.id.container, term)
-                    .addToBackStack(null)
-                    .commitAllowingStateLoss();
-        } else {
-            fm.beginTransaction()
-                    .replace(R.id.container, term)
-                    .addToBackStack(null)
-                    .commit();
+    ////
+    // Bridge side functions
+    ////
+
+    public void check_which_cmd(String cmd) {
+        SharedPreferences sp = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        inappterm = sp.getBoolean("inapp_terminal_enabled", false);
+        if (inappterm) run_cmd_inapp(cmd);
+        else run_cmd(cmd);
+    }
+
+    public void run_cmd(String cmd) {
+        Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+        activity.startActivity(intent);
+    }
+
+    // Helper: open TerminalFragment with an initial command; if not possible, fallback to legacy bridge
+    private void run_cmd_inapp(@NonNull String cmd) {
+        Activity act = getActivity();
+        try {
+            if (act instanceof androidx.appcompat.app.AppCompatActivity) {
+                androidx.appcompat.app.AppCompatActivity app = (androidx.appcompat.app.AppCompatActivity) act;
+                TerminalFragment tf = TerminalFragment.newInstanceWithCommand(R.id.terminal_item, cmd);
+                app.getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.container, tf)
+                        .addToBackStack(null)
+                        .commitAllowingStateLoss();
+                return;
+            }
+        } catch (Throwable t) {
+            // Ignore and fallback
         }
+        run_cmd(cmd);
     }
 
     private static void hideSoftKeyboard(final View caller) {
