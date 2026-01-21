@@ -256,12 +256,12 @@ public class DuckHunterFragment extends Fragment {
             boolean ok = exe.RunAsRootReturnValue("sh " + duckyOutputFile) == 0;
             mainHandler.post(() -> {
                 if (!ok) {
-                    if (new File("/config/usb_gadget/g1").exists()) {
-                        NhPaths.showMessage_long(activity, "HID interfaces are not enabled! Please enable in USB Arsenal.");
-                    } else if (new File("/dev/hidg0").exists()) {
-                        mainHandler.post(() ->
-                                NhPaths.showMessage_long(activity, "Fixing HID interface permissions.."));
-                        exe.RunAsRoot(new String[]{"chmod 666 /dev/hidg*"});
+                    if (new File("/dev/hidg0").exists()) {
+                        mainHandler.post(() -> NhPaths.showMessage_long(activity, "Checking HID interface permissions.."));
+                        if (!exe.RunAsRootOutput("stat -L -c \"%a %G %U\" /dev/hidg0 | sed 's/ .*//'").equals("666")){
+                            mainHandler.post(() ->NhPaths.showMessage_long(activity, "Setting perms to 0666.."));
+                            exe.RunAsRoot(new String[]{"chmod 666 /dev/hidg*"});
+                        }
                     } else {
                         NhPaths.showMessage_long(activity, "HID interfaces are not patched or enabled, please check your kernel configuration.");
                     }
