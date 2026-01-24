@@ -713,7 +713,7 @@ public class BTFragment extends Fragment {
                     }
 
                     if (dbus_statusCMD.equals("dbus is running.")) {
-                        DBUSstatus.setText(R.string.bt_start);
+                        DBUSstatus.setText(R.string.bt_running);
                         dbusButton.setText(R.string.bt_stop);
                     } else {
                         DBUSstatus.setText(R.string.bt_stopped);
@@ -799,7 +799,7 @@ public class BTFragment extends Fragment {
                     String l2ping_size = l2ping_Size.getText().toString();
                     String l2ping_count = l2ping_Count.getText().toString();
                     String l2ping_interface = hci_interface.getText().toString();
-                    run_cmd("echo -ne \"\\033]0;Pinging BT device\\007\" && clear;l2ping -i " + l2ping_interface + " -s " + l2ping_size + " -c " + l2ping_count + flood + reverse + " " + l2ping_target + " && echo \"\nPinging done.");
+                    run_cmd("echo -ne \"\\033]0;Pinging BT device\\007\" && clear;l2ping -i " + l2ping_interface + " -s " + l2ping_size + " -c " + l2ping_count + flood + reverse + " " + l2ping_target + " && echo \"\nPinging done.\"");
                 } else {
                     Toast.makeText(requireActivity().getApplicationContext(), "No target address!", Toast.LENGTH_SHORT).show();
                 }
