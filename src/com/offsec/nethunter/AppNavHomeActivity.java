@@ -455,7 +455,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         Boolean iswatch = getBaseContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
 
         // Snowfall enable 2/2
-        //prefs.edit().putBoolean("snowfall_enabled", false).apply();
+        prefs.edit().putBoolean("snowfall_enabled", false).apply();
 
         // inapp term enable
         Boolean inappterm;
