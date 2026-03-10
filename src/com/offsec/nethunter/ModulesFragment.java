@@ -365,7 +365,7 @@ public class ModulesFragment extends Fragment implements MenuProvider {
                         statusIcon.setImageResource(R.drawable.ic_module_loaded);
                     }
                 } else {
-                    toggleModule = exe.RunAsRootOutput("modprobe -d " + sanitizedModulesPath + " " + selectedModule + " && echo Success || echo Failed");
+                    toggleModule = exe.RunAsRootOutput("modprobe -d " + pathWithKernelVersion + " " + selectedModule + " && echo Success || echo Failed");
                     if (toggleModule.contains("Success")) {
                         Log.d(TAG, "Module enabled: " + selectedModule + " from path: " + sanitizedModulesPath);
                         Toast.makeText(requireActivity().getApplicationContext(), "Module Enabled: " + selectedModule + " from path: " + sanitizedModulesPath, Toast.LENGTH_LONG).show();
@@ -373,7 +373,7 @@ public class ModulesFragment extends Fragment implements MenuProvider {
                             statusIcon.setImageResource(R.drawable.ic_module_loaded);
                         }
                     } else {
-                        Toast.makeText(requireActivity().getApplicationContext(), "Failed - modprobe -d " + sanitizedModulesPath + " " + selectedModule, Toast.LENGTH_LONG).show();
+                        Toast.makeText(requireActivity().getApplicationContext(), "Failed - modprobe -d " + pathWithKernelVersion + " " + selectedModule, Toast.LENGTH_LONG).show();
                         if (sharedPreferences.getBoolean("enable_faulty_check", true)) {
                             checkFaultyModule(sanitizedModulesPath, selectedModule);
                         }
@@ -422,7 +422,7 @@ public class ModulesFragment extends Fragment implements MenuProvider {
                     statusIcon.setImageResource(R.drawable.ic_module_loaded);
                 }
             } else {
-                toggleModule = exe.RunAsRootOutput("modprobe -d " + sanitizedModulesPath + " " + selectedModule + " && echo Success || echo Failed");
+                toggleModule = exe.RunAsRootOutput("modprobe -d " + pathWithKernelVersion + " " + selectedModule + " && echo Success || echo Failed");
                 if (toggleModule.contains("Success")) {
                     Log.d(TAG, "Module enabled: " + selectedModule + " from path: " + sanitizedModulesPath);
                     Toast.makeText(requireActivity().getApplicationContext(), "Module Enabled: " + selectedModule + " from path: " + sanitizedModulesPath, Toast.LENGTH_LONG).show();
@@ -430,7 +430,7 @@ public class ModulesFragment extends Fragment implements MenuProvider {
                         statusIcon.setImageResource(R.drawable.ic_module_loaded);
                     }
                 } else {
-                    Toast.makeText(requireActivity().getApplicationContext(), "Failed - modprobe -d " + sanitizedModulesPath + " " + selectedModule, Toast.LENGTH_LONG).show();
+                    Toast.makeText(requireActivity().getApplicationContext(), "Failed - modprobe -d " + pathWithKernelVersion + " " + selectedModule, Toast.LENGTH_LONG).show();
                     SharedPreferences sharedPreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
                     if (sharedPreferences.getBoolean("enable_faulty_check", true)) {
                         checkFaultyModule(sanitizedModulesPath, selectedModule);
