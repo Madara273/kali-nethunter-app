@@ -20,8 +20,9 @@ public class PermissionCheck {
     public static final String[] DEFAULT_PERMISSIONS = {
             // kimocoder was here: WRITE_EXTERNAL? OR MANAGE_EXTERNAL .. check
             //android.Manifest.permission.WRITE_EXTERNAL_STORAGE,
-            android.Manifest.permission.ACCESS_FINE_LOCATION,
-            android.Manifest.permission.ACCESS_COARSE_LOCATION
+            // Skip these too, it is asked later
+            //android.Manifest.permission.ACCESS_FINE_LOCATION,
+            //android.Manifest.permission.ACCESS_COARSE_LOCATION
             // Add more permissions as needed
     };
 
