@@ -15,6 +15,15 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
+            <TextView
+                android:id="@+id/f_usbarsenal_desc"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/usbarsenal_description"
+                android:layout_gravity="center_horizontal|center"
+                android:gravity="center"
+                android:padding="4dp" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

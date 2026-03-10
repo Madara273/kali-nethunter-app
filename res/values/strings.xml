@@ -50,7 +50,7 @@
     <string name="drawertitleusbarsenal">USB Arsenal</string>
     <string name="usbarsenal_hint1_imagemounter">*Place all your .img or .iso files in "/sdcard/nh_files/diskimage/"</string>
     <string name="usbarsenal_current_usb_state">Current USB state: </string>
-    <string name="usbarsenal_description">The USB Arsenal is awesome</string>
+    <string name="usbarsenal_description">Select your desired USB Arsenal function here. If the functions are blank, try removing the init file using the top right menu. Some targets may need time to enable HID drivers on first try.</string>
     <string name="usbarsenal_header">USB Function Selector</string>
     <string name="usbarsenal_enabledfunctions">USB functions currently enabled:</string>
     <string name="usbarsenal_nofunctionsenabled">No USB function is currently enabled</string>

@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -25,6 +26,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -44,6 +46,7 @@ import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.models.USBArsenalUSBNetworkModel;
 import com.offsec.nethunter.models.USBArsenalUSBSwitchModel;
 import com.offsec.nethunter.utils.NhPaths;
+import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -110,6 +113,9 @@ public class USBArsenalFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         MenuHost menuHost = requireActivity();
+        ShellExecuter exe = new ShellExecuter();
+        File init = new File("/init.nethunter.rc");
+
         menuHost.addMenuProvider(new MenuProvider() {
             @Override
             public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
@@ -185,6 +191,13 @@ public class USBArsenalFragment extends Fragment {
                         NhPaths.showMessage_long(context, "Failed to reset the db to default.");
                     }
                     return true;
+                } else if (itemId == R.id.f_usbarsenal_menu_RemoveInit) {
+                    exe.RunAsRoot("mount -o rw,remount /; rm /init.nethunter.rc; mount -o ro,remount /");
+                    if (init.exists()) {
+                        NhPaths.showMessage_long(context, "Failed to remove /init.nethunter.rc. Please try manually");
+                    } else {
+                        NhPaths.showMessage_long(context, "Successfully removed init file. Please restart USB Arsenal");
+                    }
                 }
                 return false;
             }
@@ -234,6 +247,17 @@ public class USBArsenalFragment extends Fragment {
             msg.what = USBArsenalHandlerThread.GET_STORAGE_FUNC_FOLDER_NAME;
             msg.obj = "find /config/usb_gadget/g1/functions/ -name \"mass_storage.*\" -maxdepth 1 -type d -exec basename {} \\; | head -n1";
             usbArsenalHandlerThread.getHandler().sendMessage(msg); }
+
+        // Watch
+        SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
+
+        if (iswatch) {
+            if (init.exists()) {
+                exe.RunAsRoot("mount -o rw,remount /; rm /init.nethunter.rc; mount -o ro,remount /");
+                Toast.makeText(context, "Init DONE for WearOS. Please restart USB Arsenal", Toast.LENGTH_LONG).show();
+            }
+        }
 
         ArrayAdapter<String> usbFuncWinArrayAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_item, new ArrayList<>());
         ArrayAdapter<String> usbFuncMACArrayAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_item, new ArrayList<>());

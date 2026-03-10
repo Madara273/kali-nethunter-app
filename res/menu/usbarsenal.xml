@@ -18,6 +18,11 @@
             android:orderInCategory="100"
             android:title="Reset to Default"
             app:showAsAction="never" />
+        <item
+            android:id="@+id/f_usbarsenal_menu_RemoveInit"
+            android:orderInCategory="100"
+            android:title="Remove init"
+            app:showAsAction="never" />
     </group>
 
 </menu>
