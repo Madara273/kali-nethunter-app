@@ -86,6 +86,7 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
     private TextInputEditText satellitesEditText;
     private Context context;
     private boolean wantKismet = false;
+    private String nexmonPrefix = "";
     private boolean wantHelpView = true;
     private boolean reattachedToRunningService = false;
     private SwitchCompat switch_gps_provider = null;
@@ -223,6 +224,13 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         ShellExecuter exe = new ShellExecuter();
         EditText wlan_interface = view.findViewById(R.id.wlan_interface);
         EditText bt_interface = view.findViewById(R.id.bt_interface);
+
+        // Detect nexmon
+        String isnexmon = exe.RunAsRootOutput("strings /vendor/firmware/*bcm* | grep nexmon");
+        if (!isnexmon.isEmpty()) {
+            Toast.makeText(requireActivity().getApplicationContext(), "Nexmon firmware detected. Make sure monitor mode is enabled.", Toast.LENGTH_LONG).show();
+            nexmonPrefix="LD_PRELOAD=/lib/libnexmonkali.so ";
+        }
 
         // Initialize checkboxes
         sdrcheckbox = view.findViewById(R.id.rtlsdr_checkbox);
@@ -444,7 +452,7 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         if (wantKismet) {
             wantKismet = false;
             gpsTextView.append("Launching kismet in NetHunter Terminal\n");
-            startKismet();
+            startKismet(nexmonPrefix);
         }
     }
 
@@ -464,9 +472,9 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         gpsTextView.append("First position received\n");
     }
 
-    private void startKismet() {
+    private void startKismet(String nexmonPrefix) {
         try {
-            run_cmd("/usr/bin/start-kismet");
+            run_cmd("echo -ne \"\\033]0;Kismet\\007\" && clear;" + nexmonPrefix + "/usr/bin/start-kismet");
         } catch (Exception e) {
             NhPaths.showMessage(context, getString(R.string.toast_install_terminal));
         }
