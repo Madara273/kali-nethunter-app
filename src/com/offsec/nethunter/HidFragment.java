@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
-import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -19,6 +18,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Spinner;
+import android.widget.TextView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.tabs.TabLayout;
@@ -121,7 +121,7 @@ public class HidFragment extends Fragment {
                 if (mViewPager == null) return;
                 int pageNum = mViewPager.getCurrentItem();
                 MenuItem sourceButton = menu.findItem(R.id.source_button);
-                boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
+                boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
                 if (sourceButton != null) {
                     sourceButton.setVisible(pageNum == 0 && !iswatch);
                 }
@@ -345,6 +345,10 @@ public class HidFragment extends Fragment {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.hid_powersploit, container, false);
+            TextView powersploitDescription = rootView.findViewById(R.id.hid_powersploit_desc);
+            SharedPreferences sharedpreferences = getActivity().getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
+            boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
+            if (iswatch) powersploitDescription.setText("PowerSploit");
             Button b = rootView.findViewById(R.id.powersploitOptionsUpdate);
             b.setOnClickListener(this);
             loadOptions(rootView);
@@ -459,6 +463,10 @@ public class HidFragment extends Fragment {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.hid_windows_cmd, container, false);
+            TextView wincmdDescription = rootView.findViewById(R.id.hid_wincmd_desc);
+            SharedPreferences sharedpreferences = activity.getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
+            boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
+            if (iswatch) wincmdDescription.setText("Windows CMD");
             EditText source = rootView.findViewById(R.id.windowsCmdSource);
             exe.ReadFile_ASYNC(configFilePath, source);
             Button b = rootView.findViewById(R.id.windowsCmdUpdate);
@@ -577,6 +585,10 @@ public class HidFragment extends Fragment {
         public View onCreateView(LayoutInflater inflater, ViewGroup container,
                                  Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.hid_powershell_http, container, false);
+            TextView powershellDescription = rootView.findViewById(R.id.hid_powershell_desc);
+            SharedPreferences sharedpreferences = getActivity().getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
+            boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
+            if (iswatch) powershellDescription.setText("Powershell HTTP");
             Button b = rootView.findViewById(R.id.powershellOptionsUpdate);
             b.setOnClickListener(this);
             loadOptions(rootView);

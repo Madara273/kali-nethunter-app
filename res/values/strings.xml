@@ -138,8 +138,8 @@
 
 
     <string name="update">Update</string>
-    <string name="load">Load SDCARD</string>
-    <string name="save">Save SDCARD</string>
+    <string name="load">Load</string>
+    <string name="save">Save</string>
     <string name="execute_attack">Execute Attack</string>
 
     <string name="stop_mana">Stop mana</string>
