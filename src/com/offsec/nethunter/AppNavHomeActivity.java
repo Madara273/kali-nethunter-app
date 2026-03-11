@@ -119,8 +119,10 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
                             if (menuNav.getItem(i).getTitle() == mTitle) {
                                 MenuItem _current = menuNav.getItem(i);
                                 if (lastSelectedMenuItem != _current) {
-                                    lastSelectedMenuItem.setChecked(false);
-                                    lastSelectedMenuItem = _current;
+                                    Intent intent = new Intent(getApplicationContext(), AppNavHomeActivity.class);
+                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+                                    startActivity(intent);
+                                    finish();
                                 }
                                 _current.setChecked(true);
                                 i = mSize;
