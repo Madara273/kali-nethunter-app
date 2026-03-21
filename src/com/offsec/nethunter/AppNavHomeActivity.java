@@ -94,6 +94,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
     public static MenuItem customCMDitem;
     private final ShellExecuter exe = new ShellExecuter();
     private volatile boolean rootViewInitialized = false;
+    private Thread permissionWaitThread;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -259,25 +260,31 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         if (isAllRequiredPermissionsGranted()) {
             copyBootFilesExecutor.execute();
         } else {
-            // Crude way of waiting for the permissions to be granted before we continue
-            int t=0;
-            while (!permissionCheck.isAllPermitted(PermissionCheck.DEFAULT_PERMISSIONS)) {
-                try {
-                    Thread.sleep(1000);
-                    t++;
-                    Log.d(TAG, "Permissions missing. Waiting ..." + t);
-                } catch (InterruptedException e) {
-                    Log.d(TAG, "Permissions missing. Waiting ...");
+            // Wait for permissions on a background thread to avoid ANR
+            permissionWaitThread = new Thread(() -> {
+                int t = 0;
+                while (!permissionCheck.isAllPermitted(PermissionCheck.DEFAULT_PERMISSIONS)) {
+                    try {
+                        Thread.sleep(1000);
+                        t++;
+                        Log.d(TAG, "Permissions missing. Waiting ..." + t);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                    if (t >= 10) {
+                        break;
+                    }
                 }
-                if (t>=10) {
-                    break;
-                }
-            }
-            if (permissionCheck.isAllPermitted(PermissionCheck.DEFAULT_PERMISSIONS)) {
-                copyBootFilesExecutor.execute();
-            } else {
-                showWarningDialog("Permissions required", "Please restart application to finalize setup", true);
-            }
+                runOnUiThread(() -> {
+                    if (permissionCheck.isAllPermitted(PermissionCheck.DEFAULT_PERMISSIONS)) {
+                        copyBootFilesExecutor.execute();
+                    } else {
+                        showWarningDialog("Permissions required", "Please restart application to finalize setup", true);
+                    }
+                });
+            });
+            permissionWaitThread.start();
         }
 
         int menuFragment = getIntent().getIntExtra("menuFragment", -1);
@@ -401,6 +408,9 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if (permissionWaitThread != null) {
+            permissionWaitThread.interrupt();
+        }
         unregisterReceiver(nethunterReceiver);
         nhPaths.onDestroy();
     }
