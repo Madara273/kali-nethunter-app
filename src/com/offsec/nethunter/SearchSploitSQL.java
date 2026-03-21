@@ -81,12 +81,12 @@ class SearchSploitSQL extends SQLiteOpenHelper {
         String wildcard = "%" + filter + "%";
         String query = "SELECT * FROM " + SearchSploit.TABLE
                 + " WHERE " + SearchSploit.DESCRIPTION + " like ?" +
-                " and " + SearchSploit.TYPE + "='" + type + "'" +
-		" and " + SearchSploit.PLATFORM + "='" + platform + "'" +
+                " and " + SearchSploit.TYPE + "=?" +
+		" and " + SearchSploit.PLATFORM + "=?" +
 		" GROUP BY " + SearchSploit.ID;
         SQLiteDatabase db = this.getWritableDatabase();
         Log.d("QUERYYY", query);
-        Cursor cursor = db.rawQuery(query, new String[]{wildcard});
+        Cursor cursor = db.rawQuery(query, new String[]{wildcard, type, platform});
         List<SearchSploit> _List = createExploitList(cursor);
         db.close();
         return _List;
