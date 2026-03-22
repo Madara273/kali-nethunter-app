@@ -1349,12 +1349,12 @@ public class CARsenalFragment extends Fragment {
                 if (!freediagCmd[0].isEmpty()) {
                     run_cmd(freediagCmd[0]);
                 } else {
-                    run_cmd("freediag");
+                    run_cmd("cd /opt/car_hacking/freediag/build/scantool && freediag");
                 }
                 activity.invalidateOptionsMenu();
             });
             FreediagButton.setOnLongClickListener(v -> {
-                String defaultCmd = "freediag";
+                String defaultCmd = "cd /opt/car_hacking/freediag/build/scantool && freediag";
                 showEditCommandDialog("Edit Freediag Command", freediagCmd, "freediag_cmd", defaultCmd);
                 return true;
             });
@@ -1365,12 +1365,12 @@ public class CARsenalFragment extends Fragment {
                 if (!diagTestCmd[0].isEmpty()) {
                     run_cmd(diagTestCmd[0]);
                 } else {
-                    run_cmd("diag_test");
+                    run_cmd("cd /opt/car_hacking/freediag/build/scantool && diag_test");
                 }
                 activity.invalidateOptionsMenu();
             });
             diagTestButton.setOnLongClickListener(v -> {
-                String defaultCmd = "diag_test";
+                String defaultCmd = "cd /opt/car_hacking/freediag/build/scantool && diag_test";
                 showEditCommandDialog("Edit diag_test Command", diagTestCmd, "diagTest_cmd", defaultCmd);
                 return true;
             });
