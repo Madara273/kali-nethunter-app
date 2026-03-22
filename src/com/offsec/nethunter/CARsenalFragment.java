@@ -1349,12 +1349,12 @@ public class CARsenalFragment extends Fragment {
                 if (!freediagCmd[0].isEmpty()) {
                     run_cmd(freediagCmd[0]);
                 } else {
-                    run_cmd("sudo -u kali freediag");
+                    run_cmd("freediag");
                 }
                 activity.invalidateOptionsMenu();
             });
             FreediagButton.setOnLongClickListener(v -> {
-                String defaultCmd = "sudo -u kali freediag";
+                String defaultCmd = "freediag";
                 showEditCommandDialog("Edit Freediag Command", freediagCmd, "freediag_cmd", defaultCmd);
                 return true;
             });
@@ -1365,12 +1365,12 @@ public class CARsenalFragment extends Fragment {
                 if (!diagTestCmd[0].isEmpty()) {
                     run_cmd(diagTestCmd[0]);
                 } else {
-                    run_cmd("sudo -u kali diag_test");
+                    run_cmd("diag_test");
                 }
                 activity.invalidateOptionsMenu();
             });
             diagTestButton.setOnLongClickListener(v -> {
-                String defaultCmd = "sudo -u kali diag_test";
+                String defaultCmd = "diag_test";
                 showEditCommandDialog("Edit diag_test Command", diagTestCmd, "diagTest_cmd", defaultCmd);
                 return true;
             });
