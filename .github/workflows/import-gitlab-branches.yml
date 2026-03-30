@@ -1,0 +1,64 @@
+name: Import GitLab branches
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  import-branches:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout GitHub repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Add GitLab remote and fetch
+        run: |
+          git remote add gitlab https://gitlab.com/kalilinux/nethunter/apps/kali-nethunter-app.git || true
+          git fetch gitlab '+refs/heads/*:refs/remotes/gitlab/*'
+
+      - name: Import missing branches
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mapfile -t gitlab_branches < <(git for-each-ref --format='%(refname:strip=3)' refs/remotes/gitlab)
+          mapfile -t github_branches < <(git for-each-ref --format='%(refname:strip=3)' refs/remotes/origin)
+
+          if [[ ${#gitlab_branches[@]} -eq 0 ]]; then
+            echo "No branches found on GitLab, nothing to import."
+            exit 0
+          fi
+
+          imported=0
+          skipped=0
+
+          for branch in "${gitlab_branches[@]}"; do
+            if [[ "$branch" == "HEAD" ]]; then
+              echo "Skipping symbolic ref: HEAD"
+              continue
+            fi
+
+            if [[ ${#github_branches[@]} -gt 0 ]] && printf '%s\n' "${github_branches[@]}" | grep -Fxq "$branch"; then
+              echo "Branch '$branch' already exists on GitHub, skipping."
+              (( skipped++ )) || true
+              continue
+            fi
+
+            echo "Importing missing branch: $branch"
+            git push origin "refs/remotes/gitlab/$branch:refs/heads/$branch"
+            (( imported++ )) || true
+          done
+
+          echo "Done: imported=${imported}, skipped=${skipped}"
