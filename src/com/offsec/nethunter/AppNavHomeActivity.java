@@ -201,7 +201,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
                 //progressBar.setVisibility(View.GONE);
             }
 
-            public void onExecutorFinished(Object result) {
+            public void onExecutorFinished(String result) {
                 // Fetch the busybox path again after the busybox_nh is copied.
                 //progressBar.setVisibility(View.GONE);
                 NhPaths.BUSYBOX = NhPaths.getBusyboxPath();
