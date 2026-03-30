@@ -297,7 +297,7 @@ public class SETFragment extends Fragment {
             EditText PhishPic = SETFragmentView.findViewById(R.id.set_pic);
             EditText PhishSubject = SETFragmentView.findViewById(R.id.set_subject);
 
-            exe.RunAsRoot(new String[]{"cp " + template_src + " " + NhPaths.SD_PATH});
+            exe.RunAsRoot(new String[]{"cp " + ShellExecuter.shellEscape(template_src) + " " + ShellExecuter.shellEscape(NhPaths.SD_PATH)});
 
             String phish_link = PhishLink.getText().toString();
             String phish_name = PhishName.getText().toString();
@@ -316,14 +316,28 @@ public class SETFragment extends Fragment {
             }
 
             if (!phish_link.isEmpty()) {
-                if (phish_link.contains("&")) phish_link = exe.RunAsRootOutput("sed 's/\\&/\\\\\\&/g' <<< \"" + phish_link + "\"");
-                phish_link = exe.RunAsRootOutput("sed 's|/|\\\\/|g' <<< \"" + phish_link + "\"");
-                exe.RunAsRoot(new String[]{"sed -i 's/https\\:\\/\\/www.google.com/" + phish_link + "/g' " + template_path});
+                // Escape the link for use as a sed replacement string (no shell injection).
+                // In sed 's/pattern/replacement/g' the replacement needs & / and \ escaped.
+                String escapedLink = phish_link
+                        .replace("\\", "\\\\")
+                        .replace("&", "\\&")
+                        .replace("/", "\\/");
+                exe.RunAsRoot(new String[]{"sed -i 's/https\\:\\/\\/www.google.com/" + escapedLink + "/g' " + ShellExecuter.shellEscape(template_path)});
             }
-            if (!phish_name.isEmpty()) exe.RunAsRoot(new String[]{"sed -i 's/E Corp/" + phish_name + "/g' " + template_path});
+            if (!phish_name.isEmpty()) {
+                String escapedName = phish_name
+                        .replace("\\", "\\\\")
+                        .replace("&", "\\&");
+                exe.RunAsRoot(new String[]{"sed -i 's/E Corp/" + escapedName + "/g' " + ShellExecuter.shellEscape(template_path)});
+            }
             if (!phish_pic.isEmpty()) {
-                if (phish_pic.contains("&")) phish_pic = exe.RunAsRootOutput("sed 's/\\&/\\\\\\&/g' <<< \"" + phish_pic + "\"");
-                exe.RunAsRoot(new String[]{"sed -i \"s|id=\\\"set\\\".*|id=\\\"set\\\" src=\\\"" + phish_pic + "\\\" width=\\\"72\\\">|\" " + template_path});
+                // Escape the pic URL for use inside a double-quoted sed replacement
+                String escapedPic = phish_pic
+                        .replace("\\", "\\\\")
+                        .replace("\"", "\\\"")
+                        .replace("&", "\\&")
+                        .replace("|", "\\|");
+                exe.RunAsRoot(new String[]{"sed -i \"s|id=\\\"set\\\".*|id=\\\"set\\\" src=\\\"" + escapedPic + "\\\" width=\\\"72\\\">|\" " + ShellExecuter.shellEscape(template_path)});
             }
             myBrowser.clearCache(true);
             myBrowser.loadUrl("file://" + template_path);

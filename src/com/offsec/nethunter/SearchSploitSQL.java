@@ -53,10 +53,29 @@ class SearchSploitSQL extends SQLiteOpenHelper {
     Boolean doDbFeed() {
         // Generate the csv to kali /root first as temp (so we can read it)
         String _cmd1 = "su -c " + NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd 'usr/bin/python3 /sdcard/nh_files/modules/csv2sqlite.py /usr/share/exploitdb/files_exploits.csv /tmp/SearchSploit " + SearchSploit.TABLE + "'";
-        exe.RunAsRootOutput(_cmd1);
+        String result1 = exe.RunAsRootOutput(_cmd1);
+        Log.d("SearchSploitSQL", "doDbFeed csv2sqlite output: " + result1);
+
+        // Check the generated DB file exists before attempting to move it
+        String checkCmd = "test -f " + NhPaths.CHROOT_SYMLINK_PATH + "/tmp/SearchSploit && echo exists || echo missing";
+        String checkResult = exe.RunAsRootOutput(checkCmd);
+        if (!checkResult.contains("exists")) {
+            Log.e("SearchSploitSQL", "doDbFeed: generated DB file not found after csv2sqlite run");
+            return false;
+        }
+
         // Then move it to app db folder
         String _cmd2 = "mv " + NhPaths.CHROOT_SYMLINK_PATH + "/tmp/SearchSploit /sdcard/nh_files/SearchSploit";
-        exe.RunAsRootOutput(_cmd2);
+        String result2 = exe.RunAsRootOutput(_cmd2);
+        Log.d("SearchSploitSQL", "doDbFeed mv output: " + result2);
+
+        // Verify the file now exists at the destination
+        String verifyCmd = "test -f /sdcard/nh_files/SearchSploit && echo exists || echo missing";
+        String verifyResult = exe.RunAsRootOutput(verifyCmd);
+        if (!verifyResult.contains("exists")) {
+            Log.e("SearchSploitSQL", "doDbFeed: DB file not found at destination after mv");
+            return false;
+        }
 
         return true;
     }

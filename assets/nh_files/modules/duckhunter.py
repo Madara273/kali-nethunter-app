@@ -6,6 +6,7 @@ import sys
 import re
 import os
 import argparse
+import tempfile
 from decimal import Decimal #for conversion milliseconds -> seconds
 
 parser = argparse.ArgumentParser(description='Converts USB rubber ducky scripts to a Nethunter format', epilog="Quack Quack")
@@ -18,7 +19,6 @@ args = parser.parse_args()
 # Input file is argument / output file is output.txt
 infile = open(args.duckyscript)
 dest = open(args.hunterscript, 'w')
-tmpfile = open("tmp.txt", "w")
 
 def duckyRules (source):
 
@@ -132,121 +132,124 @@ if __name__ == "__main__":
 
     with infile as text:
         new_text = duckyRules(text.read())
-        infile.close()
 
-    # Write regex to tmp file
-    with tmpfile as result:
-        result.write(new_text)
-        tmpfile.close()
+    # Write regex to a secure temporary file and process it
+    tmp_fd, tmp_path = tempfile.mkstemp(suffix='.txt', prefix='duckhunter_')
+    try:
+        with os.fdopen(tmp_fd, 'w') as result:
+            result.write(new_text)
 
-    prev_line = ''
-    default_delay = ''
-    src = open('tmp.txt', 'r')
-    for source_line in src:
+        prev_line = ''
+        default_delay = ''
+        with open(tmp_path, 'r') as src, open(args.hunterscript, 'w') as dest:
+            for source_line in src:
 
-        if source_line == '' or source_line == '\n' or source_line.startswith('//'):
-            continue
-
-        repeat_counter = 1
-        while repeat_counter > 0:
-
-            repeat_counter -= 1
-            line = source_line
-
-            if line.startswith('DELAY '):
-                line = line.rstrip('\n')[6:].strip()
-                seconds = (Decimal(line) / Decimal(1000)) % 60
-                line = str(seconds)
-                dest.write('sleep %s\n' % line.strip().lower())
-
-            else:
-
-                if line.startswith('DEFAULT_DELAY'):
-                    line = line.rstrip('\n')[13:].strip()
-                    if line != '':
-                        seconds = (Decimal(line) / Decimal(1000)) % 60
-                        line = str(seconds)
-                    default_delay = line
-                    break
-
-                elif line.startswith('REM'):
-                    line = '#' + line.rstrip('\n')[3:]
-                    dest.write('%s\n' % line.strip())
-
-                # Mouse commands
-                elif line.startswith('--b'):
-                    dest.write('%s%s%s\n' % (prefixmouse, line.rstrip('\n').strip(), suffixmouse))
-
-                elif line.startswith('MOUSE '):
-                    line = line[6:]
-                    dest.write('%s%s%s\n' % (prefixmouse, line.rstrip('\n').strip(), suffixmouse))
-
-                # STRING to type and reads \n as ENTER
-                elif line.startswith('STRING '):
-                    line = line[7:]
-                    for char in line:
-
-                        if char != '\n':
-                            if args.layout == "ru":
-                                char = iso_ru[char]
-
-                            line = dicts[args.layout+'_bin'].get(char)
-                            if line is not None:
-                                if isinstance(line, str):
-                                    dest.write('%s%s%s\n' % (prefix, line.rstrip('\n').strip(), suffix))
-                                else:
-                                    for elem in line:
-                                        dest.write('%s%s%s\n' % (prefix, elem.rstrip('\n').strip(), suffix))
-                            else:
-                                line = dicts[args.layout][char]
-                                dest.write('%s%s%s\n' % (prefixinput, line.rstrip('\n').strip(), prefixoutput))
-                                dest.write('echo -ne "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00" > /dev/hidg0\n') # releases key
-                                dest.write('sleep 0.03 \n') # Slow things down
-
-                    dest.write('echo enter | hid-keyboard /dev/hidg0 keyboard\n') # Add enter
-
-                # TEXT to type and NOT pass \n as ENTER.  Allows text to stay put.
-                elif line.startswith('TEXT '):
-                    line = line.rstrip('\n')
-                    line = line[5:]
-                    for char in line:
-
-                        if char != '\n':
-                            if args.layout == "ru":
-                                char = iso_ru[char]
-
-                            line = dicts[args.layout+'_bin'].get(char)
-                            if line is not None:
-                                if isinstance(line, str):
-                                    dest.write('%s%s%s\n' % (prefix, line.rstrip('\n').strip(), suffix))
-                                else:
-                                    for elem in line:
-                                        dest.write('%s%s%s\n' % (prefix, elem.rstrip('\n').strip(), suffix))
-                            else:
-                                line = dicts[args.layout][char]
-                                dest.write('%s%s%s\n' % (prefixinput, line.rstrip('\n').strip(), prefixoutput))
-                                dest.write('echo -ne "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00" > /dev/hidg0\n') # releases key
-                                dest.write('sleep 0.03 \n') # Slow things down
-
-                elif line.startswith('REPEAT '):
-                    line = line.rstrip('\n')[7:]
-                    repeat_counter = int(line)
-                    source_line = prev_line
-
-                    if source_line == '':
-                        break
-
+                if source_line == '' or source_line == '\n' or source_line.startswith('//'):
                     continue
 
-                else:
-                    dest.write('%s%s%s\n' % (prefix, line.rstrip('\n').strip(), suffix))
+                repeat_counter = 1
+                while repeat_counter > 0:
 
-                if default_delay != '':
-                    dest.write('sleep %s\n' % default_delay.strip().lower())
+                    repeat_counter -= 1
+                    line = source_line
 
-        prev_line = source_line
+                    if line.startswith('DELAY '):
+                        line = line.rstrip('\n')[6:].strip()
+                        seconds = (Decimal(line) / Decimal(1000)) % 60
+                        line = str(seconds)
+                        dest.write('sleep %s\n' % line.strip().lower())
 
-    src.close()
-    dest.close()
-    os.remove("tmp.txt")
+                    else:
+
+                        if line.startswith('DEFAULT_DELAY'):
+                            line = line.rstrip('\n')[13:].strip()
+                            if line != '':
+                                seconds = (Decimal(line) / Decimal(1000)) % 60
+                                line = str(seconds)
+                            default_delay = line
+                            break
+
+                        elif line.startswith('REM'):
+                            line = '#' + line.rstrip('\n')[3:]
+                            dest.write('%s\n' % line.strip())
+
+                        # Mouse commands
+                        elif line.startswith('--b'):
+                            dest.write('%s%s%s\n' % (prefixmouse, line.rstrip('\n').strip(), suffixmouse))
+
+                        elif line.startswith('MOUSE '):
+                            line = line[6:]
+                            dest.write('%s%s%s\n' % (prefixmouse, line.rstrip('\n').strip(), suffixmouse))
+
+                        # STRING to type and reads \n as ENTER
+                        elif line.startswith('STRING '):
+                            line = line[7:]
+                            for char in line:
+
+                                if char != '\n':
+                                    if args.layout == "ru":
+                                        char = iso_ru[char]
+
+                                    line = dicts[args.layout+'_bin'].get(char)
+                                    if line is not None:
+                                        if isinstance(line, str):
+                                            dest.write('%s%s%s\n' % (prefix, line.rstrip('\n').strip(), suffix))
+                                        else:
+                                            for elem in line:
+                                                dest.write('%s%s%s\n' % (prefix, elem.rstrip('\n').strip(), suffix))
+                                    else:
+                                        line = dicts[args.layout][char]
+                                        dest.write('%s%s%s\n' % (prefixinput, line.rstrip('\n').strip(), prefixoutput))
+                                        dest.write('echo -ne "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00" > /dev/hidg0\n') # releases key
+                                        dest.write('sleep 0.03 \n') # Slow things down
+
+                            dest.write('echo enter | hid-keyboard /dev/hidg0 keyboard\n') # Add enter
+
+                        # TEXT to type and NOT pass \n as ENTER.  Allows text to stay put.
+                        elif line.startswith('TEXT '):
+                            line = line.rstrip('\n')
+                            line = line[5:]
+                            for char in line:
+
+                                if char != '\n':
+                                    if args.layout == "ru":
+                                        char = iso_ru[char]
+
+                                    line = dicts[args.layout+'_bin'].get(char)
+                                    if line is not None:
+                                        if isinstance(line, str):
+                                            dest.write('%s%s%s\n' % (prefix, line.rstrip('\n').strip(), suffix))
+                                        else:
+                                            for elem in line:
+                                                dest.write('%s%s%s\n' % (prefix, elem.rstrip('\n').strip(), suffix))
+                                    else:
+                                        line = dicts[args.layout][char]
+                                        dest.write('%s%s%s\n' % (prefixinput, line.rstrip('\n').strip(), prefixoutput))
+                                        dest.write('echo -ne "\\x00\\x00\\x00\\x00\\x00\\x00\\x00\\x00" > /dev/hidg0\n') # releases key
+                                        dest.write('sleep 0.03 \n') # Slow things down
+
+                        elif line.startswith('REPEAT '):
+                            line = line.rstrip('\n')[7:]
+                            repeat_counter = int(line)
+                            source_line = prev_line
+
+                            if source_line == '':
+                                break
+
+                            continue
+
+                        else:
+                            dest.write('%s%s%s\n' % (prefix, line.rstrip('\n').strip(), suffix))
+
+                        if default_delay != '':
+                            dest.write('sleep %s\n' % default_delay.strip().lower())
+
+                prev_line = source_line
+
+    finally:
+        try:
+            os.remove(tmp_path)
+        except OSError:
+            pass
+
     print(("File saved to location: " + args.hunterscript))

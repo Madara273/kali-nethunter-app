@@ -188,8 +188,12 @@ public class MacchangerFragment extends Fragment {
     private void setSetHostnameButton() {
         setHostNameButton.setOnClickListener(v -> {
             String newHostName = netHostNameEditText.getText().toString();
+            if (!ShellExecuter.isValidHostname(newHostName)) {
+                showToast("Invalid hostname. Use only letters, digits, hyphens, and dots.");
+                return;
+            }
             executeTask(() -> {
-                new ShellExecuter().RunAsRootOutput("setprop net.hostname " + newHostName);
+                new ShellExecuter().RunAsRootOutput("setprop net.hostname " + ShellExecuter.shellEscape(newHostName));
                 mainHandler.post(() -> {
                     showToast("net.hostname is set to " + newHostName);
                     setHostNameEditText();
