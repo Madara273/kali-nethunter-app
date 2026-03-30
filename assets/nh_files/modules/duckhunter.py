@@ -16,9 +16,8 @@ parser.add_argument('hunterscript', help='Output script')
 
 args = parser.parse_args()
 
-# Input file is argument / output file is output.txt
+# Input file is opened for processing
 infile = open(args.duckyscript)
-dest = open(args.hunterscript, 'w')
 
 def duckyRules (source):
 
