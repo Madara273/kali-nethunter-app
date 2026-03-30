@@ -26,6 +26,14 @@ public class KaliServicesSQL extends SQLiteOpenHelper {
 	public static final String TAG = "KaliServicesSQL";
 	private static final String TABLE_NAME = DATABASE_NAME;
 	private static final ArrayList<String> COLUMNS = new ArrayList<>();
+	static {
+		COLUMNS.add("id");
+		COLUMNS.add("ServiceName");
+		COLUMNS.add("CommandforStartService");
+		COLUMNS.add("CommandforStopService");
+		COLUMNS.add("CommandforCheckServiceStatus");
+		COLUMNS.add("RunOnChrootStart");
+	}
 	private static final String[][] kaliserviceData = {
 			{"1", "APACHE2", "service apache2 start", "service apache2 stop", "apache2", "0"},
 			{"2", "BLUETOOTH", "service bluetooth start", "service bluetooth stop", "bluetoothd", "0"},
@@ -47,13 +55,6 @@ public class KaliServicesSQL extends SQLiteOpenHelper {
 	private KaliServicesSQL(Context context) {
 		super(context, DATABASE_NAME, null, 1);
 		this.appContext = context.getApplicationContext();
-		// Add your default column here;
-		COLUMNS.add("id");
-		COLUMNS.add("ServiceName");
-		COLUMNS.add("CommandforStartService");
-		COLUMNS.add("CommandforStopService");
-		COLUMNS.add("CommandforCheckServiceStatus");
-		COLUMNS.add("RunOnChrootStart");
 	}
 
 	@Override

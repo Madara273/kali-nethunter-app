@@ -395,13 +395,13 @@ public class USBArsenalFragment extends Fragment {
                 if (readOnlyCheckBox.isChecked())
                     msg.obj = String.format("%s%s && echo '%s/%s' > /config/usb_gadget/g1/functions/" + usbStorageFunctionName + "/lun.0/file",
                             "echo '1' > /config/usb_gadget/g1/functions/" + usbStorageFunctionName + "/lun.0/ro",
-                            imgFileSpinner.getSelectedItem().toString().contains(".iso") ? " && echo '1' > /config/usb_gadget/g1/functions/" + usbStorageFunctionName + "/lun.0/cdrom" : " && echo '0' > /config/usb_gadget/g1/functions/mass_storage.gs6/lun.0/cdrom",
+                            imgFileSpinner.getSelectedItem().toString().contains(".iso") ? " && echo '1' > /config/usb_gadget/g1/functions/" + usbStorageFunctionName + "/lun.0/cdrom" : " && echo '0' > /config/usb_gadget/g1/functions/" + usbStorageFunctionName + "/lun.0/cdrom",
                             NhPaths.APP_SD_FILES_IMG_PATH,
                             imgFileSpinner.getSelectedItem().toString());
                 else
                     msg.obj = String.format("%s%s && echo '%s/%s' > /config/usb_gadget/g1/functions/" + usbStorageFunctionName + "/lun.0/file",
                             "echo '0' > /config/usb_gadget/g1/functions/" + usbStorageFunctionName + "/lun.0/ro",
-                            imgFileSpinner.getSelectedItem().toString().contains(".iso") ? " && echo '1' > /config/usb_gadget/g1/functions/" + usbStorageFunctionName + "/lun.0/cdrom" : " && echo '0' > /config/usb_gadget/g1/functions/mass_storage.gs6/lun.0/cdrom",
+                            imgFileSpinner.getSelectedItem().toString().contains(".iso") ? " && echo '1' > /config/usb_gadget/g1/functions/" + usbStorageFunctionName + "/lun.0/cdrom" : " && echo '0' > /config/usb_gadget/g1/functions/" + usbStorageFunctionName + "/lun.0/cdrom",
                             NhPaths.APP_SD_FILES_IMG_PATH,
                             imgFileSpinner.getSelectedItem().toString());
                 usbArsenalHandlerThread.getHandler().sendMessage(msg);
@@ -421,9 +421,15 @@ public class USBArsenalFragment extends Fragment {
         });
 
         changeInquiryButton.setOnClickListener(v -> {
+            String inquiryString = inquiryStringEditText.getText().toString();
+            // Inquiry strings are max 28 ASCII printable chars; reject single quotes to avoid shell injection
+            if (inquiryString.contains("'") || inquiryString.length() > 28) {
+                android.widget.Toast.makeText(context, "Invalid inquiry string (max 28 chars, no single quotes).", android.widget.Toast.LENGTH_SHORT).show();
+                return;
+            }
             Message msg = new Message();
             msg.what = USBArsenalHandlerThread.CHANGE_INQUIRY_STRING;
-            msg.obj = String.format("echo '%s' > /config/usb_gadget/g1/functions/%s/lun.0/inquiry_string", inquiryStringEditText.getText().toString(), usbStorageFunctionName);
+            msg.obj = String.format("echo '%s' > /config/usb_gadget/g1/functions/%s/lun.0/inquiry_string", inquiryString, usbStorageFunctionName);
             usbArsenalHandlerThread.getHandler().sendMessage(msg);
         });
 

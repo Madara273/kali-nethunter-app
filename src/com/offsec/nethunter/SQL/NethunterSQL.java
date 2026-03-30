@@ -30,6 +30,13 @@ public class NethunterSQL extends SQLiteOpenHelper {
     public static final String TAG = "NethunterSQL";
     private static final String TABLE_NAME = DATABASE_NAME;
     private static final ArrayList<String> COLUMNS = new ArrayList<>();
+    static {
+        COLUMNS.add("id");
+        COLUMNS.add("TitleName");
+        COLUMNS.add("CommandforResult");
+        COLUMNS.add("Delimiter");
+        COLUMNS.add("RunOnCreate");
+    }
     private static final String[][] nethunterData = {
             {"1", "Kernel Version", "uname -a", "\\n", "1"},
             {"2", "Busybox Version", "busybox_nh | head -n1", "\\n", "1"},
@@ -51,11 +58,6 @@ public class NethunterSQL extends SQLiteOpenHelper {
     private NethunterSQL(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
         this.context = context;
-        COLUMNS.add("id");
-        COLUMNS.add("TitleName");
-        COLUMNS.add("CommandforResult");
-        COLUMNS.add("Delimiter");
-        COLUMNS.add("RunOnCreate");
     }
 
     @Override

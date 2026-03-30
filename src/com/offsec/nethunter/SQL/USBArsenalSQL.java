@@ -26,18 +26,7 @@ public class USBArsenalSQL extends SQLiteOpenHelper {
     private static final String USBNETWORK_TABLE_NAME = "USBNetwork";
     private static final ArrayList<String> COLUMNS_USBSWITCH = new ArrayList<>();
     private static final ArrayList<String> COLUMNS_USBNETWORK = new ArrayList<>();
-    private final Context appContext;
-
-    public static synchronized USBArsenalSQL getInstance(Context context) {
-        if (instance == null) {
-            instance = new USBArsenalSQL(context.getApplicationContext());
-        }
-        return instance;
-    }
-
-    private USBArsenalSQL(Context context) {
-        super(context, DATABASE_NAME, null, 1);
-        this.appContext = context.getApplicationContext();
+    static {
         COLUMNS_USBSWITCH.add("target");
         COLUMNS_USBSWITCH.add("functions");
         COLUMNS_USBSWITCH.add("idVendor");
@@ -52,6 +41,19 @@ public class USBArsenalSQL extends SQLiteOpenHelper {
         COLUMNS_USBNETWORK.add("ip_address_for_target");
         COLUMNS_USBNETWORK.add("ip_gateway");
         COLUMNS_USBNETWORK.add("ip_subnetmask");
+    }
+    private final Context appContext;
+
+    public static synchronized USBArsenalSQL getInstance(Context context) {
+        if (instance == null) {
+            instance = new USBArsenalSQL(context.getApplicationContext());
+        }
+        return instance;
+    }
+
+    private USBArsenalSQL(Context context) {
+        super(context, DATABASE_NAME, null, 1);
+        this.appContext = context.getApplicationContext();
     }
 
     @Override

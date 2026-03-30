@@ -2392,7 +2392,7 @@ public class CARsenalFragment extends Fragment {
                 if (outputSwitch != null && outputSwitch.isChecked()) {
                     String filePath = SelectedFile.getText().toString().trim();
                     if (!filePath.isEmpty()) {
-                        outputEnabled = " -f " + filePath;
+                        outputEnabled = " -f " + ShellExecuter.shellEscape(filePath);
                     }
                 }
             }
@@ -2426,7 +2426,7 @@ public class CARsenalFragment extends Fragment {
                 if (outputSwitch != null && outputSwitch.isChecked()) {
                     String filePath = SelectedFile.getText().toString().trim();
                     if (!filePath.isEmpty()) {
-                        outputEnabled = " -f " + filePath;
+                        outputEnabled = " -f " + ShellExecuter.shellEscape(filePath);
                     }
                 }
             }
@@ -2602,7 +2602,7 @@ public class CARsenalFragment extends Fragment {
                 if (outputSwitch != null && outputSwitch.isChecked()) {
                     String filePath = SelectedFile.getText().toString().trim();
                     if (!filePath.isEmpty()) {
-                        outputEnabled = " --outfile " + filePath;
+                        outputEnabled = " --outfile " + ShellExecuter.shellEscape(filePath);
                     }
                 }
             }
@@ -2717,7 +2717,7 @@ public class CARsenalFragment extends Fragment {
                 if (outputSwitch != null && outputSwitch.isChecked()) {
                     String filePath = SelectedFile.getText().toString().trim();
                     if (!filePath.isEmpty()) {
-                        outputEnabled = " -f " + filePath;
+                        outputEnabled = " -f " + ShellExecuter.shellEscape(filePath);
                     }
                 }
             }
