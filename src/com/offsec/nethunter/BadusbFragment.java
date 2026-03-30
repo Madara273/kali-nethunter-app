@@ -52,6 +52,8 @@ public class BadusbFragment extends Fragment {
         activity = getActivity();
         if (Build.VERSION.SDK_INT == Build.VERSION_CODES.LOLLIPOP) {
             sourcePath = NhPaths.APP_SD_FILES_PATH + "/configs/startbadusb-lollipop.sh";
+        } else {
+            sourcePath = NhPaths.APP_SD_FILES_PATH + "/configs/startbadusb.sh";
         }
     }
 

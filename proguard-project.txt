@@ -18,6 +18,11 @@
 #-keepclassmembers class fqcn.of.javascript.interface.for.webview {
 #   public *;
 #}
+
+# NOTE: The rules below reference the legacy android.support.v7 namespace.
+# This project has migrated to AndroidX (androidx.*). These rules are retained
+# for compatibility with any transitive dependencies that still ship support-lib
+# classes, but can be removed once all dependencies are fully AndroidX-only.
 -dontwarn android.support.v7.**
 -keep class android.support.v7.** { *; }
 -keep interface android.support.v7.** { *; }
