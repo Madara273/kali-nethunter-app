@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	android:orientation="vertical"
+	android:padding="16dp"
+	android:background="#121212">
+
+	<com.google.android.material.card.MaterialCardView
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:layout_marginBottom="16dp"
+		app:cardBackgroundColor="#1A1A1A"
+		app:strokeColor="#424242"
+		app:strokeWidth="2dp"
+		app:cardCornerRadius="12dp">
+
+		<LinearLayout
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:orientation="vertical"
+			android:padding="16dp">
+
+			<TextView
+				android:layout_width="wrap_content"
+				android:layout_height="wrap_content"
+				android:text="SYSTEM INFO"
+				android:textColor="#E0E0E0"
+				android:textSize="11sp"
+				android:textStyle="bold"
+				android:background="#37474F"
+				android:paddingLeft="10dp"
+				android:paddingRight="10dp"
+				android:paddingTop="4dp"
+				android:paddingBottom="4dp"
+				android:layout_marginBottom="16dp"
+				android:letterSpacing="0.05" />
+
+			<TextView
+				android:id="@+id/tv_device"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:textColor="#FFFFFF"
+				android:textSize="13sp"
+				android:fontFamily="monospace"
+				android:layout_marginBottom="4dp"
+				android:drawableStart="@drawable/ic_device"
+				android:drawablePadding="12dp"
+				android:drawableTint="#BDBDBD"
+				android:gravity="center_vertical" />
+
+			<TextView
+				android:id="@+id/tv_android"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:textColor="#FFFFFF"
+				android:textSize="13sp"
+				android:fontFamily="monospace"
+				android:drawableStart="@drawable/ic_android"
+				android:drawablePadding="12dp"
+				android:drawableTint="#BDBDBD"
+				android:gravity="center_vertical" />
+
+			<View
+				android:layout_width="match_parent"
+				android:layout_height="1dp"
+				android:background="#424242"
+				android:layout_marginTop="12dp"
+				android:layout_marginBottom="12dp" />
+
+			<TextView
+				android:id="@+id/kernel_full_uname"
+				android:layout_width="match_parent"
+				android:layout_height="wrap_content"
+				android:textColor="#BDBDBD"
+				android:textSize="11sp"
+				android:fontFamily="monospace"
+				android:lineSpacingMultiplier="1.2" />
+
+		</LinearLayout>
+	</com.google.android.material.card.MaterialCardView>
+
+	<LinearLayout
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:orientation="horizontal"
+		android:weightSum="2">
+
+		<com.google.android.material.button.MaterialButton
+			android:id="@+id/btn_select_zip"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:text="Select NetHunter Kernel.zip"
+			app:backgroundTint="#37474F"
+			android:textColor="#E0E0E0"
+			android:textAllCaps="false"
+			app:cornerRadius="12dp"
+			android:visibility="visible" />
+
+		<com.google.android.material.button.MaterialButton
+			android:id="@+id/btn_flash"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:layout_marginEnd="4dp"
+			app:backgroundTint="#263238"
+			android:text="Flash"
+			android:textColor="#4CAF50"
+			android:textAllCaps="false"
+			android:visibility="gone"
+			app:cornerRadius="12dp" />
+
+		<com.google.android.material.button.MaterialButton
+			android:id="@+id/btn_cancel"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:layout_marginStart="4dp"
+			app:backgroundTint="#263238"
+			android:text="Cancel"
+			android:textColor="#FF9800"
+			android:textAllCaps="false"
+			android:visibility="gone"
+			app:cornerRadius="12dp" />
+	</LinearLayout>
+
+	<TextView
+		android:id="@+id/tv_file_path"
+		android:layout_width="match_parent"
+		android:layout_height="wrap_content"
+		android:text="File not selected"
+		android:textColor="#888888"
+		android:padding="8dp"
+		android:gravity="center" />
+
+	<RelativeLayout
+		android:layout_width="match_parent"
+		android:layout_height="0dp"
+		android:layout_weight="1"
+		android:layout_marginTop="16dp">
+
+		<com.google.android.material.card.MaterialCardView
+			android:layout_width="match_parent"
+			android:layout_height="match_parent"
+			app:cardBackgroundColor="#1A1A1A"
+			app:cardCornerRadius="16dp"
+			app:strokeColor="#424242"
+			app:strokeWidth="2dp">
+
+			<ScrollView
+				android:id="@+id/log_scroll"
+				android:layout_width="match_parent"
+				android:layout_height="match_parent"
+				android:padding="12dp">
+
+				<TextView
+					android:id="@+id/tv_log"
+					android:layout_width="match_parent"
+					android:layout_height="wrap_content"
+					android:fontFamily="monospace"
+					android:textColor="#00FF00"
+					android:textSize="11sp"
+					android:lineSpacingExtra="3dp" />
+			</ScrollView>
+		</com.google.android.material.card.MaterialCardView>
+
+		<com.google.android.material.button.MaterialButton
+			android:id="@+id/btn_reboot"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_alignParentBottom="true"
+			android:layout_alignParentEnd="true"
+			android:layout_marginEnd="16dp"
+			android:layout_marginBottom="16dp"
+			app:backgroundTint="#455A64"
+			android:text="Reboot Device"
+			android:textColor="#FFFFFF"
+			android:visibility="gone"
+			app:cornerRadius="12dp" />
+	</RelativeLayout>
+</LinearLayout>
+
