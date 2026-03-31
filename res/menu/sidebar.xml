@@ -22,6 +22,10 @@
             android:id="@+id/kernel_item"
             android:icon="@drawable/ic_action_kernel"
             android:title="@string/drawertitlekernel" />
+         <item
+            android:id="@+id/anykernel_item"
+            android:icon="@drawable/ic_action_anykernel"
+            android:title="Kernel Flasher" />
         <item
         android:id="@+id/modules_item"
         android:icon="@drawable/ic_action_extension"

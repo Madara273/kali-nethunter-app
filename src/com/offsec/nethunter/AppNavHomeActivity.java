@@ -474,6 +474,9 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         inappterm = prefs.getBoolean("inapp_terminal_enabled", false);
         if (!inappterm) hideMenuItemIfExists(2);
 
+        // hide kernel tab until fixed
+        hideMenuItemIfExists(4);
+
         String model = Build.HARDWARE;
         Boolean snowfall;
         if (iswatch) {
@@ -705,6 +708,8 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
             changeFragment(fragmentManager, SettingsFragment.newInstance(itemId));
         } else if (itemId == R.id.kernel_item) {
             changeFragment(fragmentManager, KernelFragment.newInstance(itemId));
+        } else if (itemId == R.id.anykernel_item) {
+            changeFragment(fragmentManager, AnyKernelFragment.newInstance(itemId));
         } else if (itemId == R.id.modules_item) {
             changeFragment(fragmentManager, ModulesFragment.newInstance(itemId));
         } else if (itemId == R.id.set_item) {
