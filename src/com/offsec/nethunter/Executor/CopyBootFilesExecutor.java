@@ -160,7 +160,7 @@ public class CopyBootFilesExecutor {
             prefs.edit().putBoolean(AppNavHomeActivity.CHROOT_INSTALLED_TAG, false).apply();
             return "Root permission is required!!";
         } else {
-            logDebug("Proceeding with copy operations.");
+            logDebug("Proceeding with copy and symlink operations.");
         }
 
         logDebug("COPYING FILES....");
@@ -176,8 +176,22 @@ public class CopyBootFilesExecutor {
         publishProgress("Fixing permissions for new files");
         setPermissions(NhPaths.APP_SCRIPTS_PATH, NhPaths.APP_INITD_PATH);
 
+        // Ensure busybox_nh exists and is executable before any subsequent usage
+        ensureBusyboxNh();
+
         publishProgress("Checking for encrypted /data....");
         CheckEncrypted();
+
+        publishProgress("Checking for bootkali symlinks....");
+        SymlinkScriptsToSystemBin();
+        Symlink("bootkali");
+        Symlink("bootkali_bash");
+        Symlink("bootkali_init");
+        Symlink("bootkali_login");
+        Symlink("killkali");
+        Symlink("busybox_nh");
+        Symlink("curl");
+        Symlink("iw");
 
         disableMagiskNotification();
 
@@ -218,6 +232,37 @@ public class CopyBootFilesExecutor {
             publishProgress("Failed to copy nh_files to SD card!");
         }
         return result;
+    }
+
+    private void ensureBusyboxNh() {
+        try {
+            if (!CheckForRoot.isRoot()) {
+                logDebug(TAG, "Root not available; skipping busybox_nh ensure.");
+                return;
+            }
+            final String source = NhPaths.APP_SCRIPTS_BIN_PATH + "/busybox_nh";
+            final String target = "/system/bin/busybox_nh";
+
+            // Ensure source exists and is executable (0755)
+            exe.RunAsRootReturnValue("chmod 755 " + source);
+
+            // Best-effort remount (may fail on modern Android; ignore errors)
+            exe.RunAsRoot(new String[]{
+                    "mount -o remount,rw /",
+                    "mount -o remount,rw /system",
+                    "mount -o remount,rw /system/bin"
+            });
+
+            // Recreate symlink if missing or wrong
+            String checkCmd = "[ -L " + target + " ] && [ \"$(readlink " + target + ")\" = \"" + source + "\" ]";
+            if (exe.RunAsRootReturnValue(checkCmd) != 0) {
+                exe.RunAsRootReturnValue("rm -f " + target);
+                Symlink("busybox_nh");
+            }
+            logDebug(TAG, "busybox_nh symlink ensured at: " + target);
+        } catch (Exception e) {
+            logDebug(TAG, "ensureBusyboxNh() failed: " + e.getMessage(), e);
+        }
     }
 
     private void setPermissions(String... paths) {
@@ -467,6 +512,105 @@ public class CopyBootFilesExecutor {
             logDebug(TAG, "isDeviceEncrypted() error: " + e.getMessage(), e);
             // Conservative default: assume not encrypted on error
             return false;
+        }
+    }
+
+    private void Symlink(String filename) {
+        if (!(filename.startsWith("bootkali") || filename.equals("killkali") || filename.equals("busybox_nh") || filename.equals("curl") || filename.equals("iw"))) {
+            logDebug("Skipping symlink/copy for: " + filename);
+            return;
+        }
+        File target = new File("/system/bin/" + filename);
+        logDebug("Checking for " + filename + " presence....");
+        if (target.exists()) return;
+
+        // Skip early if /system is read-only
+        String mountInfo = exe.RunAsRootOutput("mount | grep ' /system ' || true");
+        if (mountInfo != null && mountInfo.contains(" ro,")) {
+            logDebug("/system is mounted read-only. Cannot create symlink for: " + filename);
+            return;
+        }
+
+        String targetPath = "/system/bin/" + filename;
+        int rc;
+        switch (filename) {
+            case "busybox_nh": {
+                String sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/busybox_nh";
+                logDebug("command output: ln -s " + sourcePath + " " + targetPath);
+                rc = exe.RunAsRootReturnValue("ln -s " + sourcePath + " " + targetPath);
+                break;
+            }
+            case "iw": {
+                String sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/iw";
+                logDebug("command output: ln -s " + sourcePath + " " + targetPath);
+                rc = exe.RunAsRootReturnValue("ln -s " + sourcePath + " " + targetPath);
+                break;
+            }
+            case "curl": {
+                String sourcePath = NhPaths.APP_SCRIPTS_BIN_PATH + "/curl";
+                logDebug("command output: ln -s " + sourcePath + " " + targetPath);
+                rc = exe.RunAsRootReturnValue("ln -s " + sourcePath + " " + targetPath);
+                break;
+            }
+            default: {
+                String sourcePath = NhPaths.APP_SCRIPTS_PATH + "/" + filename;
+                logDebug("command output: ln -s " + sourcePath + " " + targetPath);
+                rc = exe.RunAsRootReturnValue("ln -s " + sourcePath + " " + targetPath);
+                break;
+            }
+        }
+        if (rc != 0) {
+            logDebug("Failed to create symlink for: " + filename);
+        }
+    }
+
+    private void SymlinkScriptsToSystemBin() {
+        exe.RunAsRoot(new String[]{
+                "mount -o remount,rw /",
+                "mount -o remount,rw /system",
+                "mount -o remount,rw /system/bin",
+                "mount -o remount,rw /system/xbin"
+        });
+
+        File scriptsDir = new File(NhPaths.APP_SCRIPTS_PATH);
+        File[] scripts = scriptsDir.listFiles();
+        if (scripts != null) {
+            for (File script : scripts) {
+                if (script.isFile()) {
+                    String scriptName = script.getName();
+                    if (!(scriptName.startsWith("bootkali") || scriptName.equals("killkali"))) {
+                        logDebug("Skipping symlink for: " + scriptName);
+                        continue;
+                    }
+                    String targetPath = "/system/bin/" + scriptName;
+                    String sourcePath = script.getAbsolutePath();
+
+                    String mountInfo = exe.RunAsRootOutput("mount | grep ' /system ' || true");
+                    if (mountInfo != null && mountInfo.contains("ro,")) {
+                        logDebug("/system is mounted read-only. Cannot create symlink for: " + scriptName);
+                        continue;
+                    }
+
+                    String linkCheck = exe.RunAsRootOutput("ls -l " + targetPath + " | grep '" + sourcePath + "' || true");
+                    if (linkCheck != null && linkCheck.contains(sourcePath)) {
+                        logDebug("Symlink already exists for: " + scriptName);
+                        continue;
+                    }
+
+                    int rmResult = exe.RunAsRootReturnValue("rm -f " + targetPath);
+                    if (rmResult != 0) {
+                        logDebug("Failed to remove existing file at " + targetPath + ". rmResult=" + rmResult);
+                        continue;
+                    }
+
+                    int lnResult = exe.RunAsRootReturnValue("ln -s " + sourcePath + " " + targetPath);
+                    if (lnResult == 0) {
+                        logDebug("Symlinked " + sourcePath + " to " + targetPath);
+                    } else {
+                        logDebug("Failed to symlink " + sourcePath + " to " + targetPath + ". lnResult=" + lnResult);
+                    }
+                }
+            }
         }
     }
 
