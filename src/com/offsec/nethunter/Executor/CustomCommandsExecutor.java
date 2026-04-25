@@ -214,7 +214,7 @@ public class CustomCommandsExecutor {
 	}
 
 	public static void run_cmd_android(String cmd) {
-		Intent intent = Bridge.createExecuteIntent("/system/bin/sh", cmd);
+		Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/android-su", cmd);
 		context.get().startActivity(intent);
 	}
 }
