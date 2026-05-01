@@ -37,18 +37,15 @@ public class CustomCommandsSQL extends SQLiteOpenHelper {
             {"2", "Launch Wifite",
                     "echo -ne \"\\033]0;Wifite\\007\" && clear;wifite",
                     "kali", "interactive", "0"},
-            {"3", "Launch hcxdumptool",
-                    "echo -ne \"\\033]0;hcxdumptool\\007\" && clear;hcxdumptool -i wlan1 -w $HOME/$(date +\"%Y-%m-%d_%H-%M-%S\").pcapng",
-                    "kali", "interactive", "0"},
-            {"4", "Start wlan1 in monitor mode",
-                    "echo -ne \"\\033]0;Wlan1 monitor mode\\007\" && clear;ip link set wlan1 down && iw wlan1 set monitor control && ip link set wlan1 up;sleep 2 && exit",
-                    "kali", "interactive", "0"},
-            {"5", "Start wlan0 in monitor mode",
+            {"3", "Start wlan0 in monitor mode",
                     "echo -ne \"\\033]0;Wlan0 Monitor Mode\\007\" && clear; su -c 'CON_MODE_PATH=$(find /sys/module/*/parameters/con_mode 2>/dev/null | head -n 1); if [ -f \"$CON_MODE_PATH\" ]; then CURRENT_MODE=$(cat \"$CON_MODE_PATH\"); if [ \"$CURRENT_MODE\" = \"4\" ]; then echo -e \"\\033[31mMonitor mode enabled already\\033[0m. Exiting..\"; else echo 4 > \"$CON_MODE_PATH\"; ip link set wlan0 down; ip link set wlan0 up; echo -e \"\\033[32mDone!\\033[0m Exiting..\"; fi; else echo -e \"\\033[31mYour device is not QCACLD3.0 or does not support monitor mode!\\033[0m Exiting..\"; fi' && sleep 2 && exit",
                     "android", "interactive", "0"},
-            {"6", "Stop wlan0 monitor mode",
+            {"4", "Stop wlan0 monitor mode",
                     "echo -ne \"\\033]0;Stopping Wlan0 Mon Mode\\007\" && clear; su -c 'CON_MODE_PATH=$(find /sys/module/*/parameters/con_mode 2>/dev/null | head -n 1); if [ -f \"$CON_MODE_PATH\" ]; then CURRENT_MODE=$(cat \"$CON_MODE_PATH\"); if [ \"$CURRENT_MODE\" = \"0\" ]; then echo -e \"\\033[31mMonitor mode disabled already\\033[0m. Exiting..\"; else ip link set wlan0 down; echo 0 > \"$CON_MODE_PATH\"; ip link set wlan0 up; svc wifi enable; echo -e \"\\033[32mDone!\\033[0m Exiting..\"; fi; else echo -e \"\\033[31mYour device is not QCACLD3.0 or does not support monitor mode!\\033[0m Exiting..\"; fi' && sleep 2 && exit",
                     "android", "interactive", "0"},
+            {"5", "Start wlan1 in monitor mode",
+                    "echo -ne \"\\033]0;Wlan1 monitor mode\\007\" && clear;ip link set wlan1 down && iw wlan1 set monitor control && ip link set wlan1 up;sleep 2 && exit",
+                    "kali", "interactive", "0"},
     };
 
     public static synchronized CustomCommandsSQL getInstance(Context context){
@@ -167,13 +164,14 @@ public class CustomCommandsSQL extends SQLiteOpenHelper {
     }
 
     public void editData(Integer targetPosition, List<String> editData){
-        try (SQLiteDatabase db = this.getWritableDatabase()) {
-            db.execSQL("UPDATE " + TABLE_NAME + " SET " + COLUMNS.get(1) + " = '" + editData.get(0).replace("'", "''") + "', " +
-                    COLUMNS.get(2) + " = '" + editData.get(1).replace("'", "''") + "', " +
-                    COLUMNS.get(3) + " = '" + editData.get(2).replace("'", "''") + "', " +
-                    COLUMNS.get(4) + " = '" + editData.get(3).replace("'", "''") + "', " +
-                    COLUMNS.get(5) + " = '" + editData.get(4).replace("'", "''") + "' WHERE " + COLUMNS.get(0) + " = " + targetPosition + ";");
-        }
+        SQLiteDatabase db = this.getWritableDatabase();
+        db.execSQL("UPDATE " + TABLE_NAME + " SET " + COLUMNS.get(1) + " = '" + editData.get(0).replace("'", "''") + "', " +
+                COLUMNS.get(2) + " = '" + editData.get(1).replace("'", "''") + "', " +
+                COLUMNS.get(3) + " = '" + editData.get(2).replace("'", "''") + "', " +
+                COLUMNS.get(4) + " = '" + editData.get(3).replace("'", "''") + "', " +
+                COLUMNS.get(5) + " = '" + editData.get(4).replace("'", "''") + "'" +
+                " WHERE " + COLUMNS.get(0) + " = " + (targetPosition + 1));
+        db.close();
     }
 
     public void resetData(){
