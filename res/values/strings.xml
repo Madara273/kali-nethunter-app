@@ -235,7 +235,7 @@
     <string name="settings_description">Select your desired boot animation here. Please note that some older phones prefer 90% the size of original screen resolution, so it can run smoothly. In that case, tick convert, then set image resolution and final resolution together.</string>
 
     <!-- Kernel -->
-    <string name="kernel_description">Flash your custom kernel straight from Android. Still in experimental state. Some systems does not support runtime flashing. In that case, it is recommended to flash the kernel through recovery. Your device\'s actual codename may not be in the kernel repo, in that case, use the list below to find available device names.</string>
+    <string name="kernel_description">Find a kernel for your device and flash via Magisk. If your device doesn\'t support runtime flashing, flash the kernel through recovery. If your device\'s actual codename not found automatically in the kernels repo, use the list below to browse available device codenames.</string>
 
     <!-- chroot stuff -->
     <array name="f_chrootmanager_build_chroot_arm_opts">
@@ -627,9 +627,9 @@
     <string name="kernel_loading">Loading ..</string>
     <string name="kernel_codename">Codename:</string>
     <string name="kernel_android">Android:</string>
-    <string name="kernel_custom_codename">Custom codename</string>
+    <string name="kernel_custom_codename">Select device</string>
     <string name="kernel_device_codename">Device codename</string>
-    <string name="kernel_check">Check</string>
+    <string name="kernel_check">Search</string>
     <string name="kernel_select_kernel_to_flash">Select kernel to flash</string>
     <string name="kernel_kernel_nethunter_zip">/sdcard/kernel_nethunter.zip</string>
     <string name="kernel_dots">…</string>

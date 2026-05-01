@@ -316,4 +316,7 @@
         <item name="iconPadding">4dp</item>
     </style>
 
+    <color name="settings_accent_color">#00BCD4</color>
+    <color name="settings_font_color">#000000</color>
+
 </resources>

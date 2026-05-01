@@ -46,7 +46,7 @@ public class KernelFragment extends Fragment implements MenuProvider {
     private ActivityResultLauncher<Intent> filePickerLauncher;
     private Activity activity;
     private final ShellExecuter exe = new ShellExecuter();
-    private static final String KERNEL_URL = "https://gitlab.com/yesimxev/kali-nethunter-kernels/-/raw/main/kernels.txt";
+    private static final String KERNEL_URL = "https://gitlab.com/yesimxev/kali-nethunter-kernels/-/raw/main/";
 
     public static KernelFragment newInstance(int sectionNumber) {
         KernelFragment fragment = new KernelFragment();
@@ -76,6 +76,7 @@ public class KernelFragment extends Fragment implements MenuProvider {
         Device.setText(Build.MODEL);
         Codename.setText(Build.DEVICE);
         Android.setText(Build.VERSION.RELEASE);
+        checkKernel(Build.DEVICE);
 
         // Custom codename
         final Spinner repoSpinner = rootView.findViewById(R.id.repo_list);
@@ -84,7 +85,6 @@ public class KernelFragment extends Fragment implements MenuProvider {
 
         final String[] codenamesList = exe.RunAsRootOutput("echo None;curl -s https://nethunter.kali.org/kernels.html | sed -n '/<tr class/{n;p;n;p;}' | sed 's/<[^>]*>//g' | sed 'n;/,/!s/^/- /' | paste - - | awk '!x[$0]++' | tail -n +2").split("\n");
         repoSpinner.setAdapter(new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, codenamesList));
-
         repoSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int pos, long id) {
@@ -121,9 +121,9 @@ public class KernelFragment extends Fragment implements MenuProvider {
         EditText kernelPath = rootView.findViewById(R.id.kernelpath);
         flashButton.setOnClickListener(v -> {
             String kernelfilepath = kernelPath.getText().toString();
-            run_cmd_android(NhPaths.APP_SCRIPTS_PATH + "/bin/magic-flash " + kernelfilepath + " | awk 'gsub(/ui_print /,\" \") && !/^ $/'");
+            run_cmd_android("echo -ne \"\\033]0;Flashing kernel\\007\" && clear; magisk --install-module " + kernelfilepath +
+                    ";echo -e '\\e[32mKernel flash completed. Reboot your phone to check the result. Exiting.. \\e[0m'; sleep 2 && exit");
         });
-
         return rootView;
     }
 
@@ -171,21 +171,22 @@ public class KernelFragment extends Fragment implements MenuProvider {
     private void checkKernel(String custom) {
         executor.execute(() -> {
             String codename = custom.isEmpty() ? Build.DEVICE : custom.replaceAll("[^a-zA-Z0-9_-]", "");
+            if (codename.contains("_")) codename = codename.replace("_", "-");
             String version = Build.VERSION.RELEASE;
-
             String version_text = getString(version);
-
-            String kernel_zip = exe.RunAsRootOutput("curl -s " + KERNEL_URL + " | grep " + codename + " | grep " + version_text + " || echo NA");
+            String kernel_zip = exe.RunAsRootOutput("curl -s " + KERNEL_URL + "kernels.txt | grep " + codename + " | grep " + version_text + " || echo NA");
+            String finalCodename = codename;
             requireActivity().runOnUiThread(() ->
-                    Toast.makeText(requireActivity().getApplicationContext(), "Searching for " + codename + " on Android " + version, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(requireActivity().getApplicationContext(), "Searching for " + finalCodename + " on Android " + version, Toast.LENGTH_SHORT).show()
             );
 
             if (!kernel_zip.equals("NA")) {
+
                 requireActivity().runOnUiThread(() -> {
                     MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
                     builder.setTitle("Your device is supported!");
-                    builder.setMessage("Do you want to check and flash the available kernel(s)?");
-                    builder.setPositiveButton("Ok", (dialog, which) -> {
+                    builder.setMessage("Do you want to flash the latest kernel?");
+                    builder.setPositiveButton("Yes", (dialog, which) -> {
                         if (kernel_zip.contains("\n")) {
                             final String[] kernelsArray = kernel_zip.split("\n");
                             MaterialAlertDialogBuilder builderInner = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
@@ -195,10 +196,10 @@ public class KernelFragment extends Fragment implements MenuProvider {
                                 String cmd = "echo -ne \"\\033]0;Flashing Kernel\\007\" && clear;" +
                                         "echo -e '\\e[34mDownloading " + kernelName + "...\\e[0m';" +
                                         "cd " + Environment.getExternalStorageDirectory().getPath() + " && " +
-                                        "curl " + KERNEL_URL + "/" + kernelName + " > " + kernelName + "; " +
+                                        "curl " + KERNEL_URL + kernelName + " > " + kernelName + "; " +
                                         "echo -e '\\e[32mFlashing kernel...\\e[0m';" +
-                                        NhPaths.APP_SCRIPTS_PATH + "/bin/magic-flash " + kernelName + " | awk 'gsub(/ui_print /,\" \") && !/^ $/';" +
-                                        "echo -e '\\e[32mKernel flash completed.\\e[0m';";
+                                        "magisk --install-module " + kernelName + "; " +
+                                        "echo -e '\\e[32mKernel flash completed. Reboot your phone to check the result. Exiting.. \\e[0m'; sleep 2 && exit";
                                 run_cmd_android(cmd);
                                 requireActivity().runOnUiThread(() ->
                                         Toast.makeText(requireActivity().getApplicationContext(), "Downloading to /sdcard and flashing...", Toast.LENGTH_SHORT).show()
@@ -209,17 +210,17 @@ public class KernelFragment extends Fragment implements MenuProvider {
                             String cmd = "echo -ne \"\\033]0;Flashing Kernel\\007\" && clear;" +
                                     "echo -e '\\e[34mDownloading " + kernel_zip + "...\\e[0m';" +
                                     "cd " + Environment.getExternalStorageDirectory().getPath() + " && " +
-                                    "curl " + KERNEL_URL + "/" + kernel_zip + " > " + kernel_zip + "; " +
-                                    "echo -e '\\e[32mFlashing kernel...\\e[0m';" +
-                                    NhPaths.APP_SCRIPTS_PATH + "/bin/magic-flash " + kernel_zip + " | awk 'gsub(/ui_print /,\" \") && !/^ $/';" +
-                                    "echo -e '\\e[32mKernel flash completed.\\e[0m';";
+                                    "curl " + KERNEL_URL + kernel_zip + " > " + kernel_zip + "; " +
+                                    "echo -e '\\e[32mFlashing kernel...\\e[0m'; " +
+                                    "magisk --install-module " + kernel_zip + "; " +
+                                    "echo -e '\\e[32mKernel flash completed. Reboot your phone to check the result. Exiting.. \\e[0m'; sleep 2 && exit";
                             run_cmd_android(cmd);
                             requireActivity().runOnUiThread(() ->
                                     Toast.makeText(requireActivity().getApplicationContext(), "Downloading to /sdcard and flashing...", Toast.LENGTH_SHORT).show()
                             );
                         }
                     });
-                    builder.setNegativeButton("Cancel", (dialog, which) -> {});
+                    builder.setNegativeButton("No", (dialog, which) -> {});
                     builder.show();
                 });
             } else {
