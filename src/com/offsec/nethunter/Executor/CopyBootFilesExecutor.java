@@ -55,21 +55,20 @@ public class CopyBootFilesExecutor {
         logDebug(TAG, "Progress: " + lastMessage);
     };
     private final String buildTime;
-    private Boolean shouldRun;
+    private boolean shouldRun;
     private final Activity activity;
     private WeakReference<AlertDialog> progressDialogRef;
     private CopyBootFilesExecutorListener listener;
-    private static final String result = "";
     private final SharedPreferences prefs;
     private final ShellExecuter exe = new ShellExecuter();
     private final WeakReference<Context> context;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private final AssetManager assetManager;
-    public final int NH_SYSTEM_LOGGING = 0;
+    private static final boolean NH_SYSTEM_LOGGING = false;
 
     private void logDebug(String tag, String message, Throwable throwable) {
-        if (NH_SYSTEM_LOGGING != 1) return;
+        if (!NH_SYSTEM_LOGGING) return;
         if (throwable != null) {
             Log.d(tag, message, throwable);
         } else {
@@ -104,10 +103,16 @@ public class CopyBootFilesExecutor {
     }
 
     public void execute() {
-        mainHandler.post(this::onPreExecute);
-        executor.execute(() -> {
-            String res = doInBackground();
-            mainHandler.post(() -> onPostExecute(res));
+        mainHandler.post(() -> {
+            onPreExecute();
+            if (!shouldRun) {
+                onPostExecute("");
+                return;
+            }
+            executor.execute(() -> {
+                String res = doInBackground();
+                mainHandler.post(() -> onPostExecute(res));
+            });
         });
     }
 
@@ -154,7 +159,7 @@ public class CopyBootFilesExecutor {
 
     private String doInBackground() {
         if (!shouldRun) {
-            return result;
+            return "";
         }
         if (!CheckForRoot.isRoot()) {
             prefs.edit().putBoolean(AppNavHomeActivity.CHROOT_INSTALLED_TAG, false).apply();
@@ -180,7 +185,7 @@ public class CopyBootFilesExecutor {
         ensureBusyboxNh();
 
         publishProgress("Checking for encrypted /data....");
-        CheckEncrypted();
+        checkEncrypted();
 
         publishProgress("Checking for bootkali symlinks....");
         SymlinkScriptsToSystemBin();
@@ -202,13 +207,14 @@ public class CopyBootFilesExecutor {
                 .apply();
 
         publishProgress("Checking for chroot....");
-        String command = "if [ -d " + NhPaths.CHROOT_PATH() + " ];then echo 1; fi";
+        String chrootPath = NhPaths.CHROOT_PATH();
+        String command = "if [ -d '" + chrootPath + "' ];then echo 1; fi";
         if ("1".equals(exe.RunAsRootOutput(command))) {
             prefs.edit().putBoolean(AppNavHomeActivity.CHROOT_INSTALLED_TAG, true).apply();
             publishProgress("Chroot Found!");
             publishProgress(exe.RunAsRootOutput(
-                    NhPaths.BUSYBOX + " mount -o remount,suid /data && chmod +s " +
-                            NhPaths.CHROOT_PATH() + "/usr/bin/sudo" +
+                    NhPaths.BUSYBOX + " mount -o remount,suid /data && chmod +s '" +
+                            chrootPath + "/usr/bin/sudo'" +
                             " && echo \"Initial setup done!\""));
         } else {
             publishProgress("Chroot not Found, install it in Chroot Manager");
@@ -231,7 +237,7 @@ public class CopyBootFilesExecutor {
             logDebug("\"nh_files\" directory does NOT exist at: " + nhFilesDir.getAbsolutePath());
             publishProgress("Failed to copy nh_files to SD card!");
         }
-        return result;
+        return "";
     }
 
     private void ensureBusyboxNh() {
@@ -274,7 +280,7 @@ public class CopyBootFilesExecutor {
     }
 
     private void installApks(String folderPath) {
-        for (String apk : FetchFiles(folderPath)) {
+        for (String apk : fetchFiles(folderPath)) {
             if (!apk.endsWith(".apk")) continue;
             String src = folderPath + "/" + apk;
             String safeSrc = "'" + src.replace("'", "'\\''") + "'";
@@ -330,7 +336,7 @@ public class CopyBootFilesExecutor {
             prefs.edit().putBoolean("pending_sd_sync", false).apply();
 
             publishProgress("Finalizing setup: syncing nh_files to SD card...");
-            new Thread(() -> {
+            executor.execute(() -> {
                 try {
                     syncNhFilesToSdcard();
                     File nhFilesDir = new File(NhPaths.SD_PATH, "nh_files");
@@ -343,7 +349,7 @@ public class CopyBootFilesExecutor {
                 } catch (Exception e) {
                     logDebug(TAG, "resumePendingSyncIfPermitted error: " + e.getMessage(), e);
                 }
-            }).start();
+            });
         }
     }
 
@@ -383,7 +389,7 @@ public class CopyBootFilesExecutor {
                 return;
             }
 
-            File outFile = new File(renameAssetIfneeded(destFile));
+            File outFile = new File(renameAssetIfNeeded(destFile));
             File parent = outFile.getParentFile();
             if (parent != null && !parent.exists() && !parent.mkdirs()) {
                 logDebug("Failed to create parent directories for: " + outFile.getAbsolutePath());
@@ -425,7 +431,7 @@ public class CopyBootFilesExecutor {
         logDebug(tag, message, null);
     }
 
-    private void CheckEncrypted() {
+    private void checkEncrypted() {
         // Robust detection of encrypted /data and application of compatibility fixes inside chroot
         try {
             logDebug("Checking if /data is encrypted...");
@@ -487,7 +493,7 @@ public class CopyBootFilesExecutor {
             chrootExec("id _apt || true", "Show _apt user info after group change");
             chrootExec("grep -m1 'APT::Sandbox::User' /etc/apt/apt.conf.d/01-android-nosandbox || true", "Verify apt nosandbox config");
         } catch (Exception e) {
-            logDebug(TAG, "CheckEncrypted() encountered an error: " + e.getMessage(), e);
+            logDebug(TAG, "checkEncrypted() encountered an error: " + e.getMessage(), e);
         }
     }
 
@@ -622,7 +628,7 @@ public class CopyBootFilesExecutor {
         return "";
     }
 
-    private String renameAssetIfneeded(String asset) {
+    private String renameAssetIfNeeded(String asset) {
         String cpuAbi = getPrimaryAbi();
 
         if (asset.matches("^.*-arm64$")) {
@@ -635,7 +641,7 @@ public class CopyBootFilesExecutor {
         return asset;
     }
 
-    private ArrayList<String> FetchFiles(String folder) {
+    private ArrayList<String> fetchFiles(String folder) {
         logDebug("Fetching files from " + folder);
         ArrayList<String> files = new ArrayList<>();
         try {
@@ -646,7 +652,7 @@ public class CopyBootFilesExecutor {
                 files.add(f.getName());
             }
         } catch (Exception e) {
-            logDebug(TAG, "FetchFiles error for folder: " + folder + ", " + e.getMessage());
+            logDebug(TAG, "fetchFiles error for folder: " + folder + ", " + e.getMessage());
         }
         return files;
     }
@@ -665,7 +671,7 @@ public class CopyBootFilesExecutor {
             progressDialog.dismiss();
         }
         if (listener != null) {
-            listener.onExecutorFinished(result);
+            listener.onExecutorFinished(objects);
         }
         // Prevent thread leaks
         executor.shutdown();
@@ -686,7 +692,7 @@ public class CopyBootFilesExecutor {
 
     public interface CopyBootFilesExecutorListener {
         void onExecutorPrepare();
-        void onExecutorFinished(Object result);
+        void onExecutorFinished(String result);
     }
 
     private void disableMagiskNotification() {

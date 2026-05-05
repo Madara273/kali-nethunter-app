@@ -72,7 +72,7 @@
     <uses-feature
         android:name="android.hardware.vulkan.version"
         android:version="4198400"
-        android:required="true"
+        android:required="false"
         tools:targetApi="24" />
     <supports-screens
         android:anyDensity="true"

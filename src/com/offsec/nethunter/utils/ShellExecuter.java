@@ -23,6 +23,41 @@ public class ShellExecuter {
     private final static String TAG = "ShellExecuter";
     public ShellExecuter() { }
 
+    /**
+     * Wraps {@code arg} in single quotes and escapes any single quotes within it, so that
+     * the result is safe to interpolate into a POSIX shell command string.
+     * Example: {@code shellEscape("it's a test")} → {@code 'it'\''s a test'}
+     */
+    public static String shellEscape(String arg) {
+        if (arg == null) return "''";
+        return "'" + arg.replace("'", "'\\''") + "'";
+    }
+
+    /**
+     * Returns true if {@code name} matches the safe pattern for a Linux network-interface name:
+     * 1-15 alphanumeric characters, underscores, hyphens, or dots.
+     */
+    public static boolean isValidInterfaceName(String name) {
+        return name != null && name.matches("[A-Za-z0-9._-]{1,15}");
+    }
+
+    /**
+     * Returns true if {@code name} is a valid Linux kernel module name:
+     * only alphanumeric characters, underscores, and hyphens, no path separators.
+     */
+    public static boolean isValidModuleName(String name) {
+        return name != null && name.matches("[A-Za-z0-9_-]+");
+    }
+
+    /**
+     * Returns true if {@code hostname} is a safe hostname/label value:
+     * alphanumeric, hyphens, dots, max 253 chars, no leading/trailing dots/hyphens.
+     */
+    public static boolean isValidHostname(String hostname) {
+        if (hostname == null || hostname.isEmpty() || hostname.length() > 253) return false;
+        return hostname.matches("[A-Za-z0-9]([A-Za-z0-9\\-.]{0,251}[A-Za-z0-9])?");
+    }
+
     public static Runtime cmd(String s) {
         Runtime runtime = Runtime.getRuntime();
         try {
