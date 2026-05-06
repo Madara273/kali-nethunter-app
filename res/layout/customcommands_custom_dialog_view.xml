@@ -8,7 +8,8 @@
     android:layout_marginLeft="10dp"
     android:layout_marginEnd="10dp"
     android:layout_marginRight="10dp"
-    android:layout_marginTop="20dp">
+    android:layout_marginTop="20dp"
+    android:padding="12dp">
 
     <TextView
         android:id="@+id/f_customcommands_adb_tv_title1"
