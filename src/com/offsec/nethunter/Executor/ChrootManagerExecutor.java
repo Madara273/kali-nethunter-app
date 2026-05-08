@@ -10,6 +10,7 @@ import com.offsec.nethunter.utils.ShellExecuter;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -132,6 +133,8 @@ public class ChrootManagerExecutor {
                             reader = new BufferedInputStream(input);
                             if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
                                 writer = new BufferedOutputStream(Files.newOutputStream(Paths.get(objects[3].toString())));
+                            } else {
+                                writer = new BufferedOutputStream(new FileOutputStream(objects[3].toString()));
                             }
 
                             byte[] data = new byte[1024];
