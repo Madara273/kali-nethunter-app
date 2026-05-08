@@ -1,13 +1,11 @@
 package com.offsec.nethunter.gps;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -290,11 +288,10 @@ public class LocationUpdateService extends Service {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "POST_NOTIFICATIONS permission not granted. Requesting permission.");
-            requestPostNotificationsPermission(this);
-            return;
+            Log.d(TAG, "POST_NOTIFICATIONS permission not granted in Service; skipping notify(), continuing foreground start.");
+        } else {
+            notificationManagerCompat.notify(NOTIFY_ID, notification);
         }
-        notificationManagerCompat.notify(NOTIFY_ID, notification);
 
         this.startForeground(NOTIFY_ID, notification);
         // start a timer that will update our Notification every second
@@ -397,8 +394,7 @@ public class LocationUpdateService extends Service {
         Notification notification = builder.build();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "POST_NOTIFICATIONS permission not granted. Requesting permission.");
-            requestPostNotificationsPermission(this);
+            Log.d(TAG, "POST_NOTIFICATIONS permission not granted in Service; skipping notification update.");
             return;
         }
         notificationManagerCompat.notify(NOTIFY_ID, notification);
@@ -578,16 +574,6 @@ public class LocationUpdateService extends Service {
             } catch (Exception exception) {
                 Log.d(TAG, "Failed to remove modern NMEA listener: " + exception.getMessage());
             }
-        }
-    }
-
-    private void requestPostNotificationsPermission(Context context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && context instanceof Activity) {
-            ActivityCompat.requestPermissions(
-                    (Activity) context,
-                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
-                    1
-            );
         }
     }
 
