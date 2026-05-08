@@ -19,6 +19,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
+import android.os.Process;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
@@ -51,6 +52,8 @@ import java.net.UnknownHostException;
 import java.net.InetAddress;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class LocationUpdateService extends Service {
     private FusedLocationProviderClient fusedLocationClient;
@@ -59,6 +62,7 @@ public class LocationUpdateService extends Service {
     public static final String CHANNEL_ID = "NethunterLocationUpdateChannel";
     public static final int NOTIFY_ID = 1004;
     private static final String TAG = "LocationUpdateService";
+    private static final long UDP_WORKER_SHUTDOWN_TIMEOUT_MS = 1000L;
     private static final String notificationTitle = "GPS Provider running";
     private static final String notificationText = "Sending GPS data to udp://127.0.0.1:" + NhPaths.GPS_PORT;
     private String lastLocationSourceReceived = "None";
@@ -95,7 +99,7 @@ public class LocationUpdateService extends Service {
         instance = this;
         initTimers();
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        udpWorkerThread = new HandlerThread("LocationUdpWorker");
+        udpWorkerThread = new HandlerThread("LocationUdpWorker", Process.THREAD_PRIORITY_BACKGROUND);
         udpWorkerThread.start();
         udpWorkerHandler = new Handler(udpWorkerThread.getLooper());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -548,6 +552,11 @@ public class LocationUpdateService extends Service {
 
     private void registerNmeaListener(LocationManager locationManager) {
         if (locationManager == null) return;
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "NMEA listener not registered: ACCESS_FINE_LOCATION not granted");
+            return;
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             try {
                 locationManager.addNmeaListener(nmeaMessageListener);
@@ -590,19 +599,32 @@ public class LocationUpdateService extends Service {
         stopTimers();
         stopLocationUpdates();
         if (udpWorkerHandler != null) {
+            CountDownLatch cleanupDone = new CountDownLatch(1);
             udpWorkerHandler.post(() -> {
-                if (dSock != null) {
-                    try {
+                try {
+                    if (dSock != null) {
                         dSock.close();
-                    } catch (Exception ignored) {
+                        dSock = null;
                     }
-                    dSock = null;
+                    udpDestAddr = null;
+                } finally {
+                    cleanupDone.countDown();
                 }
-                udpDestAddr = null;
             });
+            try {
+                cleanupDone.await(UDP_WORKER_SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            udpWorkerHandler.removeCallbacksAndMessages(null);
         }
         if (udpWorkerThread != null) {
             udpWorkerThread.quitSafely();
+            try {
+                udpWorkerThread.join(UDP_WORKER_SHUTDOWN_TIMEOUT_MS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
         super.onDestroy();
     }
