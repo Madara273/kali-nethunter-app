@@ -60,7 +60,7 @@ public class LocationUpdateService extends Service {
     public static final String CHANNEL_ID = "NethunterLocationUpdateChannel";
     public static final int NOTIFY_ID = 1004;
     private static final String TAG = "LocationUpdateService";
-    private static final long UDP_WORKER_SHUTDOWN_TIMEOUT_MS = 1000L;
+    private static final long UDP_WORKER_SHUTDOWN_TIMEOUT_MILLIS = 1000L;
     private static final String notificationTitle = "GPS Provider running";
     private static final String notificationText = "Sending GPS data to udp://127.0.0.1:" + NhPaths.GPS_PORT;
     private String lastLocationSourceReceived = "None";
@@ -562,7 +562,7 @@ public class LocationUpdateService extends Service {
             }
             return;
         }
-        Log.d(TAG, "NMEA listener not registered: API level below 24");
+        Log.d(TAG, "NMEA listener not registered: API level below Build.VERSION_CODES.N");
     }
 
     private void unregisterNmeaListener(LocationManager locationManager) {
@@ -598,7 +598,7 @@ public class LocationUpdateService extends Service {
                 }
             });
             try {
-                cleanupDone.await(UDP_WORKER_SHUTDOWN_TIMEOUT_MS, TimeUnit.MILLISECONDS);
+                cleanupDone.await(UDP_WORKER_SHUTDOWN_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
@@ -607,7 +607,7 @@ public class LocationUpdateService extends Service {
         if (udpWorkerThread != null) {
             udpWorkerThread.quitSafely();
             try {
-                udpWorkerThread.join(UDP_WORKER_SHUTDOWN_TIMEOUT_MS);
+                udpWorkerThread.join(UDP_WORKER_SHUTDOWN_TIMEOUT_MILLIS);
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
             }
