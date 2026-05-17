@@ -1,24 +1,23 @@
 package com.offsec.nethunter.gps;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationManager;
+import android.location.OnNmeaMessageListener;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.HandlerThread;
 import android.os.IBinder;
-import android.os.StrictMode;
+import android.os.Process;
 
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
@@ -44,7 +43,6 @@ import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.Inet4Address;
@@ -52,6 +50,8 @@ import java.net.UnknownHostException;
 import java.net.InetAddress;
 import java.util.Date;
 import java.util.Locale;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 public class LocationUpdateService extends Service {
     private FusedLocationProviderClient fusedLocationClient;
@@ -60,6 +60,7 @@ public class LocationUpdateService extends Service {
     public static final String CHANNEL_ID = "NethunterLocationUpdateChannel";
     public static final int NOTIFY_ID = 1004;
     private static final String TAG = "LocationUpdateService";
+    private static final long UDP_WORKER_SHUTDOWN_TIMEOUT_MILLIS = 1000L;
     private static final String notificationTitle = "GPS Provider running";
     private static final String notificationText = "Sending GPS data to udp://127.0.0.1:" + NhPaths.GPS_PORT;
     private String lastLocationSourceReceived = "None";
@@ -74,6 +75,8 @@ public class LocationUpdateService extends Service {
     private Date lastLocationTime = new Date();
     private Handler timerTaskHandler = null;
     private Handler resetListenersTimerTaskHandler = null;
+    private HandlerThread udpWorkerThread = null;
+    private Handler udpWorkerHandler = null;
     private final IBinder binder = new ServiceBinder();
 
     // this allows us to check if there is already a LocationUpdateService running without actually attaching to it
@@ -94,6 +97,9 @@ public class LocationUpdateService extends Service {
         instance = this;
         initTimers();
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        udpWorkerThread = new HandlerThread("LocationUdpWorker", Process.THREAD_PRIORITY_BACKGROUND);
+        udpWorkerThread.start();
+        udpWorkerHandler = new Handler(udpWorkerThread.getLooper());
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel serviceChannel = new NotificationChannel(
                     CHANNEL_ID,
@@ -259,14 +265,7 @@ public class LocationUpdateService extends Service {
 
         // Try to register for actual NMEA data straight from the GPS
         LocationManager locationManager = (LocationManager) getSystemService(Service.LOCATION_SERVICE);
-        try {
-            Method addNmeaListener =
-                    LocationManager.class.getMethod("addNmeaListener", GpsStatus.NmeaListener.class);
-            addNmeaListener.invoke(locationManager, nmeaListener);
-            Log.d(TAG, "addNmeaListener success");
-        } catch (Exception exception) {
-            Log.d(TAG, "Failed to add NMEA listener: " + exception.getMessage());
-        }
+        registerNmeaListener(locationManager);
 
         // turn on a Persistent Notification so we can continue to get location updates even when backgrounded
         NotificationManagerCompat notificationManagerCompat = NotificationManagerCompat.from(getApplicationContext());
@@ -289,11 +288,10 @@ public class LocationUpdateService extends Service {
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "POST_NOTIFICATIONS permission not granted. Requesting permission.");
-            requestPostNotificationsPermission(this);
-            return;
+            Log.d(TAG, "POST_NOTIFICATIONS permission not granted in Service; skipping notify(), continuing foreground start.");
+        } else {
+            notificationManagerCompat.notify(NOTIFY_ID, notification);
         }
-        notificationManagerCompat.notify(NOTIFY_ID, notification);
 
         this.startForeground(NOTIFY_ID, notification);
         // start a timer that will update our Notification every second
@@ -396,19 +394,21 @@ public class LocationUpdateService extends Service {
         Notification notification = builder.build();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
                 ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            Log.d(TAG, "POST_NOTIFICATIONS permission not granted. Requesting permission.");
-            requestPostNotificationsPermission(this);
+            Log.d(TAG, "POST_NOTIFICATIONS permission not granted in Service; skipping notification update.");
             return;
         }
         notificationManagerCompat.notify(NOTIFY_ID, notification);
         Log.d(TAG, "Notification Sent: " + updatedText);
     }
 
-    private final GpsStatus.NmeaListener nmeaListener = (l, s) -> {
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    private final OnNmeaMessageListener nmeaMessageListener = (message, timestamp) -> onNmeaMessage(message);
+
+    private void onNmeaMessage(String s) {
         if (!s.startsWith("$GPGGA")) {
             // if we're using the real GPS as our source, go ahead and send these extra information strings to gpsd
             if ("GPS".equals(lastLocationSourcePublished))
-                sendUdpPacket(s);
+                queueUdpPacket(s);
             return;
         }
         String[] fields = s.split(",");
@@ -425,7 +425,7 @@ public class LocationUpdateService extends Service {
         Log.d(TAG, "Real NMEA: " + s);
         lastLocationSourceReceived = "NmeaListener";
         publishLocation(s, "GPS");
-    };
+    }
 
     private boolean firstupdate = true;
     private final LocationListener locationListener = location -> {
@@ -439,9 +439,6 @@ public class LocationUpdateService extends Service {
     };
 
     private void publishLocation(String nmeaSentence, String source) {
-        // Workaround to allow network operations in main thread
-        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-        StrictMode.setThreadPolicy(policy);
         try {
             String[] fields = nmeaSentence.split(",");
             String latStr = fields[2];
@@ -479,7 +476,13 @@ public class LocationUpdateService extends Service {
             }
             updateReceiver.onPositionUpdate(nmeaSentence);
         }
-        sendUdpPacket(nmeaSentence);
+        queueUdpPacket(nmeaSentence);
+    }
+
+    private void queueUdpPacket(String nmeaSentence) {
+        if (udpWorkerHandler != null) {
+            udpWorkerHandler.post(() -> sendUdpPacket(nmeaSentence));
+        }
     }
 
     private void initializeUdpComponents() {
@@ -537,24 +540,40 @@ public class LocationUpdateService extends Service {
     private void stopLocationUpdates() {
         locationUpdatesStarted = false;
         LocationManager locationManager = (LocationManager) getSystemService(Service.LOCATION_SERVICE);
-        try {
-            Method removeNmeaListener =
-                    LocationManager.class.getMethod("removeNmeaListener", GpsStatus.NmeaListener.class);
-            removeNmeaListener.invoke(locationManager, nmeaListener);
-            Log.d(TAG, "removeNmeaListener success");
-        } catch (Exception exception) {
-            Log.d(TAG, "Failed to remove NMEA listener: " + exception.getMessage());
+        unregisterNmeaListener(locationManager);
+        if (fusedLocationClient != null) {
+            fusedLocationClient.removeLocationUpdates(locationListener);
         }
-        fusedLocationClient.removeLocationUpdates(locationListener);
     }
 
-    private void requestPostNotificationsPermission(Context context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU && context instanceof Activity) {
-            ActivityCompat.requestPermissions(
-                    (Activity) context,
-                    new String[]{Manifest.permission.POST_NOTIFICATIONS},
-                    1
-            );
+    private void registerNmeaListener(LocationManager locationManager) {
+        if (locationManager == null) return;
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            Log.d(TAG, "NMEA listener not registered: ACCESS_FINE_LOCATION not granted");
+            return;
+        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                locationManager.addNmeaListener(nmeaMessageListener);
+                Log.d(TAG, "addNmeaListener success (modern API)");
+            } catch (Exception exception) {
+                Log.d(TAG, "Failed to add modern NMEA listener: " + exception.getMessage());
+            }
+            return;
+        }
+        Log.d(TAG, "NMEA listener not registered: API level below Build.VERSION_CODES.N");
+    }
+
+    private void unregisterNmeaListener(LocationManager locationManager) {
+        if (locationManager == null) return;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            try {
+                locationManager.removeNmeaListener(nmeaMessageListener);
+                Log.d(TAG, "removeNmeaListener success (modern API)");
+            } catch (Exception exception) {
+                Log.d(TAG, "Failed to remove modern NMEA listener: " + exception.getMessage());
+            }
         }
     }
 
@@ -565,6 +584,34 @@ public class LocationUpdateService extends Service {
         // stop our Notification update timer
         stopTimers();
         stopLocationUpdates();
+        if (udpWorkerHandler != null) {
+            CountDownLatch cleanupDone = new CountDownLatch(1);
+            udpWorkerHandler.post(() -> {
+                try {
+                    if (dSock != null) {
+                        dSock.close();
+                        dSock = null;
+                    }
+                    udpDestAddr = null;
+                } finally {
+                    cleanupDone.countDown();
+                }
+            });
+            try {
+                cleanupDone.await(UDP_WORKER_SHUTDOWN_TIMEOUT_MILLIS, TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            udpWorkerHandler.removeCallbacksAndMessages(null);
+        }
+        if (udpWorkerThread != null) {
+            udpWorkerThread.quitSafely();
+            try {
+                udpWorkerThread.join(UDP_WORKER_SHUTDOWN_TIMEOUT_MILLIS);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
         super.onDestroy();
     }
 }
