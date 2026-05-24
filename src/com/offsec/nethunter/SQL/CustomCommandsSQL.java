@@ -170,7 +170,8 @@ public class CustomCommandsSQL extends SQLiteOpenHelper {
                 COLUMNS.get(2) + " = '" + editData.get(1).replace("'", "''") + "', " +
                 COLUMNS.get(3) + " = '" + editData.get(2).replace("'", "''") + "', " +
                 COLUMNS.get(4) + " = '" + editData.get(3).replace("'", "''") + "', " +
-                COLUMNS.get(5) + " = '" + editData.get(4).replace("'", "''") + "' WHERE " + COLUMNS.get(0) + " = " + targetPosition + ";");
+                COLUMNS.get(5) + " = '" + editData.get(4).replace("'", "''") + "'" +
+                " WHERE " + COLUMNS.get(0) + " = " + (targetPosition + 1));
         db.close();
     }
 
