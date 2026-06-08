@@ -663,6 +663,8 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
             changeFragment(fragmentManager, HidFragment.newInstance(itemId));
         } else if (itemId == R.id.duckhunter_item) {
             changeFragment(fragmentManager, com.offsec.nethunter.DuckHunterFragment.newInstance(itemId));
+        } else if (itemId == R.id.eviltwin_item) {
+    changeFragment(fragmentManager, new EvilTwinFragment());
         } else if (itemId == R.id.usbarsenal_item) {
             if (exe.RunAsRootReturnValue("ls /config/usb_gadget/g1") == 0) {
                 changeFragment(fragmentManager, USBArsenalFragment.newInstance(itemId));

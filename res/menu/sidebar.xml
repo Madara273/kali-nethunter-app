@@ -69,6 +69,10 @@
             android:icon="@drawable/ic_action_network_wifi"
             android:title="@string/drawertitlewifipumpkin" />
         <item
+            android:id="@+id/eviltwin_item"
+            android:icon="@drawable/ic_action_network_wifi"
+            android:title="@string/drawertitleeviltwin" />
+        <item
             android:id="@+id/wps_item"
             android:icon="@drawable/ic_baseline_wifi_protected_setup_24"
             android:title="@string/drawertitlewps" />
