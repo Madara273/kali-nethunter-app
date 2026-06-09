@@ -487,12 +487,13 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
             if (model.equals("catfish") || model.equals("catshark") || model.equals("catshark-4g")) hideMenuItemIfExists(9);
             hideMenuItemIfExists(10);
             hideMenuItemIfExists(15);
-            hideMenuItemIfExists(18);
-            hideMenuItemIfExists(20);
+            hideMenuItemIfExists(16);
+            hideMenuItemIfExists(19);
             hideMenuItemIfExists(21);
             hideMenuItemIfExists(22);
             hideMenuItemIfExists(23);
             hideMenuItemIfExists(24);
+            hideMenuItemIfExists(25);
         } else {
             snowfall = prefs.getBoolean("snowfall_enabled", true);
         }
@@ -663,6 +664,8 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
             changeFragment(fragmentManager, HidFragment.newInstance(itemId));
         } else if (itemId == R.id.duckhunter_item) {
             changeFragment(fragmentManager, com.offsec.nethunter.DuckHunterFragment.newInstance(itemId));
+        } else if (itemId == R.id.eviltwin_item) {
+    changeFragment(fragmentManager, new EvilTwinFragment());
         } else if (itemId == R.id.usbarsenal_item) {
             if (exe.RunAsRootReturnValue("ls /config/usb_gadget/g1") == 0) {
                 changeFragment(fragmentManager, USBArsenalFragment.newInstance(itemId));
