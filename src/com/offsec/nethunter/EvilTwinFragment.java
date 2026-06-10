@@ -57,8 +57,6 @@ public class EvilTwinFragment extends Fragment {
     private RadioGroup apSourceGroup;
     private EditText apNameInput;
     private RadioGroup internetSourceGroup;
-    private EditText customInternetInput;
-    private LinearLayout customInternetLayout;
     private Button startButton;
     private Button clearLogsButton;
     private TextView logText;
@@ -100,8 +98,6 @@ public class EvilTwinFragment extends Fragment {
         apSourceGroup = view.findViewById(R.id.eviltwin_ap_source);
         apNameInput = view.findViewById(R.id.eviltwin_ap_name);
         internetSourceGroup = view.findViewById(R.id.eviltwin_internet_source);
-        customInternetInput = view.findViewById(R.id.eviltwin_internet_custom_input);
-        customInternetLayout = view.findViewById(R.id.eviltwin_internet_custom_layout);
         startButton = view.findViewById(R.id.eviltwin_start);
         clearLogsButton = view.findViewById(R.id.eviltwin_clear);
         logText = view.findViewById(R.id.eviltwin_log);
@@ -157,11 +153,8 @@ public class EvilTwinFragment extends Fragment {
 
         // Internet source radio button listener
         internetSourceGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            if (checkedId == R.id.eviltwin_internet_custom) {
-                customInternetLayout.setVisibility(View.VISIBLE);
-            } else {
-                customInternetLayout.setVisibility(View.GONE);
-            }
+           // Only auto-detect and wifi options now
+           Log.d("EvilTwin", "Internet source selected: " + checkedId);
         });
 
         // Scan button click listener
@@ -400,12 +393,7 @@ public class EvilTwinFragment extends Fragment {
             return "auto";
         } else if (checkedId == R.id.eviltwin_internet_wifi) {
             return "wlan0";
-        } else if (checkedId == R.id.eviltwin_internet_custom) {
-            String custom = customInternetInput.getText().toString().trim();
-            if (!custom.isEmpty()) {
-                return custom;
-            }
-        }
+        } 
         return "auto";
     }
 
@@ -467,11 +455,6 @@ public class EvilTwinFragment extends Fragment {
         String apSource = getApSource();
         String internetSource = getInternetSource();
         
-        // Check for custom internet
-        String customInternet = "";
-        if (internetSourceGroup.getCheckedRadioButtonId() == R.id.eviltwin_internet_custom) {
-            customInternet = customInternetInput.getText().toString().trim();
-        }
         
         // Build command
         final String command = "cd /eviltwin && python3 module.py --interface " + selectedInterface +
@@ -481,13 +464,8 @@ public class EvilTwinFragment extends Fragment {
                 " --ap-source " + apSource +
                 " --ap-name " + apName +
                 " --internet " + internetSource;
-        
-        String commandWithCustom = command;
-        if (!customInternet.isEmpty()) {
-            commandWithCustom += " --custom-internet " + customInternet;
-        }
-        
-        String finalCommand = commandWithCustom + " > /sdcard/evil_twin.log 2>&1 & echo $! > /sdcard/evil_twin.pid";
+             
+        String finalCommand = command + " > /sdcard/evil_twin.log 2>&1 & echo $! > /sdcard/evil_twin.pid";
         
         // Log the command and parameters to logcat
         Log.d("EvilTwin", "========================================");
@@ -502,9 +480,6 @@ public class EvilTwinFragment extends Fragment {
         Log.d("EvilTwin", "  AP Source: " + apSource);
         Log.d("EvilTwin", "  AP Name: " + apName);
         Log.d("EvilTwin", "  Internet: " + internetSource);
-        if (!customInternet.isEmpty()) {
-            Log.d("EvilTwin", "  Custom Internet: " + customInternet);
-        }
         Log.d("EvilTwin", "========================================");
         
         appendLog("[*] Starting attack on " + selectedTargetSSID);
