@@ -6,6 +6,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -117,6 +118,22 @@ public class RunAtBootService extends Service {
                 else resultMsg = "Please start chroot as needed.";
                 break;
             }
+        }
+        Boolean iswatch = getBaseContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
+        Boolean wifi_was_on = false;
+        Boolean data_was_on = false;
+        if (!iswatch) if (resultMsg.contains("Boot completed.")) {
+            if (exe.RunAsRootOutput("settings get global wifi_on").equals("1")) {
+                exe.RunAsRoot(new String[]{"svc wifi disable"});
+                wifi_was_on = true;
+            }
+            if (exe.RunAsRootOutput("settings get global mobile_data").equals("1")) {
+                exe.RunAsRoot(new String[]{"svc data disable"});
+                data_was_on = true;
+            }
+            exe.RunAsChrootOutput("update-alternatives --set iptables /usr/sbin/iptables-legacy; iptables-save | grep -v \"bpf\" > /sdcard/iptables-default");
+            if (wifi_was_on) exe.RunAsRoot(new String[]{"svc wifi enable"});
+            if (data_was_on) exe.RunAsRoot(new String[]{"svc data enable"});
         }
 
         doNotification(
