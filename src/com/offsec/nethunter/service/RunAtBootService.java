@@ -131,7 +131,7 @@ public class RunAtBootService extends Service {
                 exe.RunAsRoot(new String[]{"svc data disable"});
                 data_was_on = true;
             }
-            exe.RunAsChrootOutput("update-alternatives --set iptables /usr/sbin/iptables-legacy; iptables-save | grep -v \"bpf\" > /sdcard/iptables-default");
+            exe.RunAsChrootOutput("update-alternatives --set iptables /usr/sbin/iptables-legacy; iptables-save | grep -v \"bpf\" > /sdcard/iptables-default; [[ $(tail -n 1 file.txt) == \"COMMIT\" ]] || echo \"COMMIT\" >> /sdcard/iptables-default");
             if (wifi_was_on) exe.RunAsRoot(new String[]{"svc wifi enable"});
             if (data_was_on) exe.RunAsRoot(new String[]{"svc data enable"});
         }
