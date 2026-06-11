@@ -256,7 +256,7 @@ public class WifipumpkinFragment extends Fragment {
                 } else {
                     Wlan0to1_string[0] = "0";
                 }
-                Toast.makeText(requireActivity().getApplicationContext(), "Starting.. type 'exit' into the terminal to stop Wifipumpkin3", Toast.LENGTH_LONG).show();
+                Toast.makeText(requireActivity().getApplicationContext(), "Starting.. you may need to restart wifi for AndroidAP after Wifipumpkin3", Toast.LENGTH_LONG).show();
 
                 exe.RunAsRoot(new String[]{"sed -i '/^APIFACE=/c\\APIFACE=" + APiface_string + "' " + NhPaths.APP_SD_FILES_PATH + "/modules/start-wp3.sh"});
                 exe.RunAsRoot(new String[]{"sed -i '/^NETIFACE=/c\\NETIFACE=" + NETiface_string + "' " + NhPaths.APP_SD_FILES_PATH + "/modules/start-wp3.sh"});
