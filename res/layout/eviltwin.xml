@@ -251,50 +251,7 @@
                         android:layout_height="wrap_content"
                         android:text="WiFi (wlan0)"
                         android:textColor="@android:color/white"/>
-
-                    <RadioButton
-                        android:id="@+id/eviltwin_internet_custom"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Custom interface"
-                        android:textColor="@android:color/white"/>
                 </RadioGroup>
-
-                <LinearLayout
-                    android:id="@+id/eviltwin_internet_custom_layout"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:visibility="gone">
-
-                    <TextView
-                        android:textSize="12sp"
-                        android:textColor="@android:color/holo_orange_light"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginBottom="4dp"
-                        android:text="Custom Interface Name"/>
-
-                    <com.google.android.material.card.MaterialCardView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:padding="4dp"
-                        app:cardCornerRadius="4dp"
-                        app:cardElevation="0dp"
-                        app:strokeColor="@android:color/holo_orange_light"
-                        app:strokeWidth="2dp">
-
-                        <EditText
-                            android:id="@+id/eviltwin_internet_custom_input"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="rmnet_data0"
-                            android:textColor="@android:color/white"
-                            android:background="@android:color/transparent"
-                            android:padding="8dp"/>
-
-                    </com.google.android.material.card.MaterialCardView>
-
-                </LinearLayout>
 
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
