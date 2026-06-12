@@ -120,20 +120,8 @@ public class RunAtBootService extends Service {
             }
         }
         Boolean iswatch = getBaseContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
-        Boolean wifi_was_on = false;
-        Boolean data_was_on = false;
         if (!iswatch) if (resultMsg.contains("Boot completed.")) {
-            if (exe.RunAsRootOutput("settings get global wifi_on").equals("1")) {
-                exe.RunAsRoot(new String[]{"svc wifi disable"});
-                wifi_was_on = true;
-            }
-            if (exe.RunAsRootOutput("settings get global mobile_data").equals("1")) {
-                exe.RunAsRoot(new String[]{"svc data disable"});
-                data_was_on = true;
-            }
-            exe.RunAsChrootOutput("update-alternatives --set iptables /usr/sbin/iptables-legacy; iptables-save | grep -v \"bpf\" > /sdcard/iptables-default; [[ $(tail -n 1 file.txt) == \"COMMIT\" ]] || echo \"COMMIT\" >> /sdcard/iptables-default");
-            if (wifi_was_on) exe.RunAsRoot(new String[]{"svc wifi enable"});
-            if (data_was_on) exe.RunAsRoot(new String[]{"svc data enable"});
+            exe.RunAsChrootOutput("update-alternatives --set iptables /usr/sbin/iptables-legacy; iptables-save | grep -v \"bpf\" > /sdcard/iptables-default;  [[ ! grep -B1 \"# Completed\" /sdcard/iptables-default | head -n1 | grep -q \"COMMIT\" ]] && sed -i '/^# Completed/i COMMIT' /sdcard/iptables-default; fi");
         }
 
         doNotification(
