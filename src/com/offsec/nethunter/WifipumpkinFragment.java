@@ -256,7 +256,7 @@ public class WifipumpkinFragment extends Fragment {
                 } else {
                     Wlan0to1_string[0] = "0";
                 }
-                Toast.makeText(requireActivity().getApplicationContext(), "Starting.. type 'exit' into the terminal to stop Wifipumpkin3", Toast.LENGTH_LONG).show();
+                Toast.makeText(requireActivity().getApplicationContext(), "Starting.. you may need to restart wifi for AndroidAP after Wifipumpkin3", Toast.LENGTH_LONG).show();
 
                 exe.RunAsRoot(new String[]{"sed -i '/^APIFACE=/c\\APIFACE=" + APiface_string + "' " + NhPaths.APP_SD_FILES_PATH + "/modules/start-wp3.sh"});
                 exe.RunAsRoot(new String[]{"sed -i '/^NETIFACE=/c\\NETIFACE=" + NETiface_string + "' " + NhPaths.APP_SD_FILES_PATH + "/modules/start-wp3.sh"});
@@ -351,17 +351,19 @@ public class WifipumpkinFragment extends Fragment {
 
     public void RunSetup() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        String cmd = "echo -ne \"\\033]0;Wifipumpkin3 Setup\\007\" && clear && apt update && apt install wifipumpkin3 dnschef -y; wp3; " +
+        String cmd = "echo -ne \"\\033]0;Wifipumpkin3 Setup\\007\" && clear && apt update && apt install wifipumpkin3 dnschef xtables-addons-common -y; wp3; " +
                 "if [ -d /sdcard/nh_files/templates ];then cd /sdcard/nh_files/templates; for file in *; do wp3 -x \"use misc.custom_captiveflask; install `echo \"${file%%.*}\"` $file; back; exit\"; done; " +
-                "cp -r /root/.config/wifipumpkin3/config/templates/* /usr/share/wifipumpkin3/config/templates/; else echo 'No templates directory in /sdcard/nh_files'; fi; exit";
+                "cp -r /root/.config/wifipumpkin3/config/templates/* /usr/share/wifipumpkin3/config/templates/; else echo 'No templates directory in /sdcard/nh_files'; fi; " +
+                "update-alternatives --set iptables /usr/sbin/iptables-legacy; iptables-save | grep -v \"bpf\" > /sdcard/iptables-default; if ! grep -B1 \"# Completed\" /sdcard/iptables-default | head -n1 | grep -q \"COMMIT\"; then sed -i '/^# Completed/i COMMIT' /sdcard/iptables-default; fi; exit";
         run_cmd(cmd);
         sharedpreferences.edit().putBoolean("wp3_setup_done", true).apply();
     }
     public void RunUpdate() {
         sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
-        String cmd = "echo -ne \"\\033]0;Wifipumpkin3 Update\\007\" && clear && apt update && apt install wifipumpkin3 dnschef -y; " +
+        String cmd = "echo -ne \"\\033]0;Wifipumpkin3 Update\\007\" && clear && apt update && apt install wifipumpkin3 dnschef xtables-addons-common -y; " +
                 "if [ -d /sdcard/nh_files/templates ];then cd /sdcard/nh_files/templates; for file in *; do wp3 -x \"use misc.custom_captiveflask; install `echo \"${file%%.*}\"` $file; back; exit\"; done; " +
-                "cp -r /root/.config/wifipumpkin3/config/templates/* /usr/share/wifipumpkin3/config/templates/; else echo 'No templates directory in /sdcard/nh_files'; fi; exit";
+                "cp -r /root/.config/wifipumpkin3/config/templates/* /usr/share/wifipumpkin3/config/templates/; else echo 'No templates directory in /sdcard/nh_files'; fi; " +
+                "update-alternatives --set iptables /usr/sbin/iptables-legacy; iptables-save | grep -v \"bpf\" > /sdcard/iptables-default;  if ! grep -B1 \"# Completed\" /sdcard/iptables-default | head -n1 | grep -q \"COMMIT\"; then sed -i '/^# Completed/i COMMIT' /sdcard/iptables-default; fi; exit";
         run_cmd(cmd);
         sharedpreferences.edit().putBoolean("wp3_setup_done", true).apply();
     }
