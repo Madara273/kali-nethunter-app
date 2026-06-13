@@ -6,6 +6,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -117,6 +118,10 @@ public class RunAtBootService extends Service {
                 else resultMsg = "Please start chroot as needed.";
                 break;
             }
+        }
+        Boolean iswatch = getBaseContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
+        if (!iswatch) if (resultMsg.contains("Boot completed.")) {
+            exe.RunAsChrootOutput("update-alternatives --set iptables /usr/sbin/iptables-legacy; iptables-save | grep -v \"bpf\" > /sdcard/iptables-default; if ! grep -B1 \"# Completed\" /sdcard/iptables-default | head -n1 | grep -q \"COMMIT\"; then sed -i '/^# Completed/i COMMIT' /sdcard/iptables-default; fi");
         }
 
         doNotification(
