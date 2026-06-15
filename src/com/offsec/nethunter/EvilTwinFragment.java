@@ -73,6 +73,9 @@ public class EvilTwinFragment extends Fragment {
     private Activity activity;
     private SharedPreferences sharedpreferences;
 
+    private Boolean inappterm;
+    private static final String PREFS_NAME = "nethunter_prefs";
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -617,13 +620,13 @@ public class EvilTwinFragment extends Fragment {
 
     private void RunSetup() {
         String command = "echo -ne \"\\033]0;Evil Twin Setup\\007\" && clear;apt update --fix-missing && apt install -y aircrack-ng hostapd dnsmasq php python3 python3-pip ethtool dnschef iw tshark xtables-addons-common && pip3 install flask requests && git clone https://github.com/dr1408/eviltwin /eviltwin";
-        run_cmd_inapp(command);
+        check_which_cmd(command);
         sharedpreferences.edit().remove("eviltwin_setup_done").apply();
     }
 
     private void RunUpdate() {
         String command = "echo -ne \"\\033]0;Evil Twin Update\\007\" && clear;cd /eviltwin && git pull && apt update --fix-missing && apt install -y aircrack-ng hostapd dnsmasq php python3 python3-pip ethtool dnschef iw tshark xtables-addons-common && pip3 install flask requests";
-        run_cmd_inapp(command);
+        check_which_cmd(command);
     }
 
     private void RunDocumentation() {
@@ -631,6 +634,12 @@ public class EvilTwinFragment extends Fragment {
         startActivity(intent);
     }
 
+    public void check_which_cmd(String cmd) {
+        SharedPreferences sp = requireContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        inappterm = sp.getBoolean("inapp_terminal_enabled", false);
+        if (inappterm) run_cmd_inapp(cmd);
+        else run_cmd(cmd);
+    }
     private void run_cmd(String command) {
         Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", command);
         activity.startActivity(intent);
