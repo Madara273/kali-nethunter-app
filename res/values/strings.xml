@@ -693,7 +693,8 @@
     <string name="eviltwin_setup_message">This seems to be the first run.\n\nEvil Twin module requires installation of required packages and the attack script.\n\nInstall the Evil Twin tools now?</string>
     <string name="eviltwin_setup_button">Setup</string>
     <string name="eviltwin_dismiss_button">Dismiss</string>
-    <string name="action_setup">Setup</string>
+    <string name="eviltwin_description">Run a fake access point portal with handshake verification using a virtually created AP. You only need an external adapter for scanning and deauthing the target network.</string>
+    <string name="action_setup">Setup</string>original
     <string name="action_update">Update</string>
     <string name="action_documentation">Documentation</string>
 

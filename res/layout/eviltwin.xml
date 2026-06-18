@@ -335,7 +335,7 @@
 
                 <com.google.android.material.card.MaterialCardView
                     android:layout_width="match_parent"
-                    android:layout_height="200dp"
+                    android:layout_height="300dp"
                     android:padding="4dp"
                     app:cardCornerRadius="4dp"
                     app:cardElevation="0dp"
@@ -343,6 +343,7 @@
                     app:strokeWidth="2dp">
 
                     <androidx.core.widget.NestedScrollView
+                        android:id="@+id/eviltwin_view"
                         android:background="@android:color/black"
                         android:padding="10dp"
                         android:layout_width="match_parent"
