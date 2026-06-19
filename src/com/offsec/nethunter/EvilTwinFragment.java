@@ -22,6 +22,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
+import android.widget.ScrollView;
 import android.widget.Spinner;
 import android.widget.TextView;
 
@@ -34,6 +35,7 @@ import androidx.core.view.MenuHost;
 import androidx.core.view.MenuProvider;
 import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Lifecycle;
+import androidx.core.widget.NestedScrollView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.offsec.nethunter.bridge.Bridge;
@@ -72,6 +74,8 @@ public class EvilTwinFragment extends Fragment {
     private Thread logReaderThread;
     private Activity activity;
     private SharedPreferences sharedpreferences;
+    private NestedScrollView EvilTwinView;
+    private ScrollView EvilTwinScroll;
 
     private Boolean inappterm;
     private static final String PREFS_NAME = "nethunter_prefs";
@@ -105,6 +109,8 @@ public class EvilTwinFragment extends Fragment {
         clearLogsButton = view.findViewById(R.id.eviltwin_clear);
         logText = view.findViewById(R.id.eviltwin_log);
         logText.setMovementMethod(new ScrollingMovementMethod());
+        EvilTwinView = view.findViewById(R.id.eviltwin_view);
+        EvilTwinScroll = view.findViewById(R.id.eviltwin_scroll);
 
         // Target spinner listener
         targetSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -162,7 +168,7 @@ public class EvilTwinFragment extends Fragment {
 
         // Scan button click listener
         scanButton.setOnClickListener(v -> {
-            scanButton.setText("SCANNING... (20s)");
+            scanButton.setText("SCANNING... (10s)");
             scanButton.setEnabled(false);
             scanNetworks();
         });
@@ -208,6 +214,9 @@ public class EvilTwinFragment extends Fragment {
                 } else if (id == R.id.action_documentation) {
                     RunDocumentation();
                     return true;
+                } else if (id == R.id.action_description) {
+                    showEvilTwinDescription();
+                    return true;
                 }
                 return false;
             }
@@ -219,8 +228,13 @@ public class EvilTwinFragment extends Fragment {
         }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
 
         // First run dialog
+
         if (!sharedpreferences.getBoolean("eviltwin_setup_done", false)) {
             SetupDialog();
+        }
+        if (sharedpreferences.getBoolean("eviltwin_first_run", true)) {
+            showEvilTwinDescription();
+            sharedpreferences.edit().putBoolean("eviltwin_first_run", false).apply();
         }
     }
 
@@ -263,7 +277,7 @@ public class EvilTwinFragment extends Fragment {
             try {
                 Log.d("EvilTwin", "Scan thread started");
                 ShellExecuter exe = new ShellExecuter();
-                
+
                 // NULL CHECK - Get selected interface safely
                 Object selectedObj = interfaceSpinner.getSelectedItem();
                 if (selectedObj == null) {
@@ -334,7 +348,7 @@ public class EvilTwinFragment extends Fragment {
                 // Verify interface is still in monitor mode
                 String verifyMode = exe.RunAsRootOutput("iw dev " + selectedInterface + " info 2>/dev/null | grep type | awk '{print $2}'");
                 Log.d("EvilTwin", "Before airodump - interface mode: '" + verifyMode + "'");
-                exe.RunAsChrootReturnValue("airodump-ng --band abg --output-format csv -w /sdcard/scan " + selectedInterface + " > /dev/null 2>&1 & sleep 20; pkill -9 -f airodump-ng");
+                exe.RunAsChrootReturnValue("airodump-ng --band abg --output-format csv -w /sdcard/scan " + selectedInterface + " > /dev/null 2>&1 & sleep 10; pkill -9 -f airodump-ng");
                 
                 Log.d("EvilTwin", "Scan finished, parsing CSV...");
                 String csvData = exe.RunAsRootOutput("awk -F, 'BEGIN {is_ap=1} /Station MAC/ {is_ap=0} is_ap && /^[0-9A-Fa-f]{2}:/ {gsub(/^[ \\t]+|[ \\t]+$/, \"\", $14); ssid = ($14 == \"\") ? \"HIDDEN\" : $14; printf \"%s|%s|%s\\n\", $1, $4, ssid}' /sdcard/scan-01.csv");
@@ -401,6 +415,10 @@ public class EvilTwinFragment extends Fragment {
     }
 
     private void startAttack() {
+        EvilTwinView.post(() -> {
+            int targetY = EvilTwinScroll.getBottom();
+            EvilTwinScroll.smoothScrollTo(0, targetY);
+        });
         // Clear old log file before starting new attack
         try {
             ShellExecuter exeClear = new ShellExecuter();
@@ -570,7 +588,7 @@ public class EvilTwinFragment extends Fragment {
 
     private void stopAttack() {
         appendLog("[*] Stopping attack...");
-        
+
         try {
             File pidFile = new File("/sdcard/evil_twin.pid");
             if (pidFile.exists()) {
@@ -600,6 +618,7 @@ public class EvilTwinFragment extends Fragment {
         handler.post(() -> {
             String currentText = logText.getText().toString();
             logText.setText(currentText + "\n" + message);
+            EvilTwinView.fullScroll(View.FOCUS_DOWN);
         });
     }
 
@@ -632,6 +651,14 @@ public class EvilTwinFragment extends Fragment {
     private void RunDocumentation() {
         Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/dr1408/eviltwin"));
         startActivity(intent);
+    }
+
+    private void showEvilTwinDescription() {
+        MaterialAlertDialogBuilder builder2 = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
+        builder2.setTitle("EvilTwin");
+        builder2.setMessage(getString(R.string.eviltwin_description));
+        builder2.setPositiveButton("OK", null);
+        builder2.show();
     }
 
     public void check_which_cmd(String cmd) {
