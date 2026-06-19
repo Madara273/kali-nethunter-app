@@ -214,6 +214,9 @@ public class EvilTwinFragment extends Fragment {
                 } else if (id == R.id.action_documentation) {
                     RunDocumentation();
                     return true;
+                } else if (id == R.id.action_description) {
+                    showEvilTwinDescription();
+                    return true;
                 }
                 return false;
             }
@@ -225,13 +228,13 @@ public class EvilTwinFragment extends Fragment {
         }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
 
         // First run dialog
-        boolean isFirstRun = sharedpreferences.getBoolean("eviltwin_first_run", true);
-        if (isFirstRun) {
-            showEvilTwinDescription();
-            sharedpreferences.edit().putBoolean("eviltwin_first_run", false).apply();
-        }
+
         if (!sharedpreferences.getBoolean("eviltwin_setup_done", false)) {
             SetupDialog();
+        }
+        if (sharedpreferences.getBoolean("eviltwin_first_run", true)) {
+            showEvilTwinDescription();
+            sharedpreferences.edit().putBoolean("eviltwin_first_run", false).apply();
         }
     }
 
@@ -651,11 +654,11 @@ public class EvilTwinFragment extends Fragment {
     }
 
     private void showEvilTwinDescription() {
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
-        builder.setTitle("EvilTwin");
-        builder.setMessage(getString(R.string.eviltwin_description));
-        builder.setPositiveButton("OK", null);
-        builder.show();
+        MaterialAlertDialogBuilder builder2 = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
+        builder2.setTitle("EvilTwin");
+        builder2.setMessage(getString(R.string.eviltwin_description));
+        builder2.setPositiveButton("OK", null);
+        builder2.show();
     }
 
     public void check_which_cmd(String cmd) {
