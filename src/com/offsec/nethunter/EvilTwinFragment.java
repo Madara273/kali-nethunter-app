@@ -618,7 +618,9 @@ public class EvilTwinFragment extends Fragment {
         handler.post(() -> {
             String currentText = logText.getText().toString();
             logText.setText(currentText + "\n" + message);
-            EvilTwinView.fullScroll(View.FOCUS_DOWN);
+            handler.postDelayed(() -> {
+                EvilTwinView.fullScroll(View.FOCUS_DOWN);
+            }, 50);
         });
     }
 
