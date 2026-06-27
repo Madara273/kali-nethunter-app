@@ -74,7 +74,7 @@
             android:title="@string/drawertitlewifipumpkin" />
         <item
             android:id="@+id/eviltwin_item"
-            android:icon="@drawable/ic_action_network_wifi"
+            android:icon="@drawable/ev_twin_badge_24"
             android:title="@string/drawertitleeviltwin" />
         <item
             android:id="@+id/wps_item"
