@@ -276,38 +276,49 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         }
 
         button_launch_app.setOnClickListener(view1 -> {
-            if (switch_gps_provider != null && !switch_gps_provider.isChecked()) {
-                gpsTextView.append("Android GPS Provider not running!\n");
-                switch_gps_provider.setChecked(true);
-                startGpsProvider();
+            // NH_PATCH_WD_BTN: toggle Kismet start/stop
+            if (button_launch_app.getText().toString()
+                    .equals(getString(R.string.launch_kismet))) {
+                enableSystemGps();
+
+                if (switch_gps_provider != null && !switch_gps_provider.isChecked()) {
+                    gpsTextView.append("Android GPS Provider not running!\n");
+                    switch_gps_provider.setChecked(true);
+                    startGpsProvider();
+                }
+                if (switch_gpsd != null && !switch_gpsd.isChecked()) {
+                    gpsTextView.append("chroot gpsd not running!\n");
+                    switch_gpsd.setChecked(true);
+                    startChrootGpsd();
+                }
+
+                String wlaniface = wlan_interface != null ? wlan_interface.getText().toString() : "";
+                wlaniface = !wlaniface.isEmpty() ? "source=" + wlaniface + "\n" : "";
+
+                String btiface = bt_interface != null ? bt_interface.getText().toString() : "";
+                btiface = !btiface.isEmpty() ? "source=" + btiface + "\n" : "";
+
+                String conf = "log_template=%p/%n\nlog_prefix=/captures/kismet/\ngps=gpsd:host=localhost,port=2947\n" +
+                        wlaniface +
+                        btiface +
+                        (sdrcheckbox != null && sdrcheckbox.isChecked() ? "source=rtl433-0\n" : "") +
+                        (sdramrcheckbox != null && sdramrcheckbox.isChecked() ? "source=rtlamr-0\n" : "") +
+                        (sdradsbcheckbox != null && sdradsbcheckbox.isChecked() ? "source=rtladsb-0\n" : "") +
+                        (mousejackcheckbox != null && mousejackcheckbox.isChecked() ? "source=mousejack:name=nRF,channel_hoprate=100/sec\n" : "");
+
+                executor.execute(() -> {
+                    exe.RunAsRoot(new String[]{"echo \"" + conf + "\" > " + NhPaths.SD_PATH + "/kismet_site.conf"});
+                    exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd mv /sdcard/kismet_site.conf /etc/kismet/"});
+                });
+                Toast.makeText(requireActivity().getApplicationContext(), "Starting Kismet.. Web UI will be available at localhost:2501\"", Toast.LENGTH_LONG).show();
+                wantKismet = true;
+                gpsTextView.append("Kismet will launch after next position received.  Waiting...\n");
+        
+                button_launch_app.setText(R.string.stop_kismet);
+            } else {
+                stopKismet();
+                button_launch_app.setText(R.string.launch_kismet);
             }
-            if (switch_gpsd != null && !switch_gpsd.isChecked()) {
-                gpsTextView.append("chroot gpsd not running!\n");
-                switch_gpsd.setChecked(true);
-                startChrootGpsd();
-            }
-
-            String wlaniface = wlan_interface != null ? wlan_interface.getText().toString() : "";
-            wlaniface = !wlaniface.isEmpty() ? "source=" + wlaniface + "\n" : "";
-
-            String btiface = bt_interface != null ? bt_interface.getText().toString() : "";
-            btiface = !btiface.isEmpty() ? "source=" + btiface + "\n" : "";
-
-            String conf = "log_template=%p/%n\nlog_prefix=/captures/kismet/\ngps=gpsd:host=localhost,port=2947\n" +
-                    wlaniface +
-                    btiface +
-                    (sdrcheckbox != null && sdrcheckbox.isChecked() ? "source=rtl433-0\n" : "") +
-                    (sdramrcheckbox != null && sdramrcheckbox.isChecked() ? "source=rtlamr-0\n" : "") +
-                    (sdradsbcheckbox != null && sdradsbcheckbox.isChecked() ? "source=rtladsb-0\n" : "") +
-                    (mousejackcheckbox != null && mousejackcheckbox.isChecked() ? "source=mousejack:name=nRF,channel_hoprate=100/sec\n" : "");
-
-            executor.execute(() -> {
-                exe.RunAsRoot(new String[]{"echo \"" + conf + "\" > " + NhPaths.SD_PATH + "/kismet_site.conf"});
-                exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd mv /sdcard/kismet_site.conf /etc/kismet/"});
-            });
-            Toast.makeText(requireActivity().getApplicationContext(), "Starting Kismet.. Web UI will be available at localhost:2501\"", Toast.LENGTH_LONG).show();
-            wantKismet = true;
-            gpsTextView.append("Kismet will launch after next position received.  Waiting...\n");
         });
     }
 
@@ -500,4 +511,68 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
             context.startActivity(intent);
         }
     }
+    // NH_PATCH_WD_GPS: toggle the phone's system location service
+    private void enableSystemGps() {
+        try {
+            ShellExecuter exe = new ShellExecuter();
+            if (android.os.Build.VERSION.SDK_INT >= 29) {
+                exe.RunAsRoot(new String[]{"settings put secure location_mode 3"});
+            } else {
+                exe.RunAsRoot(new String[]{
+                    "settings put secure location_providers_allowed +gps",
+                    "settings put secure location_providers_allowed +network"
+                });
+            }
+        } catch (Throwable t) { /* ignore */ }
+    }
+
+    private void disableSystemGps() {
+        try {
+            ShellExecuter exe = new ShellExecuter();
+            if (android.os.Build.VERSION.SDK_INT >= 29) {
+                exe.RunAsRoot(new String[]{"settings put secure location_mode 0"});
+            } else {
+                exe.RunAsRoot(new String[]{
+                    "settings put secure location_providers_allowed -gps",
+                    "settings put secure location_providers_allowed -network"
+                });
+            }
+        } catch (Throwable t) { /* ignore */ }
+    }
+
+    // NH_PATCH_WD_STOP
+    private void stopKismet() {
+        final android.app.Activity _act = getActivity();
+        new Thread(() -> {
+            try {
+                new ShellExecuter().RunAsRoot(new String[]{"pkill -f kismet"});
+            } catch (Throwable t) { /* ignore */ }
+            try { disableSystemGps(); } catch (Throwable t) { /* ignore */ }
+            try {
+                new ShellExecuter().RunAsRoot(new String[]{
+                    "for i in $(iw dev 2>/dev/null | awk '/Interface/ {print $2}' | grep mon$); do iw dev $i del 2>/dev/null; done"
+                });
+            } catch (Throwable t) { /* ignore */ }
+            if (_act != null) {
+                _act.runOnUiThread(() -> {
+                    try {
+                        if (switch_gps_provider != null && switch_gps_provider.isChecked()) {
+                            switch_gps_provider.setChecked(false);
+                        }
+                    } catch (Throwable t) { /* ignore */ }
+                    try {
+                        if (switch_gpsd != null && switch_gpsd.isChecked()) {
+                            switch_gpsd.setChecked(false);
+                        }
+                    } catch (Throwable t) { /* ignore */ }
+                    try {
+                        if (gpsTextView != null) {
+                            gpsTextView.append("Kismet stopped.\n");
+                        }
+                    } catch (Throwable t) { /* ignore */ }
+                });
+            }
+        }).start();
+    }
+
 }
