@@ -185,7 +185,7 @@ public class CopyBootFilesExecutor {
         copyAssetFolder("nh_files", NhPaths.APP_NHFILES_PATH);
 
         publishProgress("Fixing permissions for new files");
-        setPermissions(NhPaths.APP_SCRIPTS_PATH, NhPaths.APP_INITD_PATH);
+        setPermissions(NhPaths.APP_SCRIPTS_PATH, NhPaths.APP_INITD_PATH, NhPaths.APP_NHFILES_PATH);
 
         // Ensure busybox_nh exists and is executable before any subsequent usage
         ensureBusyboxNh();
