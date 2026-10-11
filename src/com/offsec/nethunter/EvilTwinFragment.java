@@ -175,15 +175,22 @@ public class EvilTwinFragment extends Fragment {
 
         // Start button click listener (toggle)
         startButton.setOnClickListener(v -> {
-            String buttonText = startButton.getText().toString();
-            Log.d("EvilTwin", "$2: Button clicked");
-            if (buttonText.equals("START")) {
-                Log.d("EvilTwin", "$2: Button shows START - calling startAttack()");
-                startAttack();
-            } else {
-                Log.d("EvilTwin", "$2: Button shows STOP - calling stopAttack()");
-                stopAttack();
-            }
+        // NH_PATCH_ET_STOP: revert monitor mode when attack stops
+        final boolean _wasRunning = new java.io.File("/sdcard/evil_twin.pid").exists();
+
+                String buttonText = startButton.getText().toString();
+                Log.d("EvilTwin", "$2: Button clicked");
+                if (buttonText.equals("START")) {
+                    Log.d("EvilTwin", "$2: Button shows START - calling startAttack()");
+                    startAttack();
+                } else {
+                    Log.d("EvilTwin", "$2: Button shows STOP - calling stopAttack()");
+                    stopAttack();
+                }
+        
+        if (_wasRunning) {
+            _revertMonitorMode();
+        }
         });
 
         // Clear button click listener
@@ -316,27 +323,37 @@ public class EvilTwinFragment extends Fragment {
                     
                     try {
                         int ret = -1;
-                        if (selectedInterface.equals("wlan0")) {
-                            // ICNSS method for wlan0
-                            ret = exe.RunAsRootReturnValue("echo 4 > /sys/module/wlan/parameters/con_mode && ifconfig " + selectedInterface + " down && ifconfig " + selectedInterface + " up");
-                            if (ret == 0) {
-                                Log.d("EvilTwin", "Monitor mode set for wlan0 using ICNSS method");
-                                appendLog("[*] Monitor mode enabled on " + selectedInterface);
-                            } else {
-                                Log.e("EvilTwin", "Failed to set monitor mode on wlan0, return code: " + ret);
-                                appendLog("[-] Failed to set monitor mode on " + selectedInterface);
-                            }
-                        } else {
-                            // Normal monitor mode
-                            ret = exe.RunAsRootReturnValue("ifconfig " + selectedInterface + " down && iw dev " + selectedInterface + " set type monitor && ifconfig " + selectedInterface + " up");
-                            if (ret == 0) {
-                                Log.d("EvilTwin", "Monitor mode set for " + selectedInterface);
-                                appendLog("[*] Monitor mode enabled on " + selectedInterface);
-                            } else {
-                                Log.e("EvilTwin", "Failed to set monitor mode on " + selectedInterface + ", return code: " + ret);
-                                appendLog("[-] Failed to set monitor mode on " + selectedInterface);
-                            }
-                        }
+// NH_PATCH_ET_CONMODE: enable monitor mode; con_mode only for internal adapters
+String _devPath = exe.RunAsRootOutput(
+        "readlink -f /sys/class/net/" + selectedInterface + "/device 2>/dev/null").trim();
+boolean _isInternal = !_devPath.isEmpty() && !_devPath.contains("/usb");
+String _conModePath = "";
+if (_isInternal) {
+    _conModePath = exe.RunAsRootOutput(
+            "find /sys/module -name con_mode 2>/dev/null | head -n 1").trim();
+}
+if (!_conModePath.isEmpty()) {
+    exe.RunAsRoot(new String[]{
+        "ip link set " + selectedInterface + " down",
+        "echo 4 > " + _conModePath,
+        "ip link set " + selectedInterface + " up"
+    });
+} else {
+    exe.RunAsRoot(new String[]{
+        "ip link set " + selectedInterface + " down",
+        "iw dev " + selectedInterface + " set type monitor",
+        "ip link set " + selectedInterface + " up"
+    });
+}
+String _iwInfo = exe.RunAsRootOutput(
+        "iw dev " + selectedInterface + " info 2>/dev/null").trim();
+if (_iwInfo.contains("type monitor")) {
+    appendLog("[*] Monitor mode enabled on " + selectedInterface);
+} else {
+    appendLog("[-] Monitor mode failed on " + selectedInterface);
+}
+
+
                     } catch (Exception e) {
                         Log.e("EvilTwin", "Exception setting monitor mode: " + e.getMessage());
                         appendLog("[-] Error setting monitor mode: " + e.getMessage());
@@ -690,4 +707,40 @@ public class EvilTwinFragment extends Fragment {
         }
         run_cmd(command);
     }
+
+    // NH_PATCH_ET_STOP: revert monitor mode + clean up interfaces on stop
+
+
+
+    // NH_PATCH_ET_STOP: revert monitor mode + reset interfaces on stop
+    private void _revertMonitorMode() {
+        new Thread(() -> {
+            try {
+                ShellExecuter exe = new ShellExecuter();
+
+                /* Revert Qualcomm con_mode to managed. */
+                String cm = exe.RunAsRootOutput(
+                        "find /sys/module -name con_mode 2>/dev/null | head -n 1").trim();
+                if (!cm.isEmpty()) {
+                    exe.RunAsRoot(new String[]{"echo 0 > " + cm});
+                }
+
+                /* Enumerate every interface.  Delete any *mon, and reset
+                 * every non-mon wlan interface to managed via a down/up
+                 * cycle.  Handles VIF adapters (separate wlanXmon) and
+                 * non-VIF adapters (original interface flipped in place,
+                 * no *mon ever appears). */
+                String script =
+                    "for i in $(iw dev 2>/dev/null | awk '/Interface/ {print $2}'); do "
+                    + "case \"$i\" in "
+                    + "*mon) iw dev \"$i\" del 2>/dev/null ;; "
+                    + "*) ifconfig \"$i\" down 2>/dev/null; "
+                    + "iw dev \"$i\" set type managed 2>/dev/null; "
+                    + "ifconfig \"$i\" up 2>/dev/null ;; "
+                    + "esac; done";
+                exe.RunAsRoot(new String[]{script});
+            } catch (Throwable t) { /* ignore */ }
+        }).start();
+    }
+
 }

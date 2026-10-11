@@ -380,6 +380,9 @@ public class BTFragment extends Fragment {
         String selected_addr;
         String selected_class;
         String selected_name;
+        private final java.util.concurrent.atomic.AtomicBoolean airplaneWatcherBusy =
+                new java.util.concurrent.atomic.AtomicBoolean(false);
+        private int airplaneOffColor = 0xFF4D4D4D;
 
         @Override
         public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -390,10 +393,30 @@ public class BTFragment extends Fragment {
         @Override
         public void onResume(){
             super.onResume();
-            // Capture view safely on UI thread, then refresh off the UI thread
+            ensureAirplaneWatcher();
             final View root = getView();
             if (root != null) {
                 EXEC.execute(() -> refresh(root));
+
+                final ImageButton btn = root.findViewById(R.id.airplaneModeButton);
+                if (btn != null) {
+                    btn.setEnabled(true);
+                    btn.setAlpha(1f);
+                }
+                Executors.newSingleThreadExecutor(r -> {
+                    Thread t = new Thread(r, "airplane-sync");
+                    t.setDaemon(true);
+                    return t;
+                }).execute(() -> {
+                    try {
+                        ShellExecuter lx = new ShellExecuter();
+                        final boolean on = "1".equals(
+                                lx.RunAsRootOutput("settings get global airplane_mode_on").trim());
+                        if (isAdded()) {
+                            requireActivity().runOnUiThread(() -> applyAirplaneButtonStyle(btn, on));
+                        }
+                    } catch (Throwable ignored) { }
+                });
             }
         }
 
@@ -468,6 +491,129 @@ public class BTFragment extends Fragment {
             // Refresh Status
             ImageButton RefreshStatus = rootView.findViewById(R.id.refreshStatus);
             RefreshStatus.setOnClickListener(v -> refresh(rootView));
+
+            final ImageButton AirplaneModeButton = rootView.findViewById(R.id.airplaneModeButton);
+            final java.util.concurrent.atomic.AtomicBoolean airplaneBusy =
+                    new java.util.concurrent.atomic.AtomicBoolean(false);
+
+            // Copy refresh's exact background so both tiles match pixel-perfect.
+            if (RefreshStatus != null && AirplaneModeButton != null) {
+                android.graphics.drawable.Drawable rb = RefreshStatus.getBackground();
+                if (rb != null && rb.getConstantState() != null) {
+                    AirplaneModeButton.setBackground(rb.getConstantState().newDrawable().mutate());
+                }
+                airplaneOffColor = extractFillColor(AirplaneModeButton.getBackground());
+            }
+
+            applyAirplaneButtonStyle(AirplaneModeButton, false);
+
+            AirplaneModeButton.setOnClickListener(v -> {
+                if (!airplaneBusy.compareAndSet(false, true)) return;
+
+                // Immediate press feedback (scale only).
+                // The icon AVD is started later, only if Bluebinder is NOT running.
+                v.animate().scaleX(0.92f).scaleY(0.92f).setDuration(90)
+                        .withEndAction(() -> v.animate()
+                                .scaleX(1f).scaleY(1f).setDuration(120).start())
+                        .start();
+
+                final ExecutorService planeExec = Executors.newSingleThreadExecutor(r -> {
+                    Thread t = new Thread(r, "bt-airplane");
+                    t.setDaemon(true);
+                    return t;
+                });
+                planeExec.execute(() -> {
+                    final ShellExecuter lx = new ShellExecuter();
+                    String errMsg = null;
+                    boolean turnedOn = false;
+                    try {
+                        String bb = lx.RunAsRootOutput("pidof bluebinder").trim();
+                        if (!bb.isEmpty()) {
+                            errMsg = "BT Arsenal is busy, disable bluebinder first";
+                            turnedOn = "1".equals(
+                                    lx.RunAsRootOutput("settings get global airplane_mode_on").trim());
+                        } else {
+                            // Bluebinder is not running — safe to play the AVD.
+                            if (isAdded()) {
+                                requireActivity().runOnUiThread(() -> {
+                                    try {
+                                        android.graphics.drawable.Drawable d = AirplaneModeButton.getDrawable();
+                                        if (d instanceof android.graphics.drawable.Animatable) {
+                                            ((android.graphics.drawable.Animatable) d).start();
+                                        }
+                                    } catch (Throwable ignored) { }
+                                });
+                            }
+
+                            boolean airOn = "1".equals(
+                                    lx.RunAsRootOutput("settings get global airplane_mode_on").trim());
+                            if (airOn) {
+                                // Toggle OFF — per-radio restore
+                                String btRaw   = lx.RunAsRootOutput("settings get global bluetooth_on").trim();
+                                String wifiRaw = lx.RunAsRootOutput("settings get global wifi_on").trim();
+                                String dataRaw = lx.RunAsRootOutput("settings get global mobile_data").trim();
+                                java.util.List<String> c = new java.util.ArrayList<>();
+                                c.add("settings put global airplane_mode_on 0");
+                                c.add("am broadcast -a android.intent.action.AIRPLANE_MODE --ez state false");
+                                if (!"1".equals(wifiRaw)) c.add("svc wifi enable");
+                                if (!"1".equals(dataRaw)) c.add("svc data enable");
+                                if (!"1".equals(btRaw)) {
+                                    c.add("settings put global bluetooth_on 1");
+                                    c.add("am broadcast -a android.bluetooth.adapter.action.STATE_CHANGED " +
+                                            "--ei android.bluetooth.adapter.extra.STATE 12 " +
+                                            "--ei android.bluetooth.adapter.extra.PREVIOUS_STATE 10");
+                                    c.add("svc bluetooth enable");
+                                }
+                                lx.RunAsRoot(c.toArray(new String[0]));
+                                turnedOn = false;
+                            } else {
+                                // Toggle ON — kill radios
+                                lx.RunAsRoot(new String[]{
+                                        "svc bluetooth disable",
+                                        "svc wifi disable",
+                                        "svc data disable"
+                                });
+                                lx.RunAsRoot(new String[]{
+                                        "settings put global bluetooth_on 0",
+                                        "am broadcast -a android.bluetooth.adapter.action.STATE_CHANGED " +
+                                                "--ei android.bluetooth.adapter.extra.STATE 10 " +
+                                                "--ei android.bluetooth.adapter.extra.PREVIOUS_STATE 12",
+                                        "settings put global airplane_mode_on 1",
+                                        "am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true"
+                                });
+                                turnedOn = true;
+                            }
+                        }
+                    } catch (Throwable t) {
+                        errMsg = "Airplane toggle failed: " + t.getMessage();
+                    }
+
+                    final String fErr = errMsg;
+                    final boolean fOn = turnedOn;
+                    final boolean fOk = (errMsg == null);
+
+                    try {
+                        if (isAdded()) {
+                            requireActivity().runOnUiThread(() -> {
+                                applyAirplaneButtonStyle(AirplaneModeButton, fOn);
+                                AirplaneModeButton.setAlpha(1f);
+                                AirplaneModeButton.setEnabled(true);
+                                if (fOn) ensureAirplaneWatcher();
+                                if (fOk) refresh(rootView);
+                                if (fErr != null) {
+                                    Toast.makeText(requireActivity().getApplicationContext(),
+                                            fErr, Toast.LENGTH_LONG).show();
+                                }
+                            });
+                        }
+                    } catch (Throwable ignored) { }
+                    finally {
+                        airplaneBusy.set(false);
+                        planeExec.shutdown();
+                    }
+                });
+            });
+
             // Initial refresh
             refresh(rootView);
 
@@ -507,34 +653,69 @@ public class BTFragment extends Fragment {
                         else {
                             File bluebinder = new File(NhPaths.CHROOT_PATH() + "/usr/sbin/bluebinder");
                             if (bluebinder.exists()) {
-                                // TODO - once again, MUST enable this for only specific devices. **Most devices don't need BT off or airplane mode on** 1/2
-                                // TODO - For now, disabling only Bluetooth for phones
-                                //Ensure all services are disabled before enabling airplane mode for bluebinder
                                 exe.RunAsRoot(new String[]{"svc bluetooth disable"});
-                                /*exe.RunAsRoot(new String[]{
-                                        //"svc bluetooth disable",
-                                        //"svc wifi disable",
-                                        "settings put global bluetooth_on 0",
-                                        // 10 = STATE_OFF | 12 = STATE_TURNING_OFF
-                                        "am broadcast -a android.bluetooth.adapter.action.STATE_CHANGED --ei android.bluetooth.adapter.extra.STATE 10 --ei android.bluetooth.adapter.extra.PREVIOUS_STATE 12",
-                                        "settings put global airplane_mode_on 1",
-                                        "am broadcast -a android.intent.action.AIRPLANE_MODE --ez state true"
-                                        //"pm disable com.android.bluetooth"
-                                });*/
 
                                 // Run the Bluebinder script
                                 run_cmd("echo -ne \"\\033]0;Bluebinder\\007\" && clear;bluebinder || bluebinder;exit");
                                 Toast.makeText(requireActivity().getApplicationContext(), "Starting bluebinder...", Toast.LENGTH_SHORT).show();
 
-                                // TODO - once again, MUST enable this for only specific devices. **Most devices don't need BT off or airplane mode on** 2/2
-                                // Delay to disable airplane mode and re-enable Wi-Fi after 9 seconds
-                                /*new Handler(Looper.getMainLooper()).postDelayed(() -> exe.RunAsRoot(new String[]{
-                                        "settings put global bluetooth_on 1",
-                                        // 12 = STATE_ON | 10 = STATE_TURNING_ON
-                                        "am broadcast -a android.bluetooth.adapter.action.STATE_CHANGED --ei android.bluetooth.adapter.extra.STATE 12 --ei android.bluetooth.adapter.extra.PREVIOUS_STATE 10",
-                                        "settings put global airplane_mode_on 0",
-                                        "am broadcast -a android.intent.action.AIRPLANE_MODE --ez state false"
-                                }), 9000); // 9000 milliseconds delay*/
+                                // ----- Restart-safe: after bluebinder is up, if
+                                //     airplane mode is ON, turn it OFF + restore
+                                //     Wi-Fi/data. Uses getActivity()/getView() instead
+                                //     of isAdded() so a background-kill → reopen
+                                //     cycle still triggers this on the next start.
+                                Executors.newSingleThreadExecutor(r -> {
+                                    Thread t = new Thread(r, "bb-airplane-restore");
+                                    t.setDaemon(true);
+                                    return t;
+                                }).execute(() -> {
+                                    try {
+                                        ShellExecuter lx = new ShellExecuter();
+                                        String airRaw = lx.RunAsRootOutput("settings get global airplane_mode_on").trim();
+                                        if (!"1".equals(airRaw)) return;
+
+                                        final int MAX_MS  = 25000;
+                                        final int POLL_MS = 400;
+                                        final int NEEDED  = 3;
+                                        long t0 = System.currentTimeMillis();
+                                        int hits = 0;
+                                        while (System.currentTimeMillis() - t0 < MAX_MS) {
+                                            Activity act = getActivity();
+                                            if (act == null || act.isFinishing()) return;
+                                            try { Thread.sleep(POLL_MS); }
+                                            catch (InterruptedException ie) { return; }
+                                            if (lx.RunAsRootOutput("pidof bluebinder").trim().isEmpty()) { hits = 0; continue; }
+                                            String hci = lx.RunAsRootOutput(
+                                                    NhPaths.APP_SCRIPTS_PATH +
+                                                            "/bootkali custom_cmd hciconfig | grep hci | cut -d: -f1"
+                                            ).trim();
+                                            if (hci.isEmpty()) { hits = 0; continue; }
+                                            hits++;
+                                            if (hits < NEEDED) continue;
+
+                                            lx.RunAsRoot(new String[]{
+                                                    "settings put global airplane_mode_on 0",
+                                                    "am broadcast -a android.intent.action.AIRPLANE_MODE --ez state false",
+                                                    "svc wifi enable",
+                                                    "svc data enable"
+                                            });
+
+                                            Activity a2 = getActivity();
+                                            if (a2 != null) {
+                                                a2.runOnUiThread(() -> {
+                                                    View r = getView();
+                                                    if (r != null) {
+                                                        ImageButton ab = r.findViewById(R.id.airplaneModeButton);
+                                                        applyAirplaneButtonStyle(ab, false);
+                                                        refresh(r);
+                                                    }
+                                                });
+                                            }
+                                            return;
+                                        }
+                                    } catch (Throwable ignored) { }
+                                });
+
                             } else {
                                 Toast.makeText(requireActivity().getApplicationContext(), "Bluebinder is not installed. Launching setup..", Toast.LENGTH_SHORT).show();
                                 RunSetup();
@@ -657,6 +838,126 @@ public class BTFragment extends Fragment {
                 }
             });
             return rootView;
+        }
+
+private void applyAirplaneButtonStyle(android.widget.ImageButton btn, boolean on) {
+            if (btn == null) return;
+            try {
+                if (on) {
+                    btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xFFF2F2F2));
+                    btn.setImageTintList(android.content.res.ColorStateList.valueOf(0xFF1C1C1E));
+                } else {
+                    // airplaneOffColor was extracted from refresh's background.
+                    btn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(airplaneOffColor));
+                    btn.setImageTintList(android.content.res.ColorStateList.valueOf(0xFFFFFFFF));
+                }
+            } catch (Throwable ignored) { }
+        }
+
+        // Extracts the solid fill color from a RippleDrawable wrapping a
+        // MaterialShapeDrawable (which is what a Material 3 IconButton uses).
+        private static int extractFillColor(android.graphics.drawable.Drawable d) {
+            if (d == null) return 0xFF4D4D4D;
+            try {
+                if (d instanceof com.google.android.material.shape.MaterialShapeDrawable) {
+                    android.content.res.ColorStateList csl =
+                            ((com.google.android.material.shape.MaterialShapeDrawable) d).getFillColor();
+                    if (csl != null) return csl.getDefaultColor();
+                }
+                if (d instanceof android.graphics.drawable.RippleDrawable) {
+                    android.graphics.drawable.RippleDrawable rd =
+                            (android.graphics.drawable.RippleDrawable) d;
+                    for (int i = 0; i < rd.getNumberOfLayers(); i++) {
+                        int c = extractFillColor(rd.getDrawable(i));
+                        if (c != 0xFF4D4D4D) return c;
+                    }
+                }
+                if (d instanceof android.graphics.drawable.LayerDrawable) {
+                    android.graphics.drawable.LayerDrawable ld =
+                            (android.graphics.drawable.LayerDrawable) d;
+                    for (int i = 0; i < ld.getNumberOfLayers(); i++) {
+                        int c = extractFillColor(ld.getDrawable(i));
+                        if (c != 0xFF4D4D4D) return c;
+                    }
+                }
+                if (d instanceof android.graphics.drawable.GradientDrawable) {
+                    // Fallback for plain <shape> drawables
+                    // (not exposed by the API; kept for completeness)
+                }
+            } catch (Throwable ignored) { }
+            return 0xFF4D4D4D;
+        }
+
+        // Persistent watcher: while airplane mode is ON, poll for hci +
+        // bluebinder. When both confirmed (2 consecutive hits), turn
+        // airplane OFF and restore Wi-Fi/data. Exits if airplane is
+        // turned off manually, or after 10 minutes.
+        private void ensureAirplaneWatcher() {
+            if (!airplaneWatcherBusy.compareAndSet(false, true)) return;
+            Executors.newSingleThreadExecutor(r -> {
+                Thread t = new Thread(r, "airplane-watcher");
+                t.setDaemon(true);
+                return t;
+            }).execute(() -> {
+                try {
+                    ShellExecuter lx = new ShellExecuter();
+                    final int POLL_MS = 2000;
+                    final int NEEDED = 2;
+                    final long MAX_RUNTIME_MS = 10L * 60L * 1000L;
+                    long t0 = System.currentTimeMillis();
+                    int hits = 0;
+
+                    while (System.currentTimeMillis() - t0 < MAX_RUNTIME_MS) {
+                        Activity act = getActivity();
+                        if (act == null || act.isFinishing()) return;
+
+                        String airRaw = lx.RunAsRootOutput(
+                                "settings get global airplane_mode_on").trim();
+                        if (!"1".equals(airRaw)) return;
+
+                        try { Thread.sleep(POLL_MS); }
+                        catch (InterruptedException ie) { return; }
+
+                        if (lx.RunAsRootOutput("pidof bluebinder").trim().isEmpty()) {
+                            hits = 0;
+                            continue;
+                        }
+
+                        String hci = lx.RunAsRootOutput(
+                                NhPaths.APP_SCRIPTS_PATH +
+                                        "/bootkali custom_cmd hciconfig | grep hci | cut -d: -f1"
+                        ).trim();
+
+                        if (hci.isEmpty()) { hits = 0; continue; }
+                        hits++;
+                        if (hits < NEEDED) continue;
+
+                        // Confirmed: hci up + bluebinder alive. Restore.
+                        lx.RunAsRoot(new String[]{
+                                "settings put global airplane_mode_on 0",
+                                "am broadcast -a android.intent.action.AIRPLANE_MODE --ez state false",
+                                "svc wifi enable",
+                                "svc data enable"
+                        });
+
+                        Activity a2 = getActivity();
+                        if (a2 != null) {
+                            a2.runOnUiThread(() -> {
+                                View r = getView();
+                                if (r != null) {
+                                    ImageButton ab = r.findViewById(R.id.airplaneModeButton);
+                                    applyAirplaneButtonStyle(ab, false);
+                                    refresh(r);
+                                }
+                            });
+                        }
+                        return;
+                    }
+                } catch (Throwable ignored) {
+                } finally {
+                    airplaneWatcherBusy.set(false);
+                }
+            });
         }
 
         // Refresh main
