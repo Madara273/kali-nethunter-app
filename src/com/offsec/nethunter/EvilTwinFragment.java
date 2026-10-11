@@ -651,7 +651,7 @@ public class EvilTwinFragment extends Fragment {
     }
 
     private void RunDocumentation() {
-        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/dr1408/eviltwin"));
+        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("https://www.kali.org/docs/nethunter/nethunter-eviltwin/"));
         startActivity(intent);
     }
 
