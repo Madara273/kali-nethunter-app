@@ -1549,4 +1549,6 @@
     <string name="btn_adb_tcpip">ADB TCP/IP</string>
     <string name="btn_adb_forward_adbhub">Forward adb-hub</string>
 
+    <!-- NH_PATCH_STRINGS -->
+    <string name="stop_kismet">STOP KISMET</string>
 </resources>
