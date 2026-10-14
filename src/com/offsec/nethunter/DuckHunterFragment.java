@@ -93,6 +93,8 @@ public class DuckHunterFragment extends Fragment {
         map.put("Brazil", "br");
         map.put("Belgian", "be");
         map.put("Hungarian", "hu");
+        map.put("Swiss German", "ch-de");
+        map.put("Italian", "it");
         keyboardLayoutString = map.keySet().toArray(new String[0]);
     }
 

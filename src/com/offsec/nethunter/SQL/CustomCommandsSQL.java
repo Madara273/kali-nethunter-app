@@ -1,6 +1,8 @@
 package com.offsec.nethunter.SQL;
 
 import android.content.ContentValues;
+import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Environment;
 import android.content.Context;
 import android.database.Cursor;
@@ -35,21 +37,18 @@ public class CustomCommandsSQL extends SQLiteOpenHelper {
             {"1", "Update Kali Metapackages",
                     "echo -ne \"\\033]0;Updating Kali\\007\" && clear;apt update && apt -y upgrade",
                     "kali", "interactive", "0"},
-            {"2", "Launch Wifite",
-                    "echo -ne \"\\033]0;Wifite\\007\" && clear;wifite",
-                    "kali", "interactive", "0"},
-            {"3", "Launch hcxdumptool",
-                    "echo -ne \"\\033]0;hcxdumptool\\007\" && clear;hcxdumptool -i wlan1 -w $HOME/$(date +\"%Y-%m-%d_%H-%M-%S\").pcapng",
-                    "kali", "interactive", "0"},
+            {"2", "Start wlan0 in monitor mode",
+                    "echo -ne \"\\033]0;Wlan0 Monitor Mode\\007\" && clear;sh '" + NhPaths.APP_SD_FILES_PATH + "/modules/start-monitormode.sh' && sleep 2 && exit",
+                    "android", "interactive", "0"},
+            {"3", "Stop wlan0 monitor mode",
+                    "echo -ne \"\\033]0;Stopping Wlan0 Mon Mode\\007\" && clear;sh '" + NhPaths.APP_SD_FILES_PATH + "/modules/stop-monitormode.sh' && sleep 2 && exit",
+                    "android", "interactive", "0"},
             {"4", "Start wlan1 in monitor mode",
                     "echo -ne \"\\033]0;Wlan1 monitor mode\\007\" && clear;ip link set wlan1 down && iw wlan1 set monitor control && ip link set wlan1 up;sleep 2 && exit",
                     "kali", "interactive", "0"},
-            {"5", "Start wlan0 in monitor mode",
-                    "echo -ne \"\\033]0;Wlan0 Monitor Mode\\007\" && clear; su -c 'svc wifi disable; CON_MODE_PATH=$(find /sys/module/*/parameters/con_mode 2>/dev/null | head -n 1); if [ -f \"$CON_MODE_PATH\" ]; then CURRENT_MODE=$(cat \"$CON_MODE_PATH\"); if [ \"$CURRENT_MODE\" = \"4\" ]; then echo -e \"\\033[31mMonitor mode enabled already\\033[0m. Exiting..\"; else echo 4 > \"$CON_MODE_PATH\"; ip link set wlan0 down; ip link set wlan0 up; echo -e \"\\033[32mDone!\\033[0m Exiting..\"; fi; else echo -e \"\\033[31mYour device is not QCACLD3.0 or does not support monitor mode!\\033[0m Exiting..\"; fi' && sleep 2 && exit",
-                    "android", "interactive", "0"},
-            {"6", "Stop wlan0 monitor mode",
-                    "echo -ne \"\\033]0;Stopping Wlan0 Mon Mode\\007\" && clear; su -c 'CON_MODE_PATH=$(find /sys/module/*/parameters/con_mode 2>/dev/null | head -n 1); if [ -f \"$CON_MODE_PATH\" ]; then CURRENT_MODE=$(cat \"$CON_MODE_PATH\"); if [ \"$CURRENT_MODE\" = \"0\" ]; then echo -e \"\\033[31mMonitor mode disabled already\\033[0m. Exiting..\"; else ip link set wlan0 down; echo 0 > \"$CON_MODE_PATH\"; ip link set wlan0 up; svc wifi enable; echo -e \"\\033[32mDone!\\033[0m Exiting..\"; fi; else echo -e \"\\033[31mYour device is not QCACLD3.0 or does not support monitor mode!\\033[0m Exiting..\"; fi' && sleep 2 && exit",
-                    "android", "interactive", "0"},
+            {"5", "Launch Wifite",
+                    "echo -ne \"\\033]0;Wifite\\007\" && clear;bash /sdcard/nh_files/modules/start-wifite.sh && sleep 2 && exit",
+                    "kali", "interactive", "0"},
     };
 
     public static synchronized CustomCommandsSQL getInstance(Context context){
