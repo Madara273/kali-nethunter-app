@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.TextUtils;
@@ -23,6 +24,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.textfield.TextInputEditText;
 import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.gps.KaliGPSUpdates;
@@ -95,6 +97,7 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
     private final String rtlamr = "";
     private final String rtladsb = "";
     private final String mousejack = "";
+    SharedPreferences sharedpreferences;
 
     public KaliGpsServiceFragment() {
         // Required empty public constructor
@@ -112,6 +115,7 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         context = getContext();
+        sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
         ActivityResultLauncher<String> backgroundLocationPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
@@ -224,6 +228,14 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         ShellExecuter exe = new ShellExecuter();
         EditText wlan_interface = view.findViewById(R.id.wlan_interface);
         EditText bt_interface = view.findViewById(R.id.bt_interface);
+        View watch_padding = view.findViewById(R.id.watch_padding);
+
+        //Watch
+        Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
+        if (iswatch) {
+            watch_padding.setVisibility(View.VISIBLE);
+            gpsTextView.setMaxHeight(250);
+        }
 
         // Detect nexmon
         String isnexmon = exe.RunAsRootOutput("strings /vendor/firmware/*bcm* | grep nexmon");
@@ -284,12 +296,10 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
                 if (switch_gps_provider != null && !switch_gps_provider.isChecked()) {
                     gpsTextView.append("Android GPS Provider not running!\n");
                     switch_gps_provider.setChecked(true);
-                    startGpsProvider();
                 }
                 if (switch_gpsd != null && !switch_gpsd.isChecked()) {
                     gpsTextView.append("chroot gpsd not running!\n");
                     switch_gpsd.setChecked(true);
-                    startChrootGpsd();
                 }
 
                 String wlaniface = wlan_interface != null ? wlan_interface.getText().toString() : "";
@@ -346,7 +356,7 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         // do this in a thread because it takes a second or two and lags the UI
         new Thread(() -> {
             ShellExecuter exe = new ShellExecuter();
-            String command = "su -c '" + NhPaths.APP_SCRIPTS_PATH + File.separator + "bootkali start_gpsd " + NhPaths.GPS_PORT + "'";
+            String command = NhPaths.APP_SCRIPTS_PATH + File.separator + "bootkali start_gpsd " + NhPaths.GPS_PORT;
             Log.d(TAG, command);
             String response = exe.RunAsRootOutput(command);
             Log.d(TAG, "Response = " + response);
@@ -358,7 +368,7 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
         // do this in a thread because it takes a second or two and lags the UI
         new Thread(() -> {
             ShellExecuter exe = new ShellExecuter();
-            String command = "su -c '" + NhPaths.APP_SCRIPTS_PATH + File.separator + "stop-gpsd'";
+            String command = NhPaths.APP_SCRIPTS_PATH + File.separator + "stop-gpsd";
             Log.d(TAG, command);
             exe.RunAsRootOutput(command);
         }).start();
@@ -485,7 +495,7 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
 
     private void startKismet(String nexmonPrefix) {
         try {
-            run_cmd("echo -ne \"\\033]0;Kismet\\007\" && clear;" + nexmonPrefix + "/usr/bin/start-kismet");
+            run_cmd("echo -ne \"\\033]0;Kismet\\007\" && clear;" + nexmonPrefix + "/usr/bin/start-kismet; exit");
         } catch (Exception e) {
             NhPaths.showMessage(context, getString(R.string.toast_install_terminal));
         }
@@ -543,15 +553,10 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
     // NH_PATCH_WD_STOP
     private void stopKismet() {
         final android.app.Activity _act = getActivity();
+        boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
         new Thread(() -> {
             try {
-                new ShellExecuter().RunAsRoot(new String[]{"pkill -f kismet"});
-            } catch (Throwable t) { /* ignore */ }
-            try { disableSystemGps(); } catch (Throwable t) { /* ignore */ }
-            try {
-                new ShellExecuter().RunAsRoot(new String[]{
-                    "for i in $(iw dev 2>/dev/null | awk '/Interface/ {print $2}' | grep mon$); do iw dev $i del 2>/dev/null; done"
-                });
+                new ShellExecuter().RunAsRoot(new String[]{"kill -INT `pidof kismet`"});
             } catch (Throwable t) { /* ignore */ }
             if (_act != null) {
                 _act.runOnUiThread(() -> {
@@ -568,6 +573,26 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
                     try {
                         if (gpsTextView != null) {
                             gpsTextView.append("Kismet stopped.\n");
+                            gpsTextView.append("Capture files saved to /sdcard/captures.\n");
+                            if (iswatch) {
+                                final MaterialAlertDialogBuilder remove_session_files = new MaterialAlertDialogBuilder(requireActivity(), R.style.DialogStyleCompat);
+                                remove_session_files.setMessage("Erase all stored Kismet session files in chroot?");
+                                remove_session_files.setPositiveButton("Yes", (dialogInterface, i) -> {
+                                    new ShellExecuter().RunAsChrootOutput("wipe -f -i -r /captures/kismet/Kismet-*");
+                                    dialogInterface.cancel();
+                                    gpsTextView.append("Kismet session files wiped in chroot.\n");
+                                    new ShellExecuter().RunAsRoot(new String[]{"pkill start-kismet"});
+                                });
+                                remove_session_files.setNegativeButton("No", (dialogInterface, i) -> {
+                                    new ShellExecuter().RunAsRoot(new String[]{"pkill start-kismet"});
+                                    dialogInterface.cancel();
+                                });
+                                final AlertDialog alert = remove_session_files.create();
+                                alert.show();
+                            } else {
+                                gpsTextView.append("Return to terminal to finish script.\n");
+                            }
+
                         }
                     } catch (Throwable t) { /* ignore */ }
                 });

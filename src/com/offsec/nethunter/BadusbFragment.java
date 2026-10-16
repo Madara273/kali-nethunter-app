@@ -3,6 +3,7 @@ package com.offsec.nethunter;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -14,6 +15,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.utils.ShellExecuter;
@@ -36,6 +38,9 @@ public class BadusbFragment extends Fragment {
     private final ShellExecuter exe = new ShellExecuter();
     private Context context;
     private Activity activity;
+
+    private Boolean iswatch;
+    private SharedPreferences sharedpreferences;
 
     public static BadusbFragment newInstance(int sectionNumber) {
         BadusbFragment fragment = new BadusbFragment();
@@ -61,8 +66,22 @@ public class BadusbFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.badusb, container, false);
         loadOptions(rootView);
-        final Button button = rootView.findViewById(R.id.updateOptions);
-        button.setOnClickListener(v -> updateOptions());
+
+        final Button startbutton = rootView.findViewById(R.id.Start);
+        startbutton.setOnClickListener(v -> {
+            updateOptions();
+            start();
+        });
+
+        final Button stopbutton = rootView.findViewById(R.id.Stop);
+        stopbutton.setOnClickListener(v -> stop());
+
+        // Detecting watch
+        TextView Desc = rootView.findViewById(R.id.badusb_desc);
+        sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
+        iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
+        if (iswatch) Desc.setVisibility(View.GONE);
+
         return rootView;
     }
 
@@ -101,8 +120,6 @@ public class BadusbFragment extends Fragment {
             public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater menuInflater) {
                 menuInflater.inflate(R.menu.badusb, menu);
                 MenuItem sourceItem = menu.findItem(R.id.source_button);
-                boolean iswatch = requireActivity().getPackageManager()
-                        .hasSystemFeature(PackageManager.FEATURE_WATCH);
                 if (iswatch) {
                     sourceItem.setVisible(false);
                 }

@@ -51,7 +51,7 @@ public class NethunterRecyclerViewAdapter extends RecyclerView.Adapter<Nethunter
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
         holder.resultRecyclerView.setLayoutManager(linearLayoutManager);
         holder.resultRecyclerView.setAdapter(new NethunterRecyclerViewAdapterResult(context, nethunterModelList.get(position).getResult()));
-        holder.runButton.setOnClickListener(v -> NethunterData.getInstance().runCommandforItem(position));
+        holder.titleTextView.setOnClickListener(v -> NethunterData.getInstance().runCommandforItem(position));
         holder.titleTextView.setOnLongClickListener(v -> {
             final LayoutInflater mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             final View promptViewEdit = mInflater.inflate(R.layout.nethunter_edit_dialog_view, null);
@@ -188,13 +188,11 @@ public class NethunterRecyclerViewAdapter extends RecyclerView.Adapter<Nethunter
     public static class ItemViewHolder extends RecyclerView.ViewHolder {
         private final TextView titleTextView;
         private final RecyclerView resultRecyclerView;
-        private final Button runButton;
 
         public ItemViewHolder(View view) {
             super(view);
             titleTextView = view.findViewById(R.id.f_nethunter_item_title_tv);
             resultRecyclerView = view.findViewById(R.id.f_nethunter_item_result_recyclerview);
-            runButton = view.findViewById(R.id.f_nethunter_item_run_btn);
         }
     }
 }

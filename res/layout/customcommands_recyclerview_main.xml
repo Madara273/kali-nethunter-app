@@ -123,6 +123,6 @@
             android:layout_height="wrap_content"
             android:layout_weight="0.6"
             android:layout_gravity="bottom"
-            android:text="EXECUTE"/>
+            android:text="Run"/>
     </LinearLayout>
 </LinearLayout>
