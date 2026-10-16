@@ -8,12 +8,12 @@
         app:showAsAction="always" />
     <item
         android:id="@+id/action_tools_settings"
-        android:icon="@drawable/ic_settings"
+        android:icon="@drawable/ic_tools_settings"
         android:title="Tools Settings"
         app:showAsAction="ifRoom"/>
     <item
         android:id="@+id/action_canusb_settings"
-        android:icon="@drawable/ic_settings"
+        android:icon="@drawable/ic_action_usb"
         android:title="CAN-USB Settings"
         app:showAsAction="ifRoom"/>
     <item

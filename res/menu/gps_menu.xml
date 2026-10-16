@@ -9,7 +9,7 @@
         android:visible="false" />
     <item
         android:id="@+id/action_info"
-        android:icon="@android:drawable/ic_menu_info_details"
+        android:icon="@drawable/ic_gps_info"
         android:title="@string/info"
         app:showAsAction="ifRoom" />
     <item

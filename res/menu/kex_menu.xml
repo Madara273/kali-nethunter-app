@@ -3,6 +3,6 @@
     <item
         android:id="@+id/action_info"
         android:title="@string/vnc_information_menu_button"
-        android:icon="@android:drawable/ic_menu_info_details"
+        android:icon="@drawable/ic_vnc_info"
         app:showAsAction="ifRoom" />
 </menu>

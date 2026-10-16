@@ -34,11 +34,11 @@
     <group android:id="@+id/chrootDependentGroup">
          <item
              android:id="@+id/kaliservices_item"
-             android:icon="@drawable/ic_action_settings_applications"
+             android:icon="@drawable/ic_action_services"
              android:title="@string/drawertitlekaliservices" />
          <item
              android:id="@+id/custom_commands_item"
-             android:icon="@drawable/ic_action_play"
+             android:icon="@drawable/ic_custom_commands"
              android:title="@string/drawertitlecustomcommands" />
          <item
              android:id="@+id/macchanger_item"
@@ -46,7 +46,7 @@
              android:title="@string/drawertitlemacchanger" />
          <item
              android:id="@+id/vnc_item"
-             android:icon="@drawable/ic_action_home"
+             android:icon="@drawable/ic_vnc"
              android:title="@string/drawertitlevncmanager" />
         <item
              android:id="@+id/audio_item"
@@ -62,7 +62,7 @@
              android:title="@string/drawertitlehid" />
          <item
              android:id="@+id/duckhunter_item"
-             android:icon="@drawable/ic_action_keyboard"
+             android:icon="@drawable/ic_duckhunter"
              android:title="@string/drawertitleduckhunter" />
          <item
              android:id="@+id/badusb_item"
@@ -106,7 +106,7 @@
              android:title="@string/drawertitlesearchsploit" />
         <item
             android:id="@+id/pineapple_item"
-            android:icon="@drawable/ic_usb"
+            android:icon="@drawable/ic_pineapple"
             android:title="@string/drawertitlepineapple" />
         <item
             android:id="@+id/gps_item"
