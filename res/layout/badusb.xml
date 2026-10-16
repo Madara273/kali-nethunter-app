@@ -24,13 +24,7 @@
                 android:padding="16dp">
 
                 <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/badusb_label"
-                    android:textAppearance="?attr/textAppearanceHeadlineLarge"
-                    android:paddingBottom="8dp" />
-
-                <TextView
+                    android:id="@+id/badusb_desc"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/badusb_description"
@@ -59,15 +53,33 @@
                         android:autofillHints="none" />
                 </com.google.android.material.textfield.TextInputLayout>
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/updateOptions"
+                    android:id="@+id/Start"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"
-                    android:layout_marginTop="16dp"
-                    android:text="@string/update"
+                    android:layout_weight="1"
+                    android:text="Start"
                     android:textColor="@color/orange"
                     style="?attr/materialButtonOutlinedStyle" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/Stop"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_weight="1"
+                    android:text="Stop"
+                    android:textColor="@color/orange"
+                    style="?attr/materialButtonOutlinedStyle" />
+
+                </LinearLayout>
             </LinearLayout>
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
