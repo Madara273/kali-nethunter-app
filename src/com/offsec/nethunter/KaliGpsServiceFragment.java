@@ -320,10 +320,11 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
                     exe.RunAsRoot(new String[]{"echo \"" + conf + "\" > " + NhPaths.SD_PATH + "/kismet_site.conf"});
                     exe.RunAsRoot(new String[]{NhPaths.APP_SCRIPTS_PATH + "/bootkali custom_cmd mv /sdcard/kismet_site.conf /etc/kismet/"});
                 });
-                Toast.makeText(requireActivity().getApplicationContext(), "Starting Kismet.. Web UI will be available at localhost:2501\"", Toast.LENGTH_LONG).show();
+                Toast.makeText(requireActivity().getApplicationContext(), "Starting terminal.. Web UI will be available in browser at 127.0.0.1:2501\"", Toast.LENGTH_LONG).show();
                 wantKismet = true;
                 gpsTextView.append("Kismet will launch after next position received.  Waiting...\n");
-        
+                gpsTextView.append("*** Web UI will be available in browser at 127.0.0.1:2501 ***\n");
+
                 button_launch_app.setText(R.string.stop_kismet);
             } else {
                 stopKismet();
