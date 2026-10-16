@@ -51,6 +51,7 @@ public class NethunterRecyclerViewAdapter extends RecyclerView.Adapter<Nethunter
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
         holder.resultRecyclerView.setLayoutManager(linearLayoutManager);
         holder.resultRecyclerView.setAdapter(new NethunterRecyclerViewAdapterResult(context, nethunterModelList.get(position).getResult()));
+        holder.titleTextView.setOnClickListener(v -> NethunterData.getInstance().runCommandforItem(position));
         holder.titleTextView.setOnLongClickListener(v -> {
             final LayoutInflater mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             final View promptViewEdit = mInflater.inflate(R.layout.nethunter_edit_dialog_view, null);
