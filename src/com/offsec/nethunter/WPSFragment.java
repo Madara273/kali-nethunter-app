@@ -87,7 +87,11 @@ public class WPSFragment extends Fragment {
         // Enabling wifi in case it's down
         if (iswatch) {
             //firmware may not even be loaded, so let's enable wearos wifi first, then disable, finally up interface
-            exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting on; ifconfig wlan0 up; settings put system clockwork_wifi_setting off; ifconfig wlan0 up"});
+            ExecutorService wifiExecutor = Executors.newSingleThreadExecutor();
+            wifiExecutor.execute(() -> requireActivity().runOnUiThread(() -> {
+                Toast.makeText(requireActivity().getApplicationContext(), "wlan0 enabled successfully", Toast.LENGTH_LONG).show();
+                exe.RunAsRoot(new String[]{"settings put system clockwork_wifi_setting on; ifconfig wlan0 up; settings put system clockwork_wifi_setting off; sleep 2; ifconfig wlan0 up"});
+            }));
         } else exe.RunAsRoot(new String[]{"svc wifi enable"});
 
         // Interface spinner setup
