@@ -11,7 +11,7 @@
 	<com.google.android.material.card.MaterialCardView
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:layout_marginBottom="16dp"
+		android:layout_marginBottom="8dp"
 		app:cardBackgroundColor="#1A1A1A"
 		app:strokeColor="#424242"
 		app:strokeWidth="2dp"
@@ -86,29 +86,14 @@
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:orientation="horizontal"
+		android:gravity="center"
 		android:weightSum="2">
 
 		<com.google.android.material.button.MaterialButton
 			android:id="@+id/btn_select_zip"
-			android:layout_width="0dp"
+			android:layout_width="match_parent"
 			android:layout_height="wrap_content"
-			android:layout_weight="1"
-			android:layout_marginEnd="4dp"
-			android:text="Select-Kernel"
-			app:backgroundTint="#37474F"
-			android:textColor="#E0E0E0"
-			android:textSize="12sp"
-			android:textAllCaps="false"
-			app:cornerRadius="12dp"
-			android:visibility="visible" />
-
-		<com.google.android.material.button.MaterialButton
-			android:id="@+id/btn_support_kernel"
-			android:layout_width="0dp"
-			android:layout_height="wrap_content"
-			android:layout_weight="1"
-			android:layout_marginStart="4dp"
-			android:text="Support-NHK"
+			android:text="Select a kernel to Flash"
 			app:backgroundTint="#37474F"
 			android:textColor="#E0E0E0"
 			android:textSize="12sp"
@@ -143,33 +128,20 @@
 			app:cornerRadius="12dp" />
 	</LinearLayout>
 
-	<com.google.android.material.progressindicator.LinearProgressIndicator
-		android:id="@+id/download_progress"
-		android:layout_width="match_parent"
-		android:layout_height="wrap_content"
-		android:layout_marginTop="12dp"
-		android:layout_marginHorizontal="8dp"
-		android:indeterminate="false"
-		android:visibility="gone"
-		app:indicatorColor="#00FF00"
-		app:trackColor="#263238"
-		app:trackThickness="4dp"
-		app:trackCornerRadius="2dp" />
-
 	<TextView
 		android:id="@+id/tv_file_path"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:text="File not selected"
 		android:textColor="#888888"
-		android:padding="8dp"
+		android:padding="4dp"
 		android:gravity="center" />
 
 	<RelativeLayout
 		android:layout_width="match_parent"
 		android:layout_height="0dp"
 		android:layout_weight="1"
-		android:layout_marginTop="16dp">
+		android:layout_marginTop="8dp">
 
 		<com.google.android.material.card.MaterialCardView
 			android:layout_width="match_parent"
