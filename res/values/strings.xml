@@ -1550,5 +1550,5 @@
     <string name="btn_adb_forward_adbhub">Forward adb-hub</string>
 
     <!-- NH_PATCH_STRINGS -->
-    <string name="stop_kismet">STOP KISMET</string>
+    <string name="stop_kismet">Stop Kismet</string>
 </resources>

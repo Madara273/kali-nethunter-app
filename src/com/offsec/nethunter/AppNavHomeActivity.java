@@ -568,7 +568,6 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
             hideMenuItemById(R.id.mpc_item);
             hideMenuItemById(R.id.searchsploit_item);
             hideMenuItemById(R.id.pineapple_item);
-            hideMenuItemById(R.id.gps_item);
             hideMenuItemById(R.id.can_item);
             hideMenuItemById(R.id.wearhunter_item);
         } else {
