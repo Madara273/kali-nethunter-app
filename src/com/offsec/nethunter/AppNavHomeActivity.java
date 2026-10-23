@@ -1,6 +1,7 @@
 package com.offsec.nethunter;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -11,6 +12,7 @@ import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
+import android.graphics.Color;
 import android.nfc.NfcAdapter;
 import android.os.Build;
 import android.os.Bundle;
@@ -24,7 +26,9 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -34,6 +38,7 @@ import com.offsec.nethunter.SQL.CustomCommandsSQL;
 import com.offsec.nethunter.SQL.KaliServicesSQL;
 import com.offsec.nethunter.SQL.NethunterSQL;
 import com.offsec.nethunter.SQL.USBArsenalSQL;
+import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.gps.KaliGPSUpdates;
 import com.offsec.nethunter.gps.LocationUpdateService;
 import com.offsec.nethunter.service.CompatCheckService;
@@ -101,10 +106,13 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
     private NfcAdapter nfcAdapter;
     private PendingIntent nfcPendingIntent;
 
+    private Context context;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        context = getApplicationContext();
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
 
         Intent nfcIntent = new Intent(this, getClass());
@@ -116,7 +124,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
 
         // Initiate the NhPaths singleton class, and it will then keep living until the app dies.
         // Also with its sharepreference listener registered, the CHROOT_PATH variable can be updated immediately on sharepreference changes.
-        nhPaths = NhPaths.getInstance(getApplicationContext());
+        nhPaths = NhPaths.getInstance(context);
 
         // Handle the back button press
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
@@ -142,7 +150,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
                             if (menuNav.getItem(i).getTitle() == mTitle) {
                                 MenuItem _current = menuNav.getItem(i);
                                 if (lastSelectedMenuItem != _current) {
-                                    Intent intent = new Intent(getApplicationContext(), AppNavHomeActivity.class);
+                                    Intent intent = new Intent(context, AppNavHomeActivity.class);
                                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
                                     startActivity(intent);
                                     finish();
@@ -180,7 +188,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         }).start();
 
         // Initiate the PermissionCheck class.
-        permissionCheck = new PermissionCheck(this, getApplicationContext());
+        permissionCheck = new PermissionCheck(this, context);
         // Register the NetHunter receiver with intent actions.
         nethunterReceiver = new NethunterReceiver();
         IntentFilter intentFilter = new IntentFilter();
@@ -196,11 +204,18 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         // initiate prefs.
         prefs = getSharedPreferences(BuildConfig.APPLICATION_ID, Context.MODE_PRIVATE);
 
+        Boolean iswatch = getBaseContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
+
+        // Changelog first run
+        int versionCode = BuildConfig.VERSION_CODE;
+        int lastChangelog = prefs.getInt("last_changelog", 0);
+        if (lastChangelog != versionCode && !iswatch) showChangelog();
+
         // Start copying the app files to the corresponding path.
-        copyBootFilesExecutor = new CopyBootFilesExecutor(getApplicationContext(), this);
+        copyBootFilesExecutor = new CopyBootFilesExecutor(context, this);
         //setContentView(R.layout.base_layout);
         //ProgressBar progressBar = findViewById(R.id.progressBar);
-        //copyBootFilesExecutor = new CopyBootFilesExecutor(getApplicationContext(), this, progressBar);
+        //copyBootFilesExecutor = new CopyBootFilesExecutor(context, this, progressBar);
         copyBootFilesExecutor.setListener(new CopyBootFilesExecutor.CopyBootFilesExecutorListener() {
             public void onPrepare() {
                 //progressBar.setVisibility(View.VISIBLE);
@@ -230,10 +245,10 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
                 // Initialize SQL singletons
                 ExecutorService executor = Executors.newFixedThreadPool(4);
                 try {
-                    executor.execute(() -> NethunterSQL.getInstance(getApplicationContext()));
-                    executor.execute(() -> KaliServicesSQL.getInstance(getApplicationContext()));
-                    executor.execute(() -> CustomCommandsSQL.getInstance(getApplicationContext()));
-                    executor.execute(() -> USBArsenalSQL.getInstance(getApplicationContext()));
+                    executor.execute(() -> NethunterSQL.getInstance(context));
+                    executor.execute(() -> KaliServicesSQL.getInstance(context));
+                    executor.execute(() -> CustomCommandsSQL.getInstance(context));
+                    executor.execute(() -> USBArsenalSQL.getInstance(context));
                 } finally {
                     executor.shutdown();
                 }
@@ -246,7 +261,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
                 }
 
                 // Check if NetHunter terminal app is installed.
-                if (getApplicationContext().getPackageManager().getLaunchIntentForPackage("com.offsec.nhterm") == null) {
+                if (context.getPackageManager().getLaunchIntentForPackage("com.offsec.nhterm") == null) {
                     showWarningDialog("NetHunter app cannot be run properly", "NetHunter terminal is not installed yet.", true);
                 }
 
@@ -373,7 +388,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
     public void onLocationUpdatesRequested(KaliGPSUpdates.Receiver receiver) {
         locationUpdatesRequested = true;
         this.locationUpdateReceiver = receiver;
-        Intent intent = new Intent(getApplicationContext(), LocationUpdateService.class);
+        Intent intent = new Intent(context, LocationUpdateService.class);
         bindService(intent, locationServiceConnection, Context.BIND_AUTO_CREATE);
     }
 
@@ -415,7 +430,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         super.onStart();
 
         // Run CompatCheck Service
-        if (navigationView != null) startService(new Intent(getApplicationContext(), CompatCheckService.class));
+        if (navigationView != null) startService(new Intent(context, CompatCheckService.class));
     }
 
     @Override
@@ -511,6 +526,35 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         }
     }
 
+    private void showChangelog() {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this, R.style.DialogStyleCompat);
+        int versionCode = BuildConfig.VERSION_CODE;
+        String latest = exe.RunAsRootOutput("curl -fs https://gitlab.com/kalilinux/nethunter/store/nethunter-store-data/-/raw/master/metadata/com.offsec.nethunter/en-US/changelogs/" + versionCode + ".txt");
+
+        TextView messageView = new TextView(this);
+        ScrollView scrollView = new ScrollView(this);
+        TextView titleView = new TextView(this);
+
+        titleView.setText("What's new");
+        titleView.setTextSize(20);
+        titleView.setPadding(30, 20, 30, 0);
+
+        messageView.setText(latest);
+        messageView.setTextSize(12);
+        messageView.setPadding(30, 30, 30, 10);
+        LinearLayout container = new LinearLayout(this);
+        container.setOrientation(LinearLayout.VERTICAL);
+        container.addView(titleView);
+        container.addView(messageView);
+
+        scrollView.addView(container);
+        builder.setView(scrollView);
+        builder.setPositiveButton("OK", (dialogInterface, i) -> {
+            prefs.edit().putInt("last_changelog", versionCode).apply();
+        });
+        if (!latest.isEmpty()) builder.show();
+    }
+
     private void setRootView() {
         setContentView(R.layout.base_layout);
 
@@ -542,8 +586,6 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         inappterm = prefs.getBoolean("inapp_terminal_enabled", false);
         if (!inappterm) hideMenuItemById(R.id.terminal_item);
 
-        // hide kernel tab until fixed
-        //hideMenuItemById(R.id.kernel_item);
         Boolean iswatch = getBaseContext().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
 
         // hide kernel tab until fixed
@@ -620,6 +662,26 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         // Enable chroot-dependent group
         navigationView.getMenu().setGroupEnabled(R.id.chrootDependentGroup, true);
 
+        // Check for protocol-id issue
+        String protocol_id;
+        if (exe.RunAsRootReturnValue(NhPaths.APP_SCRIPTS_PATH + "/chrootmgr -c \"status\"") == 0) {
+            protocol_id = exe.RunAsChrootOutput("grep -qE \"[mM]achine-id.*[pP]rotocol driver not attached\" /var/log/apt/term.log 2>/dev/null && echo 1 || echo 0"); {}
+            if (protocol_id.equals("1")) {
+                MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this, R.style.DialogStyleCompat);
+                builder.setTitle("Systemd issue detected");
+                builder.setMessage("Apply the recommended workaround? This patch will force apt to skip a broken systemd configuration step so that your package manager can finish installing or fixing updates.");
+                builder.setPositiveButton("Yes", (dialogInterface, i) -> {
+                    run_cmd("echo -ne \"\\033]0;Systemd patch\\007\" && cmp --silent /sdcard/nh_files/modules/start-kismet /usr/bin/start-kismet || cp /sdcard/nh_files/modules/start-kismet /usr/bin/start-kismet; " +
+                            "clear; echo '#!/bin/true' > /var/lib/dpkg/info/systemd.postinst && chmod +x /var/lib/dpkg/info/systemd.postinst && " +
+                            "apt install -f && sed -i '/[mM]achine-id.*[pP]rotocol driver not attached/d' /var/log/apt/term.log || echo 'Failed to patch systemd.postinst!'; echo 'Done! Exiting..'; sleep 2; exit");
+                });
+                builder.setNegativeButton("No", (dialogInterface, i) -> {
+                    dialogInterface.cancel();
+                });
+                builder.show();
+            }
+        }
+
         // Open drawer on first launch
         boolean seenNav = prefs.getBoolean("seenNav", false);
         if (!seenNav) {
@@ -636,7 +698,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         mDrawerLayout.addDrawerListener(mDrawerToggle);
         mDrawerToggle.syncState();
 
-        startService(new Intent(getApplicationContext(), CompatCheckService.class));
+        startService(new Intent(context, CompatCheckService.class));
 
         if (desiredFragment != -1) {
             changeDrawer(desiredFragment);
@@ -766,7 +828,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         } else if (itemId == R.id.mpc_item) {
             changeFragment(fragmentManager, MPCFragment.newInstance(itemId));
         } else if (itemId == R.id.vnc_item) {
-            if (getApplicationContext().getPackageManager().getLaunchIntentForPackage("com.offsec.nethunter.kex") == null) {
+            if (context.getPackageManager().getLaunchIntentForPackage("com.offsec.nethunter.kex") == null) {
                 showWarningDialog("", "NetHunter KeX is not installed yet, please install from the store!", false);
             } else {
                 changeFragment(fragmentManager, VNCFragment.newInstance(itemId));
@@ -856,6 +918,13 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
                 finish();
         });
         warningAD.create().show();
+    }
+
+    public void run_cmd(String cmd) {
+        if (context != null) {
+            @SuppressLint("SdCardPath") Intent intent = Bridge.createExecuteIntent("/data/data/com.offsec.nhterm/files/usr/bin/kali", cmd);
+            this.startActivity(intent);
+        }
     }
 
     // Main app broadcastReceiver to response for different actions.
