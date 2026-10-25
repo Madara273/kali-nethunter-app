@@ -3,70 +3,66 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@android:color/transparent"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:paddingStart="4dp"
+    android:paddingEnd="4dp"
+    android:theme="@style/ThemeOverlay.Home.Controls">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="3dp"
-        android:orientation="horizontal"
-        android:background="@android:color/transparent">
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/f_kaliservices_recyclerview_servicetitle_tv"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:layout_marginEnd="8dp"
+            android:minHeight="48dp"
+            android:gravity="center_vertical"
+            android:background="?attr/selectableItemBackground"
+            android:clickable="true"
+            android:focusable="true"
+            android:text="Loading..."
+            android:textColor="@color/home_nh_text"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/f_kaliservices_recyclerview_switch_toggle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="8dp"
-        android:orientation="horizontal">
-        <TextView
-            android:id="@+id/f_kaliservices_recyclerview_servicetitle_tv"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginEnd="4dp"
-            android:text="Loading.."
-            android:textColor="@android:color/background_light"
-            android:textSize="20sp"
-            android:background="?attr/selectableItemBackground"
-            android:clickable="true"
-            android:focusable="true"/>
-
-        <!--Button
-            android:id="@+id/f_kaliservices_recyclerview_edit_btn"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginEnd="8dp"
-            android:layout_weight="0.8"
-            android:text="EDIT"
-            android:textColor="@color/accent_material_dark" /-->
-    </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="48dp"
+        android:gravity="center_vertical"
         android:orientation="horizontal">
 
         <TextView
             android:id="@+id/f_kaliservices_recyclerview_serviceresult_tv"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="Service is NOT running."
-            android:layout_weight="0.35"
-            android:layout_marginStart="12dp"/>
-
-        <CheckBox
-            android:id="@+id/f_kaliservices_recyclerview_runonchrootstart_checkbox"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="0.35"
-            android:text="RunOnChrootStart"/>
-
-        <androidx.appcompat.widget.SwitchCompat
-            android:id="@+id/f_kaliservices_recyclerview_switch_toggle"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:layout_marginEnd="8dp"
-            android:layout_marginBottom="4dp"
-            android:layout_weight="0.5"
-            android:textColor="@android:color/background_light" />
+            android:text="Service is NOT running."
+            android:textSize="12sp" />
+
+        <com.google.android.material.checkbox.MaterialCheckBox
+            android:id="@+id/f_kaliservices_recyclerview_runonchrootstart_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:buttonTint="@color/home_nh_accent"
+            android:text="RunOnChrootStart"
+            android:textColor="@color/home_nh_muted"
+            android:textSize="12sp" />
     </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:background="@color/home_nh_border" />
 </LinearLayout>

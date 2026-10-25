@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="kaliservices_running">#91CBA8</color>
+    <color name="kaliservices_stopped">#D49A9A</color>
+</resources>

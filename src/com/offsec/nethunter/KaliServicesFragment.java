@@ -17,17 +17,18 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.EditText;
-import android.widget.HorizontalScrollView;
-import android.widget.Spinner;
+import com.offsec.nethunter.widget.ExpandableChoiceView;
 import android.widget.TextView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 import com.offsec.nethunter.RecyclerViewAdapter.KaliServicesRecyclerViewAdapter;
-import com.offsec.nethunter.RecyclerViewAdapter.KaliServicesRecyclerViewAdapterDeleteItems;
 import com.offsec.nethunter.RecyclerViewData.KaliServicesData;
 import com.offsec.nethunter.SQL.KaliServicesSQL;
 import com.offsec.nethunter.models.KaliServicesModel;
+import com.offsec.nethunter.utils.KaliServicesDialogs;
 import com.offsec.nethunter.utils.NhPaths;
 import com.offsec.nethunter.viewmodels.KaliServicesViewModel;
 
@@ -82,20 +83,23 @@ public class KaliServicesFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         KaliServicesViewModel kaliServicesViewModel = new ViewModelProvider(this).get(KaliServicesViewModel.class);
         kaliServicesViewModel.init(context);
-        kaliServicesViewModel.getLiveDataKaliServicesModelList().observe(getViewLifecycleOwner(), kaliServicesModelList -> kaliServicesRecyclerViewAdapter.notifyDataSetChanged());
 
         kaliServicesRecyclerViewAdapter = new KaliServicesRecyclerViewAdapter(context, kaliServicesViewModel.getLiveDataKaliServicesModelList().getValue());
         RecyclerView recyclerViewServiceTitle = view.findViewById(R.id.f_kaliservices_recyclerviewServiceTitle);
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
         recyclerViewServiceTitle.setLayoutManager(linearLayoutManager);
         recyclerViewServiceTitle.setAdapter(kaliServicesRecyclerViewAdapter);
+        TextView emptyState = view.findViewById(R.id.f_kaliservices_empty);
+        kaliServicesViewModel.getLiveDataKaliServicesModelList().observe(getViewLifecycleOwner(), services -> {
+            kaliServicesRecyclerViewAdapter.updateItems(services);
+            emptyState.setVisibility(services == null || services.isEmpty() ? View.VISIBLE : View.GONE);
+        });
 
         refreshButton = view.findViewById(R.id.f_kaliservices_refreshButton);
         addButton = view.findViewById(R.id.f_kaliservices_addItemButton);
         deleteButton = view.findViewById(R.id.f_kaliservices_deleteItemButton);
         moveButton = view.findViewById(R.id.f_kaliservices_moveItemButton);
-        TextView servicesDesc = view.findViewById(R.id.f_kaliservices_banner);
-        HorizontalScrollView servicesButtons = view.findViewById(R.id.f_kaliservices_btn_scrollView);
+        View servicesButtons = view.findViewById(R.id.f_kaliservices_btn_scrollView);
 
         onRefreshItemSetup();
         onAddItemSetup();
@@ -106,7 +110,7 @@ public class KaliServicesFragment extends Fragment {
         SharedPreferences sharedpreferences = activity.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
         if (iswatch) {
-            servicesDesc.setVisibility(View.GONE);
+            view.findViewById(R.id.f_kaliservices_header).setVisibility(View.GONE);
             servicesButtons.setVisibility(View.GONE);
         }
 
@@ -116,13 +120,14 @@ public class KaliServicesFragment extends Fragment {
             public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
                 inflater.inflate(R.menu.kaliservices, menu);
                 MenuItem searchItem = menu.findItem(R.id.f_kaliservices_action_search);
+                MenuItem moreItem = menu.findItem(R.id.f_kaliservices_action_more);
                 SearchView searchView = (SearchView) searchItem.getActionView();
                 boolean isWatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
                 if (isWatch) searchItem.setVisible(false);
                 if (searchView != null) {
-                    searchView.setOnSearchClickListener(v -> menu.setGroupVisible(R.id.f_kaliservices_menu_group1, false));
+                    searchView.setOnSearchClickListener(v -> moreItem.setVisible(false));
                     searchView.setOnCloseListener(() -> {
-                        menu.setGroupVisible(R.id.f_kaliservices_menu_group1, true);
+                        moreItem.setVisible(true);
                         return false;
                     });
                     searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -139,66 +144,8 @@ public class KaliServicesFragment extends Fragment {
 
             @Override
             public boolean onMenuItemSelected(@NonNull MenuItem item) {
-                LayoutInflater li = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                int id = item.getItemId();
-                View promptView = li.inflate(R.layout.kaliservices_custom_dialog_view, null);
-                TextView titleTextView = promptView.findViewById(R.id.f_kaliservices_adb_tv_title1);
-                EditText storedpathEditText = promptView.findViewById(R.id.f_kaliservices_adb_et_storedpath);
-
-                if (id == R.id.f_kaliservices_menu_backupDB) {
-                    titleTextView.setText(R.string.kaliservices_full_path_save_db);
-                    storedpathEditText.setText(String.format("%s/FragmentKaliServices", NhPaths.APP_SD_SQLBACKUP_PATH));
-                    AlertDialog dlg = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
-                            .setView(promptView)
-                            .setNegativeButton("Cancel", (d,w)->d.dismiss())
-                            .setPositiveButton("OK", (d,w)->{})
-                            .create();
-                    dlg.setOnShowListener(dd -> {
-                        Button ok = dlg.getButton(DialogInterface.BUTTON_POSITIVE);
-                        ok.setOnClickListener(v -> {
-                            String res = KaliServicesData.getInstance()
-                                    .backupData(KaliServicesSQL.getInstance(context), storedpathEditText.getText().toString());
-                            if (res == null) {
-                                NhPaths.showMessage(context, "db is successfully backup to " + storedpathEditText.getText());
-                                dlg.dismiss();
-                            } else {
-                                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat)
-                                        .setTitle("Failed to backup the DB.")
-                                        .setMessage(res)
-                                        .create().show();
-                            }
-                        });
-                    });
-                    dlg.show();
-                    return true;
-                } else if (id == R.id.f_kaliservices_menu_restoreDB) {
-                    titleTextView.setText(R.string.kaliservices_full_path_restore_db);
-                    storedpathEditText.setText(String.format("%s/FragmentKaliServices", NhPaths.APP_SD_SQLBACKUP_PATH));
-                    AlertDialog dlg = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
-                            .setView(promptView)
-                            .setNegativeButton("Cancel", (d,w)->d.dismiss())
-                            .setPositiveButton("OK", (d,w)->{})
-                            .create();
-                    dlg.setOnShowListener(dd -> {
-                        Button ok = dlg.getButton(DialogInterface.BUTTON_POSITIVE);
-                        ok.setOnClickListener(v -> {
-                            String res = KaliServicesData.getInstance()
-                                    .restoreData(KaliServicesSQL.getInstance(context), storedpathEditText.getText().toString());
-                            if (res == null) {
-                                NhPaths.showMessage(context, "db is successfully restored to " + storedpathEditText.getText());
-                                dlg.dismiss();
-                            } else {
-                                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat)
-                                        .setTitle("Failed to restore the DB.")
-                                        .setMessage(res)
-                                        .create().show();
-                            }
-                        });
-                    });
-                    dlg.show();
-                    return true;
-                } else if (id == R.id.f_kaliservices_menu_ResetToDefault) {
-                    KaliServicesData.getInstance().resetData(KaliServicesSQL.getInstance(context));
+                if (item.getItemId() == R.id.f_kaliservices_action_more) {
+                    showMoreSheet();
                     return true;
                 }
                 return false;
@@ -222,6 +169,76 @@ public class KaliServicesFragment extends Fragment {
         kaliServicesRecyclerViewAdapter = null;
     }
 
+    private void showMoreSheet() {
+        com.google.android.material.bottomsheet.BottomSheetDialog dialog =
+                new com.google.android.material.bottomsheet.BottomSheetDialog(
+                        requireContext(), R.style.ThemeOverlay_Home_BottomSheet);
+        View sheet = LayoutInflater.from(dialog.getContext())
+                .inflate(R.layout.kaliservices_more_bottomsheet, null, false);
+        sheet.findViewById(R.id.kaliservices_more_backup).setOnClickListener(v -> {
+            dialog.dismiss();
+            showDatabasePathDialog(false);
+        });
+        sheet.findViewById(R.id.kaliservices_more_restore).setOnClickListener(v -> {
+            dialog.dismiss();
+            showDatabasePathDialog(true);
+        });
+        sheet.findViewById(R.id.kaliservices_more_reset).setOnClickListener(v -> {
+            dialog.dismiss();
+            new MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_Home_Alert)
+                    .setTitle("Reset Kali Services?")
+                    .setMessage("Custom services and changes will be replaced with the defaults.")
+                    .setNegativeButton("Cancel", null)
+                    .setPositiveButton("Reset", (d, which) -> KaliServicesData.getInstance()
+                            .resetData(KaliServicesSQL.getInstance(requireContext())))
+                    .show();
+        });
+        dialog.setContentView(sheet);
+        dialog.show();
+    }
+
+    private void showDatabasePathDialog(boolean restore) {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(
+                requireContext(), R.style.ThemeOverlay_Home_Alert);
+        View form = LayoutInflater.from(builder.getContext())
+                .inflate(R.layout.kaliservices_custom_dialog_view, null, false);
+        TextView description = form.findViewById(R.id.f_kaliservices_adb_tv_title1);
+        description.setText(restore ? R.string.kaliservices_full_path_restore_db
+                : R.string.kaliservices_full_path_save_db);
+        TextInputLayout pathLayout = form.findViewById(R.id.kaliservices_database_path_til);
+        TextInputEditText pathEdit = form.findViewById(R.id.f_kaliservices_adb_et_storedpath);
+        pathEdit.setText(String.format("%s/FragmentKaliServices", NhPaths.APP_SD_SQLBACKUP_PATH));
+
+        AlertDialog dialog = builder
+                .setTitle(restore ? "Restore database" : "Back up database")
+                .setView(form)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton(restore ? "Restore" : "Back up", null)
+                .create();
+        dialog.setOnShowListener(d -> {
+            Button confirm = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+            confirm.setOnClickListener(v -> {
+                pathLayout.setError(null);
+                String path = pathEdit.getText() == null ? "" : pathEdit.getText().toString().trim();
+                if (path.isEmpty()) {
+                    pathLayout.setError("Enter a database file path");
+                    return;
+                }
+                String result = restore
+                        ? KaliServicesData.getInstance().restoreData(KaliServicesSQL.getInstance(requireContext()), path)
+                        : KaliServicesData.getInstance().backupData(KaliServicesSQL.getInstance(requireContext()), path);
+                if (result == null) {
+                    NhPaths.showMessage(requireContext(), restore
+                            ? "Kali Services database restored" : "Kali Services database backed up to " + path);
+                    dialog.dismiss();
+                } else {
+                    pathLayout.setError(result);
+                }
+            });
+        });
+        dialog.show();
+    }
+
     private void onRefreshItemSetup(){
         refreshButton.setOnClickListener(v -> KaliServicesData.getInstance().refreshData());
     }
@@ -233,7 +250,10 @@ public class KaliServicesFragment extends Fragment {
                 NhPaths.showMessage(context, "Service list is empty. Please refresh and try again.");
                 return;
             }
-            final LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            com.google.android.material.bottomsheet.BottomSheetDialog dialog =
+                    new com.google.android.material.bottomsheet.BottomSheetDialog(
+                            requireContext(), R.style.ThemeOverlay_Home_BottomSheet);
+            final LayoutInflater inflater = LayoutInflater.from(dialog.getContext());
             final View promptViewAdd = inflater.inflate(R.layout.kaliservices_add_dialog_view, null);
             final EditText titleEditText = promptViewAdd.findViewById(R.id.f_kaliservices_add_adb_et_title);
             final EditText startCmdEditText = promptViewAdd.findViewById(R.id.f_kaliservices_add_adb_et_startcommand);
@@ -244,60 +264,29 @@ public class KaliServicesFragment extends Fragment {
             final FloatingActionButton readmeButton2 = promptViewAdd.findViewById(R.id.f_kaliservices_add_btn_info_fab2);
             final FloatingActionButton readmeButton3 = promptViewAdd.findViewById(R.id.f_kaliservices_add_btn_info_fab3);
             final FloatingActionButton readmeButton4 = promptViewAdd.findViewById(R.id.f_kaliservices_add_btn_info_fab4);
-            final Spinner insertPositions = promptViewAdd.findViewById(R.id.f_kaliservices_add_adb_spr_positions);
-            final Spinner insertTitles = promptViewAdd.findViewById(R.id.f_kaliservices_add_adb_spr_titles);
+            final ExpandableChoiceView insertPositions = promptViewAdd.findViewById(R.id.f_kaliservices_add_adb_spr_positions);
+            final ExpandableChoiceView insertTitles = promptViewAdd.findViewById(R.id.f_kaliservices_add_adb_spr_titles);
 
             ArrayList<String> serviceNameArrayList = new ArrayList<>();
             for (KaliServicesModel kaliServicesModel: kaliServicesModelList){
                 serviceNameArrayList.add(kaliServicesModel.getServiceName());
             }
 
-            ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(context, android.R.layout.simple_spinner_item, serviceNameArrayList);
+            ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(dialog.getContext(), android.R.layout.simple_spinner_item, serviceNameArrayList);
             arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
 
             startCmdEditText.setText(R.string.service_servicename_start);
             stopCmdEditText.setText(R.string.service_servicename_stop);
             checkstatusCmdEditText.setText(R.string.service_servicename);
 
-            readmeButton1.setOnClickListener(view -> {
-                MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                adb.setTitle("HOW TO USE:")
-                        .setMessage(getString(R.string.kaliservices_howto_startservice))
-                        .setNegativeButton("Close", (dialogInterface, i) -> dialogInterface.dismiss());
-                final AlertDialog ad = adb.create();
-                ad.setCancelable(true);
-                ad.show();
-            });
-
-            readmeButton2.setOnClickListener(view -> {
-                MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                adb.setTitle("HOW TO USE:")
-                        .setMessage(getString(R.string.kaliservices_howto_stopservice))
-                        .setNegativeButton("Close", (dialogInterface, i) -> dialogInterface.dismiss());
-                final AlertDialog ad = adb.create();
-                ad.setCancelable(true);
-                ad.show();
-            });
-
-            readmeButton3.setOnClickListener(view -> {
-                MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                adb.setTitle("HOW TO USE:")
-                        .setMessage(getString(R.string.kaliservices_howto_checkservice))
-                        .setNegativeButton("Close", (dialogInterface, i) -> dialogInterface.dismiss());
-                final AlertDialog ad = adb.create();
-                ad.setCancelable(true);
-                ad.show();
-            });
-
-            readmeButton4.setOnClickListener(view -> {
-                MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-                adb.setTitle("HOW TO USE:")
-                        .setMessage(getString(R.string.kaliservices_howto_runServiceOnBoot))
-                        .setNegativeButton("Close", (dialogInterface, i) -> dialogInterface.dismiss());
-                final AlertDialog ad = adb.create();
-                ad.setCancelable(true);
-                ad.show();
-            });
+            readmeButton1.setOnClickListener(view -> KaliServicesDialogs.showInfo(
+                    requireContext(), "Start command", R.string.kaliservices_howto_startservice));
+            readmeButton2.setOnClickListener(view -> KaliServicesDialogs.showInfo(
+                    requireContext(), "Stop command", R.string.kaliservices_howto_stopservice));
+            readmeButton3.setOnClickListener(view -> KaliServicesDialogs.showInfo(
+                    requireContext(), "Status check", R.string.kaliservices_howto_checkservice));
+            readmeButton4.setOnClickListener(view -> KaliServicesDialogs.showInfo(
+                    requireContext(), "Run on Chroot start", R.string.kaliservices_howto_runServiceOnBoot));
 
             insertPositions.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 
@@ -305,11 +294,11 @@ public class KaliServicesFragment extends Fragment {
                 public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                     //if Insert to Top
                     if (position == 0) {
-                        insertTitles.setVisibility(View.INVISIBLE);
+                        insertTitles.setVisibility(View.GONE);
                         targetPositionId = 1;
                         //if Insert to Bottom
                     } else if (position == 1) {
-                        insertTitles.setVisibility(View.INVISIBLE);
+                        insertTitles.setVisibility(View.GONE);
                         targetPositionId = kaliServicesModelList.size() + 1;
                         //if Insert Before
                     } else if (position == 2) {
@@ -347,133 +336,134 @@ public class KaliServicesFragment extends Fragment {
                 }
             });
 
-            MaterialAlertDialogBuilder adbAdd = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-            adbAdd.setPositiveButton("OK", (dialog, which) -> { });
-            final AlertDialog adAdd = adbAdd.create();
-            adAdd.setView(promptViewAdd);
-            adAdd.setCancelable(true);
-            //If you want the dialog to stay open after clicking OK, you need to do it this way...
-            adAdd.setOnShowListener(dialog -> {
-                final Button buttonAdd = adAdd.getButton(DialogInterface.BUTTON_POSITIVE);
-                buttonAdd.setOnClickListener(v1 -> {
-                    if (titleEditText.getText().toString().isEmpty()){
-                        NhPaths.showMessage(context, getString(R.string.error_title_empty));
-                    } else if (startCmdEditText.getText().toString().isEmpty()){
-                        NhPaths.showMessage(context, "Start Command cannot be empty");
-                    } else if (stopCmdEditText.getText().toString().isEmpty()){
-                        NhPaths.showMessage(context, "Stop Command cannot be empty");
-                    } else if (checkstatusCmdEditText.getText().toString().isEmpty()){
-                        NhPaths.showMessage(context, "Check Status Command cannot be empty");
-                    } else {
-                        ArrayList<String> dataArrayList = new ArrayList<>();
-                        dataArrayList.add(titleEditText.getText().toString());
-                        dataArrayList.add(startCmdEditText.getText().toString());
-                        dataArrayList.add(stopCmdEditText.getText().toString());
-                        dataArrayList.add(checkstatusCmdEditText.getText().toString());
-                        dataArrayList.add(runOnChrootStartCheckbox.isChecked()?"1":"0");
-                        KaliServicesData.getInstance().addData(targetPositionId, dataArrayList, KaliServicesSQL.getInstance(context));
-                        adAdd.dismiss();
-                    }
-                });
-            });
-            adAdd.show();
+            dialog.setContentView(promptViewAdd);
+            promptViewAdd.findViewById(R.id.kaliservices_add_cancel_btn)
+                    .setOnClickListener(v1 -> dialog.dismiss());
+            promptViewAdd.findViewById(R.id.kaliservices_add_save_btn)
+                    .setOnClickListener(v1 -> {
+                        if (titleEditText.getText().toString().isEmpty()) {
+                            NhPaths.showMessage(context, getString(R.string.error_title_empty));
+                        } else if (startCmdEditText.getText().toString().isEmpty()) {
+                            NhPaths.showMessage(context, "Start Command cannot be empty");
+                        } else if (stopCmdEditText.getText().toString().isEmpty()) {
+                            NhPaths.showMessage(context, "Stop Command cannot be empty");
+                        } else if (checkstatusCmdEditText.getText().toString().isEmpty()) {
+                            NhPaths.showMessage(context, "Check Status Command cannot be empty");
+                        } else {
+                            ArrayList<String> dataArrayList = new ArrayList<>();
+                            dataArrayList.add(titleEditText.getText().toString());
+                            dataArrayList.add(startCmdEditText.getText().toString());
+                            dataArrayList.add(stopCmdEditText.getText().toString());
+                            dataArrayList.add(checkstatusCmdEditText.getText().toString());
+                            dataArrayList.add(runOnChrootStartCheckbox.isChecked() ? "1" : "0");
+                            KaliServicesData.getInstance().addData(targetPositionId, dataArrayList, KaliServicesSQL.getInstance(context));
+                            dialog.dismiss();
+                        }
+                    });
+            dialog.show();
         });
     }
 
     private void onDeleteItemSetup(){
         deleteButton.setOnClickListener(v -> {
             List<KaliServicesModel> kaliServicesModelList = KaliServicesData.getInstance().kaliServicesModelListFull;
-            if (kaliServicesModelList == null) return;
-            final LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            final View promptViewDelete = inflater.inflate(R.layout.kaliservices_delete_dialog_view, null, false);
-            final RecyclerView recyclerViewDeleteItem = promptViewDelete.findViewById(R.id.f_kaliservices_delete_recyclerview);
-            KaliServicesRecyclerViewAdapterDeleteItems kaliServicesRecyclerViewAdapterDeleteItems = new KaliServicesRecyclerViewAdapterDeleteItems(context, kaliServicesModelList);
+            if (kaliServicesModelList == null || kaliServicesModelList.isEmpty()) {
+                NhPaths.showMessage(context, "Nothing to delete.");
+                return;
+            }
 
-            LinearLayoutManager linearLayoutManagerDelete = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
-            recyclerViewDeleteItem.setLayoutManager(linearLayoutManagerDelete);
-            recyclerViewDeleteItem.setAdapter(kaliServicesRecyclerViewAdapterDeleteItems);
-
-            MaterialAlertDialogBuilder adbDelete = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-            adbDelete.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-            adbDelete.setPositiveButton("Delete", (dialog, which) -> { });
-            final AlertDialog adDelete = adbDelete.create();
-            adDelete.setMessage("Select the service you want to remove: ");
-            adDelete.setView(promptViewDelete);
-            adDelete.setCancelable(true);
-            //If you want the dialog to stay open after clicking OK, you need to do it this way...
-            adDelete.setOnShowListener(dialog -> {
-                final Button buttonDelete = adDelete.getButton(DialogInterface.BUTTON_POSITIVE);
-                buttonDelete.setOnClickListener(v1 -> {
-                    RecyclerView.ViewHolder viewHolder;
-                    ArrayList<Integer> selectedPosition = new ArrayList<>();
-                    ArrayList<Integer> selectedTargetIds = new ArrayList<>();
-                    for (int i = 0; i < recyclerViewDeleteItem.getChildCount(); i++) {
-                        viewHolder = recyclerViewDeleteItem.findViewHolderForAdapterPosition(i);
-                        if (viewHolder != null){
-                            CheckBox box = viewHolder.itemView.findViewById(R.id.f_kaliservices_recyclerview_dialog_chkbox);
-                            if (box.isChecked()){
-                                selectedPosition.add(i);
-                                selectedTargetIds.add(i+1);
+            com.google.android.material.bottomsheet.BottomSheetDialog dialog =
+                    new com.google.android.material.bottomsheet.BottomSheetDialog(
+                            requireContext(), R.style.ThemeOverlay_Home_BottomSheet);
+            View sheet = LayoutInflater.from(dialog.getContext())
+                    .inflate(R.layout.kaliservices_delete_dialog_view, null, false);
+            android.widget.LinearLayout container = sheet.findViewById(R.id.kaliservices_delete_list_container);
+            for (int i = 0; i < kaliServicesModelList.size(); i++) {
+                com.google.android.material.checkbox.MaterialCheckBox checkbox =
+                        new com.google.android.material.checkbox.MaterialCheckBox(dialog.getContext());
+                checkbox.setText(kaliServicesModelList.get(i).getServiceName());
+                checkbox.setTextColor(androidx.core.content.ContextCompat.getColor(
+                        dialog.getContext(), R.color.home_nh_text));
+                checkbox.setButtonTintList(android.content.res.ColorStateList.valueOf(
+                        androidx.core.content.ContextCompat.getColor(
+                                dialog.getContext(), R.color.home_nh_accent)));
+                checkbox.setTag(i);
+                container.addView(checkbox);
+            }
+            dialog.setContentView(sheet);
+            sheet.findViewById(R.id.kaliservices_delete_cancel_btn)
+                    .setOnClickListener(x -> dialog.dismiss());
+            sheet.findViewById(R.id.kaliservices_delete_confirm_btn)
+                    .setOnClickListener(x -> {
+                        ArrayList<Integer> selectedPosition = new ArrayList<>();
+                        ArrayList<Integer> selectedTargetIds = new ArrayList<>();
+                        for (int i = 0; i < container.getChildCount(); i++) {
+                            com.google.android.material.checkbox.MaterialCheckBox checkbox =
+                                    (com.google.android.material.checkbox.MaterialCheckBox) container.getChildAt(i);
+                            if (checkbox.isChecked()) {
+                                int position = (Integer) checkbox.getTag();
+                                selectedPosition.add(position);
+                                selectedTargetIds.add(position + 1);
                             }
                         }
-                    }
-                    if (!selectedPosition.isEmpty()) {
-                        KaliServicesData.getInstance().deleteData(selectedPosition, selectedTargetIds, KaliServicesSQL.getInstance(context));
+                        if (selectedPosition.isEmpty()) {
+                            NhPaths.showMessage(context, "Select at least one service.");
+                            return;
+                        }
+                        KaliServicesData.getInstance().deleteData(
+                                selectedPosition, selectedTargetIds, KaliServicesSQL.getInstance(context));
                         NhPaths.showMessage(context, "Successfully deleted " + selectedPosition.size() + " items.");
-                        adDelete.dismiss();
-                    } else {
-                        NhPaths.showMessage(context, "Nothing to be deleted.");
-                    }
-                });
-            });
-            adDelete.show();
+                        dialog.dismiss();
+                    });
+            dialog.show();
         });
     }
 
     private void onMoveItemSetup(){
         moveButton.setOnClickListener(v -> {
             List<KaliServicesModel> kaliServicesModelList = KaliServicesData.getInstance().kaliServicesModelListFull;
-            if (kaliServicesModelList == null) return;
-            final LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+            if (kaliServicesModelList == null || kaliServicesModelList.isEmpty()) {
+                NhPaths.showMessage(context, "Nothing to move.");
+                return;
+            }
+            com.google.android.material.bottomsheet.BottomSheetDialog dialog =
+                    new com.google.android.material.bottomsheet.BottomSheetDialog(
+                            requireContext(), R.style.ThemeOverlay_Home_BottomSheet);
+            final LayoutInflater inflater = LayoutInflater.from(dialog.getContext());
             final View promptViewMove = inflater.inflate(R.layout.kaliservices_move_dialog_view, null, false);
-            final Spinner titlesBefore = promptViewMove.findViewById(R.id.f_kaliservices_move_adb_spr_titlesbefore);
-            final Spinner titlesAfter = promptViewMove.findViewById(R.id.f_kaliservices_move_adb_spr_titlesafter);
-            final Spinner actions = promptViewMove.findViewById(R.id.f_kaliservices_move_adb_spr_actions);
+            final ExpandableChoiceView titlesBefore = promptViewMove.findViewById(R.id.f_kaliservices_move_adb_spr_titlesbefore);
+            final ExpandableChoiceView titlesAfter = promptViewMove.findViewById(R.id.f_kaliservices_move_adb_spr_titlesafter);
+            final ExpandableChoiceView actions = promptViewMove.findViewById(R.id.f_kaliservices_move_adb_spr_actions);
 
             ArrayList<String> serviceNameArrayList = new ArrayList<>();
             for (KaliServicesModel kaliServicesModel: kaliServicesModelList){
                 serviceNameArrayList.add(kaliServicesModel.getServiceName());
             }
 
-            ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(context, android.R.layout.simple_spinner_item, serviceNameArrayList);
+            ArrayAdapter<String> arrayAdapter = new ArrayAdapter<>(dialog.getContext(), android.R.layout.simple_spinner_item, serviceNameArrayList);
             arrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             titlesBefore.setAdapter(arrayAdapter);
             titlesAfter.setAdapter(arrayAdapter);
 
-            MaterialAlertDialogBuilder adbMove = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat);
-            adbMove.setNegativeButton("Cancel", (dialog, which) -> dialog.cancel());
-            adbMove.setPositiveButton("Move", (dialog, which) -> { });
-            final AlertDialog adMove = adbMove.create();
-            adMove.setView(promptViewMove);
-            adMove.setCancelable(true);
-            adMove.setOnShowListener(dialog -> {
-                final Button buttonMove = adMove.getButton(DialogInterface.BUTTON_POSITIVE);
-                buttonMove.setOnClickListener(v1 -> {
-                    int originalPositionIndex = titlesBefore.getSelectedItemPosition();
-                    int targetPositionIndex = titlesAfter.getSelectedItemPosition();
-                    if (originalPositionIndex == targetPositionIndex ||
-                            (actions.getSelectedItemPosition() == 0 && targetPositionIndex == (originalPositionIndex + 1)) ||
-                            (actions.getSelectedItemPosition() == 1 && targetPositionIndex == (originalPositionIndex - 1))) {
-                        NhPaths.showMessage(context, "You are moving the item to the same position, nothing to be moved.");
-                    } else {
-                        if (actions.getSelectedItemPosition() == 1) targetPositionIndex += 1;
-                        KaliServicesData.getInstance().moveData(originalPositionIndex, targetPositionIndex, KaliServicesSQL.getInstance(context));
-                        NhPaths.showMessage(context, "Successfully moved item.");
-                        adMove.dismiss();
-                    }
-                });
-            });
-            adMove.show();
+            dialog.setContentView(promptViewMove);
+            promptViewMove.findViewById(R.id.kaliservices_move_cancel_btn)
+                    .setOnClickListener(v1 -> dialog.dismiss());
+            promptViewMove.findViewById(R.id.kaliservices_move_confirm_btn)
+                    .setOnClickListener(v1 -> {
+                        int originalPositionIndex = titlesBefore.getSelectedItemPosition();
+                        int targetPositionIndex = titlesAfter.getSelectedItemPosition();
+                        if (originalPositionIndex == targetPositionIndex ||
+                                (actions.getSelectedItemPosition() == 0 && targetPositionIndex == (originalPositionIndex + 1)) ||
+                                (actions.getSelectedItemPosition() == 1 && targetPositionIndex == (originalPositionIndex - 1))) {
+                            NhPaths.showMessage(context, "You are moving the item to the same position, nothing to be moved.");
+                        } else {
+                            if (actions.getSelectedItemPosition() == 1) targetPositionIndex += 1;
+                            KaliServicesData.getInstance().moveData(originalPositionIndex, targetPositionIndex, KaliServicesSQL.getInstance(context));
+                            NhPaths.showMessage(context, "Successfully moved item.");
+                            dialog.dismiss();
+                        }
+                    });
+            dialog.show();
         });
     }
 }

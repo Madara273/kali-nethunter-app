@@ -1,166 +1,210 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:background="@drawable/bg_home_sheet"
+    android:scrollbars="none"
+    android:overScrollMode="never">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:layout_marginStart="10dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginEnd="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="20dp">
+        android:paddingStart="16dp"
+        android:paddingTop="12dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="16dp">
+
+        <View
+            android:layout_width="36dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_home_sheet_handle" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:textSize="18sp"
-            android:textColor="@color/accent_material_dark"
-            android:text="Title:"/>
+            android:paddingBottom="4dp"
+            android:text="Edit service"
+            android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
+            android:textColor="@color/home_nh_text" />
 
-        <EditText
-            android:id="@+id/f_kaliservices_edit_adb_et_title"
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:inputType="text"
-            android:layout_marginStart="4dp"/>
+            android:layout_marginBottom="12dp"
+            android:text="Update this Kali Chroot service"
+            android:textColor="@color/home_nh_muted"
+            android:textSize="12sp" />
+
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Home.Dialog.Field"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
+            android:hint="Service name">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/f_kaliservices_edit_adb_et_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="text"
+                android:textColor="@color/home_nh_text" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
-
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_weight="0.9"
-                android:textSize="18sp"
-                android:textColor="@color/accent_material_dark"
-                android:text="Command for starting the service:"/>
-
-            <com.google.android.material.floatingactionbutton.FloatingActionButton xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:layout_weight="1"
+                android:text="Start command"
+                android:textColor="@color/home_nh_muted"
+                android:textSize="13sp" />
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/f_kaliservices_edit_btn_info_fab1"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:backgroundTint="@color/colorPrimary"
-                android:layout_weight="0.1"
+                android:backgroundTint="@color/home_nh_control"
                 android:src="@drawable/ic_action_information"
-                android:textSize="12sp"
-                android:layout_marginEnd="8dp"
-                app:elevation="6dp"
+                android:tint="@color/home_nh_accent"
+                android:contentDescription="Start command help"
                 app:fabCustomSize="32dp"
-                app:pressedTranslationZ="12dp" />
-
+                app:elevation="0dp" />
         </LinearLayout>
-
-        <EditText
-
-            android:id="@+id/f_kaliservices_edit_adb_et_startcommand"
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Home.Dialog.Field"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"/>
+            android:layout_marginBottom="8dp"
+            android:hint="Command to start the service">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/f_kaliservices_edit_adb_et_startcommand"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/home_nh_text" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
-
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_weight="0.9"
-                android:textSize="18sp"
-                android:textColor="@color/accent_material_dark"
-                android:text="Command for stopping the service:"/>
-
-            <com.google.android.material.floatingactionbutton.FloatingActionButton xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:layout_weight="1"
+                android:text="Stop command"
+                android:textColor="@color/home_nh_muted"
+                android:textSize="13sp" />
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/f_kaliservices_edit_btn_info_fab2"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:backgroundTint="@color/colorPrimary"
-                android:layout_weight="0.1"
+                android:backgroundTint="@color/home_nh_control"
                 android:src="@drawable/ic_action_information"
-                android:textSize="12sp"
-                android:layout_marginEnd="8dp"
-                app:elevation="6dp"
+                android:tint="@color/home_nh_accent"
+                android:contentDescription="Stop command help"
                 app:fabCustomSize="32dp"
-                app:pressedTranslationZ="12dp" />
-
+                app:elevation="0dp" />
         </LinearLayout>
-
-        <EditText
-            android:id="@+id/f_kaliservices_edit_adb_et_stopcommand"
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Home.Dialog.Field"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp" />
+            android:layout_marginBottom="8dp"
+            android:hint="Command to stop the service">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/f_kaliservices_edit_adb_et_stopcommand"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/home_nh_text" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
-
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
-                android:layout_weight="0.9"
-                android:textSize="18sp"
-                android:textColor="@color/accent_material_dark"
-                android:text="String for checking the service:"/>
-
-            <com.google.android.material.floatingactionbutton.FloatingActionButton xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:layout_weight="1"
+                android:text="Status check"
+                android:textColor="@color/home_nh_muted"
+                android:textSize="13sp" />
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
                 android:id="@+id/f_kaliservices_edit_btn_info_fab3"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:backgroundTint="@color/colorPrimary"
-                android:layout_weight="0.1"
+                android:backgroundTint="@color/home_nh_control"
                 android:src="@drawable/ic_action_information"
-                android:textSize="12sp"
-                android:layout_marginEnd="8dp"
-                app:elevation="6dp"
+                android:tint="@color/home_nh_accent"
+                android:contentDescription="Status check help"
                 app:fabCustomSize="32dp"
-                app:pressedTranslationZ="12dp" />
-
+                app:elevation="0dp" />
         </LinearLayout>
-
-        <EditText
-            android:id="@+id/f_kaliservices_edit_adb_et_checkstatuscommand"
+        <com.google.android.material.textfield.TextInputLayout
+            style="@style/Home.Dialog.Field"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp" />
+            android:hint="Command to check service status">
+            <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/f_kaliservices_edit_adb_et_checkstatuscommand"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="@color/home_nh_text" />
+        </com.google.android.material.textfield.TextInputLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:gravity="center_vertical"
             android:orientation="horizontal">
-
-            <CheckBox
+            <com.google.android.material.checkbox.MaterialCheckBox
                 android:id="@+id/f_kaliservices_edit_adb_checkbox_runonboot"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:buttonTint="@color/home_nh_accent"
+                android:text="Run on Chroot start"
+                android:textColor="@color/home_nh_text" />
+            <com.google.android.material.floatingactionbutton.FloatingActionButton
+                android:id="@+id/f_kaliservices_edit_btn_info_fab4"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="RunOnChrootStart"
-                android:textSize="18sp"
-                android:textColor="@color/accent_material_dark"
-                android:layout_marginStart="4dp"/>
-
-            <com.google.android.material.floatingactionbutton.FloatingActionButton xmlns:app="http://schemas.android.com/apk/res-auto"
-                android:id="@+id/f_kaliservices_edit_btn_info_fab4"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:backgroundTint="@color/colorPrimary"
-                android:layout_marginStart="8dp"
+                android:backgroundTint="@color/home_nh_control"
                 android:src="@drawable/ic_action_information"
-                android:textSize="12sp"
-                app:elevation="6dp"
+                android:tint="@color/home_nh_accent"
+                android:contentDescription="Chroot start help"
                 app:fabCustomSize="32dp"
-                app:pressedTranslationZ="12dp" />
+                app:elevation="0dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:gravity="end"
+            android:orientation="horizontal">
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/kaliservices_edit_cancel_btn"
+                style="@style/Home.Dialog.Cancel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Cancel" />
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/kaliservices_edit_save_btn"
+                style="@style/Home.Dialog.Action"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:text="Save" />
         </LinearLayout>
     </LinearLayout>
-</LinearLayout>
+</ScrollView>
