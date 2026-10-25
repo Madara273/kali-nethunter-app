@@ -1,7 +1,6 @@
 package com.offsec.nethunter.RecyclerViewAdapter;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,14 +9,14 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Filter;
 import android.widget.Filterable;
-import android.widget.Spinner;
+import com.offsec.nethunter.widget.ExpandableChoiceView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AlertDialog;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 import com.offsec.nethunter.R;
 import com.offsec.nethunter.RecyclerViewData.CustomCommandsData;
 import com.offsec.nethunter.SQL.CustomCommandsSQL;
@@ -28,13 +27,62 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CustomCommandsRecyclerViewAdapter extends RecyclerView.Adapter<CustomCommandsRecyclerViewAdapter.ItemViewHolder> implements Filterable {
-    public static final String TAG = "KaliServiceRecycleView";
+    public static final String TAG = "CustomCommandsRecyclerView";
     private final Context context;
-    private final List<CustomCommandsModel> customCommandsModelList;
+    private List<CustomCommandsModel> customCommandsModelList;
+    private List<RowSnapshot> rowSnapshots;
 
     public CustomCommandsRecyclerViewAdapter(Context context, List<CustomCommandsModel> customCommandsModelList) {
         this.context = context;
-        this.customCommandsModelList = customCommandsModelList;
+        this.customCommandsModelList = customCommandsModelList == null
+                ? new ArrayList<>() : new ArrayList<>(customCommandsModelList);
+        this.rowSnapshots = snapshotRows(this.customCommandsModelList);
+    }
+
+    public void updateItems(List<CustomCommandsModel> items) {
+        List<CustomCommandsModel> nextItems = items == null ? new ArrayList<>() : new ArrayList<>(items);
+        List<RowSnapshot> nextSnapshots = snapshotRows(nextItems);
+        List<RowSnapshot> previousSnapshots = rowSnapshots;
+        DiffUtil.DiffResult changes = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override public int getOldListSize() { return previousSnapshots.size(); }
+            @Override public int getNewListSize() { return nextSnapshots.size(); }
+            @Override public boolean areItemsTheSame(int oldPosition, int newPosition) {
+                return previousSnapshots.get(oldPosition).model == nextSnapshots.get(newPosition).model;
+            }
+            @Override public boolean areContentsTheSame(int oldPosition, int newPosition) {
+                RowSnapshot oldRow = previousSnapshots.get(oldPosition);
+                RowSnapshot newRow = nextSnapshots.get(newPosition);
+                return oldRow.label.equals(newRow.label)
+                        && oldRow.runtime.equals(newRow.runtime)
+                        && oldRow.mode.equals(newRow.mode)
+                        && oldRow.runOnBoot.equals(newRow.runOnBoot);
+            }
+        });
+        customCommandsModelList = nextItems;
+        rowSnapshots = nextSnapshots;
+        changes.dispatchUpdatesTo(this);
+    }
+
+    private static List<RowSnapshot> snapshotRows(List<CustomCommandsModel> items) {
+        List<RowSnapshot> snapshots = new ArrayList<>(items.size());
+        for (CustomCommandsModel item : items) snapshots.add(new RowSnapshot(item));
+        return snapshots;
+    }
+
+    private static final class RowSnapshot {
+        final CustomCommandsModel model;
+        final String label;
+        final String runtime;
+        final String mode;
+        final String runOnBoot;
+
+        RowSnapshot(CustomCommandsModel model) {
+            this.model = model;
+            label = model.getCommandLabel();
+            runtime = model.getRuntimeEnv();
+            mode = model.getExecutionMode();
+            runOnBoot = model.getRunOnBoot();
+        }
     }
 
     @NonNull
@@ -46,65 +94,59 @@ public class CustomCommandsRecyclerViewAdapter extends RecyclerView.Adapter<Cust
 
     @Override
     public void onBindViewHolder(@NonNull final ItemViewHolder itemViewHolder, int position) {
-        itemViewHolder.commandLabelTextView.setText(customCommandsModelList.get(position).getCommandLabel());
-        itemViewHolder.execEnvTextView.setText(customCommandsModelList.get(position).getRuntimeEnv());
-        itemViewHolder.execModeTextView.setText(customCommandsModelList.get(position).getExecutionMode());
-        itemViewHolder.runOnBootTextView.setText(customCommandsModelList.get(position).getRunOnBoot().equals("1") ? "yes" : "no");
+        CustomCommandsModel boundCommand = customCommandsModelList.get(position);
+        itemViewHolder.commandLabelTextView.setText(boundCommand.getCommandLabel());
+        itemViewHolder.execEnvTextView.setText(boundCommand.getRuntimeEnv());
+        itemViewHolder.execModeTextView.setText(boundCommand.getExecutionMode());
+        itemViewHolder.runOnBootTextView.setText(boundCommand.getRunOnBoot().equals("1") ? "yes" : "no");
         itemViewHolder.commandLabelTextView.setOnLongClickListener(v -> {
-            final LayoutInflater mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-            final View promptViewEdit = mInflater.inflate(R.layout.customcommands_edit_dialog_view, null);
+            BottomSheetDialog dialog = new BottomSheetDialog(context, R.style.ThemeOverlay_Home_BottomSheet);
+            final View promptViewEdit = LayoutInflater.from(dialog.getContext())
+                    .inflate(R.layout.customcommands_edit_dialog_view, null, false);
             final EditText commandLabelEditText = promptViewEdit.findViewById(R.id.f_customcommands_edit_adb_et_commandlabel);
             final EditText commandEditText = promptViewEdit.findViewById(R.id.f_customcommands_edit_adb_et_command);
-            final Spinner sendToSpinner = promptViewEdit.findViewById(R.id.f_customcommands_edit_adb_spr_sendto);
-            final Spinner execModeSpinner = promptViewEdit.findViewById(R.id.f_customcommands_edit_adb_spr_execmode);
+            final ExpandableChoiceView sendToSpinner = promptViewEdit.findViewById(R.id.f_customcommands_edit_adb_spr_sendto);
+            final ExpandableChoiceView execModeSpinner = promptViewEdit.findViewById(R.id.f_customcommands_edit_adb_spr_execmode);
             final CheckBox runOnBootCheckbox = promptViewEdit.findViewById(R.id.f_customcommands_edit_adb_checkbox_runonboot);
 
-            commandLabelEditText.setText(CustomCommandsData.getInstance().customCommandsModelListFull.get(
-                    CustomCommandsData.getInstance().customCommandsModelListFull.indexOf(
-                            customCommandsModelList.get(position))).getCommandLabel());
-            commandEditText.setText(CustomCommandsData.getInstance().customCommandsModelListFull.get(
-                    CustomCommandsData.getInstance().customCommandsModelListFull.indexOf(
-                            customCommandsModelList.get(position))).getCommand());
-            sendToSpinner.setSelection(CustomCommandsData.getInstance().customCommandsModelListFull.get(
-                    CustomCommandsData.getInstance().customCommandsModelListFull.indexOf(
-                            customCommandsModelList.get(position))).getRuntimeEnv().equals("android") ? 0 : 1);
-            execModeSpinner.setSelection(CustomCommandsData.getInstance().customCommandsModelListFull.get(
-                    CustomCommandsData.getInstance().customCommandsModelListFull.indexOf(
-                            customCommandsModelList.get(position))).getExecutionMode().equals("interactive") ? 0 : 1);
-            runOnBootCheckbox.setChecked(CustomCommandsData.getInstance().customCommandsModelListFull.get(
-                    CustomCommandsData.getInstance().customCommandsModelListFull.indexOf(
-                            customCommandsModelList.get(position))).getRunOnBoot().equals("1"));
+            commandLabelEditText.setText(boundCommand.getCommandLabel());
+            commandEditText.setText(boundCommand.getCommand());
+            sendToSpinner.setSelection(boundCommand.getRuntimeEnv().equals("android") ? 0 : 1);
+            execModeSpinner.setSelection(boundCommand.getExecutionMode().equals("interactive") ? 0 : 1);
+            runOnBootCheckbox.setChecked(boundCommand.getRunOnBoot().equals("1"));
 
-            MaterialAlertDialogBuilder adbEdit = new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat);
-            adbEdit.setView(promptViewEdit);
-            adbEdit.setCancelable(true);
-            adbEdit.setPositiveButton("OK", (dialog, which) -> {
-            });
-            final AlertDialog adEdit = adbEdit.create();
-            adEdit.setOnShowListener(dialog -> {
-                final Button buttonEdit = adEdit.getButton(DialogInterface.BUTTON_POSITIVE);
-                buttonEdit.setOnClickListener(v1 -> {
-                    if (commandLabelEditText.getText().toString().isEmpty()) {
-                        NhPaths.showMessage(context, "Label cannot be empty");
-                    } else if (commandEditText.getText().toString().isEmpty()) {
-                        NhPaths.showMessage(context, "Command string cannot be empty");
-                    } else {
-                        ArrayList<String> dataArrayList = new ArrayList<>();
-                        dataArrayList.add(commandLabelEditText.getText().toString());
-                        dataArrayList.add(commandEditText.getText().toString());
-                        dataArrayList.add(sendToSpinner.getSelectedItem().toString());
-                        dataArrayList.add(execModeSpinner.getSelectedItem().toString());
-                        dataArrayList.add(runOnBootCheckbox.isChecked() ? "1" : "0");
-                        CustomCommandsData.getInstance().editData(CustomCommandsData.getInstance().customCommandsModelListFull.indexOf(
-                                customCommandsModelList.get(position)), dataArrayList, CustomCommandsSQL.getInstance(context));
-                        adEdit.dismiss();
-                    }
-                });
-            });
-            adEdit.show();
-            return false;
+            dialog.setContentView(promptViewEdit);
+            promptViewEdit.findViewById(R.id.customcommands_edit_cancel_btn)
+                    .setOnClickListener(v1 -> dialog.dismiss());
+            promptViewEdit.findViewById(R.id.customcommands_edit_save_btn)
+                    .setOnClickListener(v1 -> {
+                        if (commandLabelEditText.getText().toString().isEmpty()) {
+                            NhPaths.showMessage(context, "Label cannot be empty");
+                        } else if (commandEditText.getText().toString().isEmpty()) {
+                            NhPaths.showMessage(context, "Command string cannot be empty");
+                        } else {
+                            ArrayList<String> dataArrayList = new ArrayList<>();
+                            dataArrayList.add(commandLabelEditText.getText().toString());
+                            dataArrayList.add(commandEditText.getText().toString());
+                            dataArrayList.add(sendToSpinner.getSelectedItem().toString());
+                            dataArrayList.add(execModeSpinner.getSelectedItem().toString());
+                            dataArrayList.add(runOnBootCheckbox.isChecked() ? "1" : "0");
+                            int fullIndex = CustomCommandsData.getInstance().customCommandsModelListFull.indexOf(boundCommand);
+                            if (fullIndex < 0) {
+                                NhPaths.showMessage(context, "Command list changed. Please try again.");
+                                return;
+                            }
+                            CustomCommandsData.getInstance().editData(fullIndex, dataArrayList, CustomCommandsSQL.getInstance(context));
+                            dialog.dismiss();
+                        }
+                    });
+            dialog.show();
+            return true;
         });
-        itemViewHolder.runButton.setOnClickListener(v -> CustomCommandsData.getInstance().runCommandforitem(position, context));
+        itemViewHolder.runButton.setOnClickListener(v -> {
+            int fullIndex = CustomCommandsData.getInstance().customCommandsModelListFull.indexOf(boundCommand);
+            if (fullIndex >= 0) CustomCommandsData.getInstance().runCommandforitem(fullIndex, context);
+        });
     }
 
     @Override

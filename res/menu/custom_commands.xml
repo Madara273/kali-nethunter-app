@@ -1,29 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <item android:id="@+id/f_customcommands_action_search"
-        android:icon="@drawable/ic_search_customcommands"
+        android:icon="@drawable/ic_search_nethunter"
         android:title="Search"
         app:showAsAction="always"
         app:actionViewClass="androidx.appcompat.widget.SearchView"/>
 
-    <group
-        android:id="@+id/f_customcommands_menu_group1">
-        <item
-            android:id="@+id/f_customcommands_menu_backupDB"
-            android:orderInCategory="100"
-            android:title="Backup DB"
-            app:showAsAction="never" />
-        <item
-            android:id="@+id/f_customcommands_menu_restoreDB"
-            android:orderInCategory="100"
-            android:title="Restore DB"
-            app:showAsAction="never" />
-        <item
-            android:id="@+id/f_customcommands_menu_ResetToDefault"
-            android:orderInCategory="100"
-            android:title="Reset to Default"
-            app:showAsAction="never" />
-    </group>
-
+    <item
+        android:id="@+id/f_customcommands_action_more"
+        android:icon="@drawable/ic_home_more"
+        android:orderInCategory="100"
+        android:title="More"
+        app:showAsAction="always" />
 </menu>
