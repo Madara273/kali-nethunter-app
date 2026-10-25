@@ -8,5 +8,9 @@
         android:id="@+id/f_nethunter_item_result_tv"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textSize="14sp" />
+        android:paddingStart="4dp"
+        android:paddingEnd="4dp"
+        android:paddingBottom="2dp"
+        android:textColor="@color/home_nh_muted"
+        android:textSize="13sp" />
 </LinearLayout>

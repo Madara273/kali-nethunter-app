@@ -1,5 +1,7 @@
 package com.offsec.nethunter.RecyclerViewAdapter;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.view.LayoutInflater;
@@ -10,11 +12,12 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.Filter;
 import android.widget.Filterable;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
-import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.DiffUtil;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
@@ -26,16 +29,60 @@ import com.offsec.nethunter.models.NethunterModel;
 import com.offsec.nethunter.utils.NhPaths;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class NethunterRecyclerViewAdapter extends RecyclerView.Adapter<NethunterRecyclerViewAdapter.ItemViewHolder> implements Filterable {
     public static final String TAG = "NethunterRecyclerView";
     private final Context context;
-    private final List<NethunterModel> nethunterModelList;
+    private List<NethunterModel> nethunterModelList;
+    private List<RowSnapshot> rowSnapshots;
 
     public NethunterRecyclerViewAdapter(Context context, List<NethunterModel> nethunterModelList) {
         this.context = context;
-        this.nethunterModelList = nethunterModelList;
+        this.nethunterModelList = new ArrayList<>(nethunterModelList);
+        this.rowSnapshots = snapshotRows(nethunterModelList);
+    }
+
+    public void updateItems(List<NethunterModel> items) {
+        List<NethunterModel> nextItems = items == null ? new ArrayList<>() : new ArrayList<>(items);
+        List<RowSnapshot> nextSnapshots = snapshotRows(nextItems);
+        List<RowSnapshot> previousSnapshots = rowSnapshots;
+        DiffUtil.DiffResult changes = DiffUtil.calculateDiff(new DiffUtil.Callback() {
+            @Override public int getOldListSize() { return previousSnapshots.size(); }
+            @Override public int getNewListSize() { return nextSnapshots.size(); }
+            @Override public boolean areItemsTheSame(int oldPosition, int newPosition) {
+                return previousSnapshots.get(oldPosition).model == nextSnapshots.get(newPosition).model;
+            }
+            @Override public boolean areContentsTheSame(int oldPosition, int newPosition) {
+                RowSnapshot oldRow = previousSnapshots.get(oldPosition);
+                RowSnapshot newRow = nextSnapshots.get(newPosition);
+                return oldRow.title.equals(newRow.title) && Arrays.equals(oldRow.results, newRow.results);
+            }
+        });
+        nethunterModelList = nextItems;
+        rowSnapshots = nextSnapshots;
+        changes.dispatchUpdatesTo(this);
+    }
+
+    private static List<RowSnapshot> snapshotRows(List<NethunterModel> items) {
+        List<RowSnapshot> snapshots = new ArrayList<>(items.size());
+        for (NethunterModel item : items) {
+            snapshots.add(new RowSnapshot(item));
+        }
+        return snapshots;
+    }
+
+    private static final class RowSnapshot {
+        final NethunterModel model;
+        final String title;
+        final String[] results;
+
+        RowSnapshot(NethunterModel model) {
+            this.model = model;
+            title = model.getTitle();
+            results = model.getResult().clone();
+        }
     }
 
     @NonNull
@@ -47,11 +94,35 @@ public class NethunterRecyclerViewAdapter extends RecyclerView.Adapter<Nethunter
 
     @Override
     public void onBindViewHolder(@NonNull NethunterRecyclerViewAdapter.ItemViewHolder holder, int position) {
-        holder.titleTextView.setText(nethunterModelList.get(position).getTitle());
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(context, LinearLayoutManager.VERTICAL, false);
-        holder.resultRecyclerView.setLayoutManager(linearLayoutManager);
-        holder.resultRecyclerView.setAdapter(new NethunterRecyclerViewAdapterResult(context, nethunterModelList.get(position).getResult()));
-        holder.titleTextView.setOnClickListener(v -> NethunterData.getInstance().runCommandforItem(position));
+        NethunterModel boundItem = nethunterModelList.get(position);
+        holder.titleTextView.setText(boundItem.getTitle());
+        String[] results = boundItem.getResult();
+        for (int i = 0; i < results.length; i++) {
+            View resultView;
+            if (i < holder.resultContainer.getChildCount()) {
+                resultView = holder.resultContainer.getChildAt(i);
+            } else {
+                resultView = LayoutInflater.from(context).inflate(
+                        R.layout.nethunter_recyclerview_result, holder.resultContainer, false);
+                holder.resultContainer.addView(resultView);
+            }
+            TextView resultTextView = resultView.findViewById(R.id.f_nethunter_item_result_tv);
+            resultTextView.setText(results[i]);
+            resultTextView.setOnLongClickListener(v -> {
+                ClipboardManager clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                ClipData clip = ClipData.newPlainText("text", resultTextView.getText());
+                clipboard.setPrimaryClip(clip);
+                NhPaths.showMessage(context, "Copied to clipboard: " + resultTextView.getText());
+                return true;
+            });
+        }
+        while (holder.resultContainer.getChildCount() > results.length) {
+            holder.resultContainer.removeViewAt(holder.resultContainer.getChildCount() - 1);
+        }
+        holder.titleTextView.setOnClickListener(v -> {
+            int fullIndex = NethunterData.getInstance().nethunterModelListFull.indexOf(boundItem);
+            if (fullIndex >= 0) NethunterData.getInstance().runCommandforItem(fullIndex);
+        });
         holder.titleTextView.setOnLongClickListener(v -> {
             final LayoutInflater mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
             final View promptViewEdit = mInflater.inflate(R.layout.nethunter_edit_dialog_view, null);
@@ -91,18 +162,10 @@ public class NethunterRecyclerViewAdapter extends RecyclerView.Adapter<Nethunter
                 ad.setCancelable(true);
                 ad.show();
             });
-            titleEditText.setText(NethunterData.getInstance().nethunterModelListFull.get(
-                    NethunterData.getInstance().nethunterModelListFull.indexOf(
-                            nethunterModelList.get(position))).getTitle());
-            cmdEditText.setText(NethunterData.getInstance().nethunterModelListFull.get(
-                    NethunterData.getInstance().nethunterModelListFull.indexOf(
-                            nethunterModelList.get(position))).getCommand());
-            delimiterEditText.setText(NethunterData.getInstance().nethunterModelListFull.get(
-                    NethunterData.getInstance().nethunterModelListFull.indexOf(
-                            nethunterModelList.get(position))).getDelimiter());
-            runOnCreateCheckbox.setChecked(NethunterData.getInstance().nethunterModelListFull.get(
-                    NethunterData.getInstance().nethunterModelListFull.indexOf(
-                            nethunterModelList.get(position))).getRunOnCreate().equals("1"));
+            titleEditText.setText(boundItem.getTitle());
+            cmdEditText.setText(boundItem.getCommand());
+            delimiterEditText.setText(boundItem.getDelimiter());
+            runOnCreateCheckbox.setChecked(boundItem.getRunOnCreate().equals("1"));
 
             MaterialAlertDialogBuilder adb = new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat);
             adb.setPositiveButton("Apply", (dialog, which) -> { });
@@ -124,8 +187,12 @@ public class NethunterRecyclerViewAdapter extends RecyclerView.Adapter<Nethunter
                         dataArrayList.add(cmdEditText.getText().toString());
                         dataArrayList.add(delimiterEditText.getText().toString());
                         dataArrayList.add(runOnCreateCheckbox.isChecked()?"1":"0");
-                        NethunterData.getInstance().editData(NethunterData.getInstance().nethunterModelListFull.indexOf(
-                                nethunterModelList.get(position)), dataArrayList, NethunterSQL.getInstance(context));
+                        int fullIndex = NethunterData.getInstance().nethunterModelListFull.indexOf(boundItem);
+                        if (fullIndex < 0) {
+                            NhPaths.showMessage(context, "Home item changed. Please try again.");
+                            return;
+                        }
+                        NethunterData.getInstance().editData(fullIndex, dataArrayList, NethunterSQL.getInstance(context));
                         ad.dismiss();
                     }
                 });
@@ -187,12 +254,12 @@ public class NethunterRecyclerViewAdapter extends RecyclerView.Adapter<Nethunter
 
     public static class ItemViewHolder extends RecyclerView.ViewHolder {
         private final TextView titleTextView;
-        private final RecyclerView resultRecyclerView;
+        private final LinearLayout resultContainer;
 
         public ItemViewHolder(View view) {
             super(view);
             titleTextView = view.findViewById(R.id.f_nethunter_item_title_tv);
-            resultRecyclerView = view.findViewById(R.id.f_nethunter_item_result_recyclerview);
+            resultContainer = view.findViewById(R.id.f_nethunter_item_result_recyclerview);
         }
     }
 }

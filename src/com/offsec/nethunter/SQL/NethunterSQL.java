@@ -202,19 +202,21 @@ public class NethunterSQL extends SQLiteOpenHelper {
     public String backupData(String storedDBpath) {
         try {
             File data = Environment.getDataDirectory();
-            File sd = Environment.getExternalStorageDirectory();
             String currentDBPath = data.getAbsolutePath() + "/data/" + BuildConfig.APPLICATION_ID + "/databases/" + getDatabaseName();
-            if (sd.canWrite()) {
-                File currentDB = new File(currentDBPath);
-                File backupDB = new File(storedDBpath);
-                if (currentDB.exists()) {
-                    try (FileInputStream fis = new FileInputStream(currentDB);
-                         FileChannel src = fis.getChannel();
-                         FileOutputStream fos = new FileOutputStream(backupDB);
-                         FileChannel dst = fos.getChannel()) {
-                        dst.transferFrom(src, 0, src.size());
-                    }
-                }
+            File currentDB = new File(currentDBPath);
+            if (!currentDB.isFile()) {
+                return "Current database file not found.";
+            }
+            File backupDB = new File(storedDBpath);
+            File parent = backupDB.getParentFile();
+            if (parent != null && !parent.exists() && !parent.mkdirs()) {
+                return "Could not create backup directory.";
+            }
+            try (FileInputStream fis = new FileInputStream(currentDB);
+                 FileChannel src = fis.getChannel();
+                 FileOutputStream fos = new FileOutputStream(backupDB);
+                 FileChannel dst = fos.getChannel()) {
+                dst.transferFrom(src, 0, src.size());
             }
         } catch (Exception e) {
             Log.e(TAG, "backupData failed", e);
@@ -232,25 +234,20 @@ public class NethunterSQL extends SQLiteOpenHelper {
         }
         try {
             File data = Environment.getDataDirectory();
-            File sd = Environment.getExternalStorageDirectory();
             String currentDBPath = data.getAbsolutePath() + "/data/" + BuildConfig.APPLICATION_ID + "/databases/" + getDatabaseName();
-            if (sd.canWrite()) {
-                File currentDB = new File(currentDBPath);
-                File backupDB = new File(storedDBpath);
-                if (backupDB.exists()) {
-                    try (FileInputStream fis = new FileInputStream(backupDB);
-                         FileChannel src = fis.getChannel();
-                         FileOutputStream fos = new FileOutputStream(currentDB);
-                         FileChannel dst = fos.getChannel()) {
-                        dst.transferFrom(src, 0, src.size());
-                    } catch (FileNotFoundException e) {
-                        Log.e(TAG, "restoreData file not found: " + storedDBpath, e);
-                        return "File not found: " + e.getMessage();
-                    } catch (IOException e) {
-                        Log.e(TAG, "restoreData I/O error while copying db from: " + storedDBpath, e);
-                        return "I/O error: " + e.getMessage();
-                    }
-                }
+            File currentDB = new File(currentDBPath);
+            File backupDB = new File(storedDBpath);
+            try (FileInputStream fis = new FileInputStream(backupDB);
+                 FileChannel src = fis.getChannel();
+                 FileOutputStream fos = new FileOutputStream(currentDB);
+                 FileChannel dst = fos.getChannel()) {
+                dst.transferFrom(src, 0, src.size());
+            } catch (FileNotFoundException e) {
+                Log.e(TAG, "restoreData file not found: " + storedDBpath, e);
+                return "File not found: " + e.getMessage();
+            } catch (IOException e) {
+                Log.e(TAG, "restoreData I/O error while copying db from: " + storedDBpath, e);
+                return "I/O error: " + e.getMessage();
             }
         } catch (Exception e) {
             Log.e(TAG, "restoreData unexpected error", e);

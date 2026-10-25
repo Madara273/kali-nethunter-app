@@ -1,31 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:orientation="vertical">
+    android:orientation="vertical"
+    android:paddingStart="20dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="8dp">
 
-    <LinearLayout
+    <TextView
+        android:id="@+id/f_nethunter_adb_tv_title1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_marginStart="10dp"
-        android:layout_marginLeft="10dp"
-        android:layout_marginEnd="10dp"
-        android:layout_marginRight="10dp"
-        android:layout_marginTop="20dp">
+        android:layout_marginBottom="12dp"
+        android:textColor="@color/home_nh_muted"
+        android:textSize="13sp" />
 
-        <TextView
-            android:id="@+id/f_nethunter_adb_tv_title1"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"/>
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/home_database_path_til"
+        style="@style/Home.Dialog.Field"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="Database file path">
 
-        <EditText
+        <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/f_nethunter_adb_et_storedpath"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"/>
-
-    </LinearLayout>
+            android:inputType="textUri"
+            android:textColor="@color/home_nh_text" />
+    </com.google.android.material.textfield.TextInputLayout>
 </LinearLayout>

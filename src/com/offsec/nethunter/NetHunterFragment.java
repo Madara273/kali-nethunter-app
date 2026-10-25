@@ -1,6 +1,7 @@
 package com.offsec.nethunter;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -33,9 +34,14 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.widget.SearchView;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import static com.offsec.nethunter.R.id.f_nethunter_action_search;
 import static com.offsec.nethunter.R.id.f_nethunter_action_snowfall;
@@ -82,6 +88,7 @@ public class NetHunterFragment extends Fragment {
             public void onCreateMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
                 inflater.inflate(R.menu.nethunter, menu);
                 MenuItem searchItem = menu.findItem(R.id.f_nethunter_action_search);
+                MenuItem moreItem = menu.findItem(R.id.f_nethunter_action_more);
                 sharedpreferences = requireActivity().getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
 
                 boolean iswatch = requireActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_WATCH);
@@ -97,9 +104,9 @@ public class NetHunterFragment extends Fragment {
 
                 SearchView searchView = (SearchView) searchItem.getActionView();
                 if (searchView != null) {
-                    searchView.setOnSearchClickListener(v -> menu.setGroupVisible(R.id.f_nethunter_menu_group1, false));
+                    searchView.setOnSearchClickListener(v -> moreItem.setVisible(false));
                     searchView.setOnCloseListener(() -> {
-                        menu.setGroupVisible(R.id.f_nethunter_menu_group1, true);
+                        moreItem.setVisible(true);
                         return false;
                     });
                     searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -118,6 +125,10 @@ public class NetHunterFragment extends Fragment {
             public boolean onMenuItemSelected(@NonNull MenuItem item) {
                 int id = item.getItemId();
                 if (id == f_nethunter_action_search) return true;
+                if (id == R.id.f_nethunter_action_more) {
+                    showMoreSheet();
+                    return true;
+                }
                 if (id == f_nethunter_action_snowfall) {
                     trigger_snowfall();
                     return true;
@@ -134,7 +145,7 @@ public class NetHunterFragment extends Fragment {
         recyclerView.setAdapter(nethunterRecyclerViewAdapter);
         // Observe data changes and notify adapter
         NethunterData.getInstance().getNethunterModels(requireContext()).observe(getViewLifecycleOwner(), list -> {
-            if (nethunterRecyclerViewAdapter != null) nethunterRecyclerViewAdapter.notifyDataSetChanged();
+            if (nethunterRecyclerViewAdapter != null) nethunterRecyclerViewAdapter.updateItems(list);
         });
 
         // Fix button IDs to match layout
@@ -269,6 +280,83 @@ public class NetHunterFragment extends Fragment {
         }
     }
 
+    private void showMoreSheet() {
+        com.google.android.material.bottomsheet.BottomSheetDialog dialog =
+                new com.google.android.material.bottomsheet.BottomSheetDialog(
+                        requireContext(), R.style.ThemeOverlay_Home_BottomSheet);
+        View sheet = LayoutInflater.from(dialog.getContext())
+                .inflate(R.layout.nethunter_more_bottomsheet, null, false);
+        sheet.findViewById(R.id.home_more_backup).setOnClickListener(v -> {
+            dialog.dismiss();
+            showDatabasePathDialog(false);
+        });
+        sheet.findViewById(R.id.home_more_restore).setOnClickListener(v -> {
+            dialog.dismiss();
+            showDatabasePathDialog(true);
+        });
+        sheet.findViewById(R.id.home_more_reset).setOnClickListener(v -> {
+            dialog.dismiss();
+            new MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_Home_Alert)
+                    .setTitle("Reset Home items?")
+                    .setMessage("Custom Home items and changes will be replaced with the defaults.")
+                    .setNegativeButton("Cancel", null)
+                    .setPositiveButton("Reset", (d, which) -> NethunterData.getInstance()
+                            .resetData(NethunterSQL.getInstance(requireContext())))
+                    .show();
+        });
+        dialog.setContentView(sheet);
+        dialog.show();
+    }
+
+    private void showDatabasePathDialog(boolean restore) {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(
+                requireContext(), R.style.ThemeOverlay_Home_Alert);
+        View form = LayoutInflater.from(builder.getContext())
+                .inflate(R.layout.nethunter_custom_dialog_view, null, false);
+        TextView description = form.findViewById(R.id.f_nethunter_adb_tv_title1);
+        description.setText(restore ? R.string.nethunter_full_path_db_restore
+                : R.string.nethunter_full_path_save_db);
+        TextInputLayout pathLayout = form.findViewById(R.id.home_database_path_til);
+        TextInputEditText pathEdit = form.findViewById(R.id.f_nethunter_adb_et_storedpath);
+        pathEdit.setText(String.format("%s/FragmentNethunter", NhPaths.APP_SD_SQLBACKUP_PATH));
+
+        AlertDialog dialog = builder
+                .setTitle(restore ? "Restore database" : "Back up database")
+                .setView(form)
+                .setNegativeButton("Cancel", null)
+                .setPositiveButton(restore ? "Restore" : "Back up", null)
+                .create();
+        dialog.setOnShowListener(d -> {
+            Button confirm = dialog.getButton(DialogInterface.BUTTON_POSITIVE);
+            confirm.setOnClickListener(v -> {
+                pathLayout.setError(null);
+                String path = pathEdit.getText() == null ? "" : pathEdit.getText().toString().trim();
+                if (path.isEmpty()) {
+                    pathLayout.setError("Enter a database file path");
+                    return;
+                }
+                String result;
+                try {
+                    NethunterSQL database = NethunterSQL.getInstance(requireContext());
+                    result = restore
+                            ? NethunterData.getInstance().restoreData(database, path)
+                            : NethunterData.getInstance().backupData(database, path);
+                } catch (RuntimeException error) {
+                    Log.e("NetHunterFragment", "Database operation failed", error);
+                    result = error.getMessage() == null ? "Database operation failed" : error.getMessage();
+                }
+                if (result == null) {
+                    NhPaths.showMessage(requireContext(), restore
+                            ? "Home database restored" : "Home database backed up to " + path);
+                    dialog.dismiss();
+                } else {
+                    pathLayout.setError(result);
+                }
+            });
+        });
+        dialog.show();
+    }
+
     private void onAddItemSetup() {
         addButton.setOnClickListener(v -> {
             List<NethunterModel> fullList = NethunterData.getInstance().nethunterModelListFull;
@@ -279,7 +367,10 @@ public class NetHunterFragment extends Fragment {
             ArrayList<String> titles = new ArrayList<>();
             for (NethunterModel model : snapshot) titles.add(model.getTitle());
 
-            LayoutInflater inflater = LayoutInflater.from(requireContext());
+            com.google.android.material.bottomsheet.BottomSheetDialog dialog =
+                    new com.google.android.material.bottomsheet.BottomSheetDialog(
+                            requireContext(), R.style.ThemeOverlay_Home_BottomSheet);
+            LayoutInflater inflater = LayoutInflater.from(dialog.getContext());
             View sheet = inflater.inflate(R.layout.nethunter_add_bottomsheet, null, false);
 
             com.google.android.material.textfield.TextInputLayout titleTil = sheet.findViewById(R.id.add_title_til);
@@ -293,14 +384,17 @@ public class NetHunterFragment extends Fragment {
             android.widget.AutoCompleteTextView targetActv = sheet.findViewById(R.id.add_target_actv);
             com.google.android.material.button.MaterialButtonToggleGroup posGroup = sheet.findViewById(R.id.add_position_group);
 
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, titles);
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(dialog.getContext(), android.R.layout.simple_list_item_1, titles);
             targetActv.setAdapter(adapter);
 
             // Defaults
             if (!titles.isEmpty()) targetActv.setText(titles.get(0), false);
             posGroup.check(R.id.add_after);
-
-            com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
+            if (titles.isEmpty()) {
+                sheet.findViewById(R.id.add_position_label).setVisibility(View.GONE);
+                sheet.findViewById(R.id.add_target_til).setVisibility(View.GONE);
+                posGroup.setVisibility(View.GONE);
+            }
             dialog.setContentView(sheet);
 
             View cancelBtn = sheet.findViewById(R.id.add_cancel_btn);
@@ -373,12 +467,15 @@ public class NetHunterFragment extends Fragment {
             ArrayList<String> titles = new ArrayList<>();
             for (NethunterModel model : fullList) titles.add(model.getTitle());
 
-            // Inflate bottom sheet layout
-            LayoutInflater inflater = LayoutInflater.from(requireContext());
+            // Inflate with the same Home dialog theme used by Add and Delete.
+            com.google.android.material.bottomsheet.BottomSheetDialog dialog =
+                    new com.google.android.material.bottomsheet.BottomSheetDialog(
+                            requireContext(), R.style.ThemeOverlay_Home_BottomSheet);
+            LayoutInflater inflater = LayoutInflater.from(dialog.getContext());
             View sheet = inflater.inflate(R.layout.nethunter_move_bottomsheet, null, false);
 
             // Setup dropdown adapters
-            ArrayAdapter<String> adapter = new ArrayAdapter<>(requireContext(), android.R.layout.simple_list_item_1, titles);
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(dialog.getContext(), android.R.layout.simple_list_item_1, titles);
             android.widget.AutoCompleteTextView sourceActv = sheet.findViewById(R.id.move_source_actv);
             android.widget.AutoCompleteTextView targetActv = sheet.findViewById(R.id.move_target_actv);
             sourceActv.setAdapter(adapter);
@@ -394,7 +491,6 @@ public class NetHunterFragment extends Fragment {
             // Default to After for a more natural append-like move
             posGroup.check(R.id.move_after);
 
-            com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
             dialog.setContentView(sheet);
 
             View cancelBtn = sheet.findViewById(R.id.move_cancel_btn);
@@ -450,21 +546,29 @@ public class NetHunterFragment extends Fragment {
             ArrayList<String> titles = new ArrayList<>();
             for (NethunterModel model : fullList) titles.add(model.getTitle());
 
-            // Inflate bottom sheet
-            LayoutInflater inflater = LayoutInflater.from(requireContext());
+            // Inflate with the same Home dialog theme used by Add.
+            com.google.android.material.bottomsheet.BottomSheetDialog dialog =
+                    new com.google.android.material.bottomsheet.BottomSheetDialog(
+                            requireContext(), R.style.ThemeOverlay_Home_BottomSheet);
+            LayoutInflater inflater = LayoutInflater.from(dialog.getContext());
             View sheet = inflater.inflate(R.layout.nethunter_delete_bottomsheet, null, false);
             LinearLayout container = sheet.findViewById(R.id.delete_list_container);
 
             // Add a checkbox per item
             for (int i = 0; i < titles.size(); i++) {
-                com.google.android.material.checkbox.MaterialCheckBox cb = new com.google.android.material.checkbox.MaterialCheckBox(requireContext());
+                com.google.android.material.checkbox.MaterialCheckBox cb =
+                        new com.google.android.material.checkbox.MaterialCheckBox(dialog.getContext());
                 cb.setText(titles.get(i));
+                cb.setTextColor(androidx.core.content.ContextCompat.getColor(
+                        dialog.getContext(), R.color.home_nh_text));
+                cb.setButtonTintList(android.content.res.ColorStateList.valueOf(
+                        androidx.core.content.ContextCompat.getColor(
+                                dialog.getContext(), R.color.home_nh_accent)));
                 cb.setChecked(false);
                 cb.setTag(i); // store 0-based position index
                 container.addView(cb);
             }
 
-            com.google.android.material.bottomsheet.BottomSheetDialog dialog = new com.google.android.material.bottomsheet.BottomSheetDialog(requireContext());
             dialog.setContentView(sheet);
 
             View cancelBtn = sheet.findViewById(R.id.delete_cancel_btn);

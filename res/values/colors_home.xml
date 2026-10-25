@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="home_nh_bg_start">@color/system_bg</color>
+    <color name="home_nh_bg_end">#1B2029</color>
+    <color name="home_nh_surface">@color/hightech_card</color>
+    <color name="home_nh_control">@color/system_card_button_bg</color>
+    <color name="home_nh_border">@color/md_theme_dark_outlineVariant</color>
+    <color name="home_nh_scroll_thumb">#677881</color>
+    <color name="home_nh_text">@color/md_theme_dark_onSurface</color>
+    <color name="home_nh_muted">@color/system_tab_text</color>
+    <color name="home_nh_accent">#73CECB</color>
+</resources>

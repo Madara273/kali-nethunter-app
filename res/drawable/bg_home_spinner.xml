@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/home_nh_control" />
+            <corners android:radius="10dp" />
+            <stroke android:width="1dp" android:color="@color/home_nh_border" />
+        </shape>
+    </item>
+    <item android:drawable="@drawable/ic_home_dropdown"
+        android:gravity="end|center_vertical"
+        android:right="8dp"
+        android:width="24dp"
+        android:height="24dp" />
+</layer-list>

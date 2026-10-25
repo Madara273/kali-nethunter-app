@@ -2,7 +2,10 @@
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_home_sheet"
+    android:scrollbars="none"
+    android:overScrollMode="never">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,45 +16,65 @@
         android:paddingTop="12dp"
         android:paddingBottom="16dp">
 
+        <View
+            android:layout_width="36dp"
+            android:layout_height="4dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginBottom="16dp"
+            android:background="@drawable/bg_home_sheet_handle" />
+
         <TextView
             android:id="@+id/add_sheet_title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Add Item"
             android:textAppearance="@style/TextAppearance.Material3.TitleLarge"
-            android:paddingBottom="8dp" />
+            android:textColor="@color/home_nh_text"
+            android:paddingBottom="4dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:text="Create a command for the Home screen"
+            android:textColor="@color/home_nh_muted"
+            android:textSize="12sp" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/add_title_til"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            style="@style/Home.Dialog.Field"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
             android:hint="Title">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/add_title_et"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="@color/home_nh_text"
                 android:inputType="text" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/add_command_til"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            style="@style/Home.Dialog.Field"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="8dp"
             android:hint="Command">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/add_command_et"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="@color/home_nh_text"
                 android:inputType="text" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/add_delimiter_til"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+            style="@style/Home.Dialog.Field"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:hint="Line delimiter">
@@ -60,27 +83,31 @@
                 android:id="@+id/add_delimiter_et"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="@color/home_nh_text"
                 android:inputType="text" />
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.checkbox.MaterialCheckBox
             android:id="@+id/add_run_checkbox"
-            style="@style/checkbox_theme"
+            android:buttonTint="@color/home_nh_accent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
-            android:text="Run on create" />
+            android:text="Run on create"
+            android:textColor="@color/home_nh_text" />
 
         <TextView
+            android:id="@+id/add_position_label"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="12dp"
             android:text="Insert position"
-            android:textAppearance="@style/TextAppearance.Material3.BodyMedium" />
+            android:textAppearance="@style/TextAppearance.Material3.BodyMedium"
+            android:textColor="@color/home_nh_muted" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/add_target_til"
-            style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
+            style="@style/Home.Dialog.Dropdown"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="8dp"
@@ -91,6 +118,8 @@
                 style="@style/Widget.Material3.AutoCompleteTextView.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:textColor="@color/home_nh_text"
+                android:popupBackground="@color/home_nh_surface"
                 android:inputType="none"
                 android:importantForAutofill="no"
                 android:dropDownHeight="300dp" />
@@ -106,7 +135,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/add_before"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Home.Dialog.Toggle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -114,7 +143,7 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/add_after"
-                style="@style/Widget.Material3.Button.OutlinedButton"
+                style="@style/Home.Dialog.Toggle"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
@@ -130,14 +159,14 @@
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/add_cancel_btn"
-                style="@style/Widget.Material3.Button.TextButton"
+                style="@style/Home.Dialog.Cancel"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Cancel" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/add_save_btn"
-                style="@style/Widget.Material3.Button.Filled"
+                style="@style/Home.Dialog.Action"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Save"
