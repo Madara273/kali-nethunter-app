@@ -6,8 +6,6 @@ import android.os.HandlerThread;
 import android.os.Message;
 import android.os.Process;
 
-import androidx.annotation.NonNull;
-
 import com.offsec.nethunter.SQL.USBArsenalSQL;
 import com.offsec.nethunter.utils.ShellExecuter;
 
@@ -24,53 +22,50 @@ public class USBArsenalHandlerThread extends HandlerThread {
     public static final int CHANGE_INQUIRY_STRING = 9;
     public static final int GET_USBSWITCH_SQL_DATA = 10;
     public static final int GET_USBNETWORK_SQL_DATA = 11;
-    private USBArsenalListener listener;
-    private Object resultObject = new Object();
+    public static final int REMOVE_INIT = 12;
+    private volatile USBArsenalListener listener;
     private final ShellExecuter exe = new ShellExecuter();
 
     public USBArsenalHandlerThread() {
-        super("USBArsenalHandlerThread", Process.THREAD_PRIORITY_DEFAULT);
+        super("USBArsenalHandlerThread", Process.THREAD_PRIORITY_BACKGROUND);
     }
 
-    @Override
-    protected void onLooperPrepared() {
-        handler = new Handler(getLooper()) {
-            @Override
-            public void handleMessage(@NonNull Message msg) {
-                super.handleMessage(msg);
-                switch (msg.what) {
-                    case IS_INIT_EXIST:
-                    case SETUSBIFACE:
-                    case MOUNT_IMAGE:
-                    case UNMOUNT_IMAGE:
-                    case CHANGE_INQUIRY_STRING:
-                        resultObject = exe.RunAsRootReturnValue(msg.obj.toString());
-                        break;
-                    case RETRIEVE_USB_FUNCS:
-                    case RELOAD_USBIFACE:
-                    case GET_STORAGE_FUNC_FOLDER_NAME:
-                    case RELOAD_MOUNTSTATUS:
-                        resultObject = exe.RunAsRootOutput(msg.obj.toString());
-                        break;
-                    case GET_USBSWITCH_SQL_DATA:
-                        resultObject = USBArsenalSQL.getInstance((Context) msg.obj)
-                                .getUSBSwitchColumnData(msg.getData().getString("targetOSName"),
-                                        msg.getData().getString("functionName"));
-                        break;
-                    case GET_USBNETWORK_SQL_DATA:
-                        resultObject = USBArsenalSQL.getInstance((Context) msg.obj).getUSBNetworkColumnData(msg.arg1);
-                        break;
-                    default:
-                        break;
-                }
-                if (listener != null) {
-                    listener.onShellExecuterFinished(resultObject, msg.what);
-                }
-            }
-        };
+    private boolean handleUsbMessage(Message msg) {
+        USBArsenalListener callback = listener;
+        Object result;
+        switch (msg.what) {
+            case IS_INIT_EXIST:
+            case SETUSBIFACE:
+            case MOUNT_IMAGE:
+            case UNMOUNT_IMAGE:
+            case CHANGE_INQUIRY_STRING:
+            case REMOVE_INIT:
+                result = exe.RunAsRootReturnValue(msg.obj.toString());
+                break;
+            case RETRIEVE_USB_FUNCS:
+            case RELOAD_USBIFACE:
+            case GET_STORAGE_FUNC_FOLDER_NAME:
+            case RELOAD_MOUNTSTATUS:
+                result = exe.RunAsRootOutput(msg.obj.toString());
+                break;
+            case GET_USBSWITCH_SQL_DATA:
+                result = USBArsenalSQL.getInstance((Context) msg.obj)
+                        .getUSBSwitchColumnData(msg.getData().getString("targetOSName"),
+                                msg.getData().getString("functionName"));
+                break;
+            case GET_USBNETWORK_SQL_DATA:
+                result = USBArsenalSQL.getInstance((Context) msg.obj).getUSBNetworkColumnData(msg.arg1);
+                break;
+            default:
+                return false;
+        }
+        if (callback != null && callback == listener) callback.onShellExecuterFinished(result, msg.what);
+        return true;
     }
 
-    public Handler getHandler() {
+    public synchronized Handler getHandler() {
+        // getLooper waits for the started worker, so the first request cannot race onLooperPrepared.
+        if (handler == null) handler = new Handler(getLooper(), this::handleUsbMessage);
         return handler;
     }
 

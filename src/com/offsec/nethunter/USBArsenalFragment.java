@@ -24,9 +24,8 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
+import com.offsec.nethunter.widget.ExpandableChoiceView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -37,6 +36,8 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Lifecycle;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
+import com.google.android.material.bottomsheet.BottomSheetDialog;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.common.base.Predicates;
 import com.google.common.collect.Collections2;
 import com.google.common.collect.Lists;
@@ -46,7 +47,7 @@ import com.offsec.nethunter.bridge.Bridge;
 import com.offsec.nethunter.models.USBArsenalUSBNetworkModel;
 import com.offsec.nethunter.models.USBArsenalUSBSwitchModel;
 import com.offsec.nethunter.utils.NhPaths;
-import com.offsec.nethunter.utils.ShellExecuter;
+import com.offsec.nethunter.utils.USBFunctionProfile;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -77,11 +78,11 @@ public class USBArsenalFragment extends Fragment {
     private Button setUSBNetworkTetheringButton;
     private Button saveUSBFunctionConfigButton;
     private Button saveUSBNetworkTetheringConfigButton;
-    private Spinner targetOSSpinner;
-    private Spinner imgFileSpinner;
-    private Spinner usbFuncSpinner;
-    private Spinner usbNetworkAttackModeSpinner;
-    private Spinner adbSpinner;
+    private ExpandableChoiceView targetOSSpinner;
+    private ExpandableChoiceView imgFileSpinner;
+    private ExpandableChoiceView usbFuncSpinner;
+    private ExpandableChoiceView usbNetworkAttackModeSpinner;
+    private ExpandableChoiceView adbSpinner;
     private EditText inquiryStringEditText;
     private EditText[] usbSwitchInfoEditTextGroup = new EditText[5];
     private EditText[] usbNetworkInfoEditTextGroup = new EditText[5];
@@ -113,7 +114,6 @@ public class USBArsenalFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         MenuHost menuHost = requireActivity();
-        ShellExecuter exe = new ShellExecuter();
         File init = new File("/init.nethunter.rc");
 
         menuHost.addMenuProvider(new MenuProvider() {
@@ -124,82 +124,9 @@ public class USBArsenalFragment extends Fragment {
 
             @Override
             public boolean onMenuItemSelected(@NonNull MenuItem item) {
-                final LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-                final View promptView = inflater.inflate(R.layout.kaliservices_custom_dialog_view, null);
-                final TextView titleTextView = promptView.findViewById(R.id.f_kaliservices_adb_tv_title1);
-                final EditText storedpathEditText = promptView.findViewById(R.id.f_kaliservices_adb_et_storedpath);
-
-                int itemId = item.getItemId();
-                if (itemId == R.id.f_usbarsenal_menu_backupDB) {
-                    titleTextView.setText(R.string.usb_full_path_db_save);
-                    storedpathEditText.setText(String.format("%s/FragmentUSBArsenal", NhPaths.APP_SD_SQLBACKUP_PATH));
-                    MaterialAlertDialogBuilder adbBackup = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
-                            .setView(promptView)
-                            .setNegativeButton("Cancel", (d,w)->d.cancel())
-                            .setPositiveButton("OK", (d,w)->{});
-                    AlertDialog adBackup = adbBackup.create();
-                    adBackup.setOnShowListener(dlg -> {
-                        Button ok = adBackup.getButton(DialogInterface.BUTTON_POSITIVE);
-                        ok.setOnClickListener(v -> {
-                            String returned = USBArsenalSQL.getInstance(context).backupData(storedpathEditText.getText().toString());
-                            if (returned == null) {
-                                NhPaths.showMessage(context, "db successfully backed up to " + storedpathEditText.getText().toString());
-                            } else {
-                                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat)
-                                        .setTitle("Failed to backup the DB.")
-                                        .setMessage(returned)
-                                        .create().show();
-                            }
-                            adBackup.dismiss();
-                        });
-                    });
-                    adBackup.show();
-                    return true;
-                } else if (itemId == R.id.f_usbarsenal_menu_restoreDB) {
-                    titleTextView.setText(R.string.usb_full_path_db_restore);
-                    storedpathEditText.setText(String.format("%s/FragmentUSBArsenal", NhPaths.APP_SD_SQLBACKUP_PATH));
-                    MaterialAlertDialogBuilder adbRestore = new MaterialAlertDialogBuilder(activity, R.style.DialogStyleCompat)
-                            .setView(promptView)
-                            .setNegativeButton("Cancel", (d,w)->d.cancel())
-                            .setPositiveButton("OK", (d,w)->{});
-                    AlertDialog adRestore = adbRestore.create();
-                    adRestore.setOnShowListener(dlg -> {
-                        Button ok = adRestore.getButton(DialogInterface.BUTTON_POSITIVE);
-                        ok.setOnClickListener(v -> {
-                            String returned = USBArsenalSQL.getInstance(context).restoreData(storedpathEditText.getText().toString());
-                            if (returned == null) {
-                                NhPaths.showMessage(context, "db is successfully restored to " + storedpathEditText.getText().toString());
-                                refreshUSBSwitchInfos(gettargetOSSpinnerString(), getusbFuncSpinnerString());
-                                refreshUSBNetworkInfos(getusbNetWorkModeSpinnerPosition());
-                            } else {
-                                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat)
-                                        .setTitle("Failed to restore the DB.")
-                                        .setMessage(returned)
-                                        .create().show();
-                            }
-                            adRestore.dismiss();
-                        });
-                    });
-                    adRestore.show();
-                    return true;
-                } else if (itemId == R.id.f_usbarsenal_menu_ResetToDefault) {
-                    if (USBArsenalSQL.getInstance(context).resetData()) {
-                        NhPaths.showMessage(context, "db is successfully reset to default.");
-                        refreshUSBSwitchInfos(gettargetOSSpinnerString(), getusbFuncSpinnerString());
-                        refreshUSBNetworkInfos(getusbNetWorkModeSpinnerPosition());
-                    } else {
-                        NhPaths.showMessage_long(context, "Failed to reset the db to default.");
-                    }
-                    return true;
-                } else if (itemId == R.id.f_usbarsenal_menu_RemoveInit) {
-                    exe.RunAsRoot("mount -o rw,remount /; rm /init.nethunter.rc; mount -o ro,remount /");
-                    if (init.exists()) {
-                        NhPaths.showMessage_long(context, "Failed to remove /init.nethunter.rc. Please try manually");
-                    } else {
-                        NhPaths.showMessage_long(context, "Successfully removed init file. Please restart USB Arsenal");
-                    }
-                }
-                return false;
+                if (item.getItemId() != R.id.usbarsenal_action_more) return false;
+                showMoreSheet();
+                return true;
             }
         }, getViewLifecycleOwner(), Lifecycle.State.RESUMED);
 
@@ -239,33 +166,25 @@ public class USBArsenalFragment extends Fragment {
         usbNetworkInfoEditTextGroup[3] = view.findViewById(R.id.f_usbarsenal_et_usbnetwork_gatewayip);
         usbNetworkInfoEditTextGroup[4] = view.findViewById(R.id.f_usbarsenal_et_usbnetwork_ipsubnetmask);
 
-        { Message msg = new Message();
-            msg.what = USBArsenalHandlerThread.IS_INIT_EXIST;
-            msg.obj = "[ -f /init.nethunter.rc ]";
-            usbArsenalHandlerThread.getHandler().sendMessage(msg); }
-
-        { Message msg = new Message();
-            msg.what = USBArsenalHandlerThread.GET_STORAGE_FUNC_FOLDER_NAME;
-            msg.obj = "find /config/usb_gadget/g1/functions/ -name \"mass_storage.*\" -maxdepth 1 -type d -exec basename {} \\; | head -n1";
-            usbArsenalHandlerThread.getHandler().sendMessage(msg); }
-
         // Watch
         SharedPreferences sharedpreferences = context.getSharedPreferences("com.offsec.nethunter", Context.MODE_PRIVATE);
         Boolean iswatch = sharedpreferences.getBoolean("running_on_wearos", false);
 
-        if (iswatch) {
-            if (init.exists()) {
-                exe.RunAsRoot("mount -o rw,remount /; rm /init.nethunter.rc; mount -o ro,remount /");
-                Toast.makeText(context, "Init DONE for WearOS. Please restart USB Arsenal", Toast.LENGTH_LONG).show();
-            }
-        }
-
-        ArrayAdapter<String> usbFuncWinArrayAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_item, new ArrayList<>());
-        ArrayAdapter<String> usbFuncMACArrayAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_item, new ArrayList<>());
-        ArrayAdapter<String> usbNetworkAttackModeArrayAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_item, getResources().getStringArray(R.array.usbarsenal_usb_network_attack_mode));
-        usbFuncWinArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        usbFuncMACArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        usbNetworkAttackModeArrayAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        ArrayAdapter<String> usbFuncWinArrayAdapter = new ArrayAdapter<>(activity, R.layout.usbarsenal_spinner_item, new ArrayList<>());
+        ArrayAdapter<String> usbFuncMACArrayAdapter = new ArrayAdapter<>(activity, R.layout.usbarsenal_spinner_item, new ArrayList<>());
+        ArrayAdapter<String> usbNetworkAttackModeArrayAdapter = new ArrayAdapter<>(activity, R.layout.usbarsenal_spinner_item, getResources().getStringArray(R.array.usbarsenal_usb_network_attack_mode));
+        usbFuncWinArrayAdapter.setDropDownViewResource(R.layout.usbarsenal_spinner_item);
+        usbFuncMACArrayAdapter.setDropDownViewResource(R.layout.usbarsenal_spinner_item);
+        usbNetworkAttackModeArrayAdapter.setDropDownViewResource(R.layout.usbarsenal_spinner_item);
+        usbNetworkAttackModeSpinner.setAdapter(usbNetworkAttackModeArrayAdapter);
+        ArrayAdapter<CharSequence> targets = ArrayAdapter.createFromResource(requireContext(),
+                R.array.usbarsenal_target_platform, R.layout.usbarsenal_spinner_item);
+        targets.setDropDownViewResource(R.layout.usbarsenal_spinner_item);
+        targetOSSpinner.setAdapter(targets);
+        ArrayAdapter<CharSequence> adbOptions = ArrayAdapter.createFromResource(requireContext(),
+                R.array.usbarsenal_usb_adb, R.layout.usbarsenal_spinner_item);
+        adbOptions.setDropDownViewResource(R.layout.usbarsenal_spinner_item);
+        adbSpinner.setAdapter(adbOptions);
 
         targetOSSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
@@ -287,13 +206,7 @@ public class USBArsenalFragment extends Fragment {
         usbFuncSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                if (position == 0 || is_init_exists) {
-                    adbSpinner.setSelection(1);
-                    adbSpinner.setEnabled(false);
-                } else {
-                    adbSpinner.setSelection(0);
-                    adbSpinner.setEnabled(true);
-                }
+                updateAdbSelection();
                 refreshUSBSwitchInfos(gettargetOSSpinnerString(), getusbFuncSpinnerString());
             }
 
@@ -306,6 +219,17 @@ public class USBArsenalFragment extends Fragment {
         adbSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                if (is_init_exists && usbFuncSpinner.getSelectedItem() != null) {
+                    boolean enabled = position == 0;
+                    String selected = usbFuncSpinner.getSelectedItem().toString();
+                    if (USBFunctionProfile.hasAdb(selected) != enabled) {
+                        int option = findLegacyAdbOption(enabled);
+                        if (option >= 0) usbFuncSpinner.setSelection(option);
+                        else updateAdbSelection(false);
+                        return;
+                    }
+                }
+                updateAdbSelection(false);
                 refreshUSBSwitchInfos(gettargetOSSpinnerString(), getusbFuncSpinnerString());
             }
 
@@ -333,8 +257,7 @@ public class USBArsenalFragment extends Fragment {
                 String target = (targetOSSpinner.getSelectedItem() != null && "Windows".equals(targetOSSpinner.getSelectedItem().toString())) ? "win" :
                         (targetOSSpinner.getSelectedItem() != null && "Linux".equals(targetOSSpinner.getSelectedItem().toString())) ? "lnx" :
                                 (targetOSSpinner.getSelectedItem() != null && "Mac OS".equals(targetOSSpinner.getSelectedItem().toString())) ? "mac" : "";
-                String functions = usbFuncSpinner.getSelectedItem() != null ? usbFuncSpinner.getSelectedItem().toString() : "";
-                String adbEnable = (adbSpinner.getSelectedItem() != null && "Enable".equals(adbSpinner.getSelectedItem().toString())) ? ",adb" : "";
+                String functions = getusbFuncSpinnerString();
                 String idVendor = " -v '" + usbSwitchInfoEditTextGroup[0].getText().toString() + "'";
                 String idProduct = " -p '" + usbSwitchInfoEditTextGroup[1].getText().toString() + "'";
                 String manufacturer = usbSwitchInfoEditTextGroup[2].getText().toString().isEmpty() ? "" : " -m '" + usbSwitchInfoEditTextGroup[2].getText().toString() + "'";
@@ -350,7 +273,6 @@ public class USBArsenalFragment extends Fragment {
                         "' -f '" +
                         functions +
                         "'" +
-                        adbEnable +
                         idVendor +
                         idProduct +
                         manufacturer +
@@ -437,12 +359,12 @@ public class USBArsenalFragment extends Fragment {
         saveUSBFunctionConfigButton.setOnClickListener(v -> {
             if (!usbSwitchInfoEditTextGroup[0].getText().toString().matches("0x[0-9a-fA-F]{4}") ||
                     !usbSwitchInfoEditTextGroup[1].getText().toString().matches("0x[0-9a-fA-F]{4}")) {
-                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Invalid Format").setMessage("The regex must be 0x[0-9a-fA-F]{4}").create().show();
+                new MaterialAlertDialogBuilder(context, R.style.ThemeOverlay_Home_Alert).setTitle("Invalid value").setMessage("Enter four hexadecimal digits prefixed with 0x, for example 0x18d1.").create().show();
             } else if (!usbSwitchInfoEditTextGroup[2].getText().toString().matches("\\w+|^$") ||
                     !usbSwitchInfoEditTextGroup[3].getText().toString().matches("\\w+|^$")) {
-                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Invalid Format").setMessage("The regex must be \\w*|^$").create().show();
+                new MaterialAlertDialogBuilder(context, R.style.ThemeOverlay_Home_Alert).setTitle("Invalid value").setMessage("Use letters, digits or underscores, or leave the value empty.").create().show();
             } else if (!usbSwitchInfoEditTextGroup[4].getText().toString().matches("[0-9A-Z]{10}|^$")) {
-                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Invalid Format").setMessage("The regex must be [0-9A-Z]{10}|^$").create().show();
+                new MaterialAlertDialogBuilder(context, R.style.ThemeOverlay_Home_Alert).setTitle("Invalid value").setMessage("Enter ten uppercase letters or digits, or leave the value empty.").create().show();
             } else {
                 for (int i = 0; i < usbSwitchInfoEditTextGroup.length; i++) {
                     if (!USBArsenalSQL.getInstance(context).setUSBSwitchColumnData(
@@ -479,8 +401,7 @@ public class USBArsenalFragment extends Fragment {
                         .addToBackStack(null)
                         .commit());
 
-        usbArsenalHandlerThread.setOnShellExecuterFinishedListener((resultObject, actionCode) -> {
-            if (getView() != null) {
+        usbArsenalHandlerThread.setOnShellExecuterFinishedListener((resultObject, actionCode) -> postToView(view, () -> {
                 switch (actionCode){
                     case USBArsenalHandlerThread.IS_INIT_EXIST:
                         if ((int)resultObject == 0) {
@@ -491,16 +412,19 @@ public class USBArsenalFragment extends Fragment {
                                 usbArsenalHandlerThread.getHandler().sendMessage(msg); }
                         } else {
                             is_init_exists = false;
-                            uiHandler.post(() -> {
+                            {
                                 usbFuncWinArrayAdapter.clear();
                                 usbFuncWinArrayAdapter.addAll(getResources().getStringArray(R.array.usbarsenal_usb_states_win_lin));
                                 usbFuncMACArrayAdapter.clear();
                                 usbFuncMACArrayAdapter.addAll(getResources().getStringArray(R.array.usbarsenal_usb_states_mac));
-                            });
+                                for (EditText field : usbSwitchInfoEditTextGroup) field.setEnabled(true);
+                                saveUSBFunctionConfigButton.setEnabled(true);
+                                updateAdbSelection();
+                            }
                         }
                         break;
                     case USBArsenalHandlerThread.RETRIEVE_USB_FUNCS:
-                        uiHandler.post(() -> {
+                        {
                             ArrayList<String> usbFuncArray = new ArrayList<>(Arrays.asList(resultObject.toString().split("\\n")));
                             List<String> usbFuncWinArray = Lists.newArrayList(Collections2.filter(usbFuncArray,
                                     Predicates.containsPattern("win")));
@@ -514,11 +438,11 @@ public class USBArsenalFragment extends Fragment {
                                 infoEditText.setEnabled(false);
                             }
                             saveUSBFunctionConfigButton.setEnabled(false);
-                            adbSpinner.setEnabled(false);
-                        });
+                            updateAdbSelection();
+                        }
                         break;
                     case USBArsenalHandlerThread.SETUSBIFACE:
-                        uiHandler.post(() -> {
+                        {
                             if ((int)resultObject != 0){
                                 NhPaths.showMessage(context, "Failed to set USB function.");
                             } else {
@@ -526,14 +450,16 @@ public class USBArsenalFragment extends Fragment {
                                 reloadUSBStateImageButton.performClick();
                             }
                             setUSBIfaceButton.setEnabled(true);
-                        });
+                        }
                         break;
                     case USBArsenalHandlerThread.RELOAD_USBIFACE:
-                        uiHandler.post(() -> {
+                        {
                             if (resultObject.toString().isEmpty()) {
                                 usbStatusTextView.setText(R.string.usb_no_usb_function_enabled);
                                 imageMounterLL.setVisibility(View.GONE);
                                 mountedImageHintTextView.setVisibility(View.VISIBLE);
+                                usbNetworkTetheringLL.setVisibility(View.GONE);
+                                usbNetworkTetheringHintTextView.setVisibility(View.VISIBLE);
                             } else {
                                 usbStatusTextView.setText(resultObject.toString()
                                         .replaceAll("/config/usb_gadget/g1/functions/", "")
@@ -542,7 +468,8 @@ public class USBArsenalFragment extends Fragment {
                                 if (usbStatusTextView.getText().toString().contains("mass_storage")){
                                     imageMounterLL.setVisibility(View.VISIBLE);
                                     mountedImageHintTextView.setVisibility(View.GONE);
-                                    getImageFiles();
+                                    if (usbStorageFunctionName != null) reloadMountStateButton.performClick();
+                                    else getImageFiles();
                                 } else {
                                     imageMounterLL.setVisibility(View.GONE);
                                     mountedImageHintTextView.setVisibility(View.VISIBLE);
@@ -557,46 +484,46 @@ public class USBArsenalFragment extends Fragment {
                                     usbNetworkTetheringHintTextView.setVisibility(View.VISIBLE);
                                 }
                             }
-                        });
+                        }
                         break;
                     case USBArsenalHandlerThread.GET_STORAGE_FUNC_FOLDER_NAME:
                         String folder_name = resultObject.toString().split("\\n")[0];
                         // fallback to mass_storage.0 if other not found
                         if (folder_name.isEmpty()) folder_name = "mass_storage.0";
                         usbStorageFunctionName = folder_name;
+                        if (imageMounterLL.getVisibility() == View.VISIBLE) reloadMountStateButton.performClick();
                         break;
                     case USBArsenalHandlerThread.RELOAD_MOUNTSTATUS:
-                        uiHandler.post(() -> {
+                        {
                             if (resultObject.toString().isEmpty()){ mountedImageTextView.setText(R.string.usb_no_image_mounted); }
                             else {mountedImageTextView.setText(resultObject.toString());}
-                        });
+                        }
                         break;
                     case USBArsenalHandlerThread.MOUNT_IMAGE:
-                        uiHandler.post(() -> {
+                        {
                             if ((int)resultObject == 0){
                                 NhPaths.showMessage(context, imgFileSpinner.getSelectedItem().toString() + " has been mounted.");
                             } else {
                                 NhPaths.showMessage(context, "Failed to mount image " + imgFileSpinner.getSelectedItem().toString());
                             }
                             reloadMountStateButton.performClick();
-                            mountImgButton.setEnabled(true);
+                            mountImgButton.setEnabled(imgFileSpinner.getCount() > 0);
                             unmountImgButton.setEnabled(true);
-                        });
+                        }
                         break;
                     case USBArsenalHandlerThread.UNMOUNT_IMAGE:
-                        uiHandler.post(() -> {
+                        {
                             if ((int)resultObject == 0){
-                                NhPaths.showMessage(context, imgFileSpinner.getSelectedItem().toString() + " has been unmounted.");
+                                NhPaths.showMessage(context, "Image has been unmounted.");
                                 reloadMountStateButton.performClick();
                             } else {
-                                NhPaths.showMessage_long(context, "Failed to unmount image " + imgFileSpinner.getSelectedItem().toString() +
-                                        ". Your drive may be still be in use by the host, please eject your drive on the host first," +
+                                NhPaths.showMessage_long(context, "Failed to unmount image. Your drive may still be in use by the host, please eject your drive on the host first," +
                                         "and then try to umount the image again.");
                             }
                             reloadMountStateButton.performClick();
-                            mountImgButton.setEnabled(true);
+                            mountImgButton.setEnabled(imgFileSpinner.getCount() > 0);
                             unmountImgButton.setEnabled(true);
-                        });
+                        }
                         break;
                     case USBArsenalHandlerThread.CHANGE_INQUIRY_STRING:
                         String newInquiry = inquiryStringEditText.getText().toString();
@@ -613,28 +540,44 @@ public class USBArsenalFragment extends Fragment {
                                     "'.");
                         }
                         break;
+                    case USBArsenalHandlerThread.REMOVE_INIT:
+                        NhPaths.showMessage_long(context, (int) resultObject == 0
+                                ? "Successfully removed init file. Please restart USB Arsenal"
+                                : "Failed to remove /init.nethunter.rc. Please try manually");
+                        break;
                     case USBArsenalHandlerThread.GET_USBSWITCH_SQL_DATA:
-                        uiHandler.post(() -> {
+                        {
                             usbSwitchInfoEditTextGroup[0].setText(((USBArsenalUSBSwitchModel)resultObject).getidVendor());
                             usbSwitchInfoEditTextGroup[1].setText(((USBArsenalUSBSwitchModel)resultObject).getidProduct());
                             usbSwitchInfoEditTextGroup[2].setText(((USBArsenalUSBSwitchModel)resultObject).getmanufacturer());
                             usbSwitchInfoEditTextGroup[3].setText(((USBArsenalUSBSwitchModel)resultObject).getproduct());
                             usbSwitchInfoEditTextGroup[4].setText(((USBArsenalUSBSwitchModel)resultObject).getserialnumber());
-                        });
+                        }
                         break;
                     case USBArsenalHandlerThread.GET_USBNETWORK_SQL_DATA:
-                        uiHandler.post(() -> {
+                        {
                             usbNetworkInfoEditTextGroup[0].setText(((USBArsenalUSBNetworkModel)resultObject).getupstream_iface());
                             usbNetworkInfoEditTextGroup[1].setText(((USBArsenalUSBNetworkModel)resultObject).getusb_iface());
                             usbNetworkInfoEditTextGroup[2].setText(((USBArsenalUSBNetworkModel)resultObject).getip_address_for_target());
                             usbNetworkInfoEditTextGroup[3].setText(((USBArsenalUSBNetworkModel)resultObject).getip_gateway());
                             usbNetworkInfoEditTextGroup[4].setText(((USBArsenalUSBNetworkModel)resultObject).getip_subnetmask());
-                        });
+                        }
                         break;
                 }
-            }
-        });
+        }));
+        if (iswatch && init.exists()) removeInitFile();
+        { Message msg = new Message();
+            msg.what = USBArsenalHandlerThread.IS_INIT_EXIST;
+            msg.obj = "[ -f /init.nethunter.rc ]";
+            usbArsenalHandlerThread.getHandler().sendMessage(msg); }
+
+        { Message msg = new Message();
+            msg.what = USBArsenalHandlerThread.GET_STORAGE_FUNC_FOLDER_NAME;
+            msg.obj = "find /config/usb_gadget/g1/functions/ -name \"mass_storage.*\" -maxdepth 1 -type d -exec basename {} \\; | head -n1";
+            usbArsenalHandlerThread.getHandler().sendMessage(msg); }
+
     }
+
 
     @Override
     public void onStart() {
@@ -646,8 +589,10 @@ public class USBArsenalFragment extends Fragment {
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onDestroyView() {
+        usbArsenalHandlerThread.setOnShellExecuterFinishedListener(null);
+        uiHandler.removeCallbacksAndMessages(null);
+        super.onDestroyView();
         usbStatusTextView = null;
         mountedImageTextView = null;
         mountedImageHintTextView = null;
@@ -667,10 +612,114 @@ public class USBArsenalFragment extends Fragment {
         usbFuncSpinner = null;
         usbNetworkAttackModeSpinner = null;
         adbSpinner = null;
+        inquiryStringEditText = null;
+        currentInquiryHintTextView = null;
         Arrays.fill(usbSwitchInfoEditTextGroup, null);
-        usbSwitchInfoEditTextGroup = null;
         Arrays.fill(usbNetworkInfoEditTextGroup, null);
-        usbNetworkInfoEditTextGroup = null;
+    }
+
+    @Override
+    public void onDestroy() {
+        usbArsenalHandlerThread.setOnShellExecuterFinishedListener(null);
+        usbArsenalHandlerThread.quitSafely();
+        super.onDestroy();
+    }
+
+    private void postToView(View owner, Runnable action) {
+        uiHandler.post(() -> {
+            if (getView() == owner) action.run();
+        });
+    }
+
+    private void showMoreSheet() {
+        BottomSheetDialog dialog = new BottomSheetDialog(requireContext(), R.style.ThemeOverlay_Home_BottomSheet);
+        View sheet = LayoutInflater.from(dialog.getContext()).inflate(R.layout.usbarsenal_more_bottomsheet, null, false);
+        sheet.findViewById(R.id.usbarsenal_more_backup).setOnClickListener(v -> {
+            dialog.dismiss();
+            showDatabaseDialog(false);
+        });
+        sheet.findViewById(R.id.usbarsenal_more_restore).setOnClickListener(v -> {
+            dialog.dismiss();
+            showDatabaseDialog(true);
+        });
+        sheet.findViewById(R.id.usbarsenal_more_reset).setOnClickListener(v -> {
+            dialog.dismiss();
+            new MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_Home_Alert)
+                    .setTitle("Reset USB Arsenal configuration?")
+                    .setMessage("Saved USB and network settings will be replaced with the defaults.")
+                    .setNegativeButton("Cancel", null)
+                    .setPositiveButton("Reset", (d, which) -> {
+                        if (USBArsenalSQL.getInstance(context).resetData()) {
+                            NhPaths.showMessage(context, "USB Arsenal configuration reset.");
+                            refreshUSBSwitchInfos(gettargetOSSpinnerString(), getusbFuncSpinnerString());
+                            refreshUSBNetworkInfos(getusbNetWorkModeSpinnerPosition());
+                        } else {
+                            NhPaths.showMessage_long(context, "Failed to reset the database.");
+                        }
+                    }).show();
+        });
+        sheet.findViewById(R.id.usbarsenal_more_remove_init).setOnClickListener(v -> {
+            dialog.dismiss();
+            new MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_Home_Alert)
+                    .setTitle("Remove init file?")
+                    .setMessage("Remove /init.nethunter.rc, then reopen USB Arsenal to reload the available functions.")
+                    .setNegativeButton("Cancel", null)
+                    .setPositiveButton("Remove", (d, which) -> removeInitFile())
+                    .show();
+        });
+        sheet.findViewById(R.id.usbarsenal_more_info).setOnClickListener(v -> {
+            dialog.dismiss();
+            BottomSheetDialog info = new BottomSheetDialog(requireContext(), R.style.ThemeOverlay_Home_BottomSheet);
+            View content = LayoutInflater.from(info.getContext()).inflate(R.layout.usbarsenal_info_bottomsheet, null, false);
+            ((TextView) content.findViewById(R.id.usbarsenal_info_title)).setText("USB Arsenal usage");
+            ((TextView) content.findViewById(R.id.usbarsenal_info_message)).setText(R.string.usbarsenal_description);
+            content.findViewById(R.id.usbarsenal_info_close).setOnClickListener(x -> info.dismiss());
+            info.setContentView(content);
+            info.show();
+        });
+        dialog.setContentView(sheet);
+        dialog.show();
+    }
+
+    private void showDatabaseDialog(boolean restore) {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext(), R.style.ThemeOverlay_Home_Alert);
+        View form = LayoutInflater.from(builder.getContext()).inflate(R.layout.usbarsenal_database_dialog, null, false);
+        ((TextView) form.findViewById(R.id.f_usbarsenal_adb_tv_title1)).setText(
+                restore ? R.string.usb_full_path_db_restore : R.string.usb_full_path_db_save);
+        TextInputLayout pathLayout = form.findViewById(R.id.usbarsenal_database_path_til);
+        EditText pathEdit = form.findViewById(R.id.f_usbarsenal_adb_et_storedpath);
+        pathEdit.setText(String.format("%s/FragmentUSBArsenal", NhPaths.APP_SD_SQLBACKUP_PATH));
+        AlertDialog dialog = builder.setTitle(restore ? "Restore database" : "Back up database")
+                .setView(form).setNegativeButton("Cancel", null)
+                .setPositiveButton(restore ? "Restore" : "Back up", null).create();
+        dialog.setOnShowListener(d -> dialog.getButton(DialogInterface.BUTTON_POSITIVE).setOnClickListener(v -> {
+            pathLayout.setError(null);
+            String path = pathEdit.getText().toString().trim();
+            if (path.isEmpty()) {
+                pathLayout.setError("Enter a database file path");
+                return;
+            }
+            USBArsenalSQL database = USBArsenalSQL.getInstance(context);
+            String result = restore ? database.restoreData(path) : database.backupData(path);
+            if (result != null) {
+                pathLayout.setError(result);
+                return;
+            }
+            NhPaths.showMessage(context, restore ? "USB Arsenal database restored" : "Database backed up to " + path);
+            if (restore) {
+                refreshUSBSwitchInfos(gettargetOSSpinnerString(), getusbFuncSpinnerString());
+                refreshUSBNetworkInfos(getusbNetWorkModeSpinnerPosition());
+            }
+            dialog.dismiss();
+        }));
+        dialog.show();
+    }
+
+    private void removeInitFile() {
+        Message message = Message.obtain();
+        message.what = USBArsenalHandlerThread.REMOVE_INIT;
+        message.obj = "mount -o rw,remount /; rm /init.nethunter.rc; mount -o ro,remount /; [ ! -f /init.nethunter.rc ]";
+        usbArsenalHandlerThread.getHandler().sendMessage(message);
     }
 
     private void getImageFiles() {
@@ -686,11 +735,10 @@ public class USBArsenalFragment extends Fragment {
                 String msg = "Failed to create directory for storing image files at " + NhPaths.APP_SD_FILES_IMG_PATH;
                 NhPaths.showMessage(context, msg);
                 Log.e(TAG, msg);
-                ArrayAdapter<String> emptyAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_item, result);
-                emptyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                ArrayAdapter<String> emptyAdapter = new ArrayAdapter<>(activity, R.layout.usbarsenal_spinner_item, result);
+                emptyAdapter.setDropDownViewResource(R.layout.usbarsenal_spinner_item);
                 imgFileSpinner.setAdapter(emptyAdapter);
-                mountImgButton.setEnabled(true);
-                unmountImgButton.setEnabled(true);
+                updateImageFileState(false);
                 return;
             }
         }
@@ -715,19 +763,76 @@ public class USBArsenalFragment extends Fragment {
             }
         }
 
-        ArrayAdapter<String> imageAdapter = new ArrayAdapter<>(activity, android.R.layout.simple_spinner_item, result);
-        imageAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        ArrayAdapter<String> imageAdapter = new ArrayAdapter<>(activity, R.layout.usbarsenal_spinner_item, result);
+        imageAdapter.setDropDownViewResource(R.layout.usbarsenal_spinner_item);
         imgFileSpinner.setAdapter(imageAdapter);
-        mountImgButton.setEnabled(true);
+        updateImageFileState(!result.isEmpty());
+    }
+
+    private void updateImageFileState(boolean hasImages) {
+        imgFileSpinner.setEnabled(hasImages);
+        mountImgButton.setEnabled(hasImages);
         unmountImgButton.setEnabled(true);
+        View root = getView();
+        if (root != null) root.findViewById(R.id.usb_image_files_empty)
+                .setVisibility(hasImages ? View.GONE : View.VISIBLE);
     }
 
     private String getusbFuncSpinnerString() {
-        if (usbFuncSpinner.getSelectedItem() != null) {
-            return usbFuncSpinner.getSelectedItem().toString() +
-                    (adbSpinner.getSelectedItem().equals("Enable")?",adb":"");
+        Object selected = usbFuncSpinner.getSelectedItem();
+        return USBFunctionProfile.withAdb(selected == null ? null : selected.toString(),
+                is_init_exists, adbSpinner.getSelectedItemPosition() == 0);
+    }
+
+    private int findLegacyAdbOption(boolean enabled) {
+        if (usbFuncSpinner.getSelectedItem() == null) return -1;
+        List<String> profiles = new ArrayList<>();
+        for (int i = 0; i < usbFuncSpinner.getCount(); i++) {
+            profiles.add(usbFuncSpinner.getItemAtPosition(i).toString());
         }
-        return "reset";
+        return USBFunctionProfile.findAdbVariant(profiles, usbFuncSpinner.getSelectedItem().toString(), enabled);
+    }
+
+    private void updateAdbSelection() {
+        updateAdbSelection(true);
+    }
+
+    private void updateAdbSelection(boolean syncWithProfile) {
+        View root = getView();
+        if (root == null) return;
+        TextView hint = root.findViewById(R.id.usb_adb_hint);
+        Object selected = usbFuncSpinner.getSelectedItem();
+        adbSpinner.setEnabled(true);
+        if (syncWithProfile && selected != null) {
+            if (is_init_exists) adbSpinner.setSelection(USBFunctionProfile.hasAdb(selected.toString()) ? 0 : 1);
+            else if ("reset".equals(selected.toString())) adbSpinner.setSelection(0);
+        }
+        String error = adbChoiceError();
+        if (selected == null) {
+            hint.setText("Select a USB function to configure ADB.");
+        } else if (error != null) {
+            hint.setText(error);
+        } else if (is_init_exists) {
+            hint.setText("ADB follows the selected USB profile. Available matching profiles switch automatically.");
+        } else if ("reset".equals(selected.toString())) {
+            hint.setText("Reset restores ADB only. To disable ADB, select a different USB function.");
+        } else {
+            hint.setText("Include Android Debug Bridge in the selected USB function.");
+        }
+        hint.setVisibility(View.VISIBLE);
+    }
+
+    private String adbChoiceError() {
+        Object selected = usbFuncSpinner.getSelectedItem();
+        if (selected == null) return "Select a USB function first.";
+        boolean enabled = adbSpinner.getSelectedItemPosition() == 0;
+        if (is_init_exists && USBFunctionProfile.hasAdb(selected.toString()) != enabled) {
+            return "This init profile does not support the selected ADB state. Choose another USB profile.";
+        }
+        if (!is_init_exists && "reset".equals(selected.toString()) && !enabled) {
+            return "Reset always enables ADB. Choose another USB function to apply Disable.";
+        }
+        return null;
     }
 
     private String gettargetOSSpinnerString() {
@@ -739,25 +844,31 @@ public class USBArsenalFragment extends Fragment {
     }
 
     private boolean isAllUSBInfosValid() {
+        String adbError = adbChoiceError();
+        if (adbError != null) {
+            updateAdbSelection(false);
+            NhPaths.showMessage(context, adbError);
+            return false;
+        }
         if (!is_init_exists){
             if (!usbSwitchInfoEditTextGroup[0].getText().toString().matches("^0x[0-9a-fA-F]{4}$")) {
-                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Invalid Format").setMessage("The regex must be ^0x[0-9a-fA-F]{4}$").create().show();
+                new MaterialAlertDialogBuilder(context, R.style.ThemeOverlay_Home_Alert).setTitle("Invalid value").setMessage("Enter four hexadecimal digits prefixed with 0x, for example 0x18d1.").create().show();
                 return false;
             }
             if (!usbSwitchInfoEditTextGroup[1].getText().toString().matches("^0x[0-9a-fA-F]{4}$")) {
-                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Invalid Format").setMessage("The regex must be ^0x[0-9a-fA-F]{4}$").create().show();
+                new MaterialAlertDialogBuilder(context, R.style.ThemeOverlay_Home_Alert).setTitle("Invalid value").setMessage("Enter four hexadecimal digits prefixed with 0x, for example 0x18d1.").create().show();
                 return false;
             }
             if (!usbSwitchInfoEditTextGroup[2].getText().toString().matches("^\\w+$|^$")) {
-                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Invalid Format").setMessage("The regex must be ^\\w+$|^$").create().show();
+                new MaterialAlertDialogBuilder(context, R.style.ThemeOverlay_Home_Alert).setTitle("Invalid value").setMessage("Use letters, digits or underscores, or leave the value empty.").create().show();
                 return false;
             }
             if (!usbSwitchInfoEditTextGroup[3].getText().toString().matches("^\\w+$|^$")) {
-                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Invalid Format").setMessage("The regex must be ^\\w+$|^$").create().show();
+                new MaterialAlertDialogBuilder(context, R.style.ThemeOverlay_Home_Alert).setTitle("Invalid value").setMessage("Use letters, digits or underscores, or leave the value empty.").create().show();
                 return false;
             }
             if (!usbSwitchInfoEditTextGroup[4].getText().toString().matches("^[0-9A-Z]{10}$|^$")) {
-                new MaterialAlertDialogBuilder(context, R.style.DialogStyleCompat).setTitle("Invalid Format").setMessage("The regex must be ^[0-9A-Z]{10}$|^$").create().show();
+                new MaterialAlertDialogBuilder(context, R.style.ThemeOverlay_Home_Alert).setTitle("Invalid value").setMessage("Enter ten uppercase letters or digits, or leave the value empty.").create().show();
                 return false;
             }
         }

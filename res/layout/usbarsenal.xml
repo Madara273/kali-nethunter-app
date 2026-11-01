@@ -1,708 +1,130 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content">
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
-
-        <!-- USB interface switch -->
-        <LinearLayout
-            android:id="@+id/f_usbarsenal_ll_usbswitch"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <TextView
-                android:id="@+id/f_usbarsenal_desc"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/usbarsenal_description"
-                android:layout_gravity="center_horizontal|center"
-                android:gravity="center"
-                android:padding="4dp" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/cardview_shadow_start_color"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginLeft="16dp"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginBottom="4dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:text="@string/usbarsenal_header"
-                    android:textColor="@android:color/background_light"
-                    android:textSize="20sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:orientation="vertical">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="4dp">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="Target"
-                        android:layout_weight="0.4"
-                        android:textSize="18sp" />
-
-                    <Spinner
-                        android:id="@+id/f_usbarsenal_spr_targetplatform"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:baselineAligned="false"
-                        android:textSize="18sp"
-                        android:layout_weight="0.6"
-                        android:entries="@array/usbarsenal_target_platform"/>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="USB Function"
-                        android:layout_weight="0.4"
-                        android:textSize="18sp" />
-
-                    <Spinner
-                        android:id="@+id/f_usbarsenal_spr_usbfunctions"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:textSize="18sp"
-                        android:layout_weight="0.6"
-                        android:entries="@array/usbarsenal_usb_states_win_lin"/>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:orientation="horizontal">
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="ADB"
-                        android:layout_weight="0.4"
-                        android:textSize="18sp" />
-
-                    <Spinner
-                        android:id="@+id/f_usbarsenal_spr_adb"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:textSize="18sp"
-                        android:layout_weight="0.6"
-                        android:entries="@array/usbarsenal_usb_adb"/>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="idVendor"
-                        android:layout_weight="0.4"
-                        android:textSize="18sp" />
-
-                    <EditText
-                        android:id="@+id/f_usbarsenal_et_idvendor"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:autofillHints="none"
-                        android:textSize="18sp"
-                        android:layout_weight="0.6"/>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="idProduct"
-                        android:layout_weight="0.4"
-                        android:textSize="18sp" />
-
-                    <EditText
-                        android:id="@+id/f_usbarsenal_et_idproduct"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:autofillHints="none"
-                        android:textSize="18sp"
-                        android:layout_weight="0.6"
-                        android:hint=""/>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="manufacturer"
-                        android:layout_weight="0.4"
-                        android:textSize="18sp" />
-
-                    <EditText
-                        android:id="@+id/f_usbarsenal_et_manufacturer"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:autofillHints="none"
-                        android:textSize="18sp"
-                        android:layout_weight="0.6"
-                        android:hint=""/>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="product"
-                        android:layout_weight="0.4"
-                        android:textSize="18sp" />
-
-                    <EditText
-                        android:id="@+id/f_usbarsenal_et_product"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:autofillHints="none"
-                        android:textSize="18sp"
-                        android:layout_weight="0.6"/>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <TextView
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:text="serialnumber"
-                        android:layout_weight="0.4"
-                        android:textSize="18sp" />
-
-                    <EditText
-                        android:id="@+id/f_usbarsenal_et_serialnumber"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:autofillHints="none"
-                        android:textSize="18sp"
-                        android:layout_weight="0.6"
-                        android:hint=""/>
-                </LinearLayout>
-
-                <Button
-                    android:id="@+id/f_usbarsenal_btn_setusbinterface"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Set USB Function"
-                    style="?android:attr/buttonStyleSmall"/>
-
-                <Button
-                    android:id="@+id/f_usbarsenal_btn_saveusbfuncswitch"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginTop="4dp"
-                    android:text="SAVE CONFIG TO DATABASE"/>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.8"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="@string/usbarsenal_enabledfunctions"
-                            android:textSize="18sp" />
-                        <TextView
-                            android:id="@+id/f_usbarsenal_tv_current_usb_state"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:textSize="18sp" />
-                    </LinearLayout>
-
-                    <ImageButton
-                        android:id="@+id/f_usbarsenal_imgbtn_reloadUSBStatus"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:adjustViewBounds="false"
-                        android:baselineAlignBottom="false"
-                        android:contentDescription="none"
-                        android:cropToPadding="false"
-                        android:layout_weight="0.2"
-                        android:src="@drawable/ic_action_refresh" />
-                </LinearLayout>
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- Image Mounter -->
-        <LinearLayout
-            android:id="@+id/f_usbarsenal_ll_imageMounter"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:id="@+id/f_usbarsenal_ll_imageMounter_sub1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:background="@color/cardview_shadow_start_color"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginLeft="16dp"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginBottom="4dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:text="@string/usbarsenal_imagemounter_header"
-                    android:textColor="@android:color/background_light"
-                    android:textSize="20sp" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/f_usbarsenal_ll_tv_imagemounter_hint"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:text="@string/usbarsenal_imagemounter_description" />
-
-            <LinearLayout
-                android:id="@+id/f_usbarsenal_ll_imageMounter_sub2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:orientation="vertical"
-                android:visibility="gone">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="@string/usbarsenal_hint1_imagemounter" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="Select an .img or .iso file to mount"
-                    android:textSize="16sp"
-                    android:textStyle="bold" />
-
-                <Spinner
-                    android:id="@+id/f_usbarsenal_spr_img_files"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <Button
-                        android:id="@+id/f_usbarsenal_btn_mountImage"
-                        style="?android:attr/buttonStyleSmall"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.3"
-                        android:text="Mount Image" />
-
-                    <Button
-                        android:id="@+id/f_usbarsenal_btn_unmountImage"
-                        style="?android:attr/buttonStyleSmall"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.3"
-                        android:text="Unmount Image" />
-
-                    <CheckBox
-                        android:id="@+id/f_usbarsenal_chkbox_ReadOrWrite"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.4"
-                        android:paddingTop="5dp"
-                        android:paddingBottom="5dp"
-                        android:text="Read Only" />
-                </LinearLayout>
-
-                <androidx.legacy.widget.Space
-                    android:layout_width="match_parent"
-                    android:layout_height="14dp" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="horizontal">
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.8"
-                        android:orientation="vertical">
-
-                        <TextView
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="Mounted Image:"
-                            android:textSize="18sp" />
-
-                        <TextView
-                            android:id="@+id/f_usbarsenal_tv_mount_state"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:text="No image is mounted."
-                            android:textSize="18sp" />
-                    </LinearLayout>
-
-                    <ImageButton
-                        android:id="@+id/f_usbarsenal_imgbtn_reloadMountStatus"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.2"
-                        android:adjustViewBounds="false"
-                        android:baselineAlignBottom="false"
-                        android:contentDescription="TODO"
-                        android:cropToPadding="false"
-                        android:src="@drawable/ic_action_refresh" />
-                </LinearLayout>
-
-                <androidx.legacy.widget.Space
-                    android:layout_width="match_parent"
-                    android:layout_height="14dp"
-                    android:layout_weight="1" />
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:text="Inquiry string:"
-                        android:textSize="18sp" />
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="(empty to reset)" />
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="horizontal">
-
-                        <EditText
-                            android:id="@+id/f_usbarsenal_et_inquiryString"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:autofillHints="none"
-                            android:ems="10"
-                            android:inputType="text" />
-
-                        <Button
-                            android:id="@+id/f_usbarsenal_btn_changeInquiryString"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Change" />
-                    </LinearLayout>
-                </LinearLayout>
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Current inquiry string:"
-                    android:textSize="18sp" />
-
-                <TextView
-                    android:id="@+id/f_usbarsenal_tv_current_inquiry_string"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Linux File-CD/Stor gadget (kernel default)" />
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- USB Network Tethering -->
-        <LinearLayout
-            android:id="@+id/f_usbarsenal_ll_usbnetworktethering"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:id="@+id/f_usbarsenal_ll_usbnetworktethering_sub1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:background="@color/cardview_shadow_start_color"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginLeft="16dp"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginBottom="4dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:text="@string/usbarsenal_networktethering_header"
-                    android:textColor="@android:color/background_light"
-                    android:textSize="20sp" />
-            </LinearLayout>
-
-            <TextView
-                android:id="@+id/f_usbarsenal_ll_tv_usbnetworktethering_hint"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:text="@string/usbarsenal_networktethering_description" />
-
-            <LinearLayout
-                android:id="@+id/f_usbarsenal_ll_usbnetworktethering_sub2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:orientation="vertical"
-                android:visibility="visible">
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.6"
-                        android:text="Attack Mode:"
-                        android:textSize="18sp" />
-                    <Spinner
-                        android:id="@+id/f_usbarsenal_spr_networkattackmode"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:baselineAligned="false"
-                        android:textSize="18sp"
-                        android:layout_weight="0.6"
-                        android:entries="@array/usbarsenal_usb_network_attack_mode"/>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.6"
-                        android:text="Upstream Interface\n(e.g. wlan0, rmnet_data0):"
-                        android:textSize="18sp" />
-
-                    <EditText
-                        android:id="@+id/f_usbarsenal_et_usbnetwork_upstreamiface"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.4"
-                        android:autofillHints="none"
-                        android:textSize="18sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.6"
-                        android:text="USB network interface\n(e.g. rndis0, usb0):"
-                        android:textSize="18sp" />
-
-                    <EditText
-                        android:id="@+id/f_usbarsenal_et_usbnetwork_usbfunc"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.4"
-                        android:autofillHints="none"
-                        android:textSize="18sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.6"
-                        android:text="IP address to be assigned for target:"
-                        android:textSize="18sp" />
-
-                    <EditText
-                        android:id="@+id/f_usbarsenal_et_usbnetwork_targetip"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="0.4"
-                        android:autofillHints="none"
-                        android:textSize="18sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="IP address for your USB Network Interface:"
-                        android:textSize="18sp" />
-
-                    <EditText
-                        android:id="@+id/f_usbarsenal_et_usbnetwork_gatewayip"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:autofillHints="none"
-                        android:hint=""
-                        android:textSize="18sp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="IP Subnet Mask (in Octet format):"
-                        android:textSize="18sp" />
-
-                    <EditText
-                        android:id="@+id/f_usbarsenal_et_usbnetwork_ipsubnetmask"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:autofillHints="none"
-                        android:hint=""
-                        android:textSize="18sp" />
-                </LinearLayout>
-
-                <Button
-                    android:id="@+id/f_usbarsenal_btn_runusbnetworktethering"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="RUN IN NETHUNTER TERMINAL"/>
-
-                <Button
-                    android:id="@+id/f_usbarsenal_btn_saveusbnetworktethering"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="SAVE CONFIG TO DATABASE"/>
-            </LinearLayout>
-        </LinearLayout>
-
-        <!-- USB Exfiltration -->
-        <LinearLayout
-            android:id="@+id/f_usbarsenal_ll_usbexfiltration"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="4dp"
-                android:background="@color/cardview_shadow_start_color"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginLeft="16dp"
-                    android:layout_marginTop="4dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginRight="16dp"
-                    android:layout_marginBottom="4dp"
-                    android:background="?attr/selectableItemBackgroundBorderless"
-                    android:text="@string/usbarsenal_usbexfiltration_header"
-                    android:textColor="@android:color/background_light"
-                    android:textSize="20sp" />
-            </LinearLayout>
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:text="@string/usb_exfil_description" />
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_margin="16dp"
-                android:orientation="vertical">
-
-                <Button
-                    android:id="@+id/f_usbarsenal_btn_openusbexfiltration"
-                    style="?android:attr/buttonStyleSmall"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="@string/usbarsenal_usbexfiltration_open" />
-            </LinearLayout>
-        </LinearLayout>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@drawable/bg_tech_gradient" android:theme="@style/ThemeOverlay.Home.Controls">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:background="@drawable/bg_home_panel" android:padding="8dp" android:layout_marginStart="12dp" android:layout_marginEnd="12dp" android:layout_marginTop="8dp">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="USB ARSENAL" android:textColor="@color/home_nh_accent" android:textSize="16sp" android:gravity="center" android:textStyle="bold" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="USB functions, storage and network" android:textColor="@color/home_nh_muted" android:textSize="12sp" android:id="@+id/f_usbarsenal_desc" android:gravity="center" />
     </LinearLayout>
-</ScrollView>
+    <androidx.core.widget.NestedScrollView android:id="@+id/usb_content_scroll" android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:layout_marginTop="8dp" android:scrollbars="none" android:overScrollMode="never">
+        <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:paddingStart="12dp" android:paddingEnd="12dp" android:paddingBottom="12dp">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/f_usbarsenal_ll_usbswitch" android:background="@drawable/bg_home_panel" android:padding="12dp" android:visibility="visible" android:layout_marginBottom="12dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginBottom="4dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="USB function selector" android:textColor="@color/home_nh_accent" android:textSize="16sp" android:textStyle="bold" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Target" android:textColor="@color/home_nh_muted" android:textSize="14sp" android:layout_marginTop="8dp" android:layout_marginBottom="6dp" />
+                    <com.offsec.nethunter.widget.ExpandableChoiceView android:id="@+id/f_usbarsenal_spr_targetplatform" style="@style/Home.Dialog.Choice" android:layout_width="match_parent" android:layout_height="wrap_content" android:entries="@array/usbarsenal_target_platform" />
+                </LinearLayout>
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="USB function" android:textColor="@color/home_nh_muted" android:textSize="14sp" android:layout_marginTop="8dp" android:layout_marginBottom="6dp" />
+                <com.offsec.nethunter.widget.ExpandableChoiceView android:id="@+id/f_usbarsenal_spr_usbfunctions" style="@style/Home.Dialog.Choice" android:layout_width="match_parent" android:layout_height="wrap_content" android:entries="@array/usbarsenal_usb_states_win_lin" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="ADB" android:textColor="@color/home_nh_muted" android:textSize="14sp" android:layout_marginTop="8dp" android:layout_marginBottom="6dp" />
+                    <com.offsec.nethunter.widget.ExpandableChoiceView android:id="@+id/f_usbarsenal_spr_adb" style="@style/Home.Dialog.Choice" android:layout_width="match_parent" android:layout_height="wrap_content" android:entries="@array/usbarsenal_usb_adb" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="" android:textColor="@color/home_nh_muted" android:textSize="12sp" android:id="@+id/usb_adb_hint" android:layout_marginTop="6dp" android:visibility="gone" />
+                </LinearLayout>
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="12dp" android:background="@drawable/bg_home_panel" android:padding="12dp">
+                    <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1">
+                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Enabled USB functions" android:textColor="@color/home_nh_muted" android:textSize="13sp" />
+                        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Loading…" android:textColor="@color/home_nh_text" android:textSize="14sp" android:id="@+id/f_usbarsenal_tv_current_usb_state" android:fontFamily="monospace" />
+                    </LinearLayout>
+                    <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/f_usbarsenal_imgbtn_reloadUSBStatus" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="Refresh enabled functions" app:srcCompat="@drawable/ic_action_refresh" app:tint="@color/home_nh_accent" />
+                </LinearLayout>
+                <com.google.android.material.button.MaterialButton android:id="@+id/f_usbarsenal_btn_setusbinterface" style="@style/Home.Button.NetHunter" android:layout_width="match_parent" android:layout_height="52dp" android:text="Apply USB function" android:layout_marginTop="8dp" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/usb_identity_fields" android:visibility="visible">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="16dp" android:text="Device identity" android:textColor="@color/home_nh_accent" android:textSize="16sp" android:textStyle="bold" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginEnd="4dp">
+                            <com.google.android.material.textfield.TextInputLayout style="@style/Home.Dialog.Field" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Vendor ID" android:layout_marginTop="8dp">
+                                <com.google.android.material.textfield.TextInputEditText android:id="@+id/f_usbarsenal_et_idvendor" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:textColor="@color/home_nh_text" android:textSize="14sp" android:inputType="textVisiblePassword" />
+                            </com.google.android.material.textfield.TextInputLayout>
+                        </LinearLayout>
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="4dp">
+                            <com.google.android.material.textfield.TextInputLayout style="@style/Home.Dialog.Field" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Product ID" android:layout_marginTop="8dp">
+                                <com.google.android.material.textfield.TextInputEditText android:id="@+id/f_usbarsenal_et_idproduct" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:textColor="@color/home_nh_text" android:textSize="14sp" android:inputType="textVisiblePassword" />
+                            </com.google.android.material.textfield.TextInputLayout>
+                        </LinearLayout>
+                    </LinearLayout>
+                    <com.google.android.material.textfield.TextInputLayout style="@style/Home.Dialog.Field" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Manufacturer" android:layout_marginTop="8dp">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/f_usbarsenal_et_manufacturer" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:textColor="@color/home_nh_text" android:textSize="14sp" android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.textfield.TextInputLayout style="@style/Home.Dialog.Field" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Product" android:layout_marginTop="8dp">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/f_usbarsenal_et_product" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:textColor="@color/home_nh_text" android:textSize="14sp" android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.textfield.TextInputLayout style="@style/Home.Dialog.Field" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Serial number" android:layout_marginTop="8dp">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/f_usbarsenal_et_serialnumber" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:textColor="@color/home_nh_text" android:textSize="14sp" android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.button.MaterialButton android:id="@+id/f_usbarsenal_btn_saveusbfuncswitch" style="@style/Home.Button.NetHunter" android:layout_width="match_parent" android:layout_height="52dp" android:text="Save configuration" android:layout_marginTop="8dp" />
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/f_usbarsenal_ll_imageMounter" android:background="@drawable/bg_home_panel" android:padding="12dp" android:visibility="visible" android:layout_marginBottom="12dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/f_usbarsenal_ll_imageMounter_sub1" android:layout_marginBottom="4dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Disk image mounting" android:textColor="@color/home_nh_accent" android:textSize="17sp" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Present an .img or .iso file to the computer as a USB drive." android:textColor="@color/home_nh_muted" android:textSize="14sp" android:layout_marginTop="8dp" />
+                </LinearLayout>
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/usbarsenal_imagemounter_description" android:textColor="@color/home_nh_muted" android:textSize="14sp" android:id="@+id/f_usbarsenal_ll_tv_imagemounter_hint" android:layout_marginTop="8dp" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/f_usbarsenal_ll_imageMounter_sub2" android:visibility="gone">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/usbarsenal_hint1_imagemounter" android:textColor="@color/home_nh_muted" android:textSize="12sp" android:layout_marginTop="8dp" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Disk image" android:textColor="@color/home_nh_muted" android:textSize="14sp" android:layout_marginTop="8dp" android:layout_marginBottom="6dp" />
+                    <com.offsec.nethunter.widget.ExpandableChoiceView android:id="@+id/f_usbarsenal_spr_img_files" style="@style/Home.Dialog.Choice" android:layout_width="match_parent" android:layout_height="wrap_content" />
+                    <TextView android:id="@+id/usb_image_files_empty" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="8dp" android:text="No .img or .iso files found. Add an image to the folder shown above." android:textColor="@color/home_nh_muted" android:textSize="12sp" android:visibility="gone" />
+                    <com.google.android.material.checkbox.MaterialCheckBox android:id="@+id/f_usbarsenal_chkbox_ReadOrWrite" android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Read only" android:textColor="@color/home_nh_text" android:buttonTint="@color/home_nh_accent" />
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginEnd="4dp">
+                            <com.google.android.material.button.MaterialButton android:id="@+id/f_usbarsenal_btn_mountImage" style="@style/Home.Button.NetHunter" android:layout_width="match_parent" android:layout_height="52dp" android:text="Mount image" />
+                        </LinearLayout>
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1" android:layout_marginStart="4dp">
+                            <com.google.android.material.button.MaterialButton android:id="@+id/f_usbarsenal_btn_unmountImage" style="@style/Home.Button.NetHunter" android:layout_width="match_parent" android:layout_height="52dp" android:text="Unmount image" />
+                        </LinearLayout>
+                    </LinearLayout>
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:layout_marginTop="8dp">
+                        <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:orientation="vertical" android:layout_weight="1">
+                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Mounted image" android:textColor="@color/home_nh_muted" android:textSize="11sp" />
+                            <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Loading…" android:textColor="@color/home_nh_text" android:textSize="14sp" android:id="@+id/f_usbarsenal_tv_mount_state" />
+                        </LinearLayout>
+                        <androidx.appcompat.widget.AppCompatImageButton android:id="@+id/f_usbarsenal_imgbtn_reloadMountStatus" android:layout_width="48dp" android:layout_height="48dp" android:padding="12dp" android:background="?attr/selectableItemBackgroundBorderless" android:contentDescription="Refresh mounted image" app:srcCompat="@drawable/ic_action_refresh" app:tint="@color/home_nh_accent" />
+                    </LinearLayout>
+                    <com.google.android.material.textfield.TextInputLayout style="@style/Home.Dialog.Field" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Inquiry string (empty to reset)" android:layout_marginTop="8dp">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/f_usbarsenal_et_inquiryString" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:textColor="@color/home_nh_text" android:textSize="14sp" android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.button.MaterialButton android:id="@+id/f_usbarsenal_btn_changeInquiryString" style="@style/Home.Button.NetHunter" android:layout_width="match_parent" android:layout_height="52dp" android:text="Apply inquiry string" android:layout_marginTop="8dp" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Current inquiry string" android:textColor="@color/home_nh_muted" android:textSize="11sp" android:layout_marginTop="8dp" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/usb_linux_file_cd_storage_gadget" android:textColor="@color/home_nh_text" android:textSize="14sp" android:id="@+id/f_usbarsenal_tv_current_inquiry_string" />
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/f_usbarsenal_ll_usbnetworktethering" android:background="@drawable/bg_home_panel" android:padding="12dp" android:visibility="visible" android:layout_marginBottom="12dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/f_usbarsenal_ll_usbnetworktethering_sub1" android:layout_marginBottom="4dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="USB network sharing" android:textColor="@color/home_nh_accent" android:textSize="17sp" android:textStyle="bold" />
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Share this device’s network connection with the computer over USB." android:textColor="@color/home_nh_muted" android:textSize="14sp" android:layout_marginTop="8dp" />
+                </LinearLayout>
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/usbarsenal_networktethering_description" android:textColor="@color/home_nh_muted" android:textSize="14sp" android:id="@+id/f_usbarsenal_ll_tv_usbnetworktethering_hint" android:layout_marginTop="8dp" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/f_usbarsenal_ll_usbnetworktethering_sub2" android:visibility="gone">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="Mode" android:textColor="@color/home_nh_muted" android:textSize="14sp" android:layout_marginTop="8dp" android:layout_marginBottom="6dp" />
+                    <com.offsec.nethunter.widget.ExpandableChoiceView android:id="@+id/f_usbarsenal_spr_networkattackmode" style="@style/Home.Dialog.Choice" android:layout_width="match_parent" android:layout_height="wrap_content" android:entries="@array/usbarsenal_usb_network_attack_mode" />
+                    <com.google.android.material.textfield.TextInputLayout style="@style/Home.Dialog.Field" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Upstream interface (wlan0, rmnet_data0)" android:layout_marginTop="8dp">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/f_usbarsenal_et_usbnetwork_upstreamiface" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:textColor="@color/home_nh_text" android:textSize="14sp" android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.textfield.TextInputLayout style="@style/Home.Dialog.Field" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="USB interface (rndis0, usb0)" android:layout_marginTop="8dp">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/f_usbarsenal_et_usbnetwork_usbfunc" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:textColor="@color/home_nh_text" android:textSize="14sp" android:inputType="text" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.textfield.TextInputLayout style="@style/Home.Dialog.Field" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Target IP address" android:layout_marginTop="8dp">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/f_usbarsenal_et_usbnetwork_targetip" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:textColor="@color/home_nh_text" android:textSize="14sp" android:inputType="textUri" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.textfield.TextInputLayout style="@style/Home.Dialog.Field" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="USB interface IP address" android:layout_marginTop="8dp">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/f_usbarsenal_et_usbnetwork_gatewayip" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:textColor="@color/home_nh_text" android:textSize="14sp" android:inputType="textUri" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.textfield.TextInputLayout style="@style/Home.Dialog.Field" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="Subnet mask" android:layout_marginTop="8dp">
+                        <com.google.android.material.textfield.TextInputEditText android:id="@+id/f_usbarsenal_et_usbnetwork_ipsubnetmask" android:layout_width="match_parent" android:layout_height="wrap_content" android:singleLine="true" android:textColor="@color/home_nh_text" android:textSize="14sp" android:inputType="textUri" />
+                    </com.google.android.material.textfield.TextInputLayout>
+                    <com.google.android.material.button.MaterialButton android:id="@+id/f_usbarsenal_btn_runusbnetworktethering" style="@style/Home.Button.NetHunter" android:layout_width="match_parent" android:layout_height="52dp" android:text="Run in terminal" android:layout_marginTop="8dp" />
+                    <com.google.android.material.button.MaterialButton android:id="@+id/f_usbarsenal_btn_saveusbnetworktethering" style="@style/Home.Button.NetHunter" android:layout_width="match_parent" android:layout_height="52dp" android:text="Save configuration" android:layout_marginTop="4dp" />
+                </LinearLayout>
+            </LinearLayout>
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:id="@+id/f_usbarsenal_ll_usbexfiltration" android:background="@drawable/bg_home_panel" android:padding="12dp" android:visibility="visible" android:layout_marginBottom="12dp">
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginBottom="4dp">
+                    <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/usbarsenal_usbexfiltration_header" android:textColor="@color/home_nh_accent" android:textSize="16sp" android:textStyle="bold" />
+                </LinearLayout>
+                <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:text="@string/usb_exfil_description" android:textColor="@color/home_nh_muted" android:textSize="14sp" android:layout_marginTop="8dp" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/f_usbarsenal_btn_openusbexfiltration" style="@style/Home.Button.NetHunter" android:layout_width="match_parent" android:layout_height="52dp" android:text="@string/usbarsenal_usbexfiltration_open" android:layout_marginTop="12dp" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</LinearLayout>

@@ -53,7 +53,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
-import java.util.Stack;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -87,7 +86,8 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
     private com.google.android.material.navigation.NavigationView navigationView;
     private com.google.android.material.navigation.NavigationView navigationViewWear;
     private CharSequence mTitle = "NetHunter";
-    private final Stack<String> titles = new Stack<>();
+    private static final String DRAWER_BACK_STACK_PREFIX = "drawer:";
+    private boolean navigationPending;
     private SharedPreferences prefs;
     public static MenuItem lastSelectedMenuItem;
     private boolean locationUpdatesRequested = false;
@@ -130,42 +130,18 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
             @Override
             public void handleOnBackPressed() {
-                if (isBackPressEnabled) {
-                    FragmentManager fm = getSupportFragmentManager();
-                    if (fm.getBackStackEntryCount() > (titles.size() - 1)) {
-                        fm.popBackStack();
-                        return;
-                    }
-                    if (titles.size() > 1) {
-                        if (fm.getBackStackEntryCount() > 0) {
-                            fm.popBackStack();
-                        }
-                        titles.pop();
-                        mTitle = titles.peek();
-                        // update menu selection and action bar
-                        Menu menuNav = navigationView.getMenu();
-                        int i = 0;
-                        int mSize = menuNav.size();
-                        while (i < mSize) {
-                            if (menuNav.getItem(i).getTitle() == mTitle) {
-                                MenuItem _current = menuNav.getItem(i);
-                                if (lastSelectedMenuItem != _current) {
-                                    Intent intent = new Intent(context, AppNavHomeActivity.class);
-                                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-                                    startActivity(intent);
-                                    finish();
-                                }
-                                _current.setChecked(true);
-                                i = mSize;
-                            }
-                            i++;
-                        }
-                        restoreActionBar();
-                        // Do not call super.onBackPressed() here!
-                    } else {
-                        // If only one title left, finish the activity
-                        finish();
-                    }
+                if (mDrawerLayout != null && mDrawerLayout.isDrawerOpen(GravityCompat.START)) {
+                    mDrawerLayout.closeDrawer(GravityCompat.START);
+                    return;
+                }
+                if (!isBackPressEnabled || navigationPending) return;
+                FragmentManager fm = getSupportFragmentManager();
+                if (fm.isStateSaved()) return;
+                if (fm.getBackStackEntryCount() > 0) {
+                    navigationPending = true;
+                    fm.popBackStack();
+                } else {
+                    finish();
                 }
             }
         });
@@ -645,20 +621,18 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
 
         setupDrawerContent(navigationView);
 
-        // Use allowingStateLoss to avoid IllegalStateException if state was already saved
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.container, NetHunterFragment.newInstance(R.id.nethunter_item))
-                .commitAllowingStateLoss();
-
-        // First menu item title
-        Menu nvMenu = navigationView.getMenu();
-        if (nvMenu.size() > 0) {
-            MenuItem firstMenuItem = nvMenu.getItem(0);
-            if (firstMenuItem != null && firstMenuItem.getTitle() != null) {
-                titles.push(firstMenuItem.getTitle().toString());
-            }
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.addOnBackStackChangedListener(() -> {
+            navigationPending = false;
+            syncDrawerSelection();
+        });
+        // FragmentManager restores the current screen and its history after recreation.
+        if (fragmentManager.findFragmentById(R.id.container) == null) {
+            fragmentManager.beginTransaction()
+                    .replace(R.id.container, NetHunterFragment.newInstance(R.id.nethunter_item),
+                            DRAWER_BACK_STACK_PREFIX + R.id.nethunter_item)
+                    .commitAllowingStateLoss();
         }
-
         // Enable chroot-dependent group
         navigationView.getMenu().setGroupEnabled(R.id.chrootDependentGroup, true);
 
@@ -689,10 +663,7 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
             prefs.edit().putBoolean("seenNav", true).apply();
         }
 
-        if (lastSelectedMenuItem == null && nvMenu.size() > 0) {
-            lastSelectedMenuItem = nvMenu.getItem(0);
-            if (lastSelectedMenuItem != null) lastSelectedMenuItem.setChecked(true);
-        }
+        syncDrawerSelection();
 
         mDrawerToggle = new ActionBarDrawerToggle(this, mDrawerLayout, R.string.drawer_opened, R.string.drawer_closed);
         mDrawerLayout.addDrawerListener(mDrawerToggle);
@@ -736,123 +707,89 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
     }
 
     private void setupDrawerContent(NavigationView navigationView) {
-        navigationView.setNavigationItemSelectedListener(
-                menuItem -> {
-                    // only change it if is not the same as the last one
-                    if (lastSelectedMenuItem != menuItem) {
-                        //remove last
-                        if(lastSelectedMenuItem != null)
-                            lastSelectedMenuItem.setChecked(false);
-                        // update for the next
-                        lastSelectedMenuItem = menuItem;
-                    }
-                    //set checked
-                    menuItem.setChecked(true);
-                    mDrawerLayout.closeDrawers();
-                    mTitle = menuItem.getTitle();
-                    assert mTitle != null;
-                    titles.push(mTitle.toString());
-
-                    int itemId = menuItem.getItemId();
-                    changeDrawer(itemId);
-                    restoreActionBar();
-                    return true;
-                });
+        navigationView.setNavigationItemSelectedListener(menuItem -> {
+            mDrawerLayout.closeDrawers();
+            changeDrawer(menuItem.getItemId());
+            // The committed fragment transaction updates the checked item.
+            return false;
+        });
     }
 
     private void setupDrawerContentWear(NavigationView navigationViewWear) {
-        navigationViewWear.setNavigationItemSelectedListener(
-                menuItem -> {
-                    // only change it if is not the same as the last one
-                    if (lastSelectedMenuItem != menuItem) {
-                        //remove last
-                        if(lastSelectedMenuItem != null)
-                            lastSelectedMenuItem.setChecked(false);
-                        // update for the next
-                        lastSelectedMenuItem = menuItem;
-                    }
-                    //set checked
-                    menuItem.setChecked(true);
-                    mDrawerLayout.closeDrawers();
-                    mTitle = menuItem.getTitle();
-                    assert mTitle != null;
-                    titles.push(mTitle.toString());
-
-                    int itemId = menuItem.getItemId();
-                    changeDrawer(itemId);
-                    restoreActionBar();
-                    return true;
-                });
+        setupDrawerContent(navigationViewWear);
     }
 
     private void changeDrawer(int itemId) {
         FragmentManager fragmentManager = getSupportFragmentManager();
+        if (fragmentManager.isStateSaved() || navigationPending) return;
+        Fragment current = fragmentManager.findFragmentById(R.id.container);
+        if (current != null && (DRAWER_BACK_STACK_PREFIX + itemId).equals(current.getTag())) return;
         if (itemId == R.id.nethunter_item) {
-            changeFragment(fragmentManager, NetHunterFragment.newInstance(itemId));
+            changeFragment(fragmentManager, NetHunterFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.wearhunter_item) {
-            changeFragment(fragmentManager, WearHunterFragment.newInstance(itemId));
+            changeFragment(fragmentManager, WearHunterFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.can_item) {
-            changeFragment(fragmentManager, CARsenalFragment.newInstance(itemId));
+            changeFragment(fragmentManager, CARsenalFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.kaliservices_item) {
-            changeFragment(fragmentManager, KaliServicesFragment.newInstance(itemId));
+            changeFragment(fragmentManager, KaliServicesFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.custom_commands_item) {
-            changeFragment(fragmentManager, CustomCommandsFragment.newInstance(itemId));
+            changeFragment(fragmentManager, CustomCommandsFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.hid_item) {
-            changeFragment(fragmentManager, HidFragment.newInstance(itemId));
+            changeFragment(fragmentManager, HidFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.duckhunter_item) {
-            changeFragment(fragmentManager, com.offsec.nethunter.DuckHunterFragment.newInstance(itemId));
+            changeFragment(fragmentManager, com.offsec.nethunter.DuckHunterFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.eviltwin_item) {
-    changeFragment(fragmentManager, new EvilTwinFragment());
+            changeFragment(fragmentManager, new EvilTwinFragment(), itemId);
         } else if (itemId == R.id.usbarsenal_item) {
             if (exe.RunAsRootReturnValue("ls /config/usb_gadget/g1") == 0) {
-                changeFragment(fragmentManager, USBArsenalFragment.newInstance(itemId));
+                changeFragment(fragmentManager, USBArsenalFragment.newInstance(itemId), itemId);
             } else {
                 showWarningDialog("", "USB Arsenal (ConfigFS) is only supported by kernels above 4.x. Please note that HID, RNDIS, and Mass Storage should be automatically enabled on older devices with NetHunter patches.", false);
             }
         } else if (itemId == R.id.badusb_item) {
-            changeFragment(fragmentManager, BadusbFragment.newInstance(itemId));
+            changeFragment(fragmentManager, BadusbFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.wifipumpkin_item) {
-            changeFragment(fragmentManager, WifipumpkinFragment.newInstance(itemId));
+            changeFragment(fragmentManager, WifipumpkinFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.wps_item) {
-            changeFragment(fragmentManager, WPSFragment.newInstance(itemId));
+            changeFragment(fragmentManager, WPSFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.bt_item) {
-            changeFragment(fragmentManager, BTFragment.newInstance(itemId));
+            changeFragment(fragmentManager, BTFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.nfc_item) {
-            changeFragment(fragmentManager, NFCFragment.newInstance(itemId));
+            changeFragment(fragmentManager, NFCFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.audio_item) {
-            changeFragment(fragmentManager, com.offsec.nethunter.AudioFragment.newInstance(itemId));
+            changeFragment(fragmentManager, com.offsec.nethunter.AudioFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.macchanger_item) {
-            changeFragment(fragmentManager, MacchangerFragment.newInstance(itemId));
+            changeFragment(fragmentManager, MacchangerFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.createchroot_item) {
-            changeFragment(fragmentManager, ChrootManagerFragment.newInstance(itemId));
+            changeFragment(fragmentManager, ChrootManagerFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.mpc_item) {
-            changeFragment(fragmentManager, MPCFragment.newInstance(itemId));
+            changeFragment(fragmentManager, MPCFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.vnc_item) {
             if (context.getPackageManager().getLaunchIntentForPackage("com.offsec.nethunter.kex") == null) {
                 showWarningDialog("", "NetHunter KeX is not installed yet, please install from the store!", false);
             } else {
-                changeFragment(fragmentManager, VNCFragment.newInstance(itemId));
+                changeFragment(fragmentManager, VNCFragment.newInstance(itemId), itemId);
             }
         } else if (itemId == R.id.searchsploit_item) {
-            changeFragment(fragmentManager, com.offsec.nethunter.SearchSploitFragment.newInstance(itemId));
+            changeFragment(fragmentManager, com.offsec.nethunter.SearchSploitFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.terminal_item) {
-            changeFragment(fragmentManager, TerminalFragment.newInstance(itemId));
+            changeFragment(fragmentManager, TerminalFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.nmap_item) {
-            changeFragment(fragmentManager, NmapFragment.newInstance(itemId));
+            changeFragment(fragmentManager, NmapFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.pineapple_item) {
-            changeFragment(fragmentManager, PineappleFragment.newInstance(itemId));
+            changeFragment(fragmentManager, PineappleFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.gps_item) {
-            changeFragment(fragmentManager, KaliGpsServiceFragment.newInstance(itemId));
+            changeFragment(fragmentManager, KaliGpsServiceFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.settings_item) {
-            changeFragment(fragmentManager, SettingsFragment.newInstance(itemId));
+            changeFragment(fragmentManager, SettingsFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.kernel_item) {
-            changeFragment(fragmentManager, KernelFragment.newInstance(itemId));
+            changeFragment(fragmentManager, KernelFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.anykernel_item) {
-            changeFragment(fragmentManager, AnyKernelFragment.newInstance(itemId));
+            changeFragment(fragmentManager, AnyKernelFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.modules_item) {
-            changeFragment(fragmentManager, ModulesFragment.newInstance(itemId));
+            changeFragment(fragmentManager, ModulesFragment.newInstance(itemId), itemId);
         } else if (itemId == R.id.set_item) {
-            changeFragment(fragmentManager, SETFragment.newInstance(itemId));
+            changeFragment(fragmentManager, SETFragment.newInstance(itemId), itemId);
         }
     }
 
@@ -882,20 +819,41 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
         prefs.edit().putString(SharePrefTag.CHROOT_DEFAULT_STORE_DOWNLOAD_SHAREPREF_TAG, NhPaths.SD_PATH + "/Download").apply();
     }
 
-    private void changeFragment(FragmentManager fragmentManager, Fragment fragment) {
-        if (fragmentManager.isStateSaved()) {
-            fragmentManager
-                    .beginTransaction()
-                    .replace(R.id.container, fragment)
-                    .addToBackStack(null)
-                    .commitAllowingStateLoss();
-        } else {
-            fragmentManager
-                    .beginTransaction()
-                    .replace(R.id.container, fragment)
-                    .addToBackStack(null)
-                    .commit();
+    private int currentDrawerItemId() {
+        FragmentManager fm = getSupportFragmentManager();
+        for (int i = fm.getBackStackEntryCount() - 1; i >= 0; i--) {
+            String name = fm.getBackStackEntryAt(i).getName();
+            if (name != null && name.startsWith(DRAWER_BACK_STACK_PREFIX)) {
+                return Integer.parseInt(name.substring(DRAWER_BACK_STACK_PREFIX.length()));
+            }
         }
+        return R.id.nethunter_item;
+    }
+
+    private void syncDrawerSelection() {
+        if (navigationView == null) return;
+        int itemId = currentDrawerItemId();
+        MenuItem selected = navigationView.getMenu().findItem(itemId);
+        if (selected == null) return;
+        if (lastSelectedMenuItem != null) lastSelectedMenuItem.setChecked(false);
+        navigationView.setCheckedItem(itemId);
+        if (navigationViewWear != null && navigationViewWear.getMenu().findItem(itemId) != null) {
+            navigationViewWear.setCheckedItem(itemId);
+        }
+        lastSelectedMenuItem = selected;
+        mTitle = selected.getTitle();
+        if (isBackPressEnabled) restoreActionBar();
+        else blockActionBar();
+    }
+
+    private void changeFragment(FragmentManager fragmentManager, Fragment fragment, int itemId) {
+        if (fragmentManager.isStateSaved()) return;
+        navigationPending = true;
+        String destination = DRAWER_BACK_STACK_PREFIX + itemId;
+        fragmentManager.beginTransaction()
+                .replace(R.id.container, fragment, destination)
+                .addToBackStack(destination)
+                .commit();
     }
 
     private boolean isAllRequiredPermissionsGranted() {
@@ -960,7 +918,8 @@ public class AppNavHomeActivity extends AppCompatActivity implements KaliGPSUpda
                                     lastSelectedMenuItem.getItemId() != R.id.nethunter_item &&
                                     lastSelectedMenuItem.getItemId() != R.id.createchroot_item) {
                                     FragmentManager fragmentManager = getSupportFragmentManager();
-                                    changeFragment(fragmentManager, NetHunterFragment.newInstance(R.id.nethunter_item));
+                                    changeFragment(fragmentManager, NetHunterFragment.newInstance(R.id.nethunter_item),
+                                            R.id.nethunter_item);
                                 }
                             }
                         } catch (Exception e) {
