@@ -315,6 +315,7 @@ public class KaliGpsServiceFragment extends Fragment implements KaliGPSUpdates.R
                 }
 
                 String wlaniface = wlan_interface != null ? wlan_interface.getText().toString() : "";
+                if (!wlaniface.equals("wlan0")) nexmonPrefix = "";
                 wlaniface = !wlaniface.isEmpty() ? "source=" + wlaniface + "\n" : "";
 
                 String btiface = bt_interface != null ? bt_interface.getText().toString() : "";
